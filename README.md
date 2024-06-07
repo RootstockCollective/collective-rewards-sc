@@ -9,7 +9,8 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-A set of Solidity smart contracts, to implement builder incentives and staker rewards mechanisms to be integrated with the DAO.
+A set of Solidity smart contracts, to implement builder incentives and staker rewards mechanisms to be integrated with
+the DAO.
 
 ## What's Inside
 
@@ -69,7 +70,8 @@ Your contracts will be linted and tested on every push and pull request made to 
 
 ## Installing Dependencies
 
-While foundry generally uses submodules to manage dependencies, this project uses Node.js packages because [submodules don't scale](https://twitter.com/PaulRBerg/status/1736695487057531328).
+While foundry generally uses submodules to manage dependencies, this project uses Node.js packages because
+[submodules don't scale](https://twitter.com/PaulRBerg/status/1736695487057531328).
 
 This is how to install dependencies:
 
@@ -86,7 +88,6 @@ To write a new test contract, you start by importing `Test` from `forge-std`, an
 contract. Forge Std comes with a pre-instantiated [cheatcodes](https://book.getfoundry.sh/cheatcodes/) environment
 accessible via the `vm` property. If you would like to view the logs in the terminal output, you can add the `-vvv` flag
 and use [console.log](https://book.getfoundry.sh/faq?highlight=console.log#how-do-i-use-consolelog).
-
 
 ## Usage
 
