@@ -114,7 +114,7 @@ $ forge clean
 Compile the contracts:
 
 ```sh
-$ forge build
+$ forge compile
 ```
 
 ### Coverage
