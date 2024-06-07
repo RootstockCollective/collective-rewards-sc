@@ -1,9 +1,7 @@
 # Builder Incentives Smart Contracts [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
 
-[gitpod]: https://gitpod.io/#https://github.com/PaulRBerg/foundry-template
-[gitpod-badge]: https://img.shields.io/badge/Gitpod-Open%20in%20Gitpod-FFB45B?logo=gitpod
-[gha]: https://github.com/PaulRBerg/foundry-template/actions
-[gha-badge]: https://github.com/PaulRBerg/foundry-template/actions/workflows/ci.yml/badge.svg
+[gha]: https://github.com/rsksmart/builder-incentives-sc/actions
+[gha-badge]: https://github.com/rsksmart/builder-incentives-sc/actions/workflows/ci.yml/badge.svg
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 [license]: https://opensource.org/licenses/MIT
@@ -47,6 +45,7 @@ This template comes with a set of sensible default configurations for you to use
 following files:
 
 ```text
+├── .commitlintrc.ts
 ├── .editorconfig
 ├── .gitignore
 ├── .prettierignore
