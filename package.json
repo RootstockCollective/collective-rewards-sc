@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
+    "husky": "^9.0.11",
     "prettier": "^3.0.0",
     "solhint": "^3.6.2"
   },
@@ -39,6 +40,7 @@
     "prettier:write": "prettier --write \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "test": "forge test",
     "test:coverage": "forge coverage",
-    "test:coverage:report": "forge coverage --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage"
+    "test:coverage:report": "forge coverage --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage",
+    "prepare": "husky"
   }
 }
