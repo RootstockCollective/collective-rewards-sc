@@ -29,6 +29,7 @@
     "@commitlint/config-conventional": "^19.2.2",
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
     "husky": "^9.0.11",
+    "markdownlint-cli2": "^0.13.0",
     "prettier": "^3.0.0",
     "solhint": "^3.6.2"
   },
@@ -36,8 +37,9 @@
   "scripts": {
     "clean": "rm -rf cache out",
     "build": "forge build",
-    "lint": "bun run lint:sol && bun run prettier:check",
+    "lint": "bun run lint:sol && bun lint:md && bun run prettier:check",
     "lint:sol": "forge fmt --check && bun solhint {script,src,test}/**/*.sol",
+    "lint:md": "bun markdownlint-cli2 .",
     "prettier:check": "prettier --check \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "prettier:write": "prettier --write \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "test": "forge test",
