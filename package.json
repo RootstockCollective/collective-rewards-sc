@@ -25,6 +25,8 @@
     "@openzeppelin/contracts": "^5.0.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
     "husky": "^9.0.11",
     "prettier": "^3.0.0",
