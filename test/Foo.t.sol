@@ -24,7 +24,7 @@ contract FooTest is Test {
     /// @dev Basic test. Run it with `forge test -vvv` to see the console log.
     function test_Example() external view {
         console2.log("Hello World");
-        uint256 x = 42;
+        uint256 x = 41;
         assertEq(foo.id(x), x, "value mismatch");
     }
 
