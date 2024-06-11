@@ -27,8 +27,11 @@ contract Voter {
         stakerProposalsVoted;
     // amount of votes per staker
     mapping(uint256 epoch => mapping(address staker => uint256 votesUsed)) public stakerVotesUsed;
-    // last epoch where a staker voted
-    mapping(address staker => uint256 epoch) public stakerLastEpochVoted;
+
+    mapping(address proposal => uint256 votes) public lastProposalVotes;
+    mapping(address staker => mapping(address proposal => uint256 votes)) public lastStakerProposalsVoted;
+    mapping(address staker => uint256 epoch) public lastStakerVotesUsed;
+    uint256 public lastTotalVotes;
 
     constructor(RGOV rgovToken_) {
         rgovToken = rgovToken_;
@@ -46,54 +49,79 @@ contract Voter {
         uint256 length = proposals_.length;
         if (length > maxProposalsPerBatch) revert TooManyProposals();
         if (length != votes_.length) revert UnequalLengths();
-        uint256 epoch = getCurrentEpochNumber();
-        // update staker last epoch
-        stakerLastEpochVoted[staker_] = epoch;
         for (uint256 i = 0; i < length; i++) {
             // increase all the votes storages
-            stakerVotesUsed[epoch][staker_] += votes_[i];
-            proposalVotes[epoch][proposals_[i]] += votes_[i];
-            stakerProposalsVoted[epoch][staker_][proposals_[i]] += votes_[i];
-            totalVotes[epoch] += votes_[i];
+            lastStakerVotesUsed[staker_] += votes_[i];
+            lastProposalVotes[proposals_[i]] += votes_[i];
+            lastStakerProposalsVoted[staker_][proposals_[i]] += votes_[i];
+            lastTotalVotes += votes_[i];
         }
         // reverts if staker votes more than its voting power
-        if (stakerVotesUsed[epoch][staker_] > rgovToken.balanceOf(staker_)) revert InsufficientVotingPower();
+        if (lastStakerVotesUsed[staker_] > rgovToken.balanceOf(staker_)) revert InsufficientVotingPower();
+        _updateEpochVotes(staker_, proposals_);
     }
 
     function _decreaseVotes(address staker_, address[] memory proposals_, uint256[] memory votes_) internal {
         uint256 length = proposals_.length;
         if (length > maxProposalsPerBatch) revert TooManyProposals();
         if (length != votes_.length) revert UnequalLengths();
-        uint256 epoch = getCurrentEpochNumber();
-        // update staker last epoch
-        stakerLastEpochVoted[staker_] = epoch;
         for (uint256 i = 0; i < length; i++) {
             // decrease all the votes storages
-            stakerVotesUsed[epoch][staker_] -= votes_[i];
-            proposalVotes[epoch][proposals_[i]] -= votes_[i];
-            stakerProposalsVoted[epoch][staker_][proposals_[i]] -= votes_[i];
-            totalVotes[epoch] -= votes_[i];
+            lastStakerVotesUsed[staker_] -= votes_[i];
+            lastProposalVotes[proposals_[i]] -= votes_[i];
+            lastStakerProposalsVoted[staker_][proposals_[i]] -= votes_[i];
+            lastTotalVotes -= votes_[i];
+        }
+        _updateEpochVotes(staker_, proposals_);
+    }
+
+    function _updateEpochVotes(address staker_, address[] memory proposals_) internal {
+        uint256 length = proposals_.length;
+        uint256 epoch = getCurrentEpochNumber();
+        for (uint256 i = 0; i < length; i++) {
+            stakerVotesUsed[epoch][staker_] = lastStakerVotesUsed[staker_];
+            proposalVotes[epoch][proposals_[i]] = lastProposalVotes[proposals_[i]];
+            stakerProposalsVoted[epoch][staker_][proposals_[i]] = lastStakerProposalsVoted[staker_][proposals_[i]];
+            totalVotes[epoch] = lastTotalVotes;
         }
     }
 
     function getStakerAllocation(address staker_) external view returns (uint256 allocation) {
-        return stakerVotesUsed[stakerLastEpochVoted[staker_]][staker_];
+        return lastStakerVotesUsed[staker_];
     }
 
-    function getProposalVotingPct(address proposal_, uint256 epoch_) external view returns (uint256 proposalPct) {
-        return (totalVotes[epoch_] * 10 ** 18) / proposalVotes[epoch_][proposal_];
+    function getProposalVotingPct(uint256 epoch_, address proposal_) external view returns (uint256 proposalPct) {
+        // if epoch is empty, scan until find the last one updated
+        // TODO: how much epochs we can search without fail by gas limit?
+        // TODO: verify both variables > 0 or is enough with only one? are they always updated together?
+        for (uint256 i = epoch_; i > 0; i--) {
+            uint256 _proposalVotes = proposalVotes[i][proposal_];
+            if (_proposalVotes > 0) {
+                return (_proposalVotes * 10 ** 18) / totalVotes[i];
+            }
+        }
+        return 0;
     }
 
     function getStakerRewardPct(
-        address proposal_,
+        uint256 epoch_,
         address staker_,
-        uint256 epoch_
+        address proposal_
     )
         external
         view
         returns (uint256 rewardPct)
     {
-        return (proposalVotes[epoch_][proposal_] * 10 ** 18) / stakerProposalsVoted[epoch_][staker_][proposal_];
+        // if epoch is empty, scan until find the last one updated
+        // TODO: how much epochs we can search without fail by gas limit?
+        // TODO: verify both variables > 0 or is enough with only one? are they always updated together?
+        for (uint256 i = epoch_; i > 0; i--) {
+            uint256 _stakerProposalsVoted = stakerProposalsVoted[i][staker_][proposal_];
+            if (_stakerProposalsVoted > 0) {
+                return (_stakerProposalsVoted * 10 ** 18) / proposalVotes[i][proposal_];
+            }
+        }
+        return 0;
     }
 
     function getCurrentEpochNumber() public view returns (uint256 epoch) {
