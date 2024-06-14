@@ -2,7 +2,6 @@
 
 [profile.default]
   auto_detect_solc = false
-  block_timestamp = 1_680_220_800 # March 31, 2023 at 00:00 GMT
   bytecode_hash = "none"
   evm_version = "london"
   fuzz = { runs = 1_000 }
@@ -20,6 +19,9 @@
   verbosity = 4
 
 [etherscan]
+
+[fuzz]
+  runs = 64
 
 [fmt]
   bracket_spacing = true
