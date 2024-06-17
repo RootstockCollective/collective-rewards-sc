@@ -2,138 +2,224 @@
 pragma solidity >=0.8.20;
 
 import { BaseTest } from "./BaseTest.sol";
+import { IVoter } from "../src/interfaces/IVoter.sol";
 
 contract VoterTest is BaseTest {
     event Voted(address indexed voter, address indexed builder, uint256 totalWeight, uint256 timestamp);
 
     event DistributeReward(address indexed sender, address indexed gauge, uint256 amount);
 
+    event Abstained(address indexed voter, address indexed builder, uint256 totalWeight, uint256 timestamp);
+
+    address[] builderVote;
+    uint256[] weights;
+
+    function _setUp() public override {
+        builderVote.push(address(builders[0]));
+        builderVote.push(address(builders[1]));
+        weights.push(1 ether);
+        weights.push(2 ether);
+    }
+
     function test_Vote() public {
-        address[] memory builderVote = new address[](2);
-        builderVote[0] = address(builders[0]);
-        builderVote[1] = address(builders[1]);
-        uint256[] memory weights = new uint256[](2);
-        weights[0] = 1 ether;
-        weights[1] = 2 ether;
-
-        uint256 totalWeight = getTotalWeight(builderVote, weights);
-        erc20Utils.mintToken(address(builderToken), alice, totalWeight);
-
-        vm.startPrank(alice);
-        builderToken.approve(address(voter), totalWeight);
-        vm.expectEmit();
-        emit Voted(address(alice), address(builders[0]), weights[0], block.timestamp);
-        vm.expectEmit();
-        emit Voted(address(alice), address(builders[1]), weights[1], block.timestamp);
-        voter.vote(builderVote, weights);
-        vm.stopPrank();
-
+        _vote(alice);
         assertEq(voter.lastVoted(alice), block.timestamp);
-        assertEq(voter.totalWeight(), totalWeight);
-        assertEq(gauges[0].totalSupply(), weights[0]);
-        assertEq(gauges[1].totalSupply(), weights[1]);
         assertEq(gauges[0].balanceOf(alice), weights[0]);
         assertEq(gauges[1].balanceOf(alice), weights[1]);
-        assertEq(voter.builderVote(alice, 0), address(builders[0]));
-        assertEq(voter.builderVote(alice, 1), address(builders[1]));
+        assertEq(voter.voterBuilders(alice, 0), address(builders[0]));
+        assertEq(voter.voterBuilders(alice, 1), address(builders[1]));
+        assertTrue(voter.voterBuildersVoted(alice, builders[0]));
+        assertTrue(voter.voterBuildersVoted(alice, builders[1]));
         assertEq(builderToken.balanceOf(alice), 0);
 
-        erc20Utils.mintToken(address(builderToken), bob, totalWeight);
-
-        vm.startPrank(bob);
-        builderToken.approve(address(voter), totalWeight);
-        vm.expectEmit();
-        emit Voted(address(bob), address(builders[0]), weights[0], block.timestamp);
-        vm.expectEmit();
-        emit Voted(address(bob), address(builders[1]), weights[1], block.timestamp);
-        voter.vote(builderVote, weights);
-        vm.stopPrank();
-
+        _vote(bob);
         assertEq(voter.lastVoted(bob), block.timestamp);
+        assertEq(gauges[0].balanceOf(bob), weights[0]);
+        assertEq(gauges[1].balanceOf(bob), weights[1]);
+        assertEq(voter.voterBuilders(bob, 0), address(builders[0]));
+        assertEq(voter.voterBuilders(bob, 1), address(builders[1]));
+        assertTrue(voter.voterBuildersVoted(bob, builders[0]));
+        assertTrue(voter.voterBuildersVoted(bob, builders[1]));
+        assertEq(builderToken.balanceOf(bob), 0);
+
+        uint256 totalWeight = _getTotalWeight(builderVote, weights);
+
         assertEq(voter.totalWeight(), totalWeight * 2);
         assertEq(gauges[0].totalSupply(), weights[0] * 2);
         assertEq(gauges[1].totalSupply(), weights[1] * 2);
-        assertEq(gauges[0].balanceOf(bob), weights[0]);
-        assertEq(gauges[1].balanceOf(bob), weights[1]);
-        assertEq(voter.builderVote(bob, 0), address(builders[0]));
-        assertEq(voter.builderVote(bob, 1), address(builders[1]));
-        assertEq(builderToken.balanceOf(bob), 0);
+    }
+
+    function test_Vote2x() public {
+        _vote(alice);
+        assertEq(voter.lastVoted(alice), block.timestamp);
+        assertEq(gauges[0].balanceOf(alice), weights[0]);
+        assertEq(gauges[1].balanceOf(alice), weights[1]);
+        assertEq(voter.voterBuilders(alice, 0), address(builders[0]));
+        assertEq(voter.voterBuilders(alice, 1), address(builders[1]));
+        assertTrue(voter.voterBuildersVoted(alice, builders[0]));
+        assertTrue(voter.voterBuildersVoted(alice, builders[1]));
+        assertEq(builderToken.balanceOf(alice), 0);
+
+        skipAndRoll(1);
+
+        _vote(alice);
+        assertEq(voter.lastVoted(alice), block.timestamp);
+        assertEq(gauges[0].balanceOf(alice), weights[0] * 2);
+        assertEq(gauges[1].balanceOf(alice), weights[1] * 2);
+        assertEq(voter.voterBuilders(alice, 0), address(builders[0]));
+        assertEq(voter.voterBuilders(alice, 1), address(builders[1]));
+        assertTrue(voter.voterBuildersVoted(alice, builders[0]));
+        assertTrue(voter.voterBuildersVoted(alice, builders[1]));
+        assertEq(builderToken.balanceOf(alice), 0);
+
+        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
+
+        assertEq(voter.totalWeight(), _totalWeight * 2);
+        assertEq(gauges[0].totalSupply(), weights[0] * 2);
+        assertEq(gauges[1].totalSupply(), weights[1] * 2);
     }
 
     function test_Distribute() public {
-        address[] memory builderVote = new address[](2);
-        builderVote[0] = address(builders[0]);
-        builderVote[1] = address(builders[1]);
-        uint256[] memory weights = new uint256[](2);
         weights[0] = 1 ether;
         weights[1] = 1 ether;
 
-        uint256 totalWeight = getTotalWeight(builderVote, weights);
+        _vote(alice);
 
-        erc20Utils.mintToken(address(builderToken), alice, totalWeight);
+        uint256 _amountToDistribute = 100 ether;
+        erc20Utils.mintToken(address(rewardToken), voter.minter(), _amountToDistribute);
+        rewardToken.approve(address(voter), _amountToDistribute);
+        voter.notifyRewardAmount(_amountToDistribute);
 
-        vm.startPrank(alice);
-        builderToken.approve(address(voter), totalWeight);
-        voter.vote(builderVote, weights);
-        vm.stopPrank();
-
-        erc20Utils.mintToken(address(rewardToken), voter.minter(), 100 ether);
-        rewardToken.approve(address(voter), 100 ether);
-        voter.notifyRewardAmount(100 ether);
-
-        vm.expectEmit();
-        emit DistributeReward(address(this), address(gauges[0]), 50 ether);
-        vm.expectEmit();
-        emit DistributeReward(address(this), address(gauges[1]), 50 ether);
-        voter.distribute(0, 2);
-
-        assertEq(rewardToken.balanceOf(address(gauges[0])), 50 ether);
-        assertEq(rewardToken.balanceOf(address(gauges[1])), 50 ether);
-        assertEq(rewardToken.balanceOf(address(voter)), 0);
+        _distribute(_amountToDistribute, 1);
     }
 
     function test_Distribute2x() public {
-        address[] memory builderVote = new address[](2);
-        builderVote[0] = address(builders[0]);
-        builderVote[1] = address(builders[1]);
-        uint256[] memory weights = new uint256[](2);
         weights[0] = 1 ether;
         weights[1] = 1 ether;
-        uint256 totalWeight = getTotalWeight(builderVote, weights);
 
-        erc20Utils.mintToken(address(builderToken), alice, totalWeight);
-        vm.startPrank(alice);
-        builderToken.approve(address(voter), totalWeight);
-        voter.vote(builderVote, weights);
-        vm.stopPrank();
+        _vote(alice);
+        _vote(bob);
 
-        erc20Utils.mintToken(address(builderToken), bob, totalWeight);
-        vm.startPrank(bob);
-        builderToken.approve(address(voter), totalWeight);
-        voter.vote(builderVote, weights);
-        vm.stopPrank();
+        uint256 _amountToDistribute = 100 ether;
+        erc20Utils.mintToken(address(rewardToken), voter.minter(), _amountToDistribute);
+        rewardToken.approve(address(voter), _amountToDistribute);
+        voter.notifyRewardAmount(_amountToDistribute);
 
-        erc20Utils.mintToken(address(rewardToken), voter.minter(), 200 ether);
-        rewardToken.approve(address(voter), 100 ether);
-        voter.notifyRewardAmount(100 ether);
+        _distribute(_amountToDistribute, 1);
 
-        rewardToken.approve(address(voter), 100 ether);
-        voter.notifyRewardAmount(100 ether);
+        erc20Utils.mintToken(address(rewardToken), voter.minter(), _amountToDistribute);
+        rewardToken.approve(address(voter), _amountToDistribute);
+        voter.notifyRewardAmount(_amountToDistribute);
 
-        voter.distribute(0, 2);
+        _distribute(_amountToDistribute, 2);
     }
 
-    function test_CannotVoteIfUnequalLengths() public { }
+    function test_Distribute2xReward() public {
+        weights[0] = 1 ether;
+        weights[1] = 1 ether;
 
-    function test_CannotVoteIfTooManyPools() public { }
+        _vote(alice);
+        _vote(bob);
 
-    function test_CannotVoteIfNotEnoughVotingPower() public { }
+        uint256 _amountToDistribute = 100 ether;
+        erc20Utils.mintToken(address(rewardToken), voter.minter(), _amountToDistribute * 2);
+        rewardToken.approve(address(voter), _amountToDistribute * 2);
+        voter.notifyRewardAmount(_amountToDistribute);
+        voter.notifyRewardAmount(_amountToDistribute);
 
-    function test_CannotVoteIfGaugeNotAlive() public { }
+        _distribute(_amountToDistribute * 2, 1);
+    }
 
-    function test_CannotVoteIfZeroBalance() public { }
+    function test_CannotVoteIfUnequalLengths() public {
+        weights.push(2 ether);
 
-    function getTotalWeight(address[] memory _builderVote, uint256[] memory _weights) internal pure returns (uint256) {
+        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
+        erc20Utils.mintToken(address(builderToken), alice, _totalWeight);
+
+        vm.startPrank(alice);
+        builderToken.approve(address(voter), _totalWeight);
+        vm.expectRevert(IVoter.UnequalLengths.selector);
+        voter.vote(builderVote, weights);
+        vm.stopPrank();
+    }
+
+    function test_CannotVoteIfNotEnoughVotingPower() public {
+        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
+        erc20Utils.mintToken(address(builderToken), alice, _totalWeight - 10_000);
+
+        vm.startPrank(alice);
+        builderToken.approve(address(voter), _totalWeight - 10_000);
+        vm.expectRevert(IVoter.NotEnoughVotingPower.selector);
+        voter.vote(builderVote, weights);
+        vm.stopPrank();
+    }
+
+    function test_CannotVoteIfGaugeDoesNotExist() public {
+        builderVote[0] = address(5);
+
+        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
+        erc20Utils.mintToken(address(builderToken), alice, _totalWeight);
+
+        vm.startPrank(alice);
+        builderToken.approve(address(voter), _totalWeight);
+        vm.expectRevert(abi.encodeWithSelector(IVoter.GaugeDoesNotExist.selector, builderVote[0]));
+        voter.vote(builderVote, weights);
+        vm.stopPrank();
+    }
+
+    function test_CannotVoteIfGaugeNotAlive() public {
+        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
+        erc20Utils.mintToken(address(builderToken), alice, _totalWeight);
+
+        vm.prank(voter.emergencyCouncil());
+        voter.killGauge(address(gauges[0]));
+
+        vm.startPrank(alice);
+        builderToken.approve(address(voter), _totalWeight);
+        vm.expectRevert(abi.encodeWithSelector(IVoter.GaugeNotAlive.selector, address(gauges[0])));
+        voter.vote(builderVote, weights);
+        vm.stopPrank();
+    }
+
+    function test_CannotVoteIfZeroBalance() public {
+        weights[0] = 0;
+
+        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
+        erc20Utils.mintToken(address(builderToken), alice, _totalWeight);
+
+        vm.startPrank(alice);
+        builderToken.approve(address(voter), _totalWeight);
+        vm.expectRevert(IVoter.ZeroBalance.selector);
+        voter.vote(builderVote, weights);
+        vm.stopPrank();
+    }
+
+    function test_Reset() public {
+        _vote(alice);
+        assertEq(voter.lastVoted(alice), block.timestamp);
+        assertEq(gauges[0].balanceOf(alice), weights[0]);
+        assertEq(gauges[1].balanceOf(alice), weights[1]);
+        assertEq(voter.voterBuilders(alice, 0), address(builders[0]));
+        assertEq(voter.voterBuilders(alice, 1), address(builders[1]));
+        assertTrue(voter.voterBuildersVoted(alice, builders[0]));
+        assertTrue(voter.voterBuildersVoted(alice, builders[1]));
+        assertEq(builderToken.balanceOf(alice), 0);
+
+        vm.startPrank(alice);
+        vm.expectEmit();
+        emit Abstained(address(alice), address(builders[0]), weights[0], block.timestamp);
+        vm.expectEmit();
+        emit Abstained(address(alice), address(builders[1]), weights[1], block.timestamp);
+        voter.reset();
+
+        assertEq(gauges[0].balanceOf(alice), 0);
+        assertEq(gauges[1].balanceOf(alice), 0);
+        assertFalse(voter.voterBuildersVoted(alice, builders[0]));
+        assertFalse(voter.voterBuildersVoted(alice, builders[1]));
+        assertEq(builderToken.balanceOf(alice), weights[0] + weights[1]);
+    }
+
+    function _getTotalWeight(address[] memory _builderVote, uint256[] memory _weights) private pure returns (uint256) {
         uint256 _builderCnt = _builderVote.length;
         uint256 _totalWeight = 0;
 
@@ -142,5 +228,36 @@ contract VoterTest is BaseTest {
         }
 
         return _totalWeight;
+    }
+
+    function _vote(address _voterAddress) private {
+        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
+        erc20Utils.mintToken(address(builderToken), _voterAddress, _totalWeight);
+
+        vm.startPrank(_voterAddress);
+        builderToken.approve(address(voter), _totalWeight);
+        vm.expectEmit();
+        emit Voted(address(_voterAddress), address(builders[0]), weights[0], block.timestamp);
+        vm.expectEmit();
+        emit Voted(address(_voterAddress), address(builders[1]), weights[1], block.timestamp);
+        voter.vote(builderVote, weights);
+        vm.stopPrank();
+    }
+
+    function _distribute(uint256 _amountToDistribute, uint256 _factor) private {
+        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
+        uint256 _adjustment = 1e18;
+        uint256 _expectedAmountGauge0 = (_amountToDistribute * (weights[0] * _adjustment / _totalWeight)) / _adjustment;
+        uint256 _expectedAmountGauge1 = (_amountToDistribute * (weights[1] * _adjustment / _totalWeight)) / _adjustment;
+
+        vm.expectEmit();
+        emit DistributeReward(address(this), address(gauges[0]), _expectedAmountGauge0);
+        vm.expectEmit();
+        emit DistributeReward(address(this), address(gauges[1]), _expectedAmountGauge1);
+        voter.distribute(0, 2);
+
+        assertEq(rewardToken.balanceOf(address(gauges[0])), _expectedAmountGauge0 * _factor);
+        assertEq(rewardToken.balanceOf(address(gauges[1])), _expectedAmountGauge1 * _factor);
+        assertEq(rewardToken.balanceOf(address(voter)), 0);
     }
 }

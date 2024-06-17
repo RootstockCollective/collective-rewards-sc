@@ -2,7 +2,7 @@
 pragma solidity >=0.8.20;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { IGauge } from "../interfaces/IGauge.sol";
+import { IGauge } from "../interfaces/gauges/IGauge.sol";
 import { IVoter } from "../interfaces/IVoter.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -90,13 +90,9 @@ contract Gauge is IGauge, ReentrancyGuard {
     }
 
     /// @inheritdoc IGauge
-    function deposit(uint256 _amount) external {
-        address sender = msg.sender;
-        _depositFor(_amount, sender);
-    }
-
-    /// @inheritdoc IGauge
     function deposit(uint256 _amount, address _recipient) external {
+        address _sender = msg.sender;
+        if (_sender != voter) revert NotVoter();
         _depositFor(_amount, _recipient);
     }
 
@@ -115,12 +111,6 @@ contract Gauge is IGauge, ReentrancyGuard {
         totalSupplyByEpoch[TimeLibrary.epochStart(timestamp)] = totalSupply;
 
         emit Deposit(sender, _recipient, _amount);
-    }
-
-    /// @inheritdoc IGauge
-    function withdraw(uint256 _amount) external {
-        address _sender = msg.sender;
-        _withdrawFor(_amount, _sender);
     }
 
     /// @inheritdoc IGauge
@@ -170,13 +160,12 @@ contract Gauge is IGauge, ReentrancyGuard {
         uint256 timestamp = block.timestamp;
         uint256 timeUntilNext = TimeLibrary.epochNext(timestamp) - timestamp;
 
+        IERC20(rewardToken).safeTransferFrom(sender, address(this), _amount);
         if (timestamp >= periodFinish) {
-            IERC20(rewardToken).safeTransferFrom(sender, address(this), _amount);
             rewardRate = _amount / timeUntilNext;
         } else {
             uint256 _remaining = periodFinish - timestamp;
             uint256 _leftover = _remaining * rewardRate;
-            IERC20(rewardToken).safeTransferFrom(sender, address(this), _amount);
             rewardRate = (_amount + _leftover) / timeUntilNext;
         }
         rewardRateByEpoch[TimeLibrary.epochStart(timestamp)] = rewardRate;

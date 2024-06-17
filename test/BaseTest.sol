@@ -12,14 +12,13 @@ import { Gauge } from "../src/gauges/Gauge.sol";
 import { Voter } from "../src/Voter.sol";
 
 contract BaseTest is Test {
-    ERC20Utils erc20Utils;
+    ERC20Utils internal erc20Utils;
 
-    address builder1;
-    IERC20 builderToken;
-    IERC20 rewardToken;
-    Voter voter;
-    Gauge[] gauges;
-    address[] builders;
+    IERC20 internal builderToken;
+    IERC20 internal rewardToken;
+    Voter internal voter;
+    Gauge[] internal gauges;
+    address[] internal builders;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
@@ -36,5 +35,14 @@ contract BaseTest is Test {
         gauges.push(Gauge(voter.createGauge(builders[0])));
         gauges.push(Gauge(voter.createGauge(builders[1])));
         gauges.push(Gauge(voter.createGauge(builders[2])));
+        _setUp();
+    }
+
+    /// @dev Implement this if you want a custom configured deployment
+    function _setUp() public virtual { }
+
+    function skipAndRoll(uint256 timeOffset) public {
+        skip(timeOffset);
+        vm.roll(block.number + 1);
     }
 }

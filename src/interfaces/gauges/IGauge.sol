@@ -9,6 +9,7 @@ interface IGauge {
     error ZeroAmount();
     error ZeroRewardRate();
 
+    // Validate if gauge can receive deposit from anyone
     event Deposit(address indexed from, address indexed to, uint256 amount);
     event Withdraw(address indexed from, uint256 amount);
     event NotifyReward(address indexed from, uint256 amount);
@@ -68,18 +69,10 @@ interface IGauge {
     /// @notice Returns accrued balance to date from last claim / first deposit.
     function earned(address _account) external view returns (uint256 _earned);
 
-    /// @notice Deposit LP tokens into gauge for msg.sender
-    /// @param _amount .
-    function deposit(uint256 _amount) external;
-
     /// @notice Deposit LP tokens into gauge for any user
     /// @param _amount .
     /// @param _recipient Recipient to give balance to
     function deposit(uint256 _amount, address _recipient) external;
-
-    /// @notice Withdraw LP tokens for user
-    /// @param _amount .
-    function withdraw(uint256 _amount) external;
 
     /// @notice Withdraw LP tokens for user
     /// @param _amount .

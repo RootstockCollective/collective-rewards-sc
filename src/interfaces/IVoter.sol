@@ -62,8 +62,8 @@ interface IVoter {
     /// @dev Pool => Gauge
     function gauges(address pool) external view returns (address);
 
-    /// @dev Nft => Timestamp of last vote (ensures single vote per epoch)
-    function lastVoted(address sender) external view returns (uint256);
+    /// @dev voter => Timestamp of last vote (ensures single vote per epoch)
+    function lastVoted(address voter) external view returns (uint256);
 
     /// @dev Gauge => Liveness status
     function isAlive(address gauge) external view returns (bool);
@@ -94,18 +94,16 @@ interface IVoter {
     function poke(uint256 _tokenId) external; */
 
     /// @notice Called by users to vote for pools. Votes distributed proportionally based on weights.
-    ///         Can only vote or deposit into a managed NFT once per epoch.
     ///         Can only vote for gauges that have not been killed.
-    /// @dev Weights are distributed proportional to the sum of the weights in the array.
+    /// @dev Weights are distributed proportional to the sum of the weights of the different gauges.
     ///      Throws if length of _builderVote and _weights do not match.
-    /// @param _builderVote Array of pools you are voting for.
-    /// @param _weights     Weights of pools.
+    /// @param _builderVote Array of builders you are voting for.
+    /// @param _weights     Weights of builders.
     function vote(address[] calldata _builderVote, uint256[] calldata _weights) external;
 
     /// @notice Called by users to reset voting state. Required if you wish to make changes to
     ///         veNFT state (e.g. merge, split, deposit into managed etc).
     ///         Cannot reset in the same epoch that you voted in.
-    ///         Can vote or deposit into a managed NFT again after reset.
     function reset() external;
 
     /// @notice Claim emissions from gauges.

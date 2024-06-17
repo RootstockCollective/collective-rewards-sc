@@ -2,7 +2,7 @@
 pragma solidity >=0.8.20;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { IGauge } from "./interfaces/IGauge.sol";
+import { IGauge } from "./interfaces/gauges/IGauge.sol";
 import { IGaugeFactory } from "./interfaces/factories/IGaugeFactory.sol";
 import { GaugeFactory } from "./factories/GaugeFactory.sol";
 /* import {IMinter} from "./interfaces/IMinter.sol";
@@ -14,7 +14,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
 import { TimeLibrary } from "./libraries/TimeLibrary.sol";
 
 /// @title Velodrome V2 Voter
-/// @author velodrome.finance, @figs999, @pegahcarter
+/// @author velodrome.finance, @franciscotobar, @antomor
 /// @notice Manage votes, emission distribution, and gauge creation within the Velodrome ecosystem.
 ///         Also provides support for depositing and withdrawing from managed veNFTs.
 contract Voter is IVoter, ReentrancyGuard {
@@ -49,8 +49,10 @@ contract Voter is IVoter, ReentrancyGuard {
     mapping(address => address) public gauges;
     /// @inheritdoc IVoter
     mapping(address => uint256) public lastVoted;
-    /// @dev NFT => List of builders voted for by voter
-    mapping(address => address[]) public builderVote;
+    /// @dev voter => List of builders voted for by voter
+    mapping(address => address[]) public voterBuilders;
+    /// @dev voter => builders => Is already voted
+    mapping(address => mapping(address => bool)) public voterBuildersVoted;
     /// @inheritdoc IVoter
     mapping(address => bool) public isAlive;
     /// @dev Accumulated distributions per vote
@@ -125,25 +127,25 @@ contract Voter is IVoter, ReentrancyGuard {
 
     /// @inheritdoc IVoter
     function reset() external nonReentrant {
-        address sender = msg.sender;
-        _reset(sender);
+        _reset(msg.sender);
     }
 
-    function _reset(address _sender) internal {
-        address[] storage _builderVote = builderVote[_sender];
+    function _reset(address _voter) internal {
+        address[] storage _builderVote = voterBuilders[_voter];
         uint256 _builderVoteCnt = _builderVote.length;
         uint256 _totalWeight = 0;
 
         for (uint256 i = 0; i < _builderVoteCnt; i++) {
             address _builder = _builderVote[i];
             address _gauge = gauges[_builder];
-            uint256 _votes = IGauge(_gauge).balanceOf(_sender);
-            IGauge(_gauge).withdraw(_votes, _sender);
+            uint256 _votes = IGauge(_gauge).balanceOf(_voter);
+            IGauge(_gauge).withdraw(_votes, _voter);
             _totalWeight += _votes;
+            voterBuildersVoted[_voter][_builder] = false;
             emit Abstained(msg.sender, _builder, _votes, block.timestamp);
         }
         totalWeight -= _totalWeight;
-        delete builderVote[_sender];
+        delete voterBuilders[_voter];
     }
 
     /*  /// @inheritdoc IVoter
@@ -163,7 +165,7 @@ contract Voter is IVoter, ReentrancyGuard {
         _vote(_tokenId, _weight, _poolVote, _weights);
     } */
 
-    function _vote(address _sender, address[] memory _builderVote, uint256[] memory _weights) internal {
+    function _vote(address _voter, address[] memory _builderVote, uint256[] memory _weights) internal {
         uint256 _builderCnt = _builderVote.length;
         uint256 _totalWeight = 0;
 
@@ -171,9 +173,9 @@ contract Voter is IVoter, ReentrancyGuard {
             _totalWeight += _weights[i];
         }
 
-        uint256 _weight = IERC20(builderToken).balanceOf(_sender);
-        IERC20(builderToken).safeTransferFrom(_sender, address(this), _totalWeight);
+        uint256 _weight = IERC20(builderToken).balanceOf(_voter);
         if (_totalWeight > _weight) revert NotEnoughVotingPower();
+        IERC20(builderToken).safeTransferFrom(_voter, address(this), _totalWeight);
 
         for (uint256 i = 0; i < _builderCnt; i++) {
             address _builder = _builderVote[i];
@@ -181,21 +183,24 @@ contract Voter is IVoter, ReentrancyGuard {
             if (_gauge == address(0)) revert GaugeDoesNotExist(_builder);
             if (!isAlive[_gauge]) revert GaugeNotAlive(_gauge);
             if (_weights[i] == 0) revert ZeroBalance();
-            builderVote[_sender].push(_builder);
-            IGauge(_gauge).deposit(_weights[i], _sender);
-            emit Voted(_sender, _builder, _weights[i], block.timestamp);
+            if (!voterBuildersVoted[_voter][_builder]) {
+                voterBuildersVoted[_voter][_builder] = true;
+                voterBuilders[_voter].push(_builder);
+            }
+            IGauge(_gauge).deposit(_weights[i], _voter);
+            emit Voted(_voter, _builder, _weights[i], block.timestamp);
         }
         totalWeight += _totalWeight;
     }
 
     /// @inheritdoc IVoter
     function vote(address[] calldata _builderVote, uint256[] calldata _weights) external nonReentrant {
-        address _sender = msg.sender;
+        address _voter = msg.sender;
         if (_builderVote.length != _weights.length) revert UnequalLengths();
         if (_builderVote.length > maxVotingNum) revert TooManyPools();
         uint256 _timestamp = block.timestamp;
-        lastVoted[_sender] = _timestamp;
-        _vote(_sender, _builderVote, _weights);
+        lastVoted[_voter] = _timestamp;
+        _vote(_voter, _builderVote, _weights);
     }
 
     /// @inheritdoc IVoter
