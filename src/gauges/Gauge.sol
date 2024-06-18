@@ -26,6 +26,10 @@ contract Gauge is IGauge, ReentrancyGuard {
     uint256 internal constant PRECISION = 10 ** 18;
 
     /// @inheritdoc IGauge
+    uint256 public rewardPerTokenMissing;
+    /// @inheritdoc IGauge
+    uint256 public accumulatedReward;
+    /// @inheritdoc IGauge
     uint256 public periodFinish;
     /// @inheritdoc IGauge
     uint256 public rewardRate;
@@ -59,8 +63,7 @@ contract Gauge is IGauge, ReentrancyGuard {
         if (totalSupply == 0) {
             return rewardPerTokenStored;
         }
-        return rewardPerTokenStored
-            + ((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate * PRECISION) / totalSupply;
+        return rewardPerTokenStored + ((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate) / totalSupply;
     }
 
     /// @inheritdoc IGauge
@@ -106,6 +109,10 @@ contract Gauge is IGauge, ReentrancyGuard {
         IERC20(stakingToken).safeTransferFrom(sender, address(this), _amount);
         balanceOf[_recipient] += _amount;
 
+        if (totalSupply == 0) {
+            rewardPerTokenMissing = rewardPerTokenStored;
+        }
+
         totalSupply += _amount;
         uint256 timestamp = block.timestamp;
         totalSupplyByEpoch[TimeLibrary.epochStart(timestamp)] = totalSupply;
@@ -144,7 +151,7 @@ contract Gauge is IGauge, ReentrancyGuard {
     function left() external view returns (uint256) {
         if (block.timestamp >= periodFinish) return 0;
         uint256 _remaining = periodFinish - block.timestamp;
-        return _remaining * rewardRate;
+        return (_remaining * rewardRate) / PRECISION;
     }
 
     /// @inheritdoc IGauge
@@ -156,18 +163,20 @@ contract Gauge is IGauge, ReentrancyGuard {
     }
 
     function _notifyRewardAmount(address sender, uint256 _amount) internal {
+        accumulatedReward += _amount;
         rewardPerTokenStored = rewardPerToken();
         uint256 timestamp = block.timestamp;
         uint256 timeUntilNext = TimeLibrary.epochNext(timestamp) - timestamp;
 
         IERC20(rewardToken).safeTransferFrom(sender, address(this), _amount);
         if (timestamp >= periodFinish) {
-            rewardRate = _amount / timeUntilNext;
+            rewardRate = (_amount + rewardPerTokenMissing) * PRECISION / timeUntilNext;
         } else {
             uint256 _remaining = periodFinish - timestamp;
             uint256 _leftover = _remaining * rewardRate;
-            rewardRate = (_amount + _leftover) / timeUntilNext;
+            rewardRate = (_amount + _leftover + rewardPerTokenMissing) / timeUntilNext;
         }
+        rewardPerTokenMissing = 0;
         rewardRateByEpoch[TimeLibrary.epochStart(timestamp)] = rewardRate;
         if (rewardRate == 0) revert ZeroRewardRate();
 
@@ -176,7 +185,7 @@ contract Gauge is IGauge, ReentrancyGuard {
         // very high values of rewardRate in the earned and rewardsPerToken functions;
         // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
         uint256 balance = IERC20(rewardToken).balanceOf(address(this));
-        if (rewardRate > balance / timeUntilNext) revert RewardRateTooHigh();
+        if ((rewardRate / PRECISION) > balance / timeUntilNext) revert RewardRateTooHigh();
 
         lastUpdateTime = timestamp;
         periodFinish = timestamp + timeUntilNext;

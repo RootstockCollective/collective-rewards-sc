@@ -39,7 +39,7 @@
     "build": "forge build",
     "lint": "bun run lint:sol && bun lint:md && bun run prettier:check",
     "lint:sol": "forge fmt --check && bun solhint {script,src,test}/**/*.sol",
-    "format": "forge fmt",
+    "lint:md": "bun markdownlint-cli2 .",
     "prettier:check": "prettier --check \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "prettier:write": "prettier --write \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "test": "forge test",

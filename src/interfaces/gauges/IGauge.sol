@@ -25,6 +25,12 @@ interface IGauge {
     // TODO This needs to be decided if its going to be voter, controller
     function voter() external view returns (address);
 
+    /// @notice Missing value of rewardPerToken
+    function rewardPerTokenMissing() external view returns (uint256);
+
+    /// @notice Total amount rewards the gauge has received
+    function accumulatedReward() external view returns (uint256);
+
     /// @notice Timestamp end of current rewards period
     function periodFinish() external view returns (uint256);
 
