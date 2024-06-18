@@ -43,6 +43,7 @@
     "prettier:check": "prettier --check \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "prettier:write": "prettier --write \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "test": "forge test",
+    "test:report": "forge test --gas-report",
     "test:coverage": "forge coverage",
     "prepare": "husky"
   }
