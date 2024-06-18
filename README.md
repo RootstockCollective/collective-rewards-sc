@@ -145,11 +145,12 @@ forge coverage
 Deploy to RSKj:
 
 > [!IMPORTANT]  
-> Define the address to be used for the deploy with `export ETH_FROM="0xYOUR_ADDRESS"`. If you're using regtest, you
-> could use the first account configured with: `export ETH_FROM="0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"`
+> Define the address to be used for the deploy with `export ETH_FROM="0xYOUR_ADDRESS"` and the key associated
+> `--private-key "0xYOUR_PRIVATE_KEY"`. If you're using regtest, you could use the first account configured with:
+> `export ETH_FROM="0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"`
 
 ```sh
-forge script script/Deploy.s.sol --rpc-url http://localhost:4444 --legacy
+forge script script/Deploy.s.sol --rpc-url http://localhost:4444 --legacy --broadcast --private-key "0xYOUR_PRIVATE_KEY"
 ```
 
 Deploy to Anvil:
