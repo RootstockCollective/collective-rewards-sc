@@ -25,6 +25,15 @@ The following tools are required to be installed:
 - [bun](https://bun.sh/docs/installation)
 - [foundry](https://book.getfoundry.sh/getting-started/installation)
 
+> [!IMPORTANT]  
+> Please make sure to install foundry using the branch `f625d0fa7c51e65b4bf1e8f7931cd1c6e2e285e9`. By using the latest
+> version we experienced the following error on RSKj:
+> `... deserialization error: missing field ``effectiveGasPrice`` ...`
+
+```sh
+foundryup --branch f625d0fa7c51e65b4bf1e8f7931cd1c6e2e285e9
+```
+
 ## Getting Started
 
 Clone the repo and install the dependencies
@@ -132,6 +141,16 @@ forge coverage
 ```
 
 ### Deploy
+
+Deploy to RSKj:
+
+> [!IMPORTANT]  
+> Define the address to be used for the deploy with `export ETH_FROM="0xYOUR_ADDRESS"`. If you're using regtest, you
+> could use the first account configured with: `export ETH_FROM="0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"`
+
+```sh
+forge script script/Deploy.s.sol --rpc-url http://localhost:4444 --legacy
+```
 
 Deploy to Anvil:
 
