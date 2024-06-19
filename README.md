@@ -142,12 +142,13 @@ forge coverage
 
 ### Deploy
 
-Deploy to RSKj:
+When deploying the contracts to RSKj locally, one of the unlocked accounts can be used:
 
-> [!IMPORTANT]  
-> Define the address to be used for the deploy with `export ETH_FROM="0xYOUR_ADDRESS"` and the key associated
-> `--private-key "0xYOUR_PRIVATE_KEY"`. If you're using regtest, you could use the first account configured with:
-> `export ETH_FROM="0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"`
+```sh
+forge script script/Deploy.s.sol --rpc-url http://localhost:4444 --legacy --broadcast --sender 0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826 --unlocked
+```
+
+It's also possible to use any private key (as far as the associated account has balance to execute transactions):
 
 ```sh
 forge script script/Deploy.s.sol --rpc-url http://localhost:4444 --legacy --broadcast --private-key "0xYOUR_PRIVATE_KEY"
