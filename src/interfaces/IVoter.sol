@@ -35,7 +35,7 @@ interface IVoter {
     event DistributeReward(address indexed sender, address indexed gauge, uint256 amount);
 
     /// @notice The builder token use to stake for voting
-    function builderToken() external view returns (address);
+    function stakeToken() external view returns (address);
 
     /// @notice Address of Minter.sol
     function minter() external view returns (address);
@@ -73,6 +73,9 @@ interface IVoter {
 
     /// @notice Number of pools with a Gauge
     function length() external view returns (uint256);
+
+    /// @dev Total Voting Weights
+    function getVoterVotes() external view returns (uint256);
 
     /// @notice Called by Minter to distribute weekly emissions rewards for disbursement amongst gauges.
     /// @dev Assumes totalWeight != 0 (Will never be zero as long as users are voting).

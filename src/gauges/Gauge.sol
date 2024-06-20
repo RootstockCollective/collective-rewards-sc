@@ -14,9 +14,7 @@ import { TimeLibrary } from "../libraries/TimeLibrary.sol";
 /// @notice Gauge contract for distribution of emissions by address
 contract Gauge is IGauge, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    /// @inheritdoc IGauge
 
-    address public immutable stakingToken;
     /// @inheritdoc IGauge
     address public immutable rewardToken;
     /// @inheritdoc IGauge
@@ -47,8 +45,7 @@ contract Gauge is IGauge, ReentrancyGuard {
     /// @inheritdoc IGauge
     mapping(uint256 => uint256) public totalSupplyByEpoch;
 
-    constructor(address _stakingToken, address _rewardToken, address _voter) {
-        stakingToken = _stakingToken;
+    constructor(address _rewardToken, address _voter) {
         rewardToken = _rewardToken;
         //TODO check if its necessary for this approoach.
         voter = _voter;
@@ -103,7 +100,6 @@ contract Gauge is IGauge, ReentrancyGuard {
         address sender = msg.sender;
         _updateRewards(_recipient);
 
-        IERC20(stakingToken).safeTransferFrom(sender, address(this), _amount);
         balanceOf[_recipient] += _amount;
 
         totalSupply += _amount;
@@ -128,7 +124,6 @@ contract Gauge is IGauge, ReentrancyGuard {
         totalSupplyByEpoch[TimeLibrary.epochStart(timestamp)] = totalSupply;
 
         balanceOf[_recipient] -= _amount;
-        IERC20(stakingToken).safeTransfer(_recipient, _amount);
 
         emit Withdraw(_recipient, _amount);
     }

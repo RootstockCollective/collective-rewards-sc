@@ -19,9 +19,9 @@ import { TimeLibrary } from "./libraries/TimeLibrary.sol";
 ///         Also provides support for depositing and withdrawing from managed veNFTs.
 contract Voter is IVoter, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    /// @inheritdoc IVoter
 
-    address public immutable builderToken;
+    /// @inheritdoc IVoter
+    address public immutable stakeToken;
     /// @notice Base token of ve contract
     address internal immutable rewardToken;
     /// @notice Rewards are released over 7 days
@@ -62,8 +62,8 @@ contract Voter is IVoter, ReentrancyGuard {
     /// @inheritdoc IVoter
     mapping(address => uint256) public claimable;
 
-    constructor(address _builderToken, address _rewardToken) {
-        builderToken = _builderToken;
+    constructor(address _stakeToken, address _rewardToken) {
+        stakeToken = _stakeToken;
         rewardToken = _rewardToken;
         address _sender = msg.sender;
         minter = _sender;
@@ -131,7 +131,7 @@ contract Voter is IVoter, ReentrancyGuard {
     }
 
     function _reset(address _voter) internal {
-        address[] storage _builderVote = voterBuilders[_voter];
+        address[] memory _builderVote = voterBuilders[_voter];
         uint256 _builderVoteCnt = _builderVote.length;
         uint256 _totalWeight = 0;
 
@@ -165,17 +165,34 @@ contract Voter is IVoter, ReentrancyGuard {
         _vote(_tokenId, _weight, _poolVote, _weights);
     } */
 
-    function _vote(address _voter, address[] memory _builderVote, uint256[] memory _weights) internal {
-        uint256 _builderCnt = _builderVote.length;
+    function getVoterVotes() external view returns (uint256) {
+        return _getVoterVotes(msg.sender);
+    }
+
+    function _getVoterVotes(address _voter) internal view returns (uint256) {
+        uint256 _totalWeight = _getVoterTotalWeight(_voter);
+        uint256 _weight = IERC20(stakeToken).balanceOf(_voter);
+
+        return _weight - _totalWeight;
+    }
+
+    function _getVoterTotalWeight(address _voter) internal view returns (uint256) {
+        address[] memory _builderVote = voterBuilders[_voter];
+        uint256 _builderVoteCnt = _builderVote.length;
         uint256 _totalWeight = 0;
 
-        for (uint256 i = 0; i < _builderCnt; i++) {
-            _totalWeight += _weights[i];
+        for (uint256 i = 0; i < _builderVoteCnt; i++) {
+            address _builder = _builderVote[i];
+            address _gauge = gauges[_builder];
+            _totalWeight += IGauge(_gauge).balanceOf(_voter);
         }
 
-        uint256 _weight = IERC20(builderToken).balanceOf(_voter);
-        if (_totalWeight > _weight) revert NotEnoughVotingPower();
-        IERC20(builderToken).safeTransferFrom(_voter, address(this), _totalWeight);
+        return _totalWeight;
+    }
+
+    function _vote(address _voter, address[] memory _builderVote, uint256[] memory _weights) internal {
+        uint256 _builderCnt = _builderVote.length;
+        uint256 _usedWeight = 0;
 
         for (uint256 i = 0; i < _builderCnt; i++) {
             address _builder = _builderVote[i];
@@ -187,10 +204,14 @@ contract Voter is IVoter, ReentrancyGuard {
                 voterBuildersVoted[_voter][_builder] = true;
                 voterBuilders[_voter].push(_builder);
             }
+            _usedWeight += _weights[i];
             IGauge(_gauge).deposit(_weights[i], _voter);
             emit Voted(_voter, _builder, _weights[i], block.timestamp);
         }
-        totalWeight += _totalWeight;
+        uint256 _totalWeight = _getVoterTotalWeight(_voter);
+        uint256 _weight = IERC20(stakeToken).balanceOf(_voter);
+        if (_totalWeight > _weight) revert NotEnoughVotingPower();
+        totalWeight += _usedWeight;
     }
 
     /// @inheritdoc IVoter
@@ -207,9 +228,7 @@ contract Voter is IVoter, ReentrancyGuard {
     function createGauge(address _builder) external nonReentrant returns (address) {
         if (gauges[_builder] != address(0)) revert GaugeExists();
 
-        address _gauge = IGaugeFactory(gaugeFactory).createGauge(builderToken, rewardToken);
-
-        IERC20(builderToken).approve(_gauge, type(uint256).max);
+        address _gauge = IGaugeFactory(gaugeFactory).createGauge(rewardToken);
 
         gauges[_builder] = _gauge;
         isAlive[_gauge] = true;

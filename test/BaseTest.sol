@@ -14,7 +14,7 @@ import { Voter } from "../src/Voter.sol";
 contract BaseTest is Test {
     ERC20Utils internal erc20Utils;
 
-    IERC20 internal builderToken;
+    IERC20 internal stakeToken;
     IERC20 internal rewardToken;
     Voter internal voter;
     Gauge[] internal gauges;
@@ -29,9 +29,9 @@ contract BaseTest is Test {
         builders.push(address(3));
 
         erc20Utils = new ERC20Utils();
-        builderToken = IERC20(new MockERC20("BUILD", "BUILD", 18));
+        stakeToken = IERC20(new MockERC20("RGOV", "RGOV", 18));
         rewardToken = IERC20(new MockERC20("RIF", "RIF", 18));
-        voter = new Voter(address(builderToken), address(rewardToken));
+        voter = new Voter(address(stakeToken), address(rewardToken));
         gauges.push(Gauge(voter.createGauge(builders[0])));
         gauges.push(Gauge(voter.createGauge(builders[1])));
         gauges.push(Gauge(voter.createGauge(builders[2])));

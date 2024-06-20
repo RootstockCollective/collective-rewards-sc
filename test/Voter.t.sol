@@ -13,6 +13,7 @@ contract VoterTest is BaseTest {
 
     address[] builderVote;
     uint256[] weights;
+    uint256 stakeAmount = 6 ether;
 
     function _setUp() public override {
         builderVote.push(address(builders[0]));
@@ -30,7 +31,7 @@ contract VoterTest is BaseTest {
         assertEq(voter.voterBuilders(alice, 1), address(builders[1]));
         assertTrue(voter.voterBuildersVoted(alice, builders[0]));
         assertTrue(voter.voterBuildersVoted(alice, builders[1]));
-        assertEq(builderToken.balanceOf(alice), 0);
+        assertEq(stakeToken.balanceOf(alice), stakeAmount);
 
         _vote(bob);
         assertEq(voter.lastVoted(bob), block.timestamp);
@@ -40,7 +41,7 @@ contract VoterTest is BaseTest {
         assertEq(voter.voterBuilders(bob, 1), address(builders[1]));
         assertTrue(voter.voterBuildersVoted(bob, builders[0]));
         assertTrue(voter.voterBuildersVoted(bob, builders[1]));
-        assertEq(builderToken.balanceOf(bob), 0);
+        assertEq(stakeToken.balanceOf(bob), stakeAmount);
 
         uint256 totalWeight = _getTotalWeight(builderVote, weights);
 
@@ -58,7 +59,7 @@ contract VoterTest is BaseTest {
         assertEq(voter.voterBuilders(alice, 1), address(builders[1]));
         assertTrue(voter.voterBuildersVoted(alice, builders[0]));
         assertTrue(voter.voterBuildersVoted(alice, builders[1]));
-        assertEq(builderToken.balanceOf(alice), 0);
+        assertEq(stakeToken.balanceOf(alice), stakeAmount);
 
         skipAndRoll(1);
 
@@ -70,7 +71,7 @@ contract VoterTest is BaseTest {
         assertEq(voter.voterBuilders(alice, 1), address(builders[1]));
         assertTrue(voter.voterBuildersVoted(alice, builders[0]));
         assertTrue(voter.voterBuildersVoted(alice, builders[1]));
-        assertEq(builderToken.balanceOf(alice), 0);
+        assertEq(stakeToken.balanceOf(alice), stakeAmount);
 
         uint256 _totalWeight = _getTotalWeight(builderVote, weights);
 
@@ -133,22 +134,14 @@ contract VoterTest is BaseTest {
     function test_CannotVoteIfUnequalLengths() public {
         weights.push(2 ether);
 
-        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
-        erc20Utils.mintToken(address(builderToken), alice, _totalWeight);
-
         vm.startPrank(alice);
-        builderToken.approve(address(voter), _totalWeight);
         vm.expectRevert(IVoter.UnequalLengths.selector);
         voter.vote(builderVote, weights);
         vm.stopPrank();
     }
 
     function test_CannotVoteIfNotEnoughVotingPower() public {
-        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
-        erc20Utils.mintToken(address(builderToken), alice, _totalWeight - 10_000);
-
         vm.startPrank(alice);
-        builderToken.approve(address(voter), _totalWeight - 10_000);
         vm.expectRevert(IVoter.NotEnoughVotingPower.selector);
         voter.vote(builderVote, weights);
         vm.stopPrank();
@@ -157,25 +150,17 @@ contract VoterTest is BaseTest {
     function test_CannotVoteIfGaugeDoesNotExist() public {
         builderVote[0] = address(5);
 
-        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
-        erc20Utils.mintToken(address(builderToken), alice, _totalWeight);
-
         vm.startPrank(alice);
-        builderToken.approve(address(voter), _totalWeight);
         vm.expectRevert(abi.encodeWithSelector(IVoter.GaugeDoesNotExist.selector, builderVote[0]));
         voter.vote(builderVote, weights);
         vm.stopPrank();
     }
 
     function test_CannotVoteIfGaugeNotAlive() public {
-        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
-        erc20Utils.mintToken(address(builderToken), alice, _totalWeight);
-
         vm.prank(voter.emergencyCouncil());
         voter.killGauge(address(gauges[0]));
 
         vm.startPrank(alice);
-        builderToken.approve(address(voter), _totalWeight);
         vm.expectRevert(abi.encodeWithSelector(IVoter.GaugeNotAlive.selector, address(gauges[0])));
         voter.vote(builderVote, weights);
         vm.stopPrank();
@@ -184,11 +169,7 @@ contract VoterTest is BaseTest {
     function test_CannotVoteIfZeroBalance() public {
         weights[0] = 0;
 
-        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
-        erc20Utils.mintToken(address(builderToken), alice, _totalWeight);
-
         vm.startPrank(alice);
-        builderToken.approve(address(voter), _totalWeight);
         vm.expectRevert(IVoter.ZeroBalance.selector);
         voter.vote(builderVote, weights);
         vm.stopPrank();
@@ -203,7 +184,7 @@ contract VoterTest is BaseTest {
         assertEq(voter.voterBuilders(alice, 1), address(builders[1]));
         assertTrue(voter.voterBuildersVoted(alice, builders[0]));
         assertTrue(voter.voterBuildersVoted(alice, builders[1]));
-        assertEq(builderToken.balanceOf(alice), 0);
+        assertEq(stakeToken.balanceOf(alice), stakeAmount);
 
         vm.startPrank(alice);
         vm.expectEmit();
@@ -216,7 +197,7 @@ contract VoterTest is BaseTest {
         assertEq(gauges[1].balanceOf(alice), 0);
         assertFalse(voter.voterBuildersVoted(alice, builders[0]));
         assertFalse(voter.voterBuildersVoted(alice, builders[1]));
-        assertEq(builderToken.balanceOf(alice), weights[0] + weights[1]);
+        assertEq(stakeToken.balanceOf(alice), stakeAmount);
     }
 
     function _getTotalWeight(address[] memory _builderVote, uint256[] memory _weights) private pure returns (uint256) {
@@ -231,11 +212,9 @@ contract VoterTest is BaseTest {
     }
 
     function _vote(address _voterAddress) private {
-        uint256 _totalWeight = _getTotalWeight(builderVote, weights);
-        erc20Utils.mintToken(address(builderToken), _voterAddress, _totalWeight);
+        erc20Utils.mintToken(address(stakeToken), _voterAddress, stakeAmount);
 
         vm.startPrank(_voterAddress);
-        builderToken.approve(address(voter), _totalWeight);
         vm.expectEmit();
         emit Voted(address(_voterAddress), address(builders[0]), weights[0], block.timestamp);
         vm.expectEmit();

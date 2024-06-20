@@ -28,7 +28,6 @@ contract GaugeTest is BaseTest {
         uint256 _epoch = TimeLibrary.epochStart(block.timestamp);
 
         assertEq(gauge.balanceOf(alice), _depositAmount);
-        assertEq(IERC20(gauge.stakingToken()).balanceOf(address(gauge)), _depositAmount);
         assertEq(gauge.totalSupplyByEpoch(_epoch), _depositAmount);
     }
 
@@ -42,9 +41,7 @@ contract GaugeTest is BaseTest {
         uint256 _epoch = TimeLibrary.epochStart(block.timestamp);
 
         assertEq(gauge.balanceOf(alice), 0);
-        assertEq(IERC20(gauge.stakingToken()).balanceOf(address(gauge)), 0);
         assertEq(gauge.totalSupplyByEpoch(_epoch), 0);
-        assertEq(IERC20(gauge.stakingToken()).balanceOf(alice), _withdrawAmount);
     }
 
     function test_NotifyRewardAmount() public {
@@ -292,8 +289,6 @@ contract GaugeTest is BaseTest {
     }
 
     function _deposit(uint256 _amount, address _recipient) private {
-        erc20Utils.mintToken(address(builderToken), address(voter), _amount);
-
         vm.startPrank(address(voter));
         vm.expectEmit();
         emit Deposit(address(voter), _recipient, _amount);
