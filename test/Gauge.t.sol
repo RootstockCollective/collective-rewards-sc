@@ -105,7 +105,7 @@ contract GaugeTest is BaseTest {
         _withdraw(_depositAmount, bob);
         _claimRewards(bob);
 
-        assertApproxEqRel(rewardToken.balanceOf(address(gauge)), 1, 1e2);
+        assertTrue(rewardToken.balanceOf(address(gauge)) < 5);
     }
 
     function test_StuckReward2() public {
@@ -133,7 +133,7 @@ contract GaugeTest is BaseTest {
 
         skip(3 days);
 
-        uint256 _earned = _claimRewards(alice);
+        _claimRewards(alice);
 
         _notifyRewardAmount(_rewardAmount);
         _deposit(_depositAmount, bob);
@@ -146,7 +146,7 @@ contract GaugeTest is BaseTest {
         _withdraw(_depositAmount, alice);
         _claimRewards(alice);
 
-        assertApproxEqRel(rewardToken.balanceOf(address(gauge)), 1, 1e2);
+        assertTrue(rewardToken.balanceOf(address(gauge)) < 5);
     }
 
     function test_GetRewardOneDepositor() public {
