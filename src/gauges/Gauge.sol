@@ -63,7 +63,8 @@ contract Gauge is IGauge, ReentrancyGuard {
         if (totalSupply == 0) {
             return rewardPerTokenStored;
         }
-        return rewardPerTokenStored + ((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate) / totalSupply;
+        return rewardPerTokenStored
+            + ((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate * PRECISION) / totalSupply;
     }
 
     /// @inheritdoc IGauge
@@ -88,7 +89,7 @@ contract Gauge is IGauge, ReentrancyGuard {
 
     /// @inheritdoc IGauge
     function earned(address _account) public view returns (uint256) {
-        return (balanceOf[_account] * (rewardPerToken() - userRewardPerTokenPaid[_account])) / PRECISION
+        return (balanceOf[_account] * (rewardPerToken() - userRewardPerTokenPaid[_account])) / (PRECISION ** 2)
             + rewards[_account];
     }
 
@@ -103,15 +104,16 @@ contract Gauge is IGauge, ReentrancyGuard {
         if (_amount == 0) revert ZeroAmount();
         if (!IVoter(voter).isAlive(address(this))) revert NotAlive();
 
+        if (totalSupply == 0) {
+            uint256 _newRewardPerToken = ((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate) / PRECISION;
+            rewardPerTokenMissing = rewardPerTokenMissing + _newRewardPerToken;
+        }
+
         address sender = msg.sender;
         _updateRewards(_recipient);
 
         IERC20(stakingToken).safeTransferFrom(sender, address(this), _amount);
         balanceOf[_recipient] += _amount;
-
-        if (totalSupply == 0) {
-            rewardPerTokenMissing = rewardPerTokenStored;
-        }
 
         totalSupply += _amount;
         uint256 timestamp = block.timestamp;
@@ -151,7 +153,7 @@ contract Gauge is IGauge, ReentrancyGuard {
     function left() external view returns (uint256) {
         if (block.timestamp >= periodFinish) return 0;
         uint256 _remaining = periodFinish - block.timestamp;
-        return (_remaining * rewardRate) / PRECISION;
+        return (_remaining * rewardRate) / (PRECISION);
     }
 
     /// @inheritdoc IGauge
@@ -173,8 +175,8 @@ contract Gauge is IGauge, ReentrancyGuard {
             rewardRate = (_amount + rewardPerTokenMissing) * PRECISION / timeUntilNext;
         } else {
             uint256 _remaining = periodFinish - timestamp;
-            uint256 _leftover = _remaining * rewardRate;
-            rewardRate = (_amount + _leftover + rewardPerTokenMissing) / timeUntilNext;
+            uint256 _leftover = _remaining * rewardRate / PRECISION;
+            rewardRate = (_amount + _leftover + rewardPerTokenMissing) * PRECISION / timeUntilNext;
         }
         rewardPerTokenMissing = 0;
         rewardRateByEpoch[TimeLibrary.epochStart(timestamp)] = rewardRate;

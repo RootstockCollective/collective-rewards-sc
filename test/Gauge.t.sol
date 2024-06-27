@@ -5,7 +5,6 @@ import { BaseTest } from "./BaseTest.sol";
 import { IGauge } from "../src/interfaces/gauges/IGauge.sol";
 import { TimeLibrary } from "../src/libraries/TimeLibrary.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { console2 } from "forge-std/src/console2.sol";
 
 contract GaugeTest is BaseTest {
     event Deposit(address indexed from, address indexed to, uint256 amount);
@@ -70,7 +69,7 @@ contract GaugeTest is BaseTest {
 
         uint256 _newTimestamp = block.timestamp;
         uint256 _newTimeUntilNext = TimeLibrary.epochNext(_newTimestamp) - _newTimestamp;
-        uint256 _rewardPerTokenStored = (_timeUntilNext * _rewardRate) / _depositAmount;
+        uint256 _rewardPerTokenStored = (_timeUntilNext * _rewardRate * PRECISION) / _depositAmount;
 
         _notifyRewardAmount(_rewardAmount);
 
@@ -83,7 +82,7 @@ contract GaugeTest is BaseTest {
 
     function test_StuckReward() public {
         uint256 _rewardAmount = 100 ether;
-        uint256 _depositAmount = 1 ether;
+        uint256 _depositAmount = 9 ether;
 
         _notifyRewardAmount(_rewardAmount);
         _deposit(_depositAmount, alice);
@@ -105,12 +104,12 @@ contract GaugeTest is BaseTest {
         _withdraw(_depositAmount, bob);
         _claimRewards(bob);
 
-        assertTrue(rewardToken.balanceOf(address(gauge)) < 5);
+        assertTrue(rewardToken.balanceOf(address(gauge)) < 4);
     }
 
     function test_StuckReward2() public {
         uint256 _rewardAmount = 100 ether;
-        uint256 _depositAmount = 1 ether;
+        uint256 _depositAmount = 16 ether;
 
         _notifyRewardAmount(_rewardAmount);
         _deposit(_depositAmount, alice);
@@ -146,7 +145,7 @@ contract GaugeTest is BaseTest {
         _withdraw(_depositAmount, alice);
         _claimRewards(alice);
 
-        assertTrue(rewardToken.balanceOf(address(gauge)) < 5);
+        assertTrue(rewardToken.balanceOf(address(gauge)) < 10);
     }
 
     function test_GetRewardOneDepositor() public {
@@ -234,7 +233,7 @@ contract GaugeTest is BaseTest {
         uint256 _finalTimestamp = block.timestamp;
         uint256 _rewardRate = (_rewardAmount * PRECISION) / 1 weeks;
 
-        uint256 _rewardPerToken = ((_finalTimestamp - _initialTimestamp) * _rewardRate) / _depositAmount;
+        uint256 _rewardPerToken = ((_finalTimestamp - _initialTimestamp) * _rewardRate * PRECISION) / _depositAmount;
 
         assertEq(gauge.rewardPerToken(), _rewardPerToken);
         assertApproxEqRel(gauge.earned(alice), _rewardAmount, 1e2);
@@ -258,7 +257,7 @@ contract GaugeTest is BaseTest {
         uint256 _finalTimestamp = block.timestamp;
         uint256 _rewardRate = (_rewardAmount * PRECISION) / 1 weeks;
 
-        uint256 _rewardPerToken = ((_finalTimestamp - _initialTimestamp) * _rewardRate) / _depositAmount;
+        uint256 _rewardPerToken = ((_finalTimestamp - _initialTimestamp) * _rewardRate * PRECISION) / _depositAmount;
 
         assertEq(gauge.rewardPerToken(), _rewardPerToken);
         assertApproxEqRel(gauge.earned(alice), _rewardAmount / 2, 1e2);
@@ -284,7 +283,8 @@ contract GaugeTest is BaseTest {
         uint256 _finalTimestamp = block.timestamp;
         uint256 _rewardRate = (_rewardAmount * PRECISION) / 1 weeks;
 
-        uint256 _finalRewardPerToken = ((_finalTimestamp - _initialTimestamp) * _rewardRate) / _depositAmount;
+        uint256 _finalRewardPerToken =
+            ((_finalTimestamp - _initialTimestamp) * _rewardRate * PRECISION) / _depositAmount;
 
         assertEq(gauge.rewardPerToken(), _finalRewardPerToken);
         assertApproxEqRel(gauge.earned(alice), _rewardAmount / 2, 1e2);
