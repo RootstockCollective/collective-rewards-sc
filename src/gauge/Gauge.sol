@@ -121,8 +121,8 @@ contract Gauge {
      * @dev reverts if is not called by the `sponsor_` or the sponsorsManager
      * @param sponsor_ address who receives the rewards
      */
-    function getSponsorReward(address sponsor_) external onlySponsorsManager {
-        if (msg.sender != sponsor_) revert NotAuthorized();
+    function getSponsorReward(address sponsor_) external {
+        if (msg.sender != sponsor_ && msg.sender != sponsorsManager) revert NotAuthorized();
 
         _updateRewards(sponsor_);
 
@@ -165,8 +165,6 @@ contract Gauge {
         totalAllocation += allocation_;
         totalAllocationByEpoch[EpochLib.epochStart(block.timestamp)] = totalAllocation;
 
-        SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), allocation_);
-
         emit Allocated(msg.sender, sponsor_, allocation_);
     }
 
@@ -184,8 +182,6 @@ contract Gauge {
         allocationOf[sponsor_] -= allocation_;
         totalAllocation -= allocation_;
         totalAllocationByEpoch[EpochLib.epochStart(block.timestamp)] = totalAllocation;
-
-        SafeERC20.safeTransfer(rewardToken, sponsor_, allocation_);
 
         emit Deallocated(sponsor_, allocation_);
     }
