@@ -51,6 +51,8 @@ contract Gauge {
     uint256 public rewardRate;
     /// @notice most recent stored value of rewardPerToken
     uint256 public rewardPerTokenStored;
+    /// @notice missing rewards where there is not allocation
+    uint256 public rewardMissing;
     /// @notice most recent timestamp contract has updated state
     uint256 public lastUpdateTime;
     // @notice timestamp end of current rewards period
@@ -151,6 +153,12 @@ contract Gauge {
      */
     function allocate(address sponsor_, uint256 allocation_) external onlySponsorsManager {
         // TODO: 0 values check are needed?
+
+        if (totalAllocation == 0) {
+            // [PREC] = [PREC] + ([N] - [N]) * [PREC]
+            rewardMissing += ((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate);
+        }
+
         _updateRewards(sponsor_);
 
         allocationOf[sponsor_] += allocation_;
@@ -205,7 +213,7 @@ contract Gauge {
         }
 
         // [PREC] = [N] * [PREC] + [PREC]
-        _rewardRate = UtilsLib._divPrec(amount_, _timeUntilNext) + _leftover;
+        _rewardRate = UtilsLib._divPrec(amount_, _timeUntilNext) + rewardMissing + _leftover;
 
         rewardRateByEpoch[EpochLib.epochStart(block.timestamp)] = _rewardRate;
         if (_rewardRate == 0) revert ZeroRewardRate();
@@ -220,6 +228,7 @@ contract Gauge {
 
         lastUpdateTime = block.timestamp;
         _periodFinish = block.timestamp + _timeUntilNext;
+        rewardMissing = 0;
 
         // update cached variables on storage
         periodFinish = _periodFinish;
