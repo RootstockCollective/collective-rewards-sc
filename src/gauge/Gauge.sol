@@ -116,8 +116,8 @@ contract Gauge {
      * @dev reverts if is not called by the `sponsor_` or the sponsorsManager
      * @param sponsor_ address who receives the rewards
      */
-    function getSponsorReward(address sponsor_) external onlySponsorsManager {
-        if (msg.sender != sponsor_) revert NotAuthorized();
+    function getSponsorReward(address sponsor_) external {
+        if (msg.sender != sponsor_ && msg.sender != sponsorsManager) revert NotAuthorized();
 
         _updateRewards(sponsor_);
 
@@ -198,21 +198,13 @@ contract Gauge {
         // if period finished there is not remaining reward
         if (block.timestamp < _periodFinish) {
             // [PREC] = [N] * [PREC]
-            _leftover = _periodFinish - block.timestamp * _rewardRate;
+            _leftover = (_periodFinish - block.timestamp) * _rewardRate;
         }
 
-        // [PREC] = [N] * [PREC] + [PREC]
-        _rewardRate = UtilsLib._divPrec(amount_, _timeUntilNext) + rewardMissing + _leftover;
+        // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
+        _rewardRate = (amount_ * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
 
         if (_rewardRate == 0) revert ZeroRewardRate();
-
-        // Ensure the provided reward amount is not more than the balance in the contract.
-        // This keeps the reward rate in the right range, preventing overflows due to
-        // very high values of rewardRate in the earned and rewardsPerToken functions;
-        // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-        // [PREC] = [N] * [PREC] / [N]
-        uint256 _balanceRate = UtilsLib._divPrec(rewardToken.balanceOf(address(this)), _timeUntilNext);
-        if (rewardRate > _balanceRate) revert RewardRateTooHigh();
 
         lastUpdateTime = block.timestamp;
         _periodFinish = block.timestamp + _timeUntilNext;
@@ -223,6 +215,15 @@ contract Gauge {
         rewardRate = _rewardRate;
 
         SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), amount_);
+
+        // Ensure the provided reward amount is not more than the balance in the contract.
+        // This keeps the reward rate in the right range, preventing overflows due to
+        // very high values of rewardRate in the earned and rewardsPerToken functions;
+        // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
+        // [PREC] = [N] * [PREC] / [N]
+        uint256 _balanceRate = UtilsLib._divPrec(rewardToken.balanceOf(address(this)), _timeUntilNext);
+        if (rewardRate > _balanceRate) revert RewardRateTooHigh();
+
         emit NotifyReward(amount_);
     }
 

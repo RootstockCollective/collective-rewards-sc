@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 library EpochLib {
+    // TODO: is epoch duration fixed?
     uint256 internal constant WEEK = 7 days;
 
     /**
