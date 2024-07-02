@@ -44,6 +44,7 @@
     "prettier:write": "prettier --write \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "test": "forge test",
     "test:coverage": "forge coverage",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docgen": "forge doc"
   }
 }
