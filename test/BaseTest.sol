@@ -25,8 +25,8 @@ contract BaseTest is Test {
         stakingToken = new ERC20Mock();
         rewardToken = new ERC20Mock();
         gaugeFactory = new GaugeFactory();
-        sponsorsManager = new SponsorsManager(address(rewardToken), address(gaugeFactory));
-        gauge = Gauge(sponsorsManager.createGauge());
+        sponsorsManager = new SponsorsManager(address(rewardToken), address(stakingToken), address(gaugeFactory));
+        gauge = sponsorsManager.createGauge(address(10) /*builder*/ );
         initialTimestamp = block.timestamp;
         epochDuration = EpochLib.WEEK;
         _setUp();
