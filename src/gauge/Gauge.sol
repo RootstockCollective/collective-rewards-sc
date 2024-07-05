@@ -64,10 +64,6 @@ contract Gauge {
     mapping(address sponsor => uint256 rewardPerTokenPaid) public sponsorRewardPerTokenPaid;
     /// @notice cached amount of rewardToken earned for a sponsor
     mapping(address sponsor => uint256 rewards) public rewards;
-    /// @notice view to see rewardRate given the timestamp of the start of the epoch
-    mapping(uint256 epoch => uint256 rewardRate) public rewardRateByEpoch;
-    /// @notice view to see the totalAllocation given the timestamp of the start of the epoch
-    mapping(uint256 epoch => uint256 totalSupply) public totalAllocationByEpoch;
 
     /**
      * @notice constructor
@@ -165,7 +161,6 @@ contract Gauge {
 
         allocationOf[sponsor_] += allocation_;
         totalAllocation += allocation_;
-        totalAllocationByEpoch[EpochLib.epochStart(block.timestamp)] = totalAllocation;
 
         emit Allocated(msg.sender, sponsor_, allocation_);
     }
@@ -183,7 +178,6 @@ contract Gauge {
 
         allocationOf[sponsor_] -= allocation_;
         totalAllocation -= allocation_;
-        totalAllocationByEpoch[EpochLib.epochStart(block.timestamp)] = totalAllocation;
 
         emit Deallocated(sponsor_, allocation_);
     }
@@ -213,7 +207,6 @@ contract Gauge {
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
         _rewardRate = (amount_ * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
 
-        rewardRateByEpoch[EpochLib.epochStart(block.timestamp)] = _rewardRate;
         if (_rewardRate == 0) revert ZeroRewardRate();
 
         lastUpdateTime = block.timestamp;

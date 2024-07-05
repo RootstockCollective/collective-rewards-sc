@@ -71,8 +71,6 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.allocationOf(alice), 1 ether);
         // THEN totalAllocation is 1 ether
         assertEq(gauge.totalAllocation(), 1 ether);
-        // THEN totalAllocationByEpoch is 1 ether on the current epoch
-        assertEq(gauge.totalAllocationByEpoch(EpochLib.epochStart(block.timestamp)), 1 ether);
         // THEN rewardPerTokenStored is 0 because there is not rewards distributed
         assertEq(gauge.rewardPerTokenStored(), 0);
         // THEN rewardPerToken is 0 because there is not rewards distributed
@@ -104,8 +102,6 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.allocationOf(alice), 0);
         // THEN totalAllocation is 0
         assertEq(gauge.totalAllocation(), 0);
-        // THEN totalAllocationByEpoch is 0 on the current epoch
-        assertEq(gauge.totalAllocationByEpoch(EpochLib.epochStart(block.timestamp)), 0);
         // THEN rewardPerTokenStored is 0 because there is not rewards distributed
         assertEq(gauge.rewardPerTokenStored(), 0);
         // THEN rewardPerToken is 0 because there is not rewards distributed
@@ -134,8 +130,6 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.allocationOf(alice), 0.75 ether);
         // THEN totalAllocation is 0.75 ether
         assertEq(gauge.totalAllocation(), 0.75 ether);
-        // THEN totalAllocationByEpoch is 0.75 ether on the current epoch
-        assertEq(gauge.totalAllocationByEpoch(EpochLib.epochStart(block.timestamp)), 0.75 ether);
     }
 
     /**
