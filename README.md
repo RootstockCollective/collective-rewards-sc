@@ -17,6 +17,7 @@ the DAO.
 - [Forge Std](https://github.com/foundry-rs/forge-std): collection of helpful contracts and utilities for testing
 - [Prettier](https://github.com/prettier/prettier): code formatter for non-Solidity files
 - [Solhint](https://github.com/protofire/solhint): linter for Solidity code
+- [Hardhat](https://github.com/NomicFoundation/hardhat): integration testing, interact with RSKj
 
 ## Pre-requirements
 
@@ -40,7 +41,7 @@ Clone the repo and install the dependencies
 
 ```sh
 git clone https://github.com/rsksmart/builder-incentives-sc.git
-bun install # install Solhint, Prettier, and other Node.js deps
+bun install # install Solhint, Prettier, Hardhat and other Node.js deps
 ```
 
 If this is your first time with Foundry, check out the
@@ -55,6 +56,9 @@ For example, if you're interested in exploring Foundry in more detail, you shoul
 [Foundry Book](https://book.getfoundry.sh/). In particular, you may be interested in reading the
 [Writing Tests](https://book.getfoundry.sh/forge/writing-tests.html) tutorial.
 
+Foundry was integrated with Hardhat following the [Integrating with Hardhat](https://book.getfoundry.sh/config/hardhat)
+guide.
+
 ### Sensible Defaults
 
 This template comes with a set of sensible default configurations for you to use. These defaults can be found in the
@@ -68,6 +72,7 @@ following files:
 ├── .prettierrc.yml
 ├── .solhint.json
 ├── foundry.toml
+├── hardhat.config.ts
 └── remappings.txt
 ```
 
@@ -99,10 +104,14 @@ Note that OpenZeppelin Contracts is pre-installed, so you can follow that as an 
 
 ## Writing Tests
 
-To write a new test contract, you start by importing `Test` from `forge-std`, and then you inherit it in your test
-contract. Forge Std comes with a pre-instantiated [cheatcodes](https://book.getfoundry.sh/cheatcodes/) environment
-accessible via the `vm` property. If you would like to view the logs in the terminal output, you can add the `-vvv` flag
-and use [console.log](https://book.getfoundry.sh/faq?highlight=console.log#how-do-i-use-consolelog).
+### Foundry
+
+To write a new test contract, you can follow the [Foundry tests](https://book.getfoundry.sh/forge/tests) guide.
+
+### Hardhat
+
+To write a new integration test, you can follow the
+[Hardhat testing contracts](https://hardhat.org/hardhat-runner/docs/guides/test-contracts) guide.
 
 ## Usage
 
@@ -110,34 +119,18 @@ This is a list of the most frequently needed commands.
 
 ### Build
 
-Build the contracts:
+Build and compile the contracts:
 
 ```sh
-forge build
+bun run compile
 ```
 
 ### Clean
 
-Delete the build artifacts and cache directories:
+Delete the build artifacts, typechain types and cache directories:
 
 ```sh
-forge clean
-```
-
-### Compile
-
-Compile the contracts:
-
-```sh
-forge compile
-```
-
-### Coverage
-
-Get a test coverage report:
-
-```sh
-forge coverage
+bun run clean
 ```
 
 ### Deploy
@@ -171,15 +164,7 @@ For instructions on how to deploy to a testnet or mainnet, check out the
 Format the contracts:
 
 ```sh
-forge fmt
-```
-
-### Gas Usage
-
-Get a gas report:
-
-```sh
-forge test --gas-report
+bun run prettier:check
 ```
 
 ### Lint
@@ -192,11 +177,29 @@ bun run lint
 
 ### Test
 
-Run the tests:
+#### Foundry test
+
+Run the foundry tests:
 
 ```sh
-forge test
+bun run test
 ```
+
+#### Hardhat test
+
+Run the hardhat tests:
+
+```sh
+bun run test:integration
+```
+
+You can test against RSKj locally:
+
+```sh
+bun run test:integration -- --network regtest
+```
+
+#### Test coverage
 
 Generate test coverage and output result to the terminal:
 

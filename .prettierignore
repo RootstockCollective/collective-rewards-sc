@@ -1,9 +1,12 @@
 # directories
-broadcast
+artifacts
 cache
-coverage
+cache_hardhat
 node_modules
+coverage
+broadcast
 out
+typechain-types
 
 # files
 *.env

@@ -1,7 +1,9 @@
 # directories
-cache
 coverage
 node_modules
+
+# foundry
+cache
 out
 
 # files
@@ -18,3 +20,19 @@ yarn.lock
 !broadcast
 broadcast/*
 broadcast/*/31337/
+broadcast/*/33/
+
+node_modules
+.env
+
+# Hardhat files
+/cache_hardhat
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json

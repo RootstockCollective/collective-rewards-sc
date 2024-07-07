@@ -1,0 +1,12 @@
+root: true
+parser: "@typescript-eslint/parser"
+plugins:
+  - "@typescript-eslint"
+  - "mocha"
+extends: 
+  - "eslint:recommended"
+  - "plugin:@typescript-eslint/recommended"
+  - "plugin:@typescript-eslint/recommended-requiring-type-checking"
+  - "plugin:mocha/recommended"
+parserOptions:
+  project: tsconfig.json
