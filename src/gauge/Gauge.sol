@@ -146,6 +146,7 @@ contract Gauge {
      * @param sponsor_ address of user who allocates tokens
      * @param allocation_ amount of tokens to allocate
      * @return allocationDeviation deviation between current allocation and the new one
+     * @return isNegative true if new allocation is lesser than the current one
      */
     function allocate(
         address sponsor_,
@@ -153,10 +154,8 @@ contract Gauge {
     )
         external
         onlySponsorsManager
-        returns (int256 allocationDeviation)
+        returns (uint256 allocationDeviation, bool isNegative)
     {
-        // TODO: 0 values check are needed?
-
         // if sponsors quit before epoch finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
@@ -166,13 +165,20 @@ contract Gauge {
 
         _updateRewards(sponsor_);
 
-        // TODO: review if it is necessary using safeCast
-        allocationDeviation = int256(allocation_) - int256(allocationOf[sponsor_]);
-
+        // to do not deal with signed integers we add allocation if the new one is bigger than the previous one
+        uint256 _previousAllocation = allocationOf[sponsor_];
+        if (allocation_ >= _previousAllocation) {
+            allocationDeviation = allocation_ - _previousAllocation;
+            totalAllocation += allocationDeviation;
+        } else {
+            allocationDeviation = _previousAllocation - allocation_;
+            totalAllocation -= allocationDeviation;
+            isNegative = true;
+        }
         allocationOf[sponsor_] = allocation_;
-        totalAllocation = uint256(int256(totalAllocation) + allocationDeviation);
 
         emit NewAllocation(sponsor_, allocation_);
+        return (allocationDeviation, isNegative);
     }
 
     /**
