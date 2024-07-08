@@ -10,8 +10,7 @@ contract GaugeTest is BaseTest {
     // ----------- Events ----------
     // -----------------------------
     event SponsorRewardsClaimed(address indexed sponsor_, uint256 amount_);
-    event Allocated(address indexed from, address indexed sponsor_, uint256 allocation_);
-    event Deallocated(address indexed sponsor_, uint256 allocation_);
+    event NewAllocation(address indexed sponsor_, uint256 allocation_);
     event NotifyReward(uint256 amount_);
 
     function _setUp() internal override {
@@ -32,10 +31,6 @@ contract GaugeTest is BaseTest {
         //  THEN tx reverts because caller is not the SponsorsManager contract
         vm.expectRevert(Gauge.NotSponsorsManager.selector);
         gauge.allocate(alice, 1 ether);
-        // WHEN alice calls deallocate
-        //  THEN tx reverts because caller is not the SponsorsManager contract
-        vm.expectRevert(Gauge.NotSponsorsManager.selector);
-        gauge.deallocate(alice, 1 ether);
         // WHEN alice calls notifyRewardAmount
         //  THEN tx reverts because caller is not the SponsorsManager contract
         vm.expectRevert(Gauge.NotSponsorsManager.selector);
@@ -64,7 +59,7 @@ contract GaugeTest is BaseTest {
         // WHEN allocates 1 ether to alice
         //  THEN Allocated event is emitted
         vm.expectEmit();
-        emit Allocated(address(sponsorsManager), alice, 1 ether);
+        emit NewAllocation(alice, 1 ether);
         gauge.allocate(alice, 1 ether);
 
         // THEN alice allocation is 1 ether
@@ -92,11 +87,11 @@ contract GaugeTest is BaseTest {
         // AND 1 ether allocated to alice
         gauge.allocate(alice, 1 ether);
 
-        // WHEN deallocates 1 ether
-        //  THEN Deallocated event is emitted
+        // WHEN deallocates all
+        //  THEN Allocated event is emitted
         vm.expectEmit();
-        emit Deallocated(alice, 1 ether);
-        gauge.deallocate(alice, 1 ether);
+        emit NewAllocation(alice, 0 ether);
+        gauge.allocate(alice, 0 ether);
 
         // THEN alice allocation is 0
         assertEq(gauge.allocationOf(alice), 0);
@@ -124,27 +119,12 @@ contract GaugeTest is BaseTest {
         gauge.allocate(alice, 1 ether);
 
         // WHEN deallocates 0.25 ether
-        gauge.deallocate(alice, 0.25 ether);
+        gauge.allocate(alice, 0.75 ether);
 
         // THEN alice allocation is 0.75 ether
         assertEq(gauge.allocationOf(alice), 0.75 ether);
         // THEN totalAllocation is 0.75 ether
         assertEq(gauge.totalAllocation(), 0.75 ether);
-    }
-
-    /**
-     * SCENARIO: deallocate should revert when trying to deacollate more tokens than the allocated ones
-     */
-    function test_DeallocateMore() public {
-        // GIVEN a SponsorsManager contract
-        vm.startPrank(address(sponsorsManager));
-        // AND 1 ether allocated to alice
-        gauge.allocate(alice, 1 ether);
-
-        // WHEN tries to deallocate 2 ether
-        //  THEN tx reverts because underflow arithmetic error
-        vm.expectRevert(stdError.arithmeticError);
-        gauge.deallocate(alice, 2 ether);
     }
 
     /**
@@ -367,7 +347,7 @@ contract GaugeTest is BaseTest {
         _skipRemainingEpochFraction(2);
 
         // WHEN alice deallocates all
-        gauge.deallocate(alice, 1 ether);
+        gauge.allocate(alice, 0 ether);
 
         // time until next epoch is 518400
         // rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
@@ -410,7 +390,7 @@ contract GaugeTest is BaseTest {
         _skipRemainingEpochFraction(2);
 
         // WHEN alice allocates 1 ether more
-        gauge.allocate(alice, 1 ether);
+        gauge.allocate(alice, 2 ether);
 
         // time until next epoch is 518400
         // rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
@@ -453,7 +433,7 @@ contract GaugeTest is BaseTest {
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
         // AND alice deallocates all
-        gauge.deallocate(alice, 2 ether);
+        gauge.allocate(alice, 0 ether);
         // time until next epoch is 518400
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate() / 10 ** 18, 192_901_234_567_901);

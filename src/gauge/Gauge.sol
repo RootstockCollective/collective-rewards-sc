@@ -25,8 +25,7 @@ contract Gauge {
     // ----------- Events ----------
     // -----------------------------
     event SponsorRewardsClaimed(address indexed sponsor_, uint256 amount_);
-    event Allocated(address indexed from, address indexed sponsor_, uint256 allocation_);
-    event Deallocated(address indexed sponsor_, uint256 allocation_);
+    event NewAllocation(address indexed sponsor_, uint256 allocation_);
     event NotifyReward(uint256 amount_);
 
     // -----------------------------
@@ -146,8 +145,16 @@ contract Gauge {
      * @dev reverts if caller si not the sponsorsManager contract
      * @param sponsor_ address of user who allocates tokens
      * @param allocation_ amount of tokens to allocate
+     * @return allocationDeviation deviation between current allocation and the new one
      */
-    function allocate(address sponsor_, uint256 allocation_) external onlySponsorsManager {
+    function allocate(
+        address sponsor_,
+        uint256 allocation_
+    )
+        external
+        onlySponsorsManager
+        returns (int256 allocationDeviation)
+    {
         // TODO: 0 values check are needed?
 
         // if sponsors quit before epoch finish we need to store the remaining rewards on first allocation
@@ -159,27 +166,13 @@ contract Gauge {
 
         _updateRewards(sponsor_);
 
-        allocationOf[sponsor_] += allocation_;
-        totalAllocation += allocation_;
+        // TODO: review if it is necessary using safeCast
+        allocationDeviation = int256(allocation_) - int256(allocationOf[sponsor_]);
 
-        emit Allocated(msg.sender, sponsor_, allocation_);
-    }
+        allocationOf[sponsor_] = allocation_;
+        totalAllocation = uint256(int256(totalAllocation) + allocationDeviation);
 
-    /**
-     * @notice deallocates stakingTokens
-     * @dev reverts if caller si not the sponsorsManager contract
-     * @param sponsor_ address of user who deallocates tokens
-     * @param allocation_ amount of tokens to deallocate
-     */
-    function deallocate(address sponsor_, uint256 allocation_) external onlySponsorsManager {
-        // TODO: cannot be called by the sponsor?
-        // TODO: 0 values check are needed?
-        _updateRewards(sponsor_);
-
-        allocationOf[sponsor_] -= allocation_;
-        totalAllocation -= allocation_;
-
-        emit Deallocated(sponsor_, allocation_);
+        emit NewAllocation(sponsor_, allocation_);
     }
 
     /**
