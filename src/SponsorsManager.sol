@@ -157,7 +157,7 @@ contract SponsorsManager {
      *  This functions is paginated and finish one the distribution period all the gauges
      *  were distributed
      */
-    function _distribute() external {
+    function distribute() external {
         if (onDistributionPeriod == false) revert DistributionPeriodDidNotStart();
         Gauge[] memory _gaugesArray = gaugesArray;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
