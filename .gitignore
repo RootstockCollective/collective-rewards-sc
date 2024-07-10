@@ -5,6 +5,9 @@ node_modules
 # foundry
 cache
 out
+cache_hardhat
+artifacts
+typechain-types
 
 # files
 *.env
