@@ -14,20 +14,25 @@ contract BaseTest is Test {
 
     GaugeFactory public gaugeFactory;
     Gauge public gauge;
+    Gauge public gauge2;
+    Gauge[] public gaugesArray;
+    uint256[] public allocationsArray = [0, 0];
     SponsorsManager public sponsorsManager;
-    uint256 public initialTimestamp;
     uint256 public epochDuration;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
+    address internal builder = makeAddr("builder");
+    address internal builder2 = makeAddr("builder2");
 
     function setUp() public {
         stakingToken = new ERC20Mock();
         rewardToken = new ERC20Mock();
         gaugeFactory = new GaugeFactory();
         sponsorsManager = new SponsorsManager(address(rewardToken), address(stakingToken), address(gaugeFactory));
-        gauge = sponsorsManager.createGauge(address(10) /*builder*/ );
-        initialTimestamp = block.timestamp;
+        gauge = sponsorsManager.createGauge(builder);
+        gauge2 = sponsorsManager.createGauge(builder2);
+        gaugesArray = [gauge, gauge2];
         epochDuration = EpochLib.WEEK;
         _setUp();
     }
