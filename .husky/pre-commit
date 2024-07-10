@@ -1,2 +1,2 @@
-bun lint
-bun prettier:check
+npm run lint
+
