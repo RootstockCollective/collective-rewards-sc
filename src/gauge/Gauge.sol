@@ -187,8 +187,6 @@ contract Gauge {
      * @param amount_ amount of reward tokens to distribute
      */
     function notifyRewardAmount(uint256 amount_) external onlySponsorsManager {
-        // TODO: 0 amount_ check is needed?
-
         // update rewardPerToken storage
         rewardPerTokenStored = rewardPerToken();
         uint256 _timeUntilNext = EpochLib.epochNext(block.timestamp) - block.timestamp;

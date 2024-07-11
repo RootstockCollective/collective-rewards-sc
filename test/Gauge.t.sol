@@ -169,6 +169,22 @@ contract GaugeTest is BaseTest {
     }
 
     /**
+     * SCENARIO: notifyRewardAmount should reverts if rewardRate is zero
+     */
+    function test_RevertZeroRewardRate() public {
+        // GIVEN a SponsorsManager contract
+        vm.startPrank(address(sponsorsManager));
+        // AND 1 ether allocated to alice and 5 ether to bob
+        gauge.allocate(alice, 1 ether);
+        gauge.allocate(bob, 5 ether);
+
+        // WHEN tries to distribute 0 ether and there is pending rewards
+        //  THEN tx reverts because ZeroRewardRate
+        vm.expectRevert(Gauge.ZeroRewardRate.selector);
+        gauge.notifyRewardAmount(0);
+    }
+
+    /**
      * SCENARIO: alice and bob claim his rewards at the end of the epoch receiving the total amount of rewards.
      *  If they claim again without a new reward distribution they don't receive rewardTokens again.
      */
