@@ -196,7 +196,7 @@ bun run test:integration
 You can test against RSKj locally:
 
 ```sh
-bun run test:integration -- --network regtest
+bun run test:integration --network regtest
 ```
 
 #### Test coverage

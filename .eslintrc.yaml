@@ -8,5 +8,6 @@ extends:
   - "plugin:@typescript-eslint/recommended"
   - "plugin:@typescript-eslint/recommended-requiring-type-checking"
   - "plugin:mocha/recommended"
+  - "prettier"
 parserOptions:
   project: tsconfig.json

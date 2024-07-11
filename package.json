@@ -34,6 +34,7 @@
     "@typechain/hardhat": "^9.1.0",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-mocha": "^10.4.3",
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
     "husky": "^9.0.11",
