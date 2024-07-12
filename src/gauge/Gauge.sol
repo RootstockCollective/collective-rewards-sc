@@ -40,11 +40,11 @@ contract Gauge {
     // ---------- Storage ----------
     // -----------------------------
 
-    // @notice address of the builder
+    /// @notice builder address
     address public immutable builder;
     /// @notice address of the token rewarded to builder and voters
     IERC20 public immutable rewardToken;
-    // @notice address of the SponsorsManager contract
+    /// @notice SponsorsManager contract address
     address public immutable sponsorsManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
@@ -56,7 +56,7 @@ contract Gauge {
     uint256 public rewardMissing;
     /// @notice most recent timestamp contract has updated state
     uint256 public lastUpdateTime;
-    // @notice timestamp end of current rewards period
+    /// @notice timestamp end of current rewards period
     uint256 public periodFinish;
 
     /// @notice amount of stakingToken allocated by a sponsor

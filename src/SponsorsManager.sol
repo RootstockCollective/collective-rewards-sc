@@ -9,9 +9,7 @@ import { Gauge } from "./gauge/Gauge.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 
 contract SponsorsManager {
-    /// @notice Rewards are released over 7 days
-    // TODO: DURATION & MAX_DISTRIBUTIONS_PER_BATCH constant?
-    uint256 internal constant DURATION = 7 days;
+    // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
     uint256 internal constant MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
     // -----------------------------
@@ -21,7 +19,7 @@ contract SponsorsManager {
     error GaugeExists();
     error GaugeDoesNotExist(address builder_);
     error NotEnoughStaking();
-    error OnDistributionPeriod();
+    error NotOnDistributionPeriod();
     error DistributionPeriodDidNotStart();
 
     // -----------------------------
@@ -35,8 +33,8 @@ contract SponsorsManager {
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
-    modifier nonOnDistributionPeriod() {
-        if (onDistributionPeriod) revert OnDistributionPeriod();
+    modifier notOnDistributionPeriod() {
+        if (onDistributionPeriod) revert NotOnDistributionPeriod();
         _;
     }
 
@@ -48,25 +46,23 @@ contract SponsorsManager {
     IERC20 public immutable stakingToken;
     /// @notice address of the token rewarded to builder and voters
     IERC20 public immutable rewardToken;
-    // @notice address of gauge factory contract
+    /// @notice gauge factory contract address
     GaugeFactory public immutable gaugeFactory;
-    // @notice total allocation on all the gauges
+    /// @notice total allocation on all the gauges
     uint256 public totalAllocation;
-    /// @notice accumulated distributions per sponsor emission [PREC]
-    uint256 public rate;
+    /// @notice rewards to distribute per sponsor emission [PREC]
+    uint256 public rewardsPerShare;
     /// @notice index of tha last gauge distributed during a distribution period
     uint256 public indexLastGaugeDistributed;
-    // @notice true if distribution period started. Allocations and gauge creations remains blocked until finish
+    /// @notice true if distribution period started. Allocations remain blocked until it finishes
     bool public onDistributionPeriod;
 
     /// @notice gauge contract for a builder
-    mapping(address builder => Gauge gauge) public gauges;
+    mapping(address builder => Gauge gauge) public gaugeOfBuilder;
     /// @notice array of all the gauges created
-    Gauge[] public gaugesArray;
+    Gauge[] public gauges;
     /// @notice total amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public sponsorTotalAllocation;
-    /// @notice accumulated distributions for a gauge [PREC]
-    mapping(Gauge gauge => uint256 rate) internal gaugeRate;
 
     constructor(address rewardToken_, address stakingToken_, address gaugeFactory_) {
         rewardToken = IERC20(rewardToken_);
@@ -80,15 +76,15 @@ contract SponsorsManager {
 
     /**
      * @notice creates a new gauge for a builder
-     * @dev reverts if it is called during the distribution period
      * @param builder_ builder address who can claim the rewards
      * @return gauge gauge contract
      */
-    function createGauge(address builder_) external nonOnDistributionPeriod returns (Gauge gauge) {
-        if (address(gauges[builder_]) != address(0)) revert GaugeExists();
+    function createGauge(address builder_) external returns (Gauge gauge) {
+        // TODO: this function should revert if is not called by governance once the builder is whitelisted
+        if (address(gaugeOfBuilder[builder_]) != address(0)) revert GaugeExists();
         gauge = gaugeFactory.createGauge(builder_, address(rewardToken));
-        gauges[builder_] = gauge;
-        gaugesArray.push(gauge);
+        gaugeOfBuilder[builder_] = gauge;
+        gauges.push(gauge);
         emit GaugeCreated(builder_, address(gauge), msg.sender);
     }
 
@@ -98,7 +94,7 @@ contract SponsorsManager {
      * @param gauge_ address of the gauge where the tokens will be allocated
      * @param allocation_ amount of tokens to allocate
      */
-    function allocate(Gauge gauge_, uint256 allocation_) external nonOnDistributionPeriod {
+    function allocate(Gauge gauge_, uint256 allocation_) external notOnDistributionPeriod {
         (uint256 _newSponsorTotalAllocation, uint256 _newTotalAllocation) =
             _allocate(gauge_, allocation_, sponsorTotalAllocation[msg.sender], totalAllocation);
 
@@ -116,7 +112,7 @@ contract SponsorsManager {
         uint256[] calldata allocations_
     )
         external
-        nonOnDistributionPeriod
+        notOnDistributionPeriod
     {
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
@@ -134,42 +130,52 @@ contract SponsorsManager {
 
     /**
      * @notice transfers reward tokens from the sender to be distributed to the gauges
-     * @dev starts the distribution period blocking all the allocations and gauge creations
-     *  until all the gauges were distributed
+     * @dev reverts if it is called during the distribution period
      * @param amount_ amount of reward tokens to distribute
      */
-    function notifyRewardAmount(uint256 amount_) external {
-        // TODO: this function should revert if is not called by treasury or rewardManager
-        // because it will start the distribution period blocking new allocations
-
-        onDistributionPeriod = true;
+    function notifyRewardAmount(uint256 amount_) external notOnDistributionPeriod {
         // if there is no allocation let it revert by division zero
         // [PREC] = [N] * [PREC] / [N]
-        rate += UtilsLib._divPrec(amount_, totalAllocation);
+        rewardsPerShare += UtilsLib._divPrec(amount_, totalAllocation);
 
         emit NotifyReward(msg.sender, amount_);
         SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), amount_);
     }
 
     /**
+     * @notice starts the distribution period blocking all the allocations
+     *  until all the gauges were distributed
+     * @dev reverts if it is called during the distribution period
+     */
+    function startDistribution() external notOnDistributionPeriod {
+        // TODO: this function should revert if is not called by treasury or rewardManager
+        // because it will start the distribution period blocking new allocations
+
+        onDistributionPeriod = true;
+        distribute();
+    }
+
+    /**
      * @notice distribute accumulated reward tokens to the gauges
      * @dev reverts if distribution period has not yet started
-     *  This functions is paginated and finish one the distribution period all the gauges
-     *  were distributed
+     *  This function is paginated and it finishes once all gauges distribution are completed,
+     *  ending the distribution period and voting restrictions.
      */
-    function distribute() external {
+    function distribute() public {
         if (onDistributionPeriod == false) revert DistributionPeriodDidNotStart();
-        Gauge[] memory _gaugesArray = gaugesArray;
+        Gauge[] memory _gauges = gauges;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
-        uint256 _lastDistribution = Math.min(_gaugesArray.length, _gaugeIndex + MAX_DISTRIBUTIONS_PER_BATCH);
+        uint256 _lastDistribution = Math.min(_gauges.length, _gaugeIndex + MAX_DISTRIBUTIONS_PER_BATCH);
+
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
-            _distribute(_gaugesArray[_gaugeIndex]);
+            _distribute(_gauges[_gaugeIndex]);
             _gaugeIndex = UtilsLib.unchecked_inc(_gaugeIndex);
         }
         // all the gauges were distributed, so distribution period is finished
-        if (_lastDistribution == _gaugesArray.length) {
+        if (_lastDistribution == _gauges.length) {
             indexLastGaugeDistributed = 0;
+            rewardsPerShare = 0;
             onDistributionPeriod = false;
         } else {
             // Define new reference to batch beginning
@@ -248,44 +254,11 @@ contract SponsorsManager {
      * @param gauge_ address of the gauge to distribute
      */
     function _distribute(Gauge gauge_) internal {
-        uint256 _claimable = _updateFor(gauge_);
-        if (_claimable > gauge_.left() && _claimable > DURATION) {
-            rewardToken.approve(address(gauge_), _claimable);
-            gauge_.notifyRewardAmount(_claimable);
-            emit DistributeReward(msg.sender, address(gauge_), _claimable);
-        }
-    }
-
-    /**
-     * @notice gets how many reward tokens can be claimed for a gauge
-     * @param gauge_ address of the gauge
-     * @return claimable amount of reward tokens to claim
-     */
-    function _updateFor(Gauge gauge_) internal returns (uint256 claimable) {
-        uint256 _gaugeAllocation = gauge_.totalAllocation();
-        if (_gaugeAllocation > 0) {
-            // cache rate variable used multiple times
-            uint256 _rate = rate;
-            // calculate delta between gauge previous rate and the current one
-            uint256 _delta = _rate - gaugeRate[gauge_];
-            // if there are tokens to claim
-            if (_delta > 0) {
-                // update gauge with the current rate
-                gaugeRate[gauge_] = _rate;
-                // [N] = [N] * [PREC] / [PREC]
-                claimable = UtilsLib._mulPrec(_gaugeAllocation, _delta);
-                // TODO: review this
-                // if (isAlive[_gauge]) {
-                //     claimable[gauge_] += _share;
-                // } else {
-                // TODO: transfer to treasury or keep here?
-                //SafeERC20.safeTransfer(rewardToken, minter, _share);
-                // send rewards back to Minter so they're not stuck in Voter
-                // }
-            }
-        } else {
-            // new gauges are set to the default global state
-            gaugeRate[gauge_] = rate;
+        uint256 _reward = UtilsLib._mulPrec(gauge_.totalAllocation(), rewardsPerShare);
+        if (_reward > 0) {
+            rewardToken.approve(address(gauge_), _reward);
+            gauge_.notifyRewardAmount(_reward);
+            emit DistributeReward(msg.sender, address(gauge_), _reward);
         }
     }
 }
