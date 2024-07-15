@@ -15,9 +15,6 @@ contract SponsorsManagerTest is BaseTest {
     event DistributeReward(address indexed sender_, address indexed gauge_, uint256 amount_);
 
     function _setUp() internal override {
-        // mint some stakingTokens to alice and bob
-        stakingToken.mint(alice, 100_000 ether);
-        stakingToken.mint(bob, 100_000 ether);
         // mint some rewardTokens to this contract for reward distribution
         rewardToken.mint(address(this), 100_000 ether);
         rewardToken.approve(address(sponsorsManager), 100_000 ether);

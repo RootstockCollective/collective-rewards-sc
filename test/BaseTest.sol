@@ -6,6 +6,7 @@ import { ERC20Mock } from "./mocks/ERC20Mock.sol";
 import { GaugeFactory } from "../src/gauge/GaugeFactory.sol";
 import { Gauge } from "../src/gauge/Gauge.sol";
 import { SponsorsManager } from "../src/SponsorsManager.sol";
+import { RewardDistributor } from "../src/RewardDistributor.sol";
 import { EpochLib } from "../src/libraries/EpochLib.sol";
 
 contract BaseTest is Test {
@@ -18,22 +19,30 @@ contract BaseTest is Test {
     Gauge[] public gaugesArray;
     uint256[] public allocationsArray = [0, 0];
     SponsorsManager public sponsorsManager;
+    RewardDistributor public rewardDistributor;
     uint256 public epochDuration;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
     address internal builder = makeAddr("builder");
     address internal builder2 = makeAddr("builder2");
+    address internal foundationTreasury = makeAddr("foundationTreasury");
 
     function setUp() public {
         stakingToken = new ERC20Mock();
         rewardToken = new ERC20Mock();
         gaugeFactory = new GaugeFactory();
         sponsorsManager = new SponsorsManager(address(rewardToken), address(stakingToken), address(gaugeFactory));
+        rewardDistributor = new RewardDistributor(foundationTreasury, address(rewardToken), address(sponsorsManager));
         gauge = sponsorsManager.createGauge(builder);
         gauge2 = sponsorsManager.createGauge(builder2);
         gaugesArray = [gauge, gauge2];
         epochDuration = EpochLib.WEEK;
+
+        // mint some stakingTokens to alice and bob
+        stakingToken.mint(alice, 100_000 ether);
+        stakingToken.mint(bob, 100_000 ether);
+
         _setUp();
     }
 
