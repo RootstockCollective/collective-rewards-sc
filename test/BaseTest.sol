@@ -8,6 +8,7 @@ import { GaugeFactory } from "../src/gauge/GaugeFactory.sol";
 import { Gauge } from "../src/gauge/Gauge.sol";
 import { SponsorsManager } from "../src/SponsorsManager.sol";
 import { BuilderRegistry } from "../src/BuilderRegistry.sol";
+import { RewardDistributor } from "../src/RewardDistributor.sol";
 import { EpochLib } from "../src/libraries/EpochLib.sol";
 
 contract BaseTest is Test {
@@ -22,6 +23,7 @@ contract BaseTest is Test {
     uint256[] public allocationsArray = [0, 0];
     SponsorsManager public sponsorsManager;
     BuilderRegistry public builderRegistry;
+    RewardDistributor public rewardDistributor;
     uint256 public epochDuration;
 
     address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract
@@ -40,10 +42,16 @@ contract BaseTest is Test {
         sponsorsManager = new SponsorsManager(
             governor, address(changeExecutorMock), address(rewardToken), address(stakingToken), address(gaugeFactory)
         );
+        rewardDistributor = new RewardDistributor(foundation, address(rewardToken), address(sponsorsManager));
         gauge = sponsorsManager.createGauge(builder);
         gauge2 = sponsorsManager.createGauge(builder2);
         gaugesArray = [gauge, gauge2];
         epochDuration = EpochLib.WEEK;
+
+        // mint some stakingTokens to alice and bob
+        stakingToken.mint(alice, 100_000 ether);
+        stakingToken.mint(bob, 100_000 ether);
+
         _setUp();
     }
 
