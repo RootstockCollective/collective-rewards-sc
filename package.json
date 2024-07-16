@@ -58,6 +58,7 @@
     "test": "forge test",
     "test:integration": "hardhat test",
     "test:coverage": "forge coverage",
+    "test:coverage:report": "sh ./coverage.sh",
     "prepare": "husky",
     "docgen": "forge doc"
   }
