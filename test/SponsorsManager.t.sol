@@ -47,7 +47,7 @@ contract SponsorsManagerTest is BaseTest {
         emit GaugeCreated(newBuilder, /*ignored*/ address(0), address(this));
         Gauge newGauge = sponsorsManager.createGauge(newBuilder);
         //   THEN new gauge is assigned to the new builder
-        assertEq(address(sponsorsManager.gaugeOfBuilder(newBuilder)), address(newGauge));
+        assertEq(address(sponsorsManager.builderToGauge(newBuilder)), address(newGauge));
     }
 
     /**
@@ -189,7 +189,7 @@ contract SponsorsManagerTest is BaseTest {
     /**
      * SCENARIO: should revert is distribution period started
      */
-    function test_RevertNotOnDistributionPeriod() public {
+    function test_RevertNotInDistributionPeriod() public {
         // GIVEN a SponsorManager contract
         allocationsArray[0] = 1 ether;
         allocationsArray[1] = 1 ether;
@@ -203,20 +203,34 @@ contract SponsorsManagerTest is BaseTest {
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         //  AND 2 ether reward are added
         sponsorsManager.notifyRewardAmount(2 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
         //  AND distribution start
         sponsorsManager.startDistribution();
 
         // WHEN tries to allocate during the distribution period
-        //  THEN tx reverts because NotOnDistributionPeriod
-        vm.expectRevert(SponsorsManager.NotOnDistributionPeriod.selector);
+        //  THEN tx reverts because NotInDistributionPeriod
+        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         // WHEN tries to add more reward
-        //  THEN tx reverts because NotOnDistributionPeriod
-        vm.expectRevert(SponsorsManager.NotOnDistributionPeriod.selector);
+        //  THEN tx reverts because NotInDistributionPeriod
+        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
         sponsorsManager.notifyRewardAmount(2 ether);
         // WHEN tries to start distribution again
-        //  THEN tx reverts because NotOnDistributionPeriod
-        vm.expectRevert(SponsorsManager.NotOnDistributionPeriod.selector);
+        //  THEN tx reverts because NotInDistributionPeriod
+        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
+        sponsorsManager.startDistribution();
+    }
+
+    /**
+     * SCENARIO: should revert is distribution window did not start
+     */
+    function test_RevertOnlyInDistributionWindow() public {
+        // GIVEN a SponsorManager contract
+        // WHEN someone tries to distribute after the distribution window start
+        _skipToEndDistributionWindow();
+        //  THEN tx reverts because OnlyInDistributionWindow
+        vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
         sponsorsManager.startDistribution();
     }
 
@@ -251,6 +265,8 @@ contract SponsorsManagerTest is BaseTest {
 
         //  AND 100 ether reward are added
         sponsorsManager.notifyRewardAmount(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
 
         //  WHEN distribute is executed
         //   THEN DistributeReward event is emitted for gauge
@@ -267,7 +283,8 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: distribute twice on the same epoch with different allocations
+     * SCENARIO: distribute twice on the same epoch with different allocations.
+     *  The second allocation occurs on the distribution window timestamp.
      */
     function test_DistributeTwiceSameEpoch() public {
         // GIVEN a SponsorManager contract
@@ -286,9 +303,10 @@ contract SponsorsManagerTest is BaseTest {
 
         //  AND 100 ether reward are added and distributed
         sponsorsManager.notifyRewardAmount(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+        // AND distribution is executed
         sponsorsManager.startDistribution();
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
 
         // AND bob modifies his allocations 16 ether to builder and 4 ether to builder2
         vm.startPrank(bob);
@@ -327,6 +345,8 @@ contract SponsorsManagerTest is BaseTest {
 
         //  AND 100 ether reward are added and distributed
         sponsorsManager.notifyRewardAmount(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
         sponsorsManager.startDistribution();
         // AND epoch finish
         _skipAndStartNewEpoch();
@@ -340,6 +360,8 @@ contract SponsorsManagerTest is BaseTest {
 
         //  WHEN 100 ether reward are added and distributed again
         sponsorsManager.notifyRewardAmount(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
         sponsorsManager.startDistribution();
 
         // THEN reward token balance of gauge is 91.558441558441558428 = 100 * 6 / 22 + 100 * 18 / 28
@@ -366,6 +388,8 @@ contract SponsorsManagerTest is BaseTest {
 
         // AND 100 ether reward are added
         sponsorsManager.notifyRewardAmount(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
 
         // WHEN distribute is executed
         sponsorsManager.startDistribution();

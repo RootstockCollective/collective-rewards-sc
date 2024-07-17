@@ -17,17 +17,6 @@ library EpochLib {
     }
 
     /**
-     * @notice gets when an epoch ends based on given `timestamp_`
-     * @param timestamp_ timestamp to calculate
-     * @return epochStart timestamp when the epoch ends
-     */
-    function epochEnd(uint256 timestamp_) internal pure returns (uint256) {
-        unchecked {
-            return timestamp_ - (timestamp_ % WEEK) + WEEK;
-        }
-    }
-
-    /**
      * @notice gets when an epoch ends or the next one starts based on given `timestamp_`
      * @param timestamp_ timestamp to calculate
      * @return epochNext timestamp when the epoch ends or the next starts
@@ -35,6 +24,17 @@ library EpochLib {
     function epochNext(uint256 timestamp_) internal pure returns (uint256) {
         unchecked {
             return timestamp_ - (timestamp_ % WEEK) + WEEK;
+        }
+    }
+
+    /**
+     * @notice gets when an epoch distribution ends based on given `timestamp_`
+     * @param timestamp_ timestamp to calculate
+     * @return endDistributionWindow timestamp when the epoch distribution ends
+     */
+    function endDistributionWindow(uint256 timestamp_) internal pure returns (uint256) {
+        unchecked {
+            return epochStart(timestamp_) + 1 hours;
         }
     }
 }

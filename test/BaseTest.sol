@@ -49,4 +49,14 @@ contract BaseTest is Test {
         uint256 _currentEpochRemaining = EpochLib.epochNext(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining / fraction_);
     }
+
+    function _skipToStartDistributionWindow() internal {
+        _skipAndStartNewEpoch();
+    }
+
+    function _skipToEndDistributionWindow() internal {
+        _skipAndStartNewEpoch();
+        uint256 _currentEpochRemaining = EpochLib.endDistributionWindow(block.timestamp) - block.timestamp;
+        skip(_currentEpochRemaining);
+    }
 }

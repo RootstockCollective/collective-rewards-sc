@@ -7,6 +7,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeFactory } from "./gauge/GaugeFactory.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
+import { EpochLib } from "./libraries/EpochLib.sol";
 
 contract SponsorsManager {
     // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
@@ -19,7 +20,8 @@ contract SponsorsManager {
     error GaugeExists();
     error GaugeDoesNotExist(address builder_);
     error NotEnoughStaking();
-    error NotOnDistributionPeriod();
+    error OnlyInDistributionWindow();
+    error NotInDistributionPeriod();
     error DistributionPeriodDidNotStart();
 
     // -----------------------------
@@ -33,8 +35,13 @@ contract SponsorsManager {
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
-    modifier notOnDistributionPeriod() {
-        if (onDistributionPeriod) revert NotOnDistributionPeriod();
+    modifier onlyInDistributionWindow() {
+        if (block.timestamp >= EpochLib.endDistributionWindow(block.timestamp)) revert OnlyInDistributionWindow();
+        _;
+    }
+
+    modifier notInDistributionPeriod() {
+        if (onDistributionPeriod) revert NotInDistributionPeriod();
         _;
     }
 
@@ -58,7 +65,7 @@ contract SponsorsManager {
     bool public onDistributionPeriod;
 
     /// @notice gauge contract for a builder
-    mapping(address builder => Gauge gauge) public gaugeOfBuilder;
+    mapping(address builder => Gauge gauge) public builderToGauge;
     /// @notice array of all the gauges created
     Gauge[] public gauges;
     /// @notice total amount of stakingToken allocated by a sponsor
@@ -81,20 +88,20 @@ contract SponsorsManager {
      */
     function createGauge(address builder_) external returns (Gauge gauge) {
         // TODO: this function should revert if is not called by governance once the builder is whitelisted
-        if (address(gaugeOfBuilder[builder_]) != address(0)) revert GaugeExists();
+        if (address(builderToGauge[builder_]) != address(0)) revert GaugeExists();
         gauge = gaugeFactory.createGauge(builder_, address(rewardToken));
-        gaugeOfBuilder[builder_] = gauge;
+        builderToGauge[builder_] = gauge;
         gauges.push(gauge);
         emit GaugeCreated(builder_, address(gauge), msg.sender);
     }
 
     /**
-     * @notice allocates staking tokens for a gauge
+     * @notice allocates votes for a gauge
      * @dev reverts if it is called during the distribution period
-     * @param gauge_ address of the gauge where the tokens will be allocated
-     * @param allocation_ amount of tokens to allocate
+     * @param gauge_ address of the gauge where the votes will be allocated
+     * @param allocation_ amount of votes to allocate
      */
-    function allocate(Gauge gauge_, uint256 allocation_) external notOnDistributionPeriod {
+    function allocate(Gauge gauge_, uint256 allocation_) external notInDistributionPeriod {
         (uint256 _newSponsorTotalAllocation, uint256 _newTotalAllocation) =
             _allocate(gauge_, allocation_, sponsorTotalAllocation[msg.sender], totalAllocation);
 
@@ -102,17 +109,17 @@ contract SponsorsManager {
     }
 
     /**
-     * @notice allocates staking tokens for a batch of gauges
+     * @notice allocates votes for a batch of gauges
      * @dev reverts if it is called during the distribution period
-     * @param gauges_ array of gauges where the tokens will be allocated
-     * @param allocations_ array of amount of tokens to allocate
+     * @param gauges_ array of gauges where the votes will be allocated
+     * @param allocations_ array of amount of votes to allocate
      */
     function allocateBatch(
         Gauge[] calldata gauges_,
         uint256[] calldata allocations_
     )
         external
-        notOnDistributionPeriod
+        notInDistributionPeriod
     {
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
@@ -133,7 +140,7 @@ contract SponsorsManager {
      * @dev reverts if it is called during the distribution period
      * @param amount_ amount of reward tokens to distribute
      */
-    function notifyRewardAmount(uint256 amount_) external notOnDistributionPeriod {
+    function notifyRewardAmount(uint256 amount_) external notInDistributionPeriod {
         // if there is no allocation let it revert by division zero
         // [PREC] = [N] * [PREC] / [N]
         rewardsPerShare += UtilsLib._divPrec(amount_, totalAllocation);
@@ -145,12 +152,10 @@ contract SponsorsManager {
     /**
      * @notice starts the distribution period blocking all the allocations
      *  until all the gauges were distributed
-     * @dev reverts if it is called during the distribution period
+     * @dev reverts if is called outside the distribution window
+     *  reverts if it is called during the distribution period
      */
-    function startDistribution() external notOnDistributionPeriod {
-        // TODO: this function should revert if is not called by treasury or rewardManager
-        // because it will start the distribution period blocking new allocations
-
+    function startDistribution() external onlyInDistributionWindow notInDistributionPeriod {
         onDistributionPeriod = true;
         distribute();
     }
@@ -199,9 +204,9 @@ contract SponsorsManager {
     // -----------------------------
 
     /**
-     * @notice internal function used to allocate staking tokens for a gauge or a batch of gauges
-     * @param gauge_ address of the gauge where the tokens will be allocated
-     * @param allocation_ amount of tokens to allocate
+     * @notice internal function used to allocate votes for a gauge or a batch of gauges
+     * @param gauge_ address of the gauge where the votes will be allocated
+     * @param allocation_ amount of votes to allocate
      * @param sponsorTotalAllocation_ current sponsor total allocation
      * @param totalAllocation_ current total allocation
      * @return newSponsorTotalAllocation sponsor total allocation after new the allocation
