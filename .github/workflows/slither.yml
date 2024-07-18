@@ -20,20 +20,28 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Check out the repo"
+        uses: actions/checkout@v4
 
       - name: Remove test folder
         run: rm -rf test
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 21
+      - name: "Install Foundry"
+        uses: "foundry-rs/foundry-toolchain@v1"
 
-      - name: Install deps
-        run: npx bun install
+      - name: "Install Bun"
+        uses: "oven-sh/setup-bun@v1"
+
+      - name: "Install the Node.js dependencies"
+        run: "bun install"
+
+      # - name: Use Node.js
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: 21
+
+      # - name: Install deps
+      #   run: npx bun install
 
       - name: Run Slither
         uses: crytic/slither-action@v0.4.0
