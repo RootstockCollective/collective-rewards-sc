@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import { Test } from "forge-std/src/Test.sol";
+import { ChangeExecutorMock } from "./mock/ChangeExecutorMock.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { GaugeFactory } from "../src/gauge/GaugeFactory.sol";
 import { Gauge } from "../src/gauge/Gauge.sol";
@@ -9,6 +10,7 @@ import { SponsorsManager } from "../src/SponsorsManager.sol";
 import { EpochLib } from "../src/libraries/EpochLib.sol";
 
 contract BaseTest is Test {
+    ChangeExecutorMock public changeExecutorMock;
     ERC20Mock public stakingToken;
     ERC20Mock public rewardToken;
 
@@ -20,16 +22,20 @@ contract BaseTest is Test {
     SponsorsManager public sponsorsManager;
     uint256 public epochDuration;
 
+    address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
     address internal builder = makeAddr("builder");
     address internal builder2 = makeAddr("builder2");
 
     function setUp() public {
+        changeExecutorMock = new ChangeExecutorMock();
         stakingToken = new ERC20Mock();
         rewardToken = new ERC20Mock();
         gaugeFactory = new GaugeFactory();
-        sponsorsManager = new SponsorsManager(address(rewardToken), address(stakingToken), address(gaugeFactory));
+        sponsorsManager = new SponsorsManager(
+            governor, address(changeExecutorMock), address(rewardToken), address(stakingToken), address(gaugeFactory)
+        );
         gauge = sponsorsManager.createGauge(builder);
         gauge2 = sponsorsManager.createGauge(builder2);
         gaugesArray = [gauge, gauge2];

@@ -6,10 +6,11 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeFactory } from "./gauge/GaugeFactory.sol";
 import { Gauge } from "./gauge/Gauge.sol";
+import { Governed } from "./governance/Governed.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { EpochLib } from "./libraries/EpochLib.sol";
 
-contract SponsorsManager {
+contract SponsorsManager is Governed {
     // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
     uint256 internal constant MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
@@ -71,7 +72,15 @@ contract SponsorsManager {
     /// @notice total amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public sponsorTotalAllocation;
 
-    constructor(address rewardToken_, address stakingToken_, address gaugeFactory_) {
+    constructor(
+        address governor_,
+        address changeExecutor_,
+        address rewardToken_,
+        address stakingToken_,
+        address gaugeFactory_
+    )
+        Governed(governor_, changeExecutor_)
+    {
         rewardToken = IERC20(rewardToken_);
         stakingToken = IERC20(stakingToken_);
         gaugeFactory = GaugeFactory(gaugeFactory_);
@@ -86,7 +95,7 @@ contract SponsorsManager {
      * @param builder_ builder address who can claim the rewards
      * @return gauge gauge contract
      */
-    function createGauge(address builder_) external returns (Gauge gauge) {
+    function createGauge(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge) {
         // TODO: this function should revert if is not called by governance once the builder is whitelisted
         if (address(builderToGauge[builder_]) != address(0)) revert GaugeExists();
         gauge = gaugeFactory.createGauge(builder_, address(rewardToken));
