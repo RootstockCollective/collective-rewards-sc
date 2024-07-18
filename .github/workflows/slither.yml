@@ -35,14 +35,6 @@ jobs:
       - name: "Install the Node.js dependencies"
         run: "bun install"
 
-      # - name: Use Node.js
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: 21
-
-      # - name: Install deps
-      #   run: npx bun install
-
       - name: Run Slither
         uses: crytic/slither-action@v0.4.0
         id: slither
