@@ -58,7 +58,7 @@
     "test": "forge test",
     "test:integration": "hardhat test",
     "test:coverage": "forge coverage",
-    "prepare": "husky && bun run compile",
+    "prepare": "husky",
     "docgen": "forge doc"
   }
 }
