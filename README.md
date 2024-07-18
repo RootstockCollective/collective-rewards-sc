@@ -207,6 +207,22 @@ Generate test coverage and output result to the terminal:
 bun run test:coverage
 ```
 
+Generate coverage report:
+
+1. Install lcov
+
+   ```sh
+   apt-get install lcov
+   ```
+
+1. Generate report
+
+   ```sh
+   bun run test:coverage:report
+   ```
+
+1. Open `coverage/index.html`
+
 ## Acknowledgment
 
 The project is built using the [PaulRBerg foundry-template](https://github.com/PaulRBerg/foundry-template).
