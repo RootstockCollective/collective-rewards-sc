@@ -7,6 +7,7 @@ import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { GaugeFactory } from "../src/gauge/GaugeFactory.sol";
 import { Gauge } from "../src/gauge/Gauge.sol";
 import { SponsorsManager } from "../src/SponsorsManager.sol";
+import { BuilderRegistry } from "../src/BuilderRegistry.sol";
 import { EpochLib } from "../src/libraries/EpochLib.sol";
 
 contract BaseTest is Test {
@@ -20,6 +21,8 @@ contract BaseTest is Test {
     Gauge[] public gaugesArray;
     uint256[] public allocationsArray = [0, 0];
     SponsorsManager public sponsorsManager;
+    BuilderRegistry public builderRegistry;
+    uint256 public initialTimestamp;
     uint256 public epochDuration;
 
     address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract
@@ -27,11 +30,14 @@ contract BaseTest is Test {
     address internal bob = makeAddr("bob");
     address internal builder = makeAddr("builder");
     address internal builder2 = makeAddr("builder2");
+    address internal foundation = makeAddr("foundation");
+    address internal governor = makeAddr("governor");
 
     function setUp() public {
         changeExecutorMock = new ChangeExecutorMock(governor);
         stakingToken = new ERC20Mock();
         rewardToken = new ERC20Mock();
+        builderRegistry = new BuilderRegistry(foundation, governor);
         gaugeFactory = new GaugeFactory();
         sponsorsManager = new SponsorsManager(
             governor, address(changeExecutorMock), address(rewardToken), address(stakingToken), address(gaugeFactory)

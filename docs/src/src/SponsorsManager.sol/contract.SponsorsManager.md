@@ -1,6 +1,10 @@
 # SponsorsManager
 
+<<<<<<< HEAD
 [Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d568903015f871eedd363a6c648861169e985892/src/SponsorsManager.sol)
+=======
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d2969cf48df5747a801872ec11a9e5369ab00a1a/src/SponsorsManager.sol)
+>>>>>>> 570d7f7 (feat: builderRegistry)
 
 ## State Variables
 

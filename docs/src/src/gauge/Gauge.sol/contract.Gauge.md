@@ -1,6 +1,10 @@
 # Gauge
 
+<<<<<<< HEAD
 [Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d568903015f871eedd363a6c648861169e985892/src/gauge/Gauge.sol)
+=======
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d2969cf48df5747a801872ec11a9e5369ab00a1a/src/gauge/Gauge.sol)
+>>>>>>> 570d7f7 (feat: builderRegistry)
 
 For each project proposal a Gauge contract will be deployed. It receives all the rewards obtained for that project and
 allows the builder and voters to claim them.

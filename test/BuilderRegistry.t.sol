@@ -1,0 +1,366 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity 0.8.20;
+
+import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
+import { BaseTest, BuilderRegistry } from "./BaseTest.sol";
+
+using stdStorage for StdStorage;
+
+contract BuilderRegistryTest is BaseTest {
+    // -----------------------------
+    // ----------- Events ----------
+    // -----------------------------
+    event StateUpdate(address indexed builder_, BuilderRegistry.BuilderState indexed state_);
+    event RewardSplitPercentageUpdate(address indexed builder_, uint8 rewardSplitPercentage_);
+
+    /**
+     * SCENARIO: functions protected by OnlyFoundation should revert when are not
+     *  called by Foundation
+     */
+    function test_OnlyFoundation() public {
+        // GIVEN a sponsor alice
+        vm.startPrank(alice);
+
+        // WHEN alice calls activateBuilder
+        //  THEN tx reverts because caller is not the Foundation
+        vm.expectRevert(BuilderRegistry.NotFoundation.selector);
+        builderRegistry.activateBuilder(builder, alice);
+    }
+
+    /**
+     * SCENARIO: functions protected by OnlyGovernor should revert when are not
+     *  called by Governor
+     */
+    function test_OnlyGovernor() public {
+        // GIVEN a sponsor alice
+        vm.startPrank(alice);
+
+        // WHEN alice calls whitelistBuilder
+        //  THEN tx reverts because caller is not the Governor
+        vm.expectRevert(BuilderRegistry.NotGovernor.selector);
+        builderRegistry.whitelistBuilder(builder);
+
+        // WHEN alice calls pauseBuilder
+        //  THEN tx reverts because caller is not the Governor
+        vm.expectRevert(BuilderRegistry.NotGovernor.selector);
+        builderRegistry.pauseBuilder(builder);
+
+        // WHEN alice calls permitBuilder
+        //  THEN tx reverts because caller is not the Governor
+        vm.expectRevert(BuilderRegistry.NotGovernor.selector);
+        builderRegistry.permitBuilder(builder);
+
+        // WHEN alice calls setRewardSplitPercentage
+        //  THEN tx reverts because caller is not the Governor
+        vm.expectRevert(BuilderRegistry.NotGovernor.selector);
+        builderRegistry.setRewardSplitPercentage(builder, 10);
+    }
+
+    /**
+     * SCENARIO: revokeBuilder should revert if is not called by the builder
+     */
+    function test_NotAuthorized() public {
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
+
+        // GIVEN a sponsor alice
+        vm.startPrank(alice);
+
+        // WHEN alice calls revokeBuilder
+        //  THEN tx reverts because caller is not the builder
+        vm.expectRevert(BuilderRegistry.NotAuthorized.selector);
+        builderRegistry.revokeBuilder(builder);
+    }
+
+    /**
+     * SCENARIO: Foundation activates a new builder
+     */
+    function test_ActivateBuilder() public {
+        // GIVEN a Foundation
+        vm.startPrank(foundation);
+
+        // WHEN calls activateBuilder
+        //  THEN StateUpdate event is emitted
+        vm.expectEmit();
+        emit StateUpdate(builder, BuilderRegistry.BuilderState.KYCApproved);
+        builderRegistry.activateBuilder(builder, builder);
+
+        // THEN builder.state is KYCApproved
+        assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.KYCApproved));
+
+        // THEN builder rewards receive is the same builder
+        assertEq(builderRegistry.getRewardsReceiver(builder), builder);
+    }
+
+    /**
+     * SCENARIO: activateBuilder should reverts if the state is not Pending
+     */
+    function test_ActivateBuilderWrongStatus() public {
+        // GIVEN a Foundation
+        vm.startPrank(foundation);
+
+        // WHEN state is not Pending
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
+
+        // WHEN tries to activateBuilder
+        //  THEN tx reverts because is not in the required state
+        vm.expectRevert(
+            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Pending)
+        );
+        builderRegistry.activateBuilder(builder, builder);
+    }
+
+    /**
+     * SCENARIO: Governor whitelist a new builder
+     */
+    function test_WhitelistBuilder() public {
+        // GIVEN a Governor
+        vm.startPrank(governor);
+
+        // WHEN state is KYCApproved
+        _setBuilderState(builder, BuilderRegistry.BuilderState.KYCApproved);
+
+        // WHEN calls whitelistBuilder
+        //  THEN StateUpdate event is emitted
+        vm.expectEmit();
+        emit StateUpdate(builder, BuilderRegistry.BuilderState.Whitelisted);
+        builderRegistry.whitelistBuilder(builder);
+
+        // THEN builder.state is Whitelisted
+        assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
+    }
+
+    /**
+     * SCENARIO: whitelistBuilder should reverts if the state is not KYCApproved
+     */
+    function test_WhitelistBuilderWrongStatus() public {
+        // GIVEN a Governor
+        vm.startPrank(governor);
+
+        // WHEN state is not KYCApproved
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
+
+        // WHEN tries to whitelistBuilder
+        //  THEN tx reverts because is not the required state
+        vm.expectRevert(
+            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.KYCApproved)
+        );
+        builderRegistry.whitelistBuilder(builder);
+    }
+
+    /**
+     * SCENARIO: Governor pause a builder
+     */
+    function test_PauseBuilder() public {
+        // GIVEN a Governor
+        vm.startPrank(governor);
+
+        // WHEN state is Whitelisted
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
+
+        // WHEN calls pauseBuilder
+        //  THEN StateUpdate event is emitted
+        vm.expectEmit();
+        emit StateUpdate(builder, BuilderRegistry.BuilderState.Paused);
+        builderRegistry.pauseBuilder(builder);
+
+        // THEN builder.state is Paused
+        assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.Paused));
+    }
+
+    /**
+     * SCENARIO: pauseBuilder should reverts if the state is not Whitelisted
+     */
+    function test_PauseBuilderWrongStatus() public {
+        // GIVEN a Governor
+        vm.startPrank(governor);
+
+        // WHEN state is not Whitelisted
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Revoked);
+
+        // WHEN tries to pauseBuilder
+        //  THEN tx reverts because is not the required state
+        vm.expectRevert(
+            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
+        );
+        builderRegistry.pauseBuilder(builder);
+    }
+
+    /**
+     * SCENARIO: Governor permit a builder
+     */
+    function test_PermitBuilder() public {
+        // GIVEN a Governor
+        vm.startPrank(governor);
+
+        // WHEN state is Revoked
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Revoked);
+
+        // WHEN calls permitBuilder
+        //  THEN StateUpdate event is emitted
+        vm.expectEmit();
+        emit StateUpdate(builder, BuilderRegistry.BuilderState.Whitelisted);
+        builderRegistry.permitBuilder(builder);
+
+        // THEN builder.state is Whitelisted
+        assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
+    }
+
+    /**
+     * SCENARIO: permitBuilder should reverts if the state is not Revoked
+     */
+    function test_PermitBuilderWrongStatus() public {
+        // GIVEN a Governor
+        vm.startPrank(governor);
+
+        // WHEN state is not Revoked
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
+
+        // WHEN tries to permitBuilder
+        //  THEN tx reverts because is not the required state
+        vm.expectRevert(
+            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Revoked)
+        );
+        builderRegistry.permitBuilder(builder);
+    }
+
+    /**
+     * SCENARIO: Builder revoke itself
+     */
+    function test_RevokeBuilder() public {
+        // GIVEN a builder
+        vm.startPrank(builder);
+
+        // WHEN state is Whitelisted
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
+
+        // WHEN calls revokeBuilder
+        //  THEN StateUpdate event is emitted
+        vm.expectEmit();
+        emit StateUpdate(builder, BuilderRegistry.BuilderState.Revoked);
+        builderRegistry.revokeBuilder(builder);
+
+        // THEN builder.state is Revoked
+        assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.Revoked));
+    }
+
+    /**
+     * SCENARIO: revokeBuilder should reverts if the state is not Whitelisted
+     */
+    function test_RevokeBuilderWrongStatus() public {
+        // GIVEN a builder
+        vm.startPrank(builder);
+
+        // WHEN state is not Whitelisted
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Revoked);
+
+        // WHEN tries to revokeBuilder
+        //  THEN tx reverts because is not the required state
+        vm.expectRevert(
+            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
+        );
+        builderRegistry.revokeBuilder(builder);
+    }
+
+    /**
+     * SCENARIO: Governor set new builder reward split percentage
+     */
+    function test_SetRewardSplitPercentage() public {
+        // GIVEN a Governor
+        vm.startPrank(governor);
+
+        // GIVEN builder.rewardSplitPercentage is 0
+        assertEq(builderRegistry.getRewardSplitPercentage(builder), 0);
+
+        // WHEN state is Whitelisted
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
+
+        // WHEN calls setRewardSplitPercentage
+        //  THEN RewardSplitPercentageUpdate event is emitted
+        vm.expectEmit();
+        emit RewardSplitPercentageUpdate(builder, 5);
+        builderRegistry.setRewardSplitPercentage(builder, 5);
+
+        // THEN builder.rewardSplitPercentage is 5
+        assertEq(builderRegistry.getRewardSplitPercentage(builder), 5);
+    }
+
+    /**
+     * SCENARIO: setRewardSplitPercentage should reverts if the state is not Whitelisted
+     */
+    function test_SetRewardSplitPercentageWrongStatus() public {
+        // GIVEN a Governor
+        vm.startPrank(governor);
+
+        // WHEN state is not Whitelisted
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Revoked);
+
+        // WHEN tries to setRewardSplitPercentage
+        //  THEN tx reverts because is not the required state
+        vm.expectRevert(
+            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
+        );
+        builderRegistry.setRewardSplitPercentage(builder, 5);
+    }
+
+    /**
+     * SCENARIO: Getting builder state
+     */
+    function test_GetState() public {
+        // GIVEN a builder
+        vm.startPrank(builder);
+
+        // WHEN state is was previously updated to Revoked
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Revoked);
+
+        // THEN builder.state is Revoked
+        assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.Revoked));
+    }
+
+    /**
+     * SCENARIO: Getting builder rewards receiver
+     */
+    function test_GetRewardsReceiver() public {
+        // GIVEN a foundation
+        vm.startPrank(foundation);
+
+        // WHEN rewards receiver was previously updated to builder
+        builderRegistry.activateBuilder(builder, builder);
+
+        // THEN builder.rewardsReceiver is builder
+        assertEq(builderRegistry.getRewardsReceiver(builder), builder);
+    }
+
+    /**
+     * SCENARIO: Getting builder reward split percentage
+     */
+    function test_GetRewardSplitPercentage() public {
+        // GIVEN a governor
+        vm.startPrank(governor);
+
+        // WHEN state is Whitelisted
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
+
+        // WHEN reward split percentage was previously updated to 10
+        builderRegistry.setRewardSplitPercentage(builder, 10);
+
+        // THEN builder.rewardSplitPercentage is 10
+        assertEq(builderRegistry.getRewardSplitPercentage(builder), 10);
+    }
+
+    function _getBuilderStorage(address builder_) internal returns (StdStorage storage) {
+        return stdstore.target(address(builderRegistry)).sig("builders(address)").with_key(builder_);
+    }
+
+    function _setBuilderState(address builder_, BuilderRegistry.BuilderState state_) internal {
+        _getBuilderStorage(builder_).depth(0).checked_write(uint256(state_));
+    }
+
+    // TODO validate [FAIL. Reason: panic: array out-of-bounds access (0x32)] and fix it.
+    /*     function _setRewardsReceiver(address builder_, address rewardReceiver_) internal {
+        _getBuilderStorage(builder_).depth(1).checked_write(rewardReceiver_);
+    }
+
+    function _setBuilderRewardSplitPercentage(address builder_, uint8 rewardSplitPercentage_) internal {
+        _getBuilderStorage(builder_).depth(2).checked_write(rewardSplitPercentage_);
+    } */
+}
