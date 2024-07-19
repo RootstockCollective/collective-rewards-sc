@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d2969cf48df5747a801872ec11a9e5369ab00a1a/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/570d7f7acfcf922ef9eb9a54cef5dc11cb1bbfe3/src/BuilderRegistry.sol)
 
 Keeps registers of the builders
 
@@ -22,12 +22,28 @@ governor address
 address public immutable governor;
 ```
 
-### builders
+### builderState
 
-map of builders with their information
+map of builders state
 
 ```solidity
-mapping(address builder => Builder registry) public builders;
+mapping(address builder => BuilderState state) public builderState;
+```
+
+### builderAuthClaimer
+
+map of builders authorized claimer
+
+```solidity
+mapping(address builder => address payable claimer) public builderAuthClaimer;
+```
+
+### rewardSplitPercentages
+
+map of builders reward split percentage
+
+```solidity
+mapping(address builder => uint8 percentage) public rewardSplitPercentages;
 ```
 
 ## Functions
@@ -47,7 +63,7 @@ modifier onlyGovernor();
 ### atState
 
 ```solidity
-modifier atState(address builder_, BuilderState preState_);
+modifier atState(address builder_, BuilderState previousState_);
 ```
 
 ### constructor
@@ -67,14 +83,14 @@ constructor(address foundation_, address governor_);
 
 ### activateBuilder
 
-activates builder and set rewards receiver
+activates builder and set authorized claimer
 
 _reverts if is not called by the foundation address reverts if builder state is not pending_
 
 ```solidity
 function activateBuilder(
     address builder_,
-    address rewardsReceiver_
+    address payable authClaimer
 )
     external
     onlyFoundation
@@ -83,10 +99,10 @@ function activateBuilder(
 
 **Parameters**
 
-| Name               | Type      | Description                             |
-| ------------------ | --------- | --------------------------------------- |
-| `builder_`         | `address` | address of builder                      |
-| `rewardsReceiver_` | `address` | address of the builder rewards receiver |
+| Name          | Type              | Description                               |
+| ------------- | ----------------- | ----------------------------------------- |
+| `builder_`    | `address`         | address of builder                        |
+| `authClaimer` | `address payable` | address of the builder authorized claimer |
 
 ### whitelistBuilder
 
@@ -189,12 +205,12 @@ function getState(address builder_) public view returns (BuilderState);
 | ---------- | --------- | ------------------ |
 | `builder_` | `address` | address of builder |
 
-### getRewardsReceiver
+### getAuthClaimer
 
-get builder rewards receiver
+get builder authorized claimer
 
 ```solidity
-function getRewardsReceiver(address builder_) public view returns (address);
+function getAuthClaimer(address builder_) public view returns (address);
 ```
 
 **Parameters**
@@ -222,7 +238,7 @@ function getRewardSplitPercentage(address builder_) public view returns (uint256
 ### StateUpdate
 
 ```solidity
-event StateUpdate(address indexed builder_, BuilderState indexed state_);
+event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
 ```
 
 ### RewardSplitPercentageUpdate
@@ -255,18 +271,6 @@ error NotAuthorized();
 
 ```solidity
 error RequiredState(BuilderState state);
-```
-
-## Structs
-
-### Builder
-
-```solidity
-struct Builder {
-    BuilderState state;
-    address rewardsReceiver;
-    uint256 rewardSplitPercentage;
-}
 ```
 
 ## Enums

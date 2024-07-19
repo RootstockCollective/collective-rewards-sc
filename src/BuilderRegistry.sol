@@ -17,7 +17,7 @@ contract BuilderRegistry {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event StateUpdate(address indexed builder_, BuilderState indexed state_);
+    event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
     event RewardSplitPercentageUpdate(address indexed builder_, uint8 rewardSplitPercentage_);
 
     // -----------------------------
@@ -33,9 +33,8 @@ contract BuilderRegistry {
         _;
     }
 
-    modifier atState(address builder_, BuilderState preState_) {
-        Builder memory _builder = builders[builder_];
-        if (_builder.state != preState_) revert RequiredState(preState_);
+    modifier atState(address builder_, BuilderState previousState_) {
+        if (builderState[builder_] != previousState_) revert RequiredState(previousState_);
         _;
     }
 
@@ -51,15 +50,6 @@ contract BuilderRegistry {
     }
 
     // -----------------------------
-    // ---------- Structs ----------
-    // -----------------------------
-    struct Builder {
-        BuilderState state;
-        address rewardsReceiver;
-        uint256 rewardSplitPercentage;
-    }
-
-    // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
 
@@ -69,8 +59,14 @@ contract BuilderRegistry {
     /// @notice governor address
     address public immutable governor;
 
-    /// @notice map of builders with their information
-    mapping(address builder => Builder registry) public builders;
+    /// @notice map of builders state
+    mapping(address builder => BuilderState state) public builderState;
+
+    /// @notice map of builders authorized claimer
+    mapping(address builder => address payable claimer) public builderAuthClaimer;
+
+    /// @notice map of builders reward split percentage
+    mapping(address builder => uint8 percentage) public rewardSplitPercentages;
 
     /**
      * @notice constructor
@@ -87,25 +83,24 @@ contract BuilderRegistry {
     // -----------------------------
 
     /**
-     * @notice activates builder and set rewards receiver
+     * @notice activates builder and set authorized claimer
      * @dev reverts if is not called by the foundation address
      * reverts if builder state is not pending
      * @param builder_ address of builder
-     * @param rewardsReceiver_ address of the builder rewards receiver
+     * @param authClaimer address of the builder authorized claimer
      */
     function activateBuilder(
         address builder_,
-        address rewardsReceiver_
+        address payable authClaimer
     )
         external
         onlyFoundation
         atState(builder_, BuilderState.Pending)
     {
-        Builder storage _builder = builders[builder_];
-        _builder.state = BuilderState.KYCApproved;
-        _builder.rewardsReceiver = rewardsReceiver_;
+        builderState[builder_] = BuilderState.KYCApproved;
+        builderAuthClaimer[builder_] = authClaimer;
 
-        emit StateUpdate(builder_, _builder.state);
+        emit StateUpdate(builder_, BuilderState.Pending, BuilderState.KYCApproved);
     }
 
     /**
@@ -115,10 +110,9 @@ contract BuilderRegistry {
      * @param builder_ address of builder
      */
     function whitelistBuilder(address builder_) external onlyGovernor atState(builder_, BuilderState.KYCApproved) {
-        Builder storage _builder = builders[builder_];
-        _builder.state = BuilderState.Whitelisted;
+        builderState[builder_] = BuilderState.Whitelisted;
 
-        emit StateUpdate(builder_, _builder.state);
+        emit StateUpdate(builder_, BuilderState.KYCApproved, BuilderState.Whitelisted);
     }
 
     /**
@@ -128,10 +122,9 @@ contract BuilderRegistry {
      * @param builder_ address of builder
      */
     function pauseBuilder(address builder_) external onlyGovernor atState(builder_, BuilderState.Whitelisted) {
-        Builder storage _builder = builders[builder_];
-        _builder.state = BuilderState.Paused;
+        builderState[builder_] = BuilderState.Paused;
 
-        emit StateUpdate(builder_, _builder.state);
+        emit StateUpdate(builder_, BuilderState.Whitelisted, BuilderState.Paused);
     }
 
     /**
@@ -141,10 +134,9 @@ contract BuilderRegistry {
      * @param builder_ address of builder
      */
     function permitBuilder(address builder_) external onlyGovernor atState(builder_, BuilderState.Revoked) {
-        Builder storage _builder = builders[builder_];
-        _builder.state = BuilderState.Whitelisted;
+        builderState[builder_] = BuilderState.Whitelisted;
 
-        emit StateUpdate(builder_, _builder.state);
+        emit StateUpdate(builder_, BuilderState.Revoked, BuilderState.Whitelisted);
     }
 
     /**
@@ -156,10 +148,9 @@ contract BuilderRegistry {
     function revokeBuilder(address builder_) external atState(builder_, BuilderState.Whitelisted) {
         if (msg.sender != builder_) revert NotAuthorized();
 
-        Builder storage _builder = builders[builder_];
-        _builder.state = BuilderState.Revoked;
+        builderState[builder_] = BuilderState.Revoked;
 
-        emit StateUpdate(builder_, _builder.state);
+        emit StateUpdate(builder_, BuilderState.Whitelisted, BuilderState.Revoked);
     }
 
     /**
@@ -177,8 +168,7 @@ contract BuilderRegistry {
         onlyGovernor
         atState(builder_, BuilderState.Whitelisted)
     {
-        Builder storage _builder = builders[builder_];
-        _builder.rewardSplitPercentage = rewardSplitPercentage_;
+        rewardSplitPercentages[builder_] = rewardSplitPercentage_;
 
         emit RewardSplitPercentageUpdate(builder_, rewardSplitPercentage_);
     }
@@ -192,19 +182,15 @@ contract BuilderRegistry {
      * @param builder_ address of builder
      */
     function getState(address builder_) public view returns (BuilderState) {
-        Builder storage _builder = builders[builder_];
-
-        return _builder.state;
+        return builderState[builder_];
     }
 
     /**
-     * @notice get builder rewards receiver
+     * @notice get builder authorized claimer
      * @param builder_ address of builder
      */
-    function getRewardsReceiver(address builder_) public view returns (address) {
-        Builder storage _builder = builders[builder_];
-
-        return _builder.rewardsReceiver;
+    function getAuthClaimer(address builder_) public view returns (address) {
+        return builderAuthClaimer[builder_];
     }
 
     /**
@@ -212,8 +198,6 @@ contract BuilderRegistry {
      * @param builder_ address of builder
      */
     function getRewardSplitPercentage(address builder_) public view returns (uint256) {
-        Builder storage _builder = builders[builder_];
-
-        return _builder.rewardSplitPercentage;
+        return rewardSplitPercentages[builder_];
     }
 }

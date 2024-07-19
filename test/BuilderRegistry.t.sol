@@ -10,7 +10,9 @@ contract BuilderRegistryTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event StateUpdate(address indexed builder_, BuilderRegistry.BuilderState indexed state_);
+    event StateUpdate(
+        address indexed builder_, BuilderRegistry.BuilderState previousState_, BuilderRegistry.BuilderState newState_
+    );
     event RewardSplitPercentageUpdate(address indexed builder_, uint8 rewardSplitPercentage_);
 
     /**
@@ -24,7 +26,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN alice calls activateBuilder
         //  THEN tx reverts because caller is not the Foundation
         vm.expectRevert(BuilderRegistry.NotFoundation.selector);
-        builderRegistry.activateBuilder(builder, alice);
+        builderRegistry.activateBuilder(builder, payable(alice));
     }
 
     /**
@@ -81,14 +83,14 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN calls activateBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.KYCApproved);
-        builderRegistry.activateBuilder(builder, builder);
+        emit StateUpdate(builder, BuilderRegistry.BuilderState.Pending, BuilderRegistry.BuilderState.KYCApproved);
+        builderRegistry.activateBuilder(builder, payable(builder));
 
         // THEN builder.state is KYCApproved
         assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.KYCApproved));
 
         // THEN builder rewards receive is the same builder
-        assertEq(builderRegistry.getRewardsReceiver(builder), builder);
+        assertEq(builderRegistry.getAuthClaimer(builder), builder);
     }
 
     /**
@@ -106,7 +108,7 @@ contract BuilderRegistryTest is BaseTest {
         vm.expectRevert(
             abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Pending)
         );
-        builderRegistry.activateBuilder(builder, builder);
+        builderRegistry.activateBuilder(builder, payable(builder));
     }
 
     /**
@@ -122,7 +124,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN calls whitelistBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Whitelisted);
+        emit StateUpdate(builder, BuilderRegistry.BuilderState.KYCApproved, BuilderRegistry.BuilderState.Whitelisted);
         builderRegistry.whitelistBuilder(builder);
 
         // THEN builder.state is Whitelisted
@@ -160,7 +162,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN calls pauseBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Paused);
+        emit StateUpdate(builder, BuilderRegistry.BuilderState.Whitelisted, BuilderRegistry.BuilderState.Paused);
         builderRegistry.pauseBuilder(builder);
 
         // THEN builder.state is Paused
@@ -198,7 +200,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN calls permitBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Whitelisted);
+        emit StateUpdate(builder, BuilderRegistry.BuilderState.Revoked, BuilderRegistry.BuilderState.Whitelisted);
         builderRegistry.permitBuilder(builder);
 
         // THEN builder.state is Whitelisted
@@ -236,7 +238,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN calls revokeBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Revoked);
+        emit StateUpdate(builder, BuilderRegistry.BuilderState.Whitelisted, BuilderRegistry.BuilderState.Revoked);
         builderRegistry.revokeBuilder(builder);
 
         // THEN builder.state is Revoked
@@ -317,17 +319,17 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: Getting builder rewards receiver
+     * SCENARIO: Getting builder authorized claimer
      */
-    function test_GetRewardsReceiver() public {
+    function test_GetAuthClaimer() public {
         // GIVEN a foundation
         vm.startPrank(foundation);
 
-        // WHEN rewards receiver was previously updated to builder
-        builderRegistry.activateBuilder(builder, builder);
+        // WHEN authorized claimer was previously updated to builder
+        _setAuthClaimer(builder, builder);
 
-        // THEN builder.rewardsReceiver is builder
-        assertEq(builderRegistry.getRewardsReceiver(builder), builder);
+        // THEN builder.authClaimer is builder
+        assertEq(builderRegistry.getAuthClaimer(builder), builder);
     }
 
     /**
@@ -337,30 +339,27 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN a governor
         vm.startPrank(governor);
 
-        // WHEN state is Whitelisted
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
-
         // WHEN reward split percentage was previously updated to 10
-        builderRegistry.setRewardSplitPercentage(builder, 10);
+        _setBuilderRewardSplitPercentage(builder, 10);
 
         // THEN builder.rewardSplitPercentage is 10
         assertEq(builderRegistry.getRewardSplitPercentage(builder), 10);
     }
 
-    function _getBuilderStorage(address builder_) internal returns (StdStorage storage) {
-        return stdstore.target(address(builderRegistry)).sig("builders(address)").with_key(builder_);
-    }
-
     function _setBuilderState(address builder_, BuilderRegistry.BuilderState state_) internal {
-        _getBuilderStorage(builder_).depth(0).checked_write(uint256(state_));
+        stdstore.target(address(builderRegistry)).sig("builderState(address)").with_key(builder_).checked_write(
+            uint256(state_)
+        );
     }
 
-    // TODO validate [FAIL. Reason: panic: array out-of-bounds access (0x32)] and fix it.
-    /*     function _setRewardsReceiver(address builder_, address rewardReceiver_) internal {
-        _getBuilderStorage(builder_).depth(1).checked_write(rewardReceiver_);
+    function _setAuthClaimer(address builder_, address authClaimer_) internal {
+        stdstore.target(address(builderRegistry)).sig("builderAuthClaimer(address)").with_key(builder_).checked_write(
+            authClaimer_
+        );
     }
 
     function _setBuilderRewardSplitPercentage(address builder_, uint8 rewardSplitPercentage_) internal {
-        _getBuilderStorage(builder_).depth(2).checked_write(rewardSplitPercentage_);
-    } */
+        stdstore.target(address(builderRegistry)).sig("rewardSplitPercentages(address)").with_key(builder_)
+            .checked_write(rewardSplitPercentage_);
+    }
 }
