@@ -1,26 +1,24 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { IChangeExecutor } from "../../src/interfaces/IChangeExecutor.sol";
+import { ChangeExecutor } from "../../src/governance/ChangeExecutor.sol";
 import { IChangeContract } from "../../src/interfaces/IChangeContract.sol";
 
 /**
  * @title ChangeExecutorMock
  *   @dev Test only contract to mock Governor behavior
  */
-contract ChangeExecutorMock is IChangeExecutor {
+contract ChangeExecutorMock is ChangeExecutor {
     bool public isAuthorized = true;
 
     /**
-     * @notice Function to be called to make the changes in changeContract
-     * @param changeContract Address of the contract that will execute the changes
+     * @notice Constructor
+     * @param governor_ governor contract address
      */
-    function executeChange(IChangeContract changeContract) external {
-        changeContract.execute();
-    }
+    constructor(address governor_) ChangeExecutor(governor_) { }
 
-    function isAuthorizedChanger(address) external view override returns (bool) {
-        return isAuthorized;
+    function isAuthorizedChanger(address changer_) external view override returns (bool) {
+        return isAuthorized || _isAuthorizedChanger(changer_);
     }
 
     function setIsAuthorized(bool isAuthorized_) public {

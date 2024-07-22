@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { IChangeExecutor } from "../interfaces/IChangeExecutor.sol";
+import { ChangeExecutor } from "./ChangeExecutor.sol";
 
 /**
  * @title Governed
@@ -26,7 +26,7 @@ abstract contract Governed {
      * the governance system
      */
     modifier onlyGovernorOrAuthorizedChanger() {
-        checkIfGovernorOrAuthorizedChanger();
+        _checkIfGovernorOrAuthorizedChanger();
         _;
     }
 
@@ -37,7 +37,7 @@ abstract contract Governed {
     /// @notice governor contract address
     address public immutable governor;
     /// @notice contract that can articulate more complex changes executed from the governor
-    IChangeExecutor public immutable changeExecutor;
+    ChangeExecutor public immutable changeExecutor;
 
     /**
      * @notice Constructor
@@ -46,7 +46,7 @@ abstract contract Governed {
      */
     constructor(address governor_, address changeExecutor_) {
         governor = governor_;
-        changeExecutor = IChangeExecutor(changeExecutor_);
+        changeExecutor = ChangeExecutor(changeExecutor_);
     }
 
     // -----------------------------
@@ -56,7 +56,7 @@ abstract contract Governed {
     /**
      * @notice Checks if the msg sender is the governor or an authorized changer, reverts otherwise
      */
-    function checkIfGovernorOrAuthorizedChanger() internal view {
+    function _checkIfGovernorOrAuthorizedChanger() internal view {
         if (msg.sender != governor && !changeExecutor.isAuthorizedChanger(msg.sender)) {
             revert NotGovernorOrAuthorizedChanger();
         }
