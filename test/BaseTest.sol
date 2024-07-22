@@ -29,7 +29,7 @@ contract BaseTest is Test {
     address internal builder2 = makeAddr("builder2");
 
     function setUp() public {
-        changeExecutorMock = new ChangeExecutorMock();
+        changeExecutorMock = new ChangeExecutorMock(governor);
         stakingToken = new ERC20Mock();
         rewardToken = new ERC20Mock();
         gaugeFactory = new GaugeFactory();
