@@ -26,7 +26,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN alice calls activateBuilder
         //  THEN tx reverts because caller is not the Foundation
         vm.expectRevert(BuilderRegistry.NotFoundation.selector);
-        builderRegistry.activateBuilder(builder, payable(alice));
+        builderRegistry.activateBuilder(builder, alice, 0);
     }
 
     /**
@@ -84,7 +84,7 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
         emit StateUpdate(builder, BuilderRegistry.BuilderState.Pending, BuilderRegistry.BuilderState.KYCApproved);
-        builderRegistry.activateBuilder(builder, payable(builder));
+        builderRegistry.activateBuilder(builder, builder, 0);
 
         // THEN builder.state is KYCApproved
         assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.KYCApproved));
@@ -108,7 +108,20 @@ contract BuilderRegistryTest is BaseTest {
         vm.expectRevert(
             abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Pending)
         );
-        builderRegistry.activateBuilder(builder, payable(builder));
+        builderRegistry.activateBuilder(builder, builder, 0);
+    }
+
+    /**
+     * SCENARIO: activateBuilder should reverts if reward split percentage is higher than 100
+     */
+    function test_ActivateBuilderInvalidRewardSplitPercentage() public {
+        // GIVEN a Foundation
+        vm.startPrank(foundation);
+
+        // WHEN tries to activateBuilder
+        //  THEN tx reverts because is not a valid reward split percentage
+        vm.expectRevert(BuilderRegistry.InvalidRewardSplitPercentage.selector);
+        builderRegistry.activateBuilder(builder, builder, 101);
     }
 
     /**
@@ -302,6 +315,22 @@ contract BuilderRegistryTest is BaseTest {
             abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
         );
         builderRegistry.setRewardSplitPercentage(builder, 5);
+    }
+
+    /**
+     * SCENARIO: setRewardSplitPercentage should reverts if reward split percentage is higher than 100
+     */
+    function test_SetRewardSplitPercentageInvalidRewardSplitPercentage() public {
+        // GIVEN a Governor
+        vm.startPrank(governor);
+
+        // WHEN state is Whitelisted
+        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
+
+        // WHEN tries to setRewardSplitPercentage
+        //  THEN tx reverts because is not a valid reward split percentage
+        vm.expectRevert(BuilderRegistry.InvalidRewardSplitPercentage.selector);
+        builderRegistry.setRewardSplitPercentage(builder, 101);
     }
 
     /**

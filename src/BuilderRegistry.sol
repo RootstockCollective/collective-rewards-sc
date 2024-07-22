@@ -12,6 +12,7 @@ contract BuilderRegistry {
     error NotFoundation();
     error NotGovernor();
     error NotAuthorized();
+    error InvalidRewardSplitPercentage();
     error RequiredState(BuilderState state);
 
     // -----------------------------
@@ -63,7 +64,7 @@ contract BuilderRegistry {
     mapping(address builder => BuilderState state) public builderState;
 
     /// @notice map of builders authorized claimer
-    mapping(address builder => address payable claimer) public builderAuthClaimer;
+    mapping(address builder => address claimer) public builderAuthClaimer;
 
     /// @notice map of builders reward split percentage
     mapping(address builder => uint8 percentage) public rewardSplitPercentages;
@@ -87,18 +88,21 @@ contract BuilderRegistry {
      * @dev reverts if is not called by the foundation address
      * reverts if builder state is not pending
      * @param builder_ address of builder
-     * @param authClaimer address of the builder authorized claimer
+     * @param authClaimer_ address of the builder authorized claimer
+     * @param rewardSplitPercentage_ percentage of reward split from 0 - 100
      */
     function activateBuilder(
         address builder_,
-        address payable authClaimer
+        address authClaimer_,
+        uint8 rewardSplitPercentage_
     )
         external
         onlyFoundation
         atState(builder_, BuilderState.Pending)
     {
         builderState[builder_] = BuilderState.KYCApproved;
-        builderAuthClaimer[builder_] = authClaimer;
+        builderAuthClaimer[builder_] = authClaimer_;
+        _setRewardSplitPercentage(builder_, rewardSplitPercentage_);
 
         emit StateUpdate(builder_, BuilderState.Pending, BuilderState.KYCApproved);
     }
@@ -158,7 +162,7 @@ contract BuilderRegistry {
      * @dev reverts if is not called by the governor address
      * reverts if builder state is not Whitelisted
      * @param builder_ address of builder
-     * @param rewardSplitPercentage_ percentage of reward split
+     * @param rewardSplitPercentage_ percentage of reward split from 0 - 100
      */
     function setRewardSplitPercentage(
         address builder_,
@@ -168,9 +172,7 @@ contract BuilderRegistry {
         onlyGovernor
         atState(builder_, BuilderState.Whitelisted)
     {
-        rewardSplitPercentages[builder_] = rewardSplitPercentage_;
-
-        emit RewardSplitPercentageUpdate(builder_, rewardSplitPercentage_);
+        _setRewardSplitPercentage(builder_, rewardSplitPercentage_);
     }
 
     // -----------------------------
@@ -197,7 +199,18 @@ contract BuilderRegistry {
      * @notice get builder reward split percentage
      * @param builder_ address of builder
      */
-    function getRewardSplitPercentage(address builder_) public view returns (uint256) {
+    function getRewardSplitPercentage(address builder_) public view returns (uint8) {
         return rewardSplitPercentages[builder_];
+    }
+
+    // -----------------------------
+    // ---- Internal Functions -----
+    // -----------------------------
+
+    function _setRewardSplitPercentage(address builder_, uint8 rewardSplitPercentage_) internal {
+        if (rewardSplitPercentage_ > 100) revert InvalidRewardSplitPercentage();
+        rewardSplitPercentages[builder_] = rewardSplitPercentage_;
+
+        emit RewardSplitPercentageUpdate(builder_, rewardSplitPercentage_);
     }
 }
