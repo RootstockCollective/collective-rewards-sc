@@ -7,6 +7,9 @@ library UtilsLib {
     // slither-disable-next-line unused-state
     uint256 internal constant PRECISION = 10 ** 18;
 
+    // slither-disable-next-line unused-state
+    uint256 internal constant BPS_PRECISION = 10_000;
+
     // Saves gas
     // https://github.com/KadenZipfel/gas-optimizations/blob/main/gas-saving-patterns/unchecked-arithmetic.md
     function unchecked_inc(uint256 i_) internal pure returns (uint256) {
@@ -33,5 +36,15 @@ library UtilsLib {
      */
     function _mulPrec(uint256 a_, uint256 b_) internal pure returns (uint256) {
         return (a_ * b_) / PRECISION;
+    }
+
+    /**
+     * @notice percentage using bps
+     * @param amount_ amount
+     * @param bps_ bps
+     * @return `amount_` * `bps_` / BPS_PRECISION
+     */
+    function _calculatePercentage(uint256 amount_, uint256 bps_) internal pure returns (uint256) {
+        return (amount_ * bps_) / BPS_PRECISION;
     }
 }

@@ -3,6 +3,9 @@ pragma solidity 0.8.20;
 
 import { BaseTest, Gauge } from "./BaseTest.sol";
 import { EpochLib } from "../src/libraries/EpochLib.sol";
+import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
+
+using stdStorage for StdStorage;
 
 contract GaugeTest is BaseTest {
     // -----------------------------
@@ -10,7 +13,7 @@ contract GaugeTest is BaseTest {
     // -----------------------------
     event SponsorRewardsClaimed(address indexed sponsor_, uint256 amount_);
     event NewAllocation(address indexed sponsor_, uint256 allocation_);
-    event NotifyReward(uint256 amount_);
+    event NotifyReward(uint256 builderAmount_, uint256 sponsorsAmount_);
 
     function _setUp() internal override {
         // mint some rewardTokens to sponsorsManager simulating a distribution
@@ -46,6 +49,11 @@ contract GaugeTest is BaseTest {
         //  THEN tx reverts because caller is not authorized
         vm.expectRevert(Gauge.NotAuthorized.selector);
         gauge.getSponsorReward(bob);
+
+        // WHEN alice calls getBuilderReward using builder address
+        //  THEN tx reverts because caller is not authorized
+        vm.expectRevert(Gauge.NotAuthorized.selector);
+        gauge.getBuilderReward(builder);
     }
 
     /**
@@ -127,6 +135,58 @@ contract GaugeTest is BaseTest {
     }
 
     /**
+     * SCENARIO: notifyRewardAmount with rewards split percentage different than 0
+     * rewards variables are updated in the middle and at the end of the epoch
+     */
+    function test_NotifyRewardAmountWithStrategy() public {
+        // GIVEN a SponsorsManager contract
+        vm.startPrank(address(sponsorsManager));
+        // AND 1 ether allocated to alice and 5 ether to bob
+        gauge.allocate(alice, 1 ether);
+        gauge.allocate(bob, 5 ether);
+
+        // AND builder reward split percentage is 30%
+        _setBuilderRewardSplitPercentage(builder, 3000);
+
+        // WHEN 100 ether distributed
+        //  THEN notifyRewardAmount event is emitted
+        vm.expectEmit();
+        emit NotifyReward(30 ether, 70 ether);
+        gauge.notifyRewardAmount(100 ether);
+
+        // THEN rewardPerTokenStored is 0
+        assertEq(gauge.rewardPerTokenStored(), 0);
+        // THEN rewardMissing is 0
+        assertEq(gauge.rewardMissing(), 0);
+        // THEN rewardPerToken is 0
+        assertEq(gauge.rewardPerToken(), 0);
+        // THEN lastUpdateTime is the current one
+        assertEq(gauge.lastUpdateTime(), block.timestamp);
+        // THEN periodFinish is updated with the timestamp when the epoch finish
+        assertEq(gauge.periodFinish(), EpochLib.epochNext(block.timestamp));
+        // THEN time until next epoch is 518400
+        assertEq(gauge.periodFinish() - block.timestamp, 518_400);
+        // THEN rewardRate is 0.000135030864197530 = 70 ether / 518400 sec
+        assertEq(gauge.rewardRate() / 10 ** 18, 135_030_864_197_530);
+        // THEN builderRewards is 30% of 100 ether
+        assertEq(gauge.builderRewards(), 30 ether);
+
+        // AND half epoch pass
+        _skipRemainingEpochFraction(2);
+
+        // THEN rewardPerToken is 5.833333333333333333 = 518400 / 2 * 0.000135030864197530 / 6 ether
+        assertEq(gauge.rewardPerToken(), 5_833_333_333_333_333_333);
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // THEN rewardPerToken is 11.666666666666666666 = 518400 * 0.000135030864197530 / 6 ether
+        assertEq(gauge.rewardPerToken(), 11_666_666_666_666_666_666);
+        // THEN builderRewards is 30% of 100 ether
+        assertEq(gauge.builderRewards(), 30 ether);
+    }
+
+    /**
      * SCENARIO: rewards variables are updated in the middle and at the end of the epoch
      */
     function test_NotifyRewardAmount() public {
@@ -137,6 +197,9 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether);
 
         // WHEN 100 ether distributed
+        //  THEN notifyRewardAmount event is emitted
+        vm.expectEmit();
+        emit NotifyReward(0 ether, 100 ether);
         gauge.notifyRewardAmount(100 ether);
 
         // THEN rewardPerTokenStored is 0
@@ -184,10 +247,45 @@ contract GaugeTest is BaseTest {
     }
 
     /**
+     * SCENARIO: builder claim his rewards at any time during the epoch receiving the total amount of rewards.
+     */
+    function test_ClaimBuilderRewards() public {
+        // GIVEN a SponsorsManager contract
+        vm.startPrank(address(sponsorsManager));
+        // AND 1 ether allocated to alice and 5 ether to bob
+        gauge.allocate(alice, 1 ether);
+        gauge.allocate(bob, 5 ether);
+
+        // AND builder reward split percentage is 30%
+        _setBuilderRewardSplitPercentage(builder, 3000);
+
+        // AND builder auth claimer is alice
+        _setAuthClaimer(builder, alice);
+
+        // WHEN 100 ether distributed
+        gauge.notifyRewardAmount(100 ether);
+
+        // AND half epoch pass
+        _skipRemainingEpochFraction(2);
+
+        // THEN builderRewards is 30% of 100 ether
+        assertEq(gauge.builderRewards(), 30 ether);
+
+        // AND another epoch finish without a new distribution
+        _skipAndStartNewEpoch();
+
+        // WHEN builder claims rewards again
+        vm.startPrank(builder);
+        gauge.getBuilderReward(builder);
+        // THEN alice rewardToken balance is 30% of 100 ether
+        assertEq(rewardToken.balanceOf(alice), 30 ether);
+    }
+
+    /**
      * SCENARIO: alice and bob claim his rewards at the end of the epoch receiving the total amount of rewards.
      *  If they claim again without a new reward distribution they don't receive rewardTokens again.
      */
-    function test_ClaimRewards() public {
+    function test_ClaimSponsorRewards() public {
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
         // AND 1 ether allocated to alice and 5 ether to bob
@@ -230,7 +328,7 @@ contract GaugeTest is BaseTest {
     /**
      * SCENARIO: alice and bob claim his rewards in the middle of the epoch receiving partial rewards.
      */
-    function test_ClaimRewardsPartial() public {
+    function test_ClaimSponsorRewardsPartial() public {
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
         // AND 1 ether allocated to alice and 5 ether to bob
@@ -265,7 +363,7 @@ contract GaugeTest is BaseTest {
      * SCENARIO: alice and bob don't claim on epoch 1 but claim on epoch 2
      *  receiving the 2 reward distributions accumulated
      */
-    function test_ClaimRewardsAccumulative() public {
+    function test_ClaimSponsorRewardsAccumulative() public {
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
         // AND 1 ether allocated to alice and 5 ether to bob
@@ -306,7 +404,7 @@ contract GaugeTest is BaseTest {
     /**
      * SCENARIO: there are 2 distributions on the same epoch, alice and bob claim them
      */
-    function test_ClaimRewards2DistributionOnSameEpoch() public {
+    function test_ClaimSponsorRewards2DistributionOnSameEpoch() public {
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
         // AND 1 ether allocated to alice and 5 ether to bob
@@ -348,7 +446,7 @@ contract GaugeTest is BaseTest {
     /**
      * SCENARIO: alice quit before the epoch finish, so receives less rewards and bob more
      */
-    function test_ClaimRewardsAliceQuit() public {
+    function test_ClaimSponsorRewardsAliceQuit() public {
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
         // AND 1 ether allocated to alice and 5 ether to bob
@@ -391,7 +489,7 @@ contract GaugeTest is BaseTest {
     /**
      * SCENARIO: alice allocates more before the epoch finish, so receives more rewards and bob less
      */
-    function test_ClaimRewardsAliceAllocatesAgain() public {
+    function test_ClaimSponsorRewardsAliceAllocatesAgain() public {
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
         // AND 1 ether allocated to alice and 5 ether to bob
@@ -437,7 +535,7 @@ contract GaugeTest is BaseTest {
      * alice and bob allocate again on the next epoch and receive the missing
      * rewards from the previous one
      */
-    function test_ClaimMissingRewardsOnNextEpoch() public {
+    function test_ClaimMissingSponsorRewardsOnNextEpoch() public {
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
 
@@ -489,5 +587,16 @@ contract GaugeTest is BaseTest {
         gauge.getSponsorReward(bob);
         // THEN bob rewardToken balance is 124.999999999999999995 = 5 * (49.999999999999999998 - 24.999999999999999999)
         assertEq(rewardToken.balanceOf(bob), 124_999_999_999_999_999_995);
+    }
+
+    function _setBuilderRewardSplitPercentage(address builder_, uint256 rewardSplitPercentage_) internal {
+        stdstore.target(address(builderRegistry)).sig("rewardSplitPercentages(address)").with_key(builder_)
+            .checked_write(rewardSplitPercentage_);
+    }
+
+    function _setAuthClaimer(address builder_, address authClaimer_) internal {
+        stdstore.target(address(builderRegistry)).sig("builderAuthClaimer(address)").with_key(builder_).checked_write(
+            authClaimer_
+        );
     }
 }

@@ -53,8 +53,6 @@ contract BaseTest is Test {
         rewardDistributor =
             new RewardDistributorDeployer().run(foundation, address(rewardToken), address(sponsorsManager));
         gauge = sponsorsManager.createGauge(builder);
-        gauge2 = sponsorsManager.createGauge(builder2);
-        gaugesArray = [gauge, gauge2];
         epochDuration = EpochLib.WEEK;
 
         // mint some stakingTokens to alice and bob

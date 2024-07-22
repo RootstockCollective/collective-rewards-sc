@@ -56,6 +56,8 @@ contract SponsorsManager is Governed {
     IERC20 public immutable rewardToken;
     /// @notice gauge factory contract address
     GaugeFactory public immutable gaugeFactory;
+    /// @notice builder registry contract address
+    BuilderRegistry public immutable builderRegistry;
     /// @notice total allocation on all the gauges
     uint256 public totalAllocation;
     /// @notice rewards to distribute per sponsor emission [PREC]
@@ -84,6 +86,7 @@ contract SponsorsManager is Governed {
         rewardToken = IERC20(rewardToken_);
         stakingToken = IERC20(stakingToken_);
         gaugeFactory = GaugeFactory(gaugeFactory_);
+        builderRegistry = BuilderRegistry(builderRegistry_);
     }
 
     // -----------------------------

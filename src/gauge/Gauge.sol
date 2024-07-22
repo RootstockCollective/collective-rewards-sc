@@ -4,6 +4,8 @@ pragma solidity 0.8.20;
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SponsorsManager } from "../SponsorsManager.sol";
+import { BuilderRegistry } from "../BuilderRegistry.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EpochLib } from "../libraries/EpochLib.sol";
 
@@ -25,14 +27,15 @@ contract Gauge {
     // ----------- Events ----------
     // -----------------------------
     event SponsorRewardsClaimed(address indexed sponsor_, uint256 amount_);
+    event BuilderRewardsClaimed(address indexed builder_, uint256 amount_);
     event NewAllocation(address indexed sponsor_, uint256 allocation_);
-    event NotifyReward(uint256 amount_);
+    event NotifyReward(uint256 builderAmount_, uint256 sponsorsAmount_);
 
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlySponsorsManager() {
-        if (msg.sender != sponsorsManager) revert NotSponsorsManager();
+        if (msg.sender != address(sponsorsManager)) revert NotSponsorsManager();
         _;
     }
 
@@ -45,7 +48,7 @@ contract Gauge {
     /// @notice address of the token rewarded to builder and voters
     IERC20 public immutable rewardToken;
     /// @notice SponsorsManager contract address
-    address public immutable sponsorsManager;
+    SponsorsManager public immutable sponsorsManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
     /// @notice current reward rate of rewardToken to distribute per second [PREC]
@@ -58,6 +61,8 @@ contract Gauge {
     uint256 public lastUpdateTime;
     /// @notice timestamp end of current rewards period
     uint256 public periodFinish;
+    /// @notice timestamp end of current rewards period
+    uint256 public builderRewards;
 
     /// @notice amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public allocationOf;
@@ -75,7 +80,7 @@ contract Gauge {
     constructor(address builder_, address rewardToken_, address sponsorsManager_) {
         builder = builder_;
         rewardToken = IERC20(rewardToken_);
-        sponsorsManager = sponsorsManager_;
+        sponsorsManager = SponsorsManager(sponsorsManager_);
     }
 
     // -----------------------------
@@ -121,7 +126,7 @@ contract Gauge {
      * @param sponsor_ address who receives the rewards
      */
     function getSponsorReward(address sponsor_) external {
-        if (msg.sender != sponsor_ && msg.sender != sponsorsManager) revert NotAuthorized();
+        if (msg.sender != sponsor_ && msg.sender != address(sponsorsManager)) revert NotAuthorized();
 
         _updateRewards(sponsor_);
 
@@ -130,6 +135,23 @@ contract Gauge {
             rewards[sponsor_] = 0;
             SafeERC20.safeTransfer(rewardToken, sponsor_, reward);
             emit SponsorRewardsClaimed(sponsor_, reward);
+        }
+    }
+
+    /**
+     * @notice gets rewards for an `sponsor_` address
+     * @dev reverts if is not called by the `sponsor_` or the sponsorsManager
+     * @param builder_ address who receives the rewards
+     */
+    function getBuilderReward(address builder_) external {
+        if (msg.sender != builder_ && msg.sender != address(sponsorsManager)) revert NotAuthorized();
+
+        uint256 reward = builderRewards;
+        if (reward > 0) {
+            builderRewards = 0;
+            address _authClaimer = sponsorsManager.builderRegistry().getAuthClaimer(builder_);
+            SafeERC20.safeTransfer(rewardToken, _authClaimer, reward);
+            emit BuilderRewardsClaimed(_authClaimer, builderRewards);
         }
     }
 
@@ -205,8 +227,16 @@ contract Gauge {
             _leftover = (_periodFinish - block.timestamp) * _rewardRate;
         }
 
+        // [N] = [N] * [N] / [PREC]
+        uint256 _builderAmount =
+            UtilsLib._calculatePercentage(amount_, sponsorsManager.builderRegistry().getRewardSplitPercentage(builder));
+        // [N] = [N] - [N]
+        uint256 _sponsorsAmount = amount_ - _builderAmount;
+
+        builderRewards += _builderAmount;
+
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
-        _rewardRate = (amount_ * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
+        _rewardRate = (_sponsorsAmount * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
 
         if (_rewardRate == 0) revert ZeroRewardRate();
 
@@ -228,7 +258,7 @@ contract Gauge {
         uint256 _balanceRate = UtilsLib._divPrec(rewardToken.balanceOf(address(this)), _timeUntilNext);
         if (rewardRate > _balanceRate) revert RewardRateTooHigh();
 
-        emit NotifyReward(amount_);
+        emit NotifyReward(_builderAmount, _sponsorsAmount);
     }
 
     // -----------------------------
