@@ -139,9 +139,9 @@ contract Gauge {
     }
 
     /**
-     * @notice gets rewards for an `sponsor_` address
-     * @dev reverts if is not called by the `sponsor_` or the sponsorsManager
-     * @param builder_ address who receives the rewards
+     * @notice gets rewards for an `builder_` address
+     * @dev reverts if is not called by the `builder_` or the sponsorsManager
+     * @param builder_ address from builder that is claiming rewards
      */
     function getBuilderReward(address builder_) external {
         if (msg.sender != builder_ && msg.sender != address(sponsorsManager)) revert NotAuthorized();
