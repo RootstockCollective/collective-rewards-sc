@@ -13,7 +13,7 @@ contract BuilderRegistryTest is BaseTest {
     event StateUpdate(
         address indexed builder_, BuilderRegistry.BuilderState previousState_, BuilderRegistry.BuilderState newState_
     );
-    event RewardSplitPercentageUpdate(address indexed builder_, uint8 rewardSplitPercentage_);
+    event RewardSplitPercentageUpdate(address indexed builder_, uint256 rewardSplitPercentage_);
 
     /**
      * SCENARIO: functions protected by OnlyFoundation should revert when are not
@@ -121,7 +121,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN tries to activateBuilder
         //  THEN tx reverts because is not a valid reward split percentage
         vm.expectRevert(BuilderRegistry.InvalidRewardSplitPercentage.selector);
-        builderRegistry.activateBuilder(builder, builder, 101);
+        builderRegistry.activateBuilder(builder, builder, 10_001);
     }
 
     /**
@@ -330,7 +330,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN tries to setRewardSplitPercentage
         //  THEN tx reverts because is not a valid reward split percentage
         vm.expectRevert(BuilderRegistry.InvalidRewardSplitPercentage.selector);
-        builderRegistry.setRewardSplitPercentage(builder, 101);
+        builderRegistry.setRewardSplitPercentage(builder, 10_001);
     }
 
     /**
@@ -387,7 +387,7 @@ contract BuilderRegistryTest is BaseTest {
         );
     }
 
-    function _setBuilderRewardSplitPercentage(address builder_, uint8 rewardSplitPercentage_) internal {
+    function _setBuilderRewardSplitPercentage(address builder_, uint256 rewardSplitPercentage_) internal {
         stdstore.target(address(builderRegistry)).sig("rewardSplitPercentages(address)").with_key(builder_)
             .checked_write(rewardSplitPercentage_);
     }

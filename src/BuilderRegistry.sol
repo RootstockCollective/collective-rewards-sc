@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
+import { UtilsLib } from "./libraries/UtilsLib.sol";
+
 /**
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
@@ -19,7 +21,7 @@ contract BuilderRegistry {
     // ----------- Events ----------
     // -----------------------------
     event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
-    event RewardSplitPercentageUpdate(address indexed builder_, uint8 rewardSplitPercentage_);
+    event RewardSplitPercentageUpdate(address indexed builder_, uint256 rewardSplitPercentage_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -67,7 +69,7 @@ contract BuilderRegistry {
     mapping(address builder => address claimer) public builderAuthClaimer;
 
     /// @notice map of builders reward split percentage
-    mapping(address builder => uint8 percentage) public rewardSplitPercentages;
+    mapping(address builder => uint256 percentage) public rewardSplitPercentages;
 
     /**
      * @notice constructor
@@ -89,12 +91,12 @@ contract BuilderRegistry {
      * reverts if builder state is not pending
      * @param builder_ address of builder
      * @param authClaimer_ address of the builder authorized claimer
-     * @param rewardSplitPercentage_ percentage of reward split from 0 - 100
+     * @param rewardSplitPercentage_ percentage of reward split in basis points
      */
     function activateBuilder(
         address builder_,
         address authClaimer_,
-        uint8 rewardSplitPercentage_
+        uint256 rewardSplitPercentage_
     )
         external
         onlyFoundation
@@ -162,11 +164,11 @@ contract BuilderRegistry {
      * @dev reverts if is not called by the governor address
      * reverts if builder state is not Whitelisted
      * @param builder_ address of builder
-     * @param rewardSplitPercentage_ percentage of reward split from 0 - 100
+     * @param rewardSplitPercentage_ percentage of reward split in basis points
      */
     function setRewardSplitPercentage(
         address builder_,
-        uint8 rewardSplitPercentage_
+        uint256 rewardSplitPercentage_
     )
         external
         onlyGovernor
@@ -199,7 +201,7 @@ contract BuilderRegistry {
      * @notice get builder reward split percentage
      * @param builder_ address of builder
      */
-    function getRewardSplitPercentage(address builder_) public view returns (uint8) {
+    function getRewardSplitPercentage(address builder_) public view returns (uint256) {
         return rewardSplitPercentages[builder_];
     }
 
@@ -207,8 +209,8 @@ contract BuilderRegistry {
     // ---- Internal Functions -----
     // -----------------------------
 
-    function _setRewardSplitPercentage(address builder_, uint8 rewardSplitPercentage_) internal {
-        if (rewardSplitPercentage_ > 100) revert InvalidRewardSplitPercentage();
+    function _setRewardSplitPercentage(address builder_, uint256 rewardSplitPercentage_) internal {
+        if (rewardSplitPercentage_ > UtilsLib.BPS_PRECISION) revert InvalidRewardSplitPercentage();
         rewardSplitPercentages[builder_] = rewardSplitPercentage_;
 
         emit RewardSplitPercentageUpdate(builder_, rewardSplitPercentage_);

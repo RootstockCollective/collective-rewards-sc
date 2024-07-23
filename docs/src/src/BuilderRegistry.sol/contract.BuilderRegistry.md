@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/41e1b3d4d859d865d50082fa3927f5126e4e5e81/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5ba4509a7ff07edd73e6644dc1737b81eed14f7a/src/BuilderRegistry.sol)
 
 Keeps registers of the builders
 
@@ -43,7 +43,7 @@ mapping(address builder => address claimer) public builderAuthClaimer;
 map of builders reward split percentage
 
 ```solidity
-mapping(address builder => uint8 percentage) public rewardSplitPercentages;
+mapping(address builder => uint256 percentage) public rewardSplitPercentages;
 ```
 
 ## Functions
@@ -91,7 +91,7 @@ _reverts if is not called by the foundation address reverts if builder state is 
 function activateBuilder(
     address builder_,
     address authClaimer_,
-    uint8 rewardSplitPercentage_
+    uint256 rewardSplitPercentage_
 )
     external
     onlyFoundation
@@ -100,11 +100,11 @@ function activateBuilder(
 
 **Parameters**
 
-| Name                     | Type      | Description                               |
-| ------------------------ | --------- | ----------------------------------------- |
-| `builder_`               | `address` | address of builder                        |
-| `authClaimer_`           | `address` | address of the builder authorized claimer |
-| `rewardSplitPercentage_` | `uint8`   | percentage of reward split from 0 - 100   |
+| Name                     | Type      | Description                                |
+| ------------------------ | --------- | ------------------------------------------ |
+| `builder_`               | `address` | address of builder                         |
+| `authClaimer_`           | `address` | address of the builder authorized claimer  |
+| `rewardSplitPercentage_` | `uint256` | percentage of reward split in basis points |
 
 ### whitelistBuilder
 
@@ -179,7 +179,7 @@ _reverts if is not called by the governor address reverts if builder state is no
 ```solidity
 function setRewardSplitPercentage(
     address builder_,
-    uint8 rewardSplitPercentage_
+    uint256 rewardSplitPercentage_
 )
     external
     onlyGovernor
@@ -188,10 +188,10 @@ function setRewardSplitPercentage(
 
 **Parameters**
 
-| Name                     | Type      | Description                             |
-| ------------------------ | --------- | --------------------------------------- |
-| `builder_`               | `address` | address of builder                      |
-| `rewardSplitPercentage_` | `uint8`   | percentage of reward split from 0 - 100 |
+| Name                     | Type      | Description                                |
+| ------------------------ | --------- | ------------------------------------------ |
+| `builder_`               | `address` | address of builder                         |
+| `rewardSplitPercentage_` | `uint256` | percentage of reward split in basis points |
 
 ### getState
 
@@ -226,7 +226,7 @@ function getAuthClaimer(address builder_) public view returns (address);
 get builder reward split percentage
 
 ```solidity
-function getRewardSplitPercentage(address builder_) public view returns (uint8);
+function getRewardSplitPercentage(address builder_) public view returns (uint256);
 ```
 
 **Parameters**
@@ -238,7 +238,7 @@ function getRewardSplitPercentage(address builder_) public view returns (uint8);
 ### \_setRewardSplitPercentage
 
 ```solidity
-function _setRewardSplitPercentage(address builder_, uint8 rewardSplitPercentage_) internal;
+function _setRewardSplitPercentage(address builder_, uint256 rewardSplitPercentage_) internal;
 ```
 
 ## Events
@@ -252,7 +252,7 @@ event StateUpdate(address indexed builder_, BuilderState previousState_, Builder
 ### RewardSplitPercentageUpdate
 
 ```solidity
-event RewardSplitPercentageUpdate(address indexed builder_, uint8 rewardSplitPercentage_);
+event RewardSplitPercentageUpdate(address indexed builder_, uint256 rewardSplitPercentage_);
 ```
 
 ## Errors

@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 library UtilsLib {
     // Constants may not be used in child contracts and that is fine as they are
     // not using any space in storage, so we disable the check
     // slither-disable-next-line unused-state
     uint256 internal constant PRECISION = 10 ** 18;
+
+    // slither-disable-next-line unused-state
+    uint256 internal constant BPS_PRECISION = 10_000;
 
     // Saves gas
     // https://github.com/KadenZipfel/gas-optimizations/blob/main/gas-saving-patterns/unchecked-arithmetic.md
@@ -33,5 +38,15 @@ library UtilsLib {
      */
     function _mulPrec(uint256 a_, uint256 b_) internal pure returns (uint256) {
         return (a_ * b_) / PRECISION;
+    }
+
+    /**
+     * @notice percentage using bps
+     * @param amount_ amount
+     * @param bps_ bps
+     * @return `amount_` * `bps_` / BPS_PRECISION
+     */
+    function _calculatePercentage(uint256 amount_, uint256 bps_) internal pure returns (uint256) {
+        return (amount_ * bps_) / BPS_PRECISION;
     }
 }
