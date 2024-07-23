@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { UtilsLib } from "./libraries/UtilsLib.sol";
+import { Governed } from "./governance/Governed.sol";
 
 /**
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
  */
-contract BuilderRegistry {
+contract BuilderRegistry is Governed {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
     error NotFoundation();
-    error NotGovernor();
     error NotAuthorized();
     error InvalidRewardSplitPercentage();
     error RequiredState(BuilderState state);
@@ -28,11 +27,6 @@ contract BuilderRegistry {
     // -----------------------------
     modifier onlyFoundation() {
         if (msg.sender != foundation) revert NotFoundation();
-        _;
-    }
-
-    modifier onlyGovernor() {
-        if (msg.sender != governor) revert NotGovernor();
         _;
     }
 
@@ -59,9 +53,6 @@ contract BuilderRegistry {
     /// @notice foundation address
     address public immutable foundation;
 
-    /// @notice governor address
-    address public immutable governor;
-
     /// @notice map of builders state
     mapping(address builder => BuilderState state) public builderState;
 
@@ -76,9 +67,8 @@ contract BuilderRegistry {
      * @param foundation_ address of the foundation
      * @param governor_ address of the governor
      */
-    constructor(address foundation_, address governor_) {
+    constructor(address governor_, address changeExecutor_, address foundation_) Governed(governor_, changeExecutor_) {
         foundation = foundation_;
-        governor = governor_;
     }
 
     // -----------------------------
@@ -111,11 +101,15 @@ contract BuilderRegistry {
 
     /**
      * @notice whitelist builder
-     * @dev reverts if is not called by the governor address
+     * @dev reverts if is not called by the governor address or authorized changer
      * reverts if builder state is not KYCApproved
      * @param builder_ address of builder
      */
-    function whitelistBuilder(address builder_) external onlyGovernor atState(builder_, BuilderState.KYCApproved) {
+    function whitelistBuilder(address builder_)
+        external
+        onlyGovernorOrAuthorizedChanger
+        atState(builder_, BuilderState.KYCApproved)
+    {
         builderState[builder_] = BuilderState.Whitelisted;
 
         emit StateUpdate(builder_, BuilderState.KYCApproved, BuilderState.Whitelisted);
@@ -123,11 +117,15 @@ contract BuilderRegistry {
 
     /**
      * @notice pause builder
-     * @dev reverts if is not called by the governor address
+     * @dev reverts if is not called by the governor address or authorized changer
      * reverts if builder state is not Whitelisted
      * @param builder_ address of builder
      */
-    function pauseBuilder(address builder_) external onlyGovernor atState(builder_, BuilderState.Whitelisted) {
+    function pauseBuilder(address builder_)
+        external
+        onlyGovernorOrAuthorizedChanger
+        atState(builder_, BuilderState.Whitelisted)
+    {
         builderState[builder_] = BuilderState.Paused;
 
         emit StateUpdate(builder_, BuilderState.Whitelisted, BuilderState.Paused);
@@ -135,11 +133,15 @@ contract BuilderRegistry {
 
     /**
      * @notice permit builder
-     * @dev reverts if is not called by the governor address
+     * @dev reverts if is not called by the governor address or authorized changer
      * reverts if builder state is not Revoked
      * @param builder_ address of builder
      */
-    function permitBuilder(address builder_) external onlyGovernor atState(builder_, BuilderState.Revoked) {
+    function permitBuilder(address builder_)
+        external
+        onlyGovernorOrAuthorizedChanger
+        atState(builder_, BuilderState.Revoked)
+    {
         builderState[builder_] = BuilderState.Whitelisted;
 
         emit StateUpdate(builder_, BuilderState.Revoked, BuilderState.Whitelisted);
@@ -161,7 +163,7 @@ contract BuilderRegistry {
 
     /**
      * @notice set builder reward split percentage
-     * @dev reverts if is not called by the governor address
+     * @dev reverts if is not called by the governor address or authorized changer
      * reverts if builder state is not Whitelisted
      * @param builder_ address of builder
      * @param rewardSplitPercentage_ percentage of reward split(100% == 1 ether)
@@ -171,7 +173,7 @@ contract BuilderRegistry {
         uint256 rewardSplitPercentage_
     )
         external
-        onlyGovernor
+        onlyGovernorOrAuthorizedChanger
         atState(builder_, BuilderState.Whitelisted)
     {
         _setRewardSplitPercentage(builder_, rewardSplitPercentage_);

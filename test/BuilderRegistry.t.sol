@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 import { BaseTest, BuilderRegistry } from "./BaseTest.sol";
+import { Governed } from "../src/governance/Governed.sol";
 
 using stdStorage for StdStorage;
 
@@ -37,24 +38,27 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN a sponsor alice
         vm.startPrank(alice);
 
+        // GIVEN mock authorized is false
+        changeExecutorMock.setIsAuthorized(false);
+
         // WHEN alice calls whitelistBuilder
         //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(BuilderRegistry.NotGovernor.selector);
+        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         builderRegistry.whitelistBuilder(builder);
 
         // WHEN alice calls pauseBuilder
         //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(BuilderRegistry.NotGovernor.selector);
+        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         builderRegistry.pauseBuilder(builder);
 
         // WHEN alice calls permitBuilder
         //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(BuilderRegistry.NotGovernor.selector);
+        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         builderRegistry.permitBuilder(builder);
 
         // WHEN alice calls setRewardSplitPercentage
         //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(BuilderRegistry.NotGovernor.selector);
+        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         builderRegistry.setRewardSplitPercentage(builder, 10);
     }
 

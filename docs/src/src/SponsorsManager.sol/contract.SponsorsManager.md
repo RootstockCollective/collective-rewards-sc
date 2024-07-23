@@ -1,6 +1,8 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/0fb32a648d6522aa34818cd34c659917294ce052/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/9e5650b8576ed38cbee2c0a3ec521c14bf14f352/src/SponsorsManager.sol)
+
+**Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
 ## State Variables
 
@@ -107,7 +109,14 @@ modifier notInDistributionPeriod();
 ### constructor
 
 ```solidity
-constructor(address rewardToken_, address stakingToken_, address gaugeFactory_);
+constructor(
+    address governor_,
+    address changeExecutor_,
+    address rewardToken_,
+    address stakingToken_,
+    address gaugeFactory_
+)
+    Governed(governor_, changeExecutor_);
 ```
 
 ### createGauge
@@ -115,7 +124,7 @@ constructor(address rewardToken_, address stakingToken_, address gaugeFactory_);
 creates a new gauge for a builder
 
 ```solidity
-function createGauge(address builder_) external returns (Gauge gauge);
+function createGauge(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge);
 ```
 
 **Parameters**

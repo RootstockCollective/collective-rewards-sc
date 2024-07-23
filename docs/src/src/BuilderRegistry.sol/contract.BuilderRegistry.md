@@ -1,6 +1,8 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/0fb32a648d6522aa34818cd34c659917294ce052/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/9e5650b8576ed38cbee2c0a3ec521c14bf14f352/src/BuilderRegistry.sol)
+
+**Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
 Keeps registers of the builders
 
@@ -12,14 +14,6 @@ foundation address
 
 ```solidity
 address public immutable foundation;
-```
-
-### governor
-
-governor address
-
-```solidity
-address public immutable governor;
 ```
 
 ### builderState
@@ -54,12 +48,6 @@ mapping(address builder => uint256 percentage) public rewardSplitPercentages;
 modifier onlyFoundation();
 ```
 
-### onlyGovernor
-
-```solidity
-modifier onlyGovernor();
-```
-
 ### atState
 
 ```solidity
@@ -71,15 +59,16 @@ modifier atState(address builder_, BuilderState previousState_);
 constructor
 
 ```solidity
-constructor(address foundation_, address governor_);
+constructor(address governor_, address changeExecutor_, address foundation_) Governed(governor_, changeExecutor_);
 ```
 
 **Parameters**
 
-| Name          | Type      | Description               |
-| ------------- | --------- | ------------------------- |
-| `foundation_` | `address` | address of the foundation |
-| `governor_`   | `address` | address of the governor   |
+| Name              | Type      | Description               |
+| ----------------- | --------- | ------------------------- |
+| `governor_`       | `address` | address of the governor   |
+| `changeExecutor_` | `address` |                           |
+| `foundation_`     | `address` | address of the foundation |
 
 ### activateBuilder
 
@@ -110,10 +99,13 @@ function activateBuilder(
 
 whitelist builder
 
-_reverts if is not called by the governor address reverts if builder state is not KYCApproved_
+_reverts if is not called by the governor address or authorized changer reverts if builder state is not KYCApproved_
 
 ```solidity
-function whitelistBuilder(address builder_) external onlyGovernor atState(builder_, BuilderState.KYCApproved);
+function whitelistBuilder(address builder_)
+    external
+    onlyGovernorOrAuthorizedChanger
+    atState(builder_, BuilderState.KYCApproved);
 ```
 
 **Parameters**
@@ -126,10 +118,13 @@ function whitelistBuilder(address builder_) external onlyGovernor atState(builde
 
 pause builder
 
-_reverts if is not called by the governor address reverts if builder state is not Whitelisted_
+_reverts if is not called by the governor address or authorized changer reverts if builder state is not Whitelisted_
 
 ```solidity
-function pauseBuilder(address builder_) external onlyGovernor atState(builder_, BuilderState.Whitelisted);
+function pauseBuilder(address builder_)
+    external
+    onlyGovernorOrAuthorizedChanger
+    atState(builder_, BuilderState.Whitelisted);
 ```
 
 **Parameters**
@@ -142,10 +137,13 @@ function pauseBuilder(address builder_) external onlyGovernor atState(builder_, 
 
 permit builder
 
-_reverts if is not called by the governor address reverts if builder state is not Revoked_
+_reverts if is not called by the governor address or authorized changer reverts if builder state is not Revoked_
 
 ```solidity
-function permitBuilder(address builder_) external onlyGovernor atState(builder_, BuilderState.Revoked);
+function permitBuilder(address builder_)
+    external
+    onlyGovernorOrAuthorizedChanger
+    atState(builder_, BuilderState.Revoked);
 ```
 
 **Parameters**
@@ -174,7 +172,7 @@ function revokeBuilder(address builder_) external atState(builder_, BuilderState
 
 set builder reward split percentage
 
-_reverts if is not called by the governor address reverts if builder state is not Whitelisted_
+_reverts if is not called by the governor address or authorized changer reverts if builder state is not Whitelisted_
 
 ```solidity
 function setRewardSplitPercentage(
@@ -182,7 +180,7 @@ function setRewardSplitPercentage(
     uint256 rewardSplitPercentage_
 )
     external
-    onlyGovernor
+    onlyGovernorOrAuthorizedChanger
     atState(builder_, BuilderState.Whitelisted);
 ```
 
@@ -261,12 +259,6 @@ event RewardSplitPercentageUpdate(address indexed builder_, uint256 rewardSplitP
 
 ```solidity
 error NotFoundation();
-```
-
-### NotGovernor
-
-```solidity
-error NotGovernor();
 ```
 
 ### NotAuthorized

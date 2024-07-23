@@ -30,13 +30,12 @@ contract BaseTest is Test {
     address internal builder = makeAddr("builder");
     address internal builder2 = makeAddr("builder2");
     address internal foundation = makeAddr("foundation");
-    address internal governor = makeAddr("governor");
 
     function setUp() public {
         changeExecutorMock = new ChangeExecutorMock(governor);
         stakingToken = new ERC20Mock();
         rewardToken = new ERC20Mock();
-        builderRegistry = new BuilderRegistry(foundation, governor);
+        builderRegistry = new BuilderRegistry(governor, address(changeExecutorMock), foundation);
         gaugeFactory = new GaugeFactory();
         sponsorsManager = new SponsorsManager(
             governor, address(changeExecutorMock), address(rewardToken), address(stakingToken), address(gaugeFactory)
