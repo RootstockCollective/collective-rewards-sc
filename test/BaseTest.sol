@@ -22,7 +22,6 @@ contract BaseTest is Test {
     uint256[] public allocationsArray = [0, 0];
     SponsorsManager public sponsorsManager;
     BuilderRegistry public builderRegistry;
-    uint256 public initialTimestamp;
     uint256 public epochDuration;
 
     address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract

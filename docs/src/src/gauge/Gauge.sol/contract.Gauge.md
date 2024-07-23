@@ -1,22 +1,6 @@
 # Gauge
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d568903015f871eedd363a6c648861169e985892/src/gauge/Gauge.sol)
-=======
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d2969cf48df5747a801872ec11a9e5369ab00a1a/src/gauge/Gauge.sol)
->>>>>>> 570d7f7 (feat: builderRegistry)
-=======
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/570d7f7acfcf922ef9eb9a54cef5dc11cb1bbfe3/src/gauge/Gauge.sol)
->>>>>>> 6f201f9 (refactor: pr comments)
-=======
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/41e1b3d4d859d865d50082fa3927f5126e4e5e81/src/gauge/Gauge.sol)
->>>>>>> 5ba4509 (refactor: pr comments)
-=======
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5ba4509a7ff07edd73e6644dc1737b81eed14f7a/src/gauge/Gauge.sol)
->>>>>>> 5ef60f6 (refactor: pr comments)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/26cede3bca1fa205726e5fbfc42ce638e32ad00b/src/gauge/Gauge.sol)
 
 For each project proposal a Gauge contract will be deployed. It receives all the rewards obtained for that project and
 allows the builder and voters to claim them.

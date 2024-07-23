@@ -1,22 +1,6 @@
 # EpochLib
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d568903015f871eedd363a6c648861169e985892/src/libraries/EpochLib.sol)
-=======
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d2969cf48df5747a801872ec11a9e5369ab00a1a/src/libraries/EpochLib.sol)
->>>>>>> 570d7f7 (feat: builderRegistry)
-=======
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/570d7f7acfcf922ef9eb9a54cef5dc11cb1bbfe3/src/libraries/EpochLib.sol)
->>>>>>> 6f201f9 (refactor: pr comments)
-=======
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/41e1b3d4d859d865d50082fa3927f5126e4e5e81/src/libraries/EpochLib.sol)
->>>>>>> 5ba4509 (refactor: pr comments)
-=======
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5ba4509a7ff07edd73e6644dc1737b81eed14f7a/src/libraries/EpochLib.sol)
->>>>>>> 5ef60f6 (refactor: pr comments)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/26cede3bca1fa205726e5fbfc42ce638e32ad00b/src/libraries/EpochLib.sol)
 
 ## State Variables
 
@@ -48,26 +32,6 @@ function epochStart(uint256 timestamp_) internal pure returns (uint256);
 | -------- | --------- | ------------------------------------------ |
 | `<none>` | `uint256` | epochStart timestamp when the epoch starts |
 
-### epochEnd
-
-gets when an epoch ends based on given `timestamp_`
-
-```solidity
-function epochEnd(uint256 timestamp_) internal pure returns (uint256);
-```
-
-**Parameters**
-
-| Name         | Type      | Description            |
-| ------------ | --------- | ---------------------- |
-| `timestamp_` | `uint256` | timestamp to calculate |
-
-**Returns**
-
-| Name     | Type      | Description                              |
-| -------- | --------- | ---------------------------------------- |
-| `<none>` | `uint256` | epochStart timestamp when the epoch ends |
-
 ### epochNext
 
 gets when an epoch ends or the next one starts based on given `timestamp_`
@@ -87,3 +51,23 @@ function epochNext(uint256 timestamp_) internal pure returns (uint256);
 | Name     | Type      | Description                                                |
 | -------- | --------- | ---------------------------------------------------------- |
 | `<none>` | `uint256` | epochNext timestamp when the epoch ends or the next starts |
+
+### endDistributionWindow
+
+gets when an epoch distribution ends based on given `timestamp_`
+
+```solidity
+function endDistributionWindow(uint256 timestamp_) internal pure returns (uint256);
+```
+
+**Parameters**
+
+| Name         | Type      | Description            |
+| ------------ | --------- | ---------------------- |
+| `timestamp_` | `uint256` | timestamp to calculate |
+
+**Returns**
+
+| Name     | Type      | Description                                                      |
+| -------- | --------- | ---------------------------------------------------------------- |
+| `<none>` | `uint256` | endDistributionWindow timestamp when the epoch distribution ends |
