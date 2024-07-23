@@ -14,7 +14,7 @@ contract BuilderRegistryTest is BaseTest {
     event StateUpdate(
         address indexed builder_, BuilderRegistry.BuilderState previousState_, BuilderRegistry.BuilderState newState_
     );
-    event RewardSplitPercentageUpdate(address indexed builder_, uint256 rewardSplitPercentage_);
+    event BuilderKickbackPctUpdate(address indexed builder_, uint256 builderKickbackPct_);
 
     /**
      * SCENARIO: functions protected by OnlyFoundation should revert when are not
@@ -56,10 +56,10 @@ contract BuilderRegistryTest is BaseTest {
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         builderRegistry.permitBuilder(builder);
 
-        // WHEN alice calls setRewardSplitPercentage
+        // WHEN alice calls setBuilderKickbackPct
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        builderRegistry.setRewardSplitPercentage(builder, 10);
+        builderRegistry.setBuilderKickbackPct(builder, 10);
     }
 
     /**
@@ -116,15 +116,15 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: activateBuilder should reverts if reward split percentage is higher than 100
+     * SCENARIO: activateBuilder should reverts if kickback percentage is higher than 100
      */
-    function test_ActivateBuilderInvalidRewardSplitPercentage() public {
+    function test_ActivateBuilderInvalidBuilderKickbackPct() public {
         // GIVEN a Foundation
         vm.startPrank(foundation);
 
         // WHEN tries to activateBuilder
-        //  THEN tx reverts because is not a valid reward split percentage
-        vm.expectRevert(BuilderRegistry.InvalidRewardSplitPercentage.selector);
+        //  THEN tx reverts because is not a valid kickback percentage
+        vm.expectRevert(BuilderRegistry.InvalidBuilderKickbackPct.selector);
         builderRegistry.activateBuilder(builder, builder, 2 ether);
     }
 
@@ -281,60 +281,60 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: Governor set new builder reward split percentage
+     * SCENARIO: Governor set new builder kickback percentage
      */
-    function test_SetRewardSplitPercentage() public {
+    function test_SetBuilderKickbackPct() public {
         // GIVEN a Governor
         vm.startPrank(governor);
 
-        // GIVEN builder.rewardSplitPercentage is 0
-        assertEq(builderRegistry.getRewardSplitPercentage(builder), 0);
+        // GIVEN builder.builderKickbackPct is 0
+        assertEq(builderRegistry.getBuilderKickbackPct(builder), 0);
 
         // WHEN state is Whitelisted
         _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
 
-        // WHEN calls setRewardSplitPercentage
-        //  THEN RewardSplitPercentageUpdate event is emitted
+        // WHEN calls setBuilderKickbackPct
+        //  THEN BuilderKickbackPctUpdate event is emitted
         vm.expectEmit();
-        emit RewardSplitPercentageUpdate(builder, 5);
-        builderRegistry.setRewardSplitPercentage(builder, 5);
+        emit BuilderKickbackPctUpdate(builder, 5);
+        builderRegistry.setBuilderKickbackPct(builder, 5);
 
-        // THEN builder.rewardSplitPercentage is 5
-        assertEq(builderRegistry.getRewardSplitPercentage(builder), 5);
+        // THEN builder.builderKickbackPct is 5
+        assertEq(builderRegistry.getBuilderKickbackPct(builder), 5);
     }
 
     /**
-     * SCENARIO: setRewardSplitPercentage should reverts if the state is not Whitelisted
+     * SCENARIO: setBuilderKickbackPct should reverts if the state is not Whitelisted
      */
-    function test_SetRewardSplitPercentageWrongStatus() public {
+    function test_SetBuilderKickbackPctWrongStatus() public {
         // GIVEN a Governor
         vm.startPrank(governor);
 
         // WHEN state is not Whitelisted
         _setBuilderState(builder, BuilderRegistry.BuilderState.Revoked);
 
-        // WHEN tries to setRewardSplitPercentage
+        // WHEN tries to setBuilderKickbackPct
         //  THEN tx reverts because is not the required state
         vm.expectRevert(
             abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
         );
-        builderRegistry.setRewardSplitPercentage(builder, 5);
+        builderRegistry.setBuilderKickbackPct(builder, 5);
     }
 
     /**
-     * SCENARIO: setRewardSplitPercentage should reverts if reward split percentage is higher than 100
+     * SCENARIO: setBuilderKickbackPct should reverts if kickback percentage is higher than 100
      */
-    function test_SetRewardSplitPercentageInvalidRewardSplitPercentage() public {
+    function test_SetBuilderKickbackPctInvalidBuilderKickbackPct() public {
         // GIVEN a Governor
         vm.startPrank(governor);
 
         // WHEN state is Whitelisted
         _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
 
-        // WHEN tries to setRewardSplitPercentage
-        //  THEN tx reverts because is not a valid reward split percentage
-        vm.expectRevert(BuilderRegistry.InvalidRewardSplitPercentage.selector);
-        builderRegistry.setRewardSplitPercentage(builder, 2 ether);
+        // WHEN tries to setBuilderKickbackPct
+        //  THEN tx reverts because is not a valid kickback percentage
+        vm.expectRevert(BuilderRegistry.InvalidBuilderKickbackPct.selector);
+        builderRegistry.setBuilderKickbackPct(builder, 2 ether);
     }
 
     /**
@@ -366,17 +366,17 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: Getting builder reward split percentage
+     * SCENARIO: Getting builder kickback percentage
      */
-    function test_GetRewardSplitPercentage() public {
+    function test_GetBuilderKickbackPct() public {
         // GIVEN a governor
         vm.startPrank(governor);
 
-        // WHEN reward split percentage was previously updated to 10
-        _setBuilderRewardSplitPercentage(builder, 10);
+        // WHEN kickback percentage was previously updated to 10
+        _setBuilderBuilderKickbackPct(builder, 10);
 
-        // THEN builder.rewardSplitPercentage is 10
-        assertEq(builderRegistry.getRewardSplitPercentage(builder), 10);
+        // THEN builder.builderKickbackPct is 10
+        assertEq(builderRegistry.getBuilderKickbackPct(builder), 10);
     }
 
     function _setBuilderState(address builder_, BuilderRegistry.BuilderState state_) internal {
@@ -391,8 +391,9 @@ contract BuilderRegistryTest is BaseTest {
         );
     }
 
-    function _setBuilderRewardSplitPercentage(address builder_, uint256 rewardSplitPercentage_) internal {
-        stdstore.target(address(builderRegistry)).sig("rewardSplitPercentages(address)").with_key(builder_)
-            .checked_write(rewardSplitPercentage_);
+    function _setBuilderBuilderKickbackPct(address builder_, uint256 builderKickbackPct_) internal {
+        stdstore.target(address(builderRegistry)).sig("builderKickbackPct(address)").with_key(builder_).checked_write(
+            builderKickbackPct_
+        );
     }
 }

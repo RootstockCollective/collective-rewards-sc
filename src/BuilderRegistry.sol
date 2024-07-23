@@ -13,14 +13,14 @@ contract BuilderRegistry is Governed {
     // -----------------------------
     error NotFoundation();
     error NotAuthorized();
-    error InvalidRewardSplitPercentage();
+    error InvalidBuilderKickbackPct();
     error RequiredState(BuilderState state);
 
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
     event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
-    event RewardSplitPercentageUpdate(address indexed builder_, uint256 rewardSplitPercentage_);
+    event BuilderKickbackPctUpdate(address indexed builder_, uint256 builderKickbackPct_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -59,14 +59,9 @@ contract BuilderRegistry is Governed {
     /// @notice map of builders reward receiver
     mapping(address builder => address rewardReceiver) public builderRewardReceiver;
 
-    /// @notice map of builders reward split percentage
-    mapping(address builder => uint256 percentage) public rewardSplitPercentages;
+    /// @notice map of builders kickback percentage
+    mapping(address builder => uint256 percentage) public builderKickbackPct;
 
-    /**
-     * @notice constructor
-     * @param foundation_ address of the foundation
-     * @param governor_ address of the governor
-     */
     constructor(address governor_, address changeExecutor_, address foundation_) Governed(governor_, changeExecutor_) {
         foundation = foundation_;
     }
@@ -81,12 +76,12 @@ contract BuilderRegistry is Governed {
      * reverts if builder state is not pending
      * @param builder_ address of builder
      * @param rewardReceiver_ address of the builder reward receiver
-     * @param rewardSplitPercentage_ percentage of reward split(100% == 1 ether)
+     * @param builderKickbackPct_ kickback percentage(100% == 1 ether)
      */
     function activateBuilder(
         address builder_,
         address rewardReceiver_,
-        uint256 rewardSplitPercentage_
+        uint256 builderKickbackPct_
     )
         external
         onlyFoundation
@@ -94,7 +89,7 @@ contract BuilderRegistry is Governed {
     {
         builderState[builder_] = BuilderState.KYCApproved;
         builderRewardReceiver[builder_] = rewardReceiver_;
-        _setRewardSplitPercentage(builder_, rewardSplitPercentage_);
+        _setBuilderKickbackPct(builder_, builderKickbackPct_);
 
         emit StateUpdate(builder_, BuilderState.Pending, BuilderState.KYCApproved);
     }
@@ -162,21 +157,21 @@ contract BuilderRegistry is Governed {
     }
 
     /**
-     * @notice set builder reward split percentage
+     * @notice set builder kickback percentage
      * @dev reverts if is not called by the governor address or authorized changer
      * reverts if builder state is not Whitelisted
      * @param builder_ address of builder
-     * @param rewardSplitPercentage_ percentage of reward split(100% == 1 ether)
+     * @param builderKickbackPct_ kickback percentage(100% == 1 ether)
      */
-    function setRewardSplitPercentage(
+    function setBuilderKickbackPct(
         address builder_,
-        uint256 rewardSplitPercentage_
+        uint256 builderKickbackPct_
     )
         external
         onlyGovernorOrAuthorizedChanger
         atState(builder_, BuilderState.Whitelisted)
     {
-        _setRewardSplitPercentage(builder_, rewardSplitPercentage_);
+        _setBuilderKickbackPct(builder_, builderKickbackPct_);
     }
 
     // -----------------------------
@@ -200,21 +195,21 @@ contract BuilderRegistry is Governed {
     }
 
     /**
-     * @notice get builder reward split percentage
+     * @notice get builder kickback percentage
      * @param builder_ address of builder
      */
-    function getRewardSplitPercentage(address builder_) public view returns (uint256) {
-        return rewardSplitPercentages[builder_];
+    function getBuilderKickbackPct(address builder_) public view returns (uint256) {
+        return builderKickbackPct[builder_];
     }
 
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
 
-    function _setRewardSplitPercentage(address builder_, uint256 rewardSplitPercentage_) internal {
-        if (rewardSplitPercentage_ > 1 ether) revert InvalidRewardSplitPercentage();
-        rewardSplitPercentages[builder_] = rewardSplitPercentage_;
+    function _setBuilderKickbackPct(address builder_, uint256 builderKickbackPct_) internal {
+        if (builderKickbackPct_ > 1 ether) revert InvalidBuilderKickbackPct();
+        builderKickbackPct[builder_] = builderKickbackPct_;
 
-        emit RewardSplitPercentageUpdate(builder_, rewardSplitPercentage_);
+        emit BuilderKickbackPctUpdate(builder_, builderKickbackPct_);
     }
 }

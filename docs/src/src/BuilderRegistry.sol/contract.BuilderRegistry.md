@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/9e5650b8576ed38cbee2c0a3ec521c14bf14f352/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/593a4330380586d483b11df54f093ffbc3b3a65a/src/BuilderRegistry.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
@@ -32,12 +32,12 @@ map of builders reward receiver
 mapping(address builder => address rewardReceiver) public builderRewardReceiver;
 ```
 
-### rewardSplitPercentages
+### builderKickbackPct
 
-map of builders reward split percentage
+map of builders kickback percentage
 
 ```solidity
-mapping(address builder => uint256 percentage) public rewardSplitPercentages;
+mapping(address builder => uint256 percentage) public builderKickbackPct;
 ```
 
 ## Functions
@@ -56,19 +56,9 @@ modifier atState(address builder_, BuilderState previousState_);
 
 ### constructor
 
-constructor
-
 ```solidity
 constructor(address governor_, address changeExecutor_, address foundation_) Governed(governor_, changeExecutor_);
 ```
-
-**Parameters**
-
-| Name              | Type      | Description               |
-| ----------------- | --------- | ------------------------- |
-| `governor_`       | `address` | address of the governor   |
-| `changeExecutor_` | `address` |                           |
-| `foundation_`     | `address` | address of the foundation |
 
 ### activateBuilder
 
@@ -80,7 +70,7 @@ _reverts if is not called by the foundation address reverts if builder state is 
 function activateBuilder(
     address builder_,
     address rewardReceiver_,
-    uint256 rewardSplitPercentage_
+    uint256 builderKickbackPct_
 )
     external
     onlyFoundation
@@ -89,11 +79,11 @@ function activateBuilder(
 
 **Parameters**
 
-| Name                     | Type      | Description                                 |
-| ------------------------ | --------- | ------------------------------------------- |
-| `builder_`               | `address` | address of builder                          |
-| `rewardReceiver_`        | `address` | address of the builder reward receiver      |
-| `rewardSplitPercentage_` | `uint256` | percentage of reward split(100% == 1 ether) |
+| Name                  | Type      | Description                            |
+| --------------------- | --------- | -------------------------------------- |
+| `builder_`            | `address` | address of builder                     |
+| `rewardReceiver_`     | `address` | address of the builder reward receiver |
+| `builderKickbackPct_` | `uint256` | kickback percentage(100% == 1 ether)   |
 
 ### whitelistBuilder
 
@@ -168,16 +158,16 @@ function revokeBuilder(address builder_) external atState(builder_, BuilderState
 | ---------- | --------- | ------------------ |
 | `builder_` | `address` | address of builder |
 
-### setRewardSplitPercentage
+### setBuilderKickbackPct
 
-set builder reward split percentage
+set builder kickback percentage
 
 _reverts if is not called by the governor address or authorized changer reverts if builder state is not Whitelisted_
 
 ```solidity
-function setRewardSplitPercentage(
+function setBuilderKickbackPct(
     address builder_,
-    uint256 rewardSplitPercentage_
+    uint256 builderKickbackPct_
 )
     external
     onlyGovernorOrAuthorizedChanger
@@ -186,10 +176,10 @@ function setRewardSplitPercentage(
 
 **Parameters**
 
-| Name                     | Type      | Description                                 |
-| ------------------------ | --------- | ------------------------------------------- |
-| `builder_`               | `address` | address of builder                          |
-| `rewardSplitPercentage_` | `uint256` | percentage of reward split(100% == 1 ether) |
+| Name                  | Type      | Description                          |
+| --------------------- | --------- | ------------------------------------ |
+| `builder_`            | `address` | address of builder                   |
+| `builderKickbackPct_` | `uint256` | kickback percentage(100% == 1 ether) |
 
 ### getState
 
@@ -219,12 +209,12 @@ function getRewardReceiver(address builder_) public view returns (address);
 | ---------- | --------- | ------------------ |
 | `builder_` | `address` | address of builder |
 
-### getRewardSplitPercentage
+### getBuilderKickbackPct
 
-get builder reward split percentage
+get builder kickback percentage
 
 ```solidity
-function getRewardSplitPercentage(address builder_) public view returns (uint256);
+function getBuilderKickbackPct(address builder_) public view returns (uint256);
 ```
 
 **Parameters**
@@ -233,10 +223,10 @@ function getRewardSplitPercentage(address builder_) public view returns (uint256
 | ---------- | --------- | ------------------ |
 | `builder_` | `address` | address of builder |
 
-### \_setRewardSplitPercentage
+### \_setBuilderKickbackPct
 
 ```solidity
-function _setRewardSplitPercentage(address builder_, uint256 rewardSplitPercentage_) internal;
+function _setBuilderKickbackPct(address builder_, uint256 builderKickbackPct_) internal;
 ```
 
 ## Events
@@ -247,10 +237,10 @@ function _setRewardSplitPercentage(address builder_, uint256 rewardSplitPercenta
 event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
 ```
 
-### RewardSplitPercentageUpdate
+### BuilderKickbackPctUpdate
 
 ```solidity
-event RewardSplitPercentageUpdate(address indexed builder_, uint256 rewardSplitPercentage_);
+event BuilderKickbackPctUpdate(address indexed builder_, uint256 builderKickbackPct_);
 ```
 
 ## Errors
@@ -267,10 +257,10 @@ error NotFoundation();
 error NotAuthorized();
 ```
 
-### InvalidRewardSplitPercentage
+### InvalidBuilderKickbackPct
 
 ```solidity
-error InvalidRewardSplitPercentage();
+error InvalidBuilderKickbackPct();
 ```
 
 ### RequiredState
