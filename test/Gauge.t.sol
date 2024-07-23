@@ -146,7 +146,7 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether);
 
         // AND builder reward split percentage is 30%
-        _setBuilderRewardSplitPercentage(builder, 3000);
+        _setBuilderRewardSplitPercentage(builder, 300_000_000_000_000_000);
 
         // WHEN 100 ether distributed
         //  THEN notifyRewardAmount event is emitted
@@ -257,7 +257,7 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether);
 
         // AND builder reward split percentage is 30%
-        _setBuilderRewardSplitPercentage(builder, 3000);
+        _setBuilderRewardSplitPercentage(builder, 300_000_000_000_000_000);
 
         // AND builder auth claimer is alice
         _setAuthClaimer(builder, alice);

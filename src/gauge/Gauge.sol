@@ -227,9 +227,9 @@ contract Gauge {
             _leftover = (_periodFinish - block.timestamp) * _rewardRate;
         }
 
-        // [N] = [N] * [N] / [PREC]
+        // [N] = [N] * [PREC] / [PREC]
         uint256 _builderAmount =
-            UtilsLib._calculatePercentage(amount_, sponsorsManager.builderRegistry().getRewardSplitPercentage(builder));
+            UtilsLib._mulPrec(amount_, sponsorsManager.builderRegistry().getRewardSplitPercentage(builder));
         // [N] = [N] - [N]
         uint256 _sponsorsAmount = amount_ - _builderAmount;
 
