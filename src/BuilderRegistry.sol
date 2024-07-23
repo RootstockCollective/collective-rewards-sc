@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
+import { UtilsLib } from "./libraries/UtilsLib.sol";
+
 /**
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
@@ -63,8 +65,8 @@ contract BuilderRegistry {
     /// @notice map of builders state
     mapping(address builder => BuilderState state) public builderState;
 
-    /// @notice map of builders authorized claimer
-    mapping(address builder => address claimer) public builderAuthClaimer;
+    /// @notice map of builders reward receiver
+    mapping(address builder => address rewardReceiver) public builderRewardReceiver;
 
     /// @notice map of builders reward split percentage
     mapping(address builder => uint256 percentage) public rewardSplitPercentages;
@@ -84,16 +86,16 @@ contract BuilderRegistry {
     // -----------------------------
 
     /**
-     * @notice activates builder and set authorized claimer
+     * @notice activates builder and set reward receiver
      * @dev reverts if is not called by the foundation address
      * reverts if builder state is not pending
      * @param builder_ address of builder
-     * @param authClaimer_ address of the builder authorized claimer
+     * @param rewardReceiver_ address of the builder reward receiver
      * @param rewardSplitPercentage_ percentage of reward split(100% == 1 ether)
      */
     function activateBuilder(
         address builder_,
-        address authClaimer_,
+        address rewardReceiver_,
         uint256 rewardSplitPercentage_
     )
         external
@@ -101,7 +103,7 @@ contract BuilderRegistry {
         atState(builder_, BuilderState.Pending)
     {
         builderState[builder_] = BuilderState.KYCApproved;
-        builderAuthClaimer[builder_] = authClaimer_;
+        builderRewardReceiver[builder_] = rewardReceiver_;
         _setRewardSplitPercentage(builder_, rewardSplitPercentage_);
 
         emit StateUpdate(builder_, BuilderState.Pending, BuilderState.KYCApproved);
@@ -188,11 +190,11 @@ contract BuilderRegistry {
     }
 
     /**
-     * @notice get builder authorized claimer
+     * @notice get builder reward receiver
      * @param builder_ address of builder
      */
-    function getAuthClaimer(address builder_) public view returns (address) {
-        return builderAuthClaimer[builder_];
+    function getRewardReceiver(address builder_) public view returns (address) {
+        return builderRewardReceiver[builder_];
     }
 
     /**

@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/40267d0e07c6d6dea0800c6e77ebcb14a7ad880e/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/0fb32a648d6522aa34818cd34c659917294ce052/src/BuilderRegistry.sol)
 
 Keeps registers of the builders
 
@@ -30,12 +30,12 @@ map of builders state
 mapping(address builder => BuilderState state) public builderState;
 ```
 
-### builderAuthClaimer
+### builderRewardReceiver
 
-map of builders authorized claimer
+map of builders reward receiver
 
 ```solidity
-mapping(address builder => address claimer) public builderAuthClaimer;
+mapping(address builder => address rewardReceiver) public builderRewardReceiver;
 ```
 
 ### rewardSplitPercentages
@@ -83,14 +83,14 @@ constructor(address foundation_, address governor_);
 
 ### activateBuilder
 
-activates builder and set authorized claimer
+activates builder and set reward receiver
 
 _reverts if is not called by the foundation address reverts if builder state is not pending_
 
 ```solidity
 function activateBuilder(
     address builder_,
-    address authClaimer_,
+    address rewardReceiver_,
     uint256 rewardSplitPercentage_
 )
     external
@@ -103,7 +103,7 @@ function activateBuilder(
 | Name                     | Type      | Description                                 |
 | ------------------------ | --------- | ------------------------------------------- |
 | `builder_`               | `address` | address of builder                          |
-| `authClaimer_`           | `address` | address of the builder authorized claimer   |
+| `rewardReceiver_`        | `address` | address of the builder reward receiver      |
 | `rewardSplitPercentage_` | `uint256` | percentage of reward split(100% == 1 ether) |
 
 ### whitelistBuilder
@@ -207,12 +207,12 @@ function getState(address builder_) public view returns (BuilderState);
 | ---------- | --------- | ------------------ |
 | `builder_` | `address` | address of builder |
 
-### getAuthClaimer
+### getRewardReceiver
 
-get builder authorized claimer
+get builder reward receiver
 
 ```solidity
-function getAuthClaimer(address builder_) public view returns (address);
+function getRewardReceiver(address builder_) public view returns (address);
 ```
 
 **Parameters**

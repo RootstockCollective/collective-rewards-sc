@@ -89,8 +89,8 @@ contract BuilderRegistryTest is BaseTest {
         // THEN builder.state is KYCApproved
         assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.KYCApproved));
 
-        // THEN builder rewards receive is the same builder
-        assertEq(builderRegistry.getAuthClaimer(builder), builder);
+        // THEN builder rewards receiver is the same as the builder
+        assertEq(builderRegistry.getRewardReceiver(builder), builder);
     }
 
     /**
@@ -348,17 +348,17 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: Getting builder authorized claimer
+     * SCENARIO: Getting builder reward receiver
      */
-    function test_GetAuthClaimer() public {
+    function test_GetRewardReceiver() public {
         // GIVEN a foundation
         vm.startPrank(foundation);
 
-        // WHEN authorized claimer was previously updated to builder
-        _setAuthClaimer(builder, builder);
+        // WHEN reward receiver was previously updated to builder
+        _setRewardReceiver(builder, builder);
 
-        // THEN builder.authClaimer is builder
-        assertEq(builderRegistry.getAuthClaimer(builder), builder);
+        // THEN builder.rewardReceiver is builder
+        assertEq(builderRegistry.getRewardReceiver(builder), builder);
     }
 
     /**
@@ -381,9 +381,9 @@ contract BuilderRegistryTest is BaseTest {
         );
     }
 
-    function _setAuthClaimer(address builder_, address authClaimer_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderAuthClaimer(address)").with_key(builder_).checked_write(
-            authClaimer_
+    function _setRewardReceiver(address builder_, address rewardReceiver_) internal {
+        stdstore.target(address(builderRegistry)).sig("builderRewardReceiver(address)").with_key(builder_).checked_write(
+            rewardReceiver_
         );
     }
 
