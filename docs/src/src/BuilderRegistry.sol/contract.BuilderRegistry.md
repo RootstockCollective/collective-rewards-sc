@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/26cede3bca1fa205726e5fbfc42ce638e32ad00b/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/40267d0e07c6d6dea0800c6e77ebcb14a7ad880e/src/BuilderRegistry.sol)
 
 Keeps registers of the builders
 
@@ -100,11 +100,11 @@ function activateBuilder(
 
 **Parameters**
 
-| Name                     | Type      | Description                                |
-| ------------------------ | --------- | ------------------------------------------ |
-| `builder_`               | `address` | address of builder                         |
-| `authClaimer_`           | `address` | address of the builder authorized claimer  |
-| `rewardSplitPercentage_` | `uint256` | percentage of reward split in basis points |
+| Name                     | Type      | Description                                 |
+| ------------------------ | --------- | ------------------------------------------- |
+| `builder_`               | `address` | address of builder                          |
+| `authClaimer_`           | `address` | address of the builder authorized claimer   |
+| `rewardSplitPercentage_` | `uint256` | percentage of reward split(100% == 1 ether) |
 
 ### whitelistBuilder
 
@@ -188,10 +188,10 @@ function setRewardSplitPercentage(
 
 **Parameters**
 
-| Name                     | Type      | Description                                |
-| ------------------------ | --------- | ------------------------------------------ |
-| `builder_`               | `address` | address of builder                         |
-| `rewardSplitPercentage_` | `uint256` | percentage of reward split in basis points |
+| Name                     | Type      | Description                                 |
+| ------------------------ | --------- | ------------------------------------------- |
+| `builder_`               | `address` | address of builder                          |
+| `rewardSplitPercentage_` | `uint256` | percentage of reward split(100% == 1 ether) |
 
 ### getState
 

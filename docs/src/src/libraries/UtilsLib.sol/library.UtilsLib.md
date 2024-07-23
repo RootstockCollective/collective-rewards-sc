@@ -1,6 +1,6 @@
 # UtilsLib
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/26cede3bca1fa205726e5fbfc42ce638e32ad00b/src/libraries/UtilsLib.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/40267d0e07c6d6dea0800c6e77ebcb14a7ad880e/src/libraries/UtilsLib.sol)
 
 ## State Variables
 
@@ -8,12 +8,6 @@
 
 ```solidity
 uint256 internal constant PRECISION = 10 ** 18;
-```
-
-### BPS_PRECISION
-
-```solidity
-uint256 internal constant BPS_PRECISION = 10_000;
 ```
 
 ## Functions
@@ -65,24 +59,3 @@ function _mulPrec(uint256 a_, uint256 b_) internal pure returns (uint256);
 | Name     | Type      | Description              |
 | -------- | --------- | ------------------------ |
 | `<none>` | `uint256` | `a_` \* `b_` / PRECISION |
-
-### \_calculatePercentage
-
-percentage using bps
-
-```solidity
-function _calculatePercentage(uint256 amount_, uint256 bps_) internal pure returns (uint256);
-```
-
-**Parameters**
-
-| Name      | Type      | Description |
-| --------- | --------- | ----------- |
-| `amount_` | `uint256` | amount      |
-| `bps_`    | `uint256` | bps         |
-
-**Returns**
-
-| Name     | Type      | Description                         |
-| -------- | --------- | ----------------------------------- |
-| `<none>` | `uint256` | `amount_` \* `bps_` / BPS_PRECISION |

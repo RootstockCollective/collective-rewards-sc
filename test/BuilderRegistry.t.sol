@@ -121,7 +121,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN tries to activateBuilder
         //  THEN tx reverts because is not a valid reward split percentage
         vm.expectRevert(BuilderRegistry.InvalidRewardSplitPercentage.selector);
-        builderRegistry.activateBuilder(builder, builder, 10_001);
+        builderRegistry.activateBuilder(builder, builder, 2 ether);
     }
 
     /**
@@ -330,7 +330,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN tries to setRewardSplitPercentage
         //  THEN tx reverts because is not a valid reward split percentage
         vm.expectRevert(BuilderRegistry.InvalidRewardSplitPercentage.selector);
-        builderRegistry.setRewardSplitPercentage(builder, 10_001);
+        builderRegistry.setRewardSplitPercentage(builder, 2 ether);
     }
 
     /**

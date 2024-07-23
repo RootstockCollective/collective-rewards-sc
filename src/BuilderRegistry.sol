@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { UtilsLib } from "./libraries/UtilsLib.sol";
-
 /**
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
@@ -91,7 +89,7 @@ contract BuilderRegistry {
      * reverts if builder state is not pending
      * @param builder_ address of builder
      * @param authClaimer_ address of the builder authorized claimer
-     * @param rewardSplitPercentage_ percentage of reward split in basis points
+     * @param rewardSplitPercentage_ percentage of reward split(100% == 1 ether)
      */
     function activateBuilder(
         address builder_,
@@ -164,7 +162,7 @@ contract BuilderRegistry {
      * @dev reverts if is not called by the governor address
      * reverts if builder state is not Whitelisted
      * @param builder_ address of builder
-     * @param rewardSplitPercentage_ percentage of reward split in basis points
+     * @param rewardSplitPercentage_ percentage of reward split(100% == 1 ether)
      */
     function setRewardSplitPercentage(
         address builder_,
@@ -210,7 +208,7 @@ contract BuilderRegistry {
     // -----------------------------
 
     function _setRewardSplitPercentage(address builder_, uint256 rewardSplitPercentage_) internal {
-        if (rewardSplitPercentage_ > UtilsLib.BPS_PRECISION) revert InvalidRewardSplitPercentage();
+        if (rewardSplitPercentage_ > 1 ether) revert InvalidRewardSplitPercentage();
         rewardSplitPercentages[builder_] = rewardSplitPercentage_;
 
         emit RewardSplitPercentageUpdate(builder_, rewardSplitPercentage_);
