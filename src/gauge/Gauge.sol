@@ -40,36 +40,40 @@ contract Gauge {
     // ---------- Storage ----------
     // -----------------------------
 
+    /// @notice builder address
+    address public immutable builder;
     /// @notice address of the token rewarded to builder and voters
     IERC20 public immutable rewardToken;
-    // @notice address of the SponsorsManager contract
+    /// @notice SponsorsManager contract address
     address public immutable sponsorsManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
-    /// @notice current reward rate of rewardToken to distribute per second
+    /// @notice current reward rate of rewardToken to distribute per second [PREC]
     uint256 public rewardRate;
-    /// @notice most recent stored value of rewardPerToken
+    /// @notice most recent stored value of rewardPerToken [PREC]
     uint256 public rewardPerTokenStored;
-    /// @notice missing rewards where there is not allocation
+    /// @notice missing rewards where there is not allocation [PREC]
     uint256 public rewardMissing;
     /// @notice most recent timestamp contract has updated state
     uint256 public lastUpdateTime;
-    // @notice timestamp end of current rewards period
+    /// @notice timestamp end of current rewards period
     uint256 public periodFinish;
 
     /// @notice amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public allocationOf;
-    /// @notice cached rewardPerTokenStored for a sponsor based on their most recent action
+    /// @notice cached rewardPerTokenStored for a sponsor based on their most recent action [PREC]
     mapping(address sponsor => uint256 rewardPerTokenPaid) public sponsorRewardPerTokenPaid;
     /// @notice cached amount of rewardToken earned for a sponsor
     mapping(address sponsor => uint256 rewards) public rewards;
 
     /**
      * @notice constructor
+     * @param builder_ address of the builder
      * @param rewardToken_ address of the token rewarded to builder and voters
      * @param sponsorsManager_ address of the SponsorsManager contract
      */
-    constructor(address rewardToken_, address sponsorsManager_) {
+    constructor(address builder_, address rewardToken_, address sponsorsManager_) {
+        builder = builder_;
         rewardToken = IERC20(rewardToken_);
         sponsorsManager = sponsorsManager_;
     }
