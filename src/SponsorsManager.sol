@@ -201,13 +201,24 @@ contract SponsorsManager is Governed {
     }
 
     /**
-     * @notice claims rewards form a batch of gauges
+     * @notice claims sponsor rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
      */
     function claimRewards(Gauge[] memory gauges_) external {
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
             gauges_[i].getSponsorReward(msg.sender);
+        }
+    }
+
+    /**
+     * @notice claims builder rewards form a batch of gauges
+     * @param gauges_ array of gauges to claim
+     */
+    function claimBuilderRewards(Gauge[] memory gauges_) external {
+        uint256 _length = gauges_.length;
+        for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
+            gauges_[i].getBuilderReward();
         }
     }
 

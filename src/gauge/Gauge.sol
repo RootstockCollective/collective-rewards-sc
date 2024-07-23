@@ -121,7 +121,7 @@ contract Gauge {
     }
 
     /**
-     * @notice gets rewards for an `sponsor_` address
+     * @notice gets rewards for a `sponsor_` address
      * @dev reverts if is not called by the `sponsor_` or the sponsorsManager
      * @param sponsor_ address who receives the rewards
      */
@@ -139,19 +139,15 @@ contract Gauge {
     }
 
     /**
-     * @notice gets rewards for an `builder_` address
-     * @dev reverts if is not called by the `builder_` or the sponsorsManager
-     * @param builder_ address from builder that is claiming rewards
+     * @notice gets rewards for the builder
      */
-    function getBuilderReward(address builder_) external {
-        if (msg.sender != builder_ && msg.sender != address(sponsorsManager)) revert NotAuthorized();
-
+    function getBuilderReward() external {
         uint256 reward = builderRewards;
         if (reward > 0) {
             builderRewards = 0;
-            address _authClaimer = sponsorsManager.builderRegistry().getAuthClaimer(builder_);
-            SafeERC20.safeTransfer(rewardToken, _authClaimer, reward);
-            emit BuilderRewardsClaimed(_authClaimer, builderRewards);
+            address _rewardReceiver = sponsorsManager.builderRegistry().getRewardReceiver(builder);
+            SafeERC20.safeTransfer(rewardToken, _rewardReceiver, reward);
+            emit BuilderRewardsClaimed(_rewardReceiver, builderRewards);
         }
     }
 

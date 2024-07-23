@@ -49,11 +49,6 @@ contract GaugeTest is BaseTest {
         //  THEN tx reverts because caller is not authorized
         vm.expectRevert(Gauge.NotAuthorized.selector);
         gauge.getSponsorReward(bob);
-
-        // WHEN alice calls getBuilderReward using builder address
-        //  THEN tx reverts because caller is not authorized
-        vm.expectRevert(Gauge.NotAuthorized.selector);
-        gauge.getBuilderReward(builder);
     }
 
     /**
@@ -259,8 +254,8 @@ contract GaugeTest is BaseTest {
         // AND builder reward split percentage is 30%
         _setBuilderRewardSplitPercentage(builder, 300_000_000_000_000_000);
 
-        // AND builder auth claimer is alice
-        _setAuthClaimer(builder, alice);
+        // AND builder reward receiver is alice
+        _setRewardReceiver(builder, alice);
 
         // WHEN 100 ether distributed
         gauge.notifyRewardAmount(100 ether);
@@ -275,8 +270,7 @@ contract GaugeTest is BaseTest {
         _skipAndStartNewEpoch();
 
         // WHEN builder claims rewards again
-        vm.startPrank(builder);
-        gauge.getBuilderReward(builder);
+        gauge.getBuilderReward();
         // THEN alice rewardToken balance is 30% of 100 ether
         assertEq(rewardToken.balanceOf(alice), 30 ether);
     }
@@ -594,9 +588,9 @@ contract GaugeTest is BaseTest {
             .checked_write(rewardSplitPercentage_);
     }
 
-    function _setAuthClaimer(address builder_, address authClaimer_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderAuthClaimer(address)").with_key(builder_).checked_write(
-            authClaimer_
+    function _setRewardReceiver(address builder_, address rewardReceiver_) internal {
+        stdstore.target(address(builderRegistry)).sig("builderRewardReceiver(address)").with_key(builder_).checked_write(
+            rewardReceiver_
         );
     }
 }
