@@ -1,6 +1,8 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d568903015f871eedd363a6c648861169e985892/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5f35a21cd6c3981ceefbb9cb59cbab117642b659/src/SponsorsManager.sol)
+
+**Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
 ## State Variables
 
@@ -66,12 +68,12 @@ true if distribution period started. Allocations remain blocked until it finishe
 bool public onDistributionPeriod;
 ```
 
-### gaugeOfBuilder
+### builderToGauge
 
 gauge contract for a builder
 
 ```solidity
-mapping(address builder => Gauge gauge) public gaugeOfBuilder;
+mapping(address builder => Gauge gauge) public builderToGauge;
 ```
 
 ### gauges
@@ -92,16 +94,29 @@ mapping(address sponsor => uint256 allocation) public sponsorTotalAllocation;
 
 ## Functions
 
-### notOnDistributionPeriod
+### onlyInDistributionWindow
 
 ```solidity
-modifier notOnDistributionPeriod();
+modifier onlyInDistributionWindow();
+```
+
+### notInDistributionPeriod
+
+```solidity
+modifier notInDistributionPeriod();
 ```
 
 ### constructor
 
 ```solidity
-constructor(address rewardToken_, address stakingToken_, address gaugeFactory_);
+constructor(
+    address governor_,
+    address changeExecutor_,
+    address rewardToken_,
+    address stakingToken_,
+    address gaugeFactory_
+)
+    Governed(governor_, changeExecutor_);
 ```
 
 ### createGauge
@@ -109,7 +124,7 @@ constructor(address rewardToken_, address stakingToken_, address gaugeFactory_);
 creates a new gauge for a builder
 
 ```solidity
-function createGauge(address builder_) external returns (Gauge gauge);
+function createGauge(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge);
 ```
 
 **Parameters**
@@ -126,37 +141,37 @@ function createGauge(address builder_) external returns (Gauge gauge);
 
 ### allocate
 
-allocates staking tokens for a gauge
+allocates votes for a gauge
 
 _reverts if it is called during the distribution period_
 
 ```solidity
-function allocate(Gauge gauge_, uint256 allocation_) external notOnDistributionPeriod;
+function allocate(Gauge gauge_, uint256 allocation_) external notInDistributionPeriod;
 ```
 
 **Parameters**
 
-| Name          | Type      | Description                                             |
-| ------------- | --------- | ------------------------------------------------------- |
-| `gauge_`      | `Gauge`   | address of the gauge where the tokens will be allocated |
-| `allocation_` | `uint256` | amount of tokens to allocate                            |
+| Name          | Type      | Description                                            |
+| ------------- | --------- | ------------------------------------------------------ |
+| `gauge_`      | `Gauge`   | address of the gauge where the votes will be allocated |
+| `allocation_` | `uint256` | amount of votes to allocate                            |
 
 ### allocateBatch
 
-allocates staking tokens for a batch of gauges
+allocates votes for a batch of gauges
 
 _reverts if it is called during the distribution period_
 
 ```solidity
-function allocateBatch(Gauge[] calldata gauges_, uint256[] calldata allocations_) external notOnDistributionPeriod;
+function allocateBatch(Gauge[] calldata gauges_, uint256[] calldata allocations_) external notInDistributionPeriod;
 ```
 
 **Parameters**
 
-| Name           | Type        | Description                                        |
-| -------------- | ----------- | -------------------------------------------------- |
-| `gauges_`      | `Gauge[]`   | array of gauges where the tokens will be allocated |
-| `allocations_` | `uint256[]` | array of amount of tokens to allocate              |
+| Name           | Type        | Description                                       |
+| -------------- | ----------- | ------------------------------------------------- |
+| `gauges_`      | `Gauge[]`   | array of gauges where the votes will be allocated |
+| `allocations_` | `uint256[]` | array of amount of votes to allocate              |
 
 ### notifyRewardAmount
 
@@ -165,7 +180,7 @@ transfers reward tokens from the sender to be distributed to the gauges
 _reverts if it is called during the distribution period_
 
 ```solidity
-function notifyRewardAmount(uint256 amount_) external notOnDistributionPeriod;
+function notifyRewardAmount(uint256 amount_) external notInDistributionPeriod;
 ```
 
 **Parameters**
@@ -178,10 +193,10 @@ function notifyRewardAmount(uint256 amount_) external notOnDistributionPeriod;
 
 starts the distribution period blocking all the allocations until all the gauges were distributed
 
-_reverts if it is called during the distribution period_
+_reverts if is called outside the distribution window reverts if it is called during the distribution period_
 
 ```solidity
-function startDistribution() external notOnDistributionPeriod;
+function startDistribution() external onlyInDistributionWindow notInDistributionPeriod;
 ```
 
 ### distribute
@@ -211,7 +226,7 @@ function claimRewards(Gauge[] memory gauges_) external;
 
 ### \_allocate
 
-internal function used to allocate staking tokens for a gauge or a batch of gauges
+internal function used to allocate votes for a gauge or a batch of gauges
 
 ```solidity
 function _allocate(
@@ -226,12 +241,12 @@ function _allocate(
 
 **Parameters**
 
-| Name                      | Type      | Description                                             |
-| ------------------------- | --------- | ------------------------------------------------------- |
-| `gauge_`                  | `Gauge`   | address of the gauge where the tokens will be allocated |
-| `allocation_`             | `uint256` | amount of tokens to allocate                            |
-| `sponsorTotalAllocation_` | `uint256` | current sponsor total allocation                        |
-| `totalAllocation_`        | `uint256` | current total allocation                                |
+| Name                      | Type      | Description                                            |
+| ------------------------- | --------- | ------------------------------------------------------ |
+| `gauge_`                  | `Gauge`   | address of the gauge where the votes will be allocated |
+| `allocation_`             | `uint256` | amount of votes to allocate                            |
+| `sponsorTotalAllocation_` | `uint256` | current sponsor total allocation                       |
+| `totalAllocation_`        | `uint256` | current total allocation                               |
 
 **Returns**
 
@@ -329,10 +344,16 @@ error GaugeDoesNotExist(address builder_);
 error NotEnoughStaking();
 ```
 
-### NotOnDistributionPeriod
+### OnlyInDistributionWindow
 
 ```solidity
-error NotOnDistributionPeriod();
+error OnlyInDistributionWindow();
+```
+
+### NotInDistributionPeriod
+
+```solidity
+error NotInDistributionPeriod();
 ```
 
 ### DistributionPeriodDidNotStart

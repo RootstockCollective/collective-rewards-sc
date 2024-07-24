@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { stdError } from "forge-std/src/Test.sol";
 import { BaseTest, Gauge } from "./BaseTest.sol";
 import { EpochLib } from "../src/libraries/EpochLib.sol";
 
