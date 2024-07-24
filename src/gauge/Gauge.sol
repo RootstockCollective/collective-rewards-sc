@@ -5,7 +5,6 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { SponsorsManager } from "../SponsorsManager.sol";
-import { BuilderRegistry } from "../BuilderRegistry.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EpochLib } from "../libraries/EpochLib.sol";
 
@@ -225,7 +224,7 @@ contract Gauge {
 
         // [N] = [N] * [PREC] / [PREC]
         uint256 _builderAmount =
-            UtilsLib._mulPrec(amount_, sponsorsManager.builderRegistry().getRewardSplitPercentage(builder));
+            UtilsLib._mulPrec(amount_, sponsorsManager.builderRegistry().getBuilderKickbackPct(builder));
         // [N] = [N] - [N]
         uint256 _sponsorsAmount = amount_ - _builderAmount;
 

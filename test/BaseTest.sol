@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import { Test } from "forge-std/src/Test.sol";
+import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 
 import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
 import { Deploy as ChangeExecutorMockDeployer } from "script/test_mock/ChangeExecutorMock.s.sol";
@@ -17,6 +18,8 @@ import { SponsorsManager } from "src/SponsorsManager.sol";
 import { BuilderRegistry } from "src/BuilderRegistry.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { EpochLib } from "src/libraries/EpochLib.sol";
+
+using stdStorage for StdStorage;
 
 contract BaseTest is Test {
     ChangeExecutorMock public changeExecutorMock;
@@ -38,6 +41,7 @@ contract BaseTest is Test {
     address internal bob = makeAddr("bob");
     address internal builder = makeAddr("builder");
     address internal builder2 = makeAddr("builder2");
+    address internal kycApprover = makeAddr("kycApprover");
     address internal foundation = makeAddr("foundation");
 
     function setUp() public {
@@ -45,10 +49,15 @@ contract BaseTest is Test {
         MockTokenDeployer mockTokenDeployer = new MockTokenDeployer();
         stakingToken = mockTokenDeployer.run(0);
         rewardToken = mockTokenDeployer.run(1);
-        builderRegistry = new BuilderRegistryDeployer().run(governor, address(changeExecutorMock), foundation);
+        builderRegistry = new BuilderRegistryDeployer().run(governor, address(changeExecutorMock), kycApprover);
         gaugeFactory = new GaugeFactoryDeployer().run();
         sponsorsManager = new SponsorsManagerDeployer().run(
-            governor, address(changeExecutorMock), address(rewardToken), address(stakingToken), address(gaugeFactory)
+            governor,
+            address(changeExecutorMock),
+            address(rewardToken),
+            address(stakingToken),
+            address(gaugeFactory),
+            address(builderRegistry)
         );
         rewardDistributor =
             new RewardDistributorDeployer().run(foundation, address(rewardToken), address(sponsorsManager));
@@ -85,5 +94,23 @@ contract BaseTest is Test {
         _skipAndStartNewEpoch();
         uint256 _currentEpochRemaining = EpochLib.endDistributionWindow(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining);
+    }
+
+    function _setBuilderState(address builder_, BuilderRegistry.BuilderState state_) internal {
+        stdstore.target(address(builderRegistry)).sig("builderState(address)").with_key(builder_).checked_write(
+            uint256(state_)
+        );
+    }
+
+    function _setRewardReceiver(address builder_, address rewardReceiver_) internal {
+        stdstore.target(address(builderRegistry)).sig("builderRewardReceiver(address)").with_key(builder_).checked_write(
+            rewardReceiver_
+        );
+    }
+
+    function _setBuilderBuilderKickbackPct(address builder_, uint256 builderKickbackPct_) internal {
+        stdstore.target(address(builderRegistry)).sig("builderKickbackPct(address)").with_key(builder_).checked_write(
+            builderKickbackPct_
+        );
     }
 }

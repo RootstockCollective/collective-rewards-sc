@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 import { BaseTest, BuilderRegistry } from "./BaseTest.sol";
 import { Governed } from "../src/governance/Governed.sol";
-
-using stdStorage for StdStorage;
 
 contract BuilderRegistryTest is BaseTest {
     // -----------------------------
@@ -64,11 +61,11 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: Foundation activates a new builder
+     * SCENARIO: kycApprover activates a new builder
      */
     function test_ActivateBuilder() public {
-        // GIVEN a Foundation
-        vm.startPrank(foundation);
+        // GIVEN a kycApprover
+        vm.startPrank(kycApprover);
 
         // WHEN calls activateBuilder
         //  THEN StateUpdate event is emitted
@@ -87,8 +84,8 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: activateBuilder should reverts if the state is not Pending
      */
     function test_ActivateBuilderWrongStatus() public {
-        // GIVEN a Foundation
-        vm.startPrank(foundation);
+        // GIVEN a kycApprover
+        vm.startPrank(kycApprover);
 
         // WHEN state is not Pending
         _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
@@ -105,8 +102,8 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: activateBuilder should reverts if kickback percentage is higher than 100
      */
     function test_ActivateBuilderInvalidBuilderKickbackPct() public {
-        // GIVEN a Foundation
-        vm.startPrank(foundation);
+        // GIVEN a kycApprover
+        vm.startPrank(kycApprover);
 
         // WHEN tries to activateBuilder
         //  THEN tx reverts because is not a valid kickback percentage
@@ -341,8 +338,8 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: Getting builder reward receiver
      */
     function test_GetRewardReceiver() public {
-        // GIVEN a foundation
-        vm.startPrank(foundation);
+        // GIVEN a kycApprover
+        vm.startPrank(kycApprover);
 
         // WHEN reward receiver was previously updated to builder
         _setRewardReceiver(builder, builder);
@@ -363,23 +360,5 @@ contract BuilderRegistryTest is BaseTest {
 
         // THEN builder.builderKickbackPct is 10
         assertEq(builderRegistry.getBuilderKickbackPct(builder), 10);
-    }
-
-    function _setBuilderState(address builder_, BuilderRegistry.BuilderState state_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderState(address)").with_key(builder_).checked_write(
-            uint256(state_)
-        );
-    }
-
-    function _setRewardReceiver(address builder_, address rewardReceiver_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderRewardReceiver(address)").with_key(builder_).checked_write(
-            rewardReceiver_
-        );
-    }
-
-    function _setBuilderBuilderKickbackPct(address builder_, uint256 builderKickbackPct_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderKickbackPct(address)").with_key(builder_).checked_write(
-            builderKickbackPct_
-        );
     }
 }

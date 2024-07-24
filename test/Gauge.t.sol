@@ -3,9 +3,6 @@ pragma solidity 0.8.20;
 
 import { BaseTest, Gauge } from "./BaseTest.sol";
 import { EpochLib } from "../src/libraries/EpochLib.sol";
-import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
-
-using stdStorage for StdStorage;
 
 contract GaugeTest is BaseTest {
     // -----------------------------
@@ -140,8 +137,8 @@ contract GaugeTest is BaseTest {
         gauge.allocate(alice, 1 ether);
         gauge.allocate(bob, 5 ether);
 
-        // AND builder reward split percentage is 30%
-        _setBuilderRewardSplitPercentage(builder, 300_000_000_000_000_000);
+        // AND builder kickback percentage is 30%
+        _setBuilderBuilderKickbackPct(builder, 300_000_000_000_000_000);
 
         // WHEN 100 ether distributed
         //  THEN notifyRewardAmount event is emitted
@@ -251,8 +248,8 @@ contract GaugeTest is BaseTest {
         gauge.allocate(alice, 1 ether);
         gauge.allocate(bob, 5 ether);
 
-        // AND builder reward split percentage is 30%
-        _setBuilderRewardSplitPercentage(builder, 300_000_000_000_000_000);
+        // AND builder kickback percentage is 30%
+        _setBuilderBuilderKickbackPct(builder, 300_000_000_000_000_000);
 
         // AND builder reward receiver is alice
         _setRewardReceiver(builder, alice);
@@ -581,16 +578,5 @@ contract GaugeTest is BaseTest {
         gauge.getSponsorReward(bob);
         // THEN bob rewardToken balance is 124.999999999999999995 = 5 * (49.999999999999999998 - 24.999999999999999999)
         assertEq(rewardToken.balanceOf(bob), 124_999_999_999_999_999_995);
-    }
-
-    function _setBuilderRewardSplitPercentage(address builder_, uint256 rewardSplitPercentage_) internal {
-        stdstore.target(address(builderRegistry)).sig("rewardSplitPercentages(address)").with_key(builder_)
-            .checked_write(rewardSplitPercentage_);
-    }
-
-    function _setRewardReceiver(address builder_, address rewardReceiver_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderRewardReceiver(address)").with_key(builder_).checked_write(
-            rewardReceiver_
-        );
     }
 }

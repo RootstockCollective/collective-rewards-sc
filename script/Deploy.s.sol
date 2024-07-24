@@ -40,14 +40,19 @@ contract Deploy is Broadcaster, OutputWriter {
         ChangeExecutor changeExecutor = new ChangeExecutorDeployer().run(_governorAddress);
         save("ChangeExecutor", address(changeExecutor));
 
-        SponsorsManager sponsorManager = new SponsorsManagerDeployer().run(
-            _governorAddress, address(changeExecutor), _rewardTokenAddress, _stakingTokenAddress, address(gaugeFactory)
-        );
-        save("SponsorsManager", address(sponsorManager));
-
         BuilderRegistry builderRegistry =
             new BuilderRegistryDeployer().run(_governorAddress, address(changeExecutor), _kycApproverAddress);
         save("BuilderRegistry", address(builderRegistry));
+
+        SponsorsManager sponsorManager = new SponsorsManagerDeployer().run(
+            _governorAddress,
+            address(changeExecutor),
+            _rewardTokenAddress,
+            _stakingTokenAddress,
+            address(gaugeFactory),
+            address(builderRegistry)
+        );
+        save("SponsorsManager", address(sponsorManager));
 
         RewardDistributor rewardDistributor = new RewardDistributorDeployer().run(
             _foundationTreasuryAddress, _rewardTokenAddress, address(sponsorManager)
