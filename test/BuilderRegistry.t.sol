@@ -17,20 +17,6 @@ contract BuilderRegistryTest is BaseTest {
     event BuilderKickbackPctUpdate(address indexed builder_, uint256 builderKickbackPct_);
 
     /**
-     * SCENARIO: functions protected by OnlyFoundation should revert when are not
-     *  called by Foundation
-     */
-    function test_OnlyFoundation() public {
-        // GIVEN a sponsor alice
-        vm.startPrank(alice);
-
-        // WHEN alice calls activateBuilder
-        //  THEN tx reverts because caller is not the Foundation
-        vm.expectRevert(BuilderRegistry.NotFoundation.selector);
-        builderRegistry.activateBuilder(builder, alice, 0);
-    }
-
-    /**
      * SCENARIO: functions protected by OnlyGovernor should revert when are not
      *  called by Governor
      */

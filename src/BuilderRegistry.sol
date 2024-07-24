@@ -2,16 +2,17 @@
 pragma solidity 0.8.20;
 
 import { Governed } from "./governance/Governed.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
  */
-contract BuilderRegistry is Governed {
+contract BuilderRegistry is Governed, Ownable2Step {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
-    error NotFoundation();
     error NotAuthorized();
     error InvalidBuilderKickbackPct();
     error RequiredState(BuilderState state);
@@ -25,11 +26,6 @@ contract BuilderRegistry is Governed {
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
-    modifier onlyFoundation() {
-        if (msg.sender != foundation) revert NotFoundation();
-        _;
-    }
-
     modifier atState(address builder_, BuilderState previousState_) {
         if (builderState[builder_] != previousState_) revert RequiredState(previousState_);
         _;
@@ -50,9 +46,6 @@ contract BuilderRegistry is Governed {
     // ---------- Storage ----------
     // -----------------------------
 
-    /// @notice foundation address
-    address public immutable foundation;
-
     /// @notice map of builders state
     mapping(address builder => BuilderState state) public builderState;
 
@@ -62,9 +55,14 @@ contract BuilderRegistry is Governed {
     /// @notice map of builders kickback percentage
     mapping(address builder => uint256 percentage) public builderKickbackPct;
 
-    constructor(address governor_, address changeExecutor_, address foundation_) Governed(governor_, changeExecutor_) {
-        foundation = foundation_;
-    }
+    constructor(
+        address governor_,
+        address changeExecutor_,
+        address owner_
+    )
+        Governed(governor_, changeExecutor_)
+        Ownable(owner_)
+    { }
 
     // -----------------------------
     // ---- External Functions -----
@@ -72,7 +70,7 @@ contract BuilderRegistry is Governed {
 
     /**
      * @notice activates builder and set reward receiver
-     * @dev reverts if is not called by the foundation address
+     * @dev reverts if is not called by the owner address
      * reverts if builder state is not pending
      * @param builder_ address of builder
      * @param rewardReceiver_ address of the builder reward receiver
@@ -84,7 +82,7 @@ contract BuilderRegistry is Governed {
         uint256 builderKickbackPct_
     )
         external
-        onlyFoundation
+        onlyOwner
         atState(builder_, BuilderState.Pending)
     {
         builderState[builder_] = BuilderState.KYCApproved;

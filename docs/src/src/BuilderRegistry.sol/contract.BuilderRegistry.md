@@ -1,20 +1,12 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/593a4330380586d483b11df54f093ffbc3b3a65a/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/9daff6e1b77404f7de5d95940913866696480758/src/BuilderRegistry.sol)
 
-**Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
+**Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md), Ownable2Step
 
 Keeps registers of the builders
 
 ## State Variables
-
-### foundation
-
-foundation address
-
-```solidity
-address public immutable foundation;
-```
 
 ### builderState
 
@@ -42,12 +34,6 @@ mapping(address builder => uint256 percentage) public builderKickbackPct;
 
 ## Functions
 
-### onlyFoundation
-
-```solidity
-modifier onlyFoundation();
-```
-
 ### atState
 
 ```solidity
@@ -57,14 +43,20 @@ modifier atState(address builder_, BuilderState previousState_);
 ### constructor
 
 ```solidity
-constructor(address governor_, address changeExecutor_, address foundation_) Governed(governor_, changeExecutor_);
+constructor(
+    address governor_,
+    address changeExecutor_,
+    address owner_
+)
+    Governed(governor_, changeExecutor_)
+    Ownable(owner_);
 ```
 
 ### activateBuilder
 
 activates builder and set reward receiver
 
-_reverts if is not called by the foundation address reverts if builder state is not pending_
+_reverts if is not called by the owner address reverts if builder state is not pending_
 
 ```solidity
 function activateBuilder(
@@ -73,7 +65,7 @@ function activateBuilder(
     uint256 builderKickbackPct_
 )
     external
-    onlyFoundation
+    onlyOwner
     atState(builder_, BuilderState.Pending);
 ```
 
@@ -244,12 +236,6 @@ event BuilderKickbackPctUpdate(address indexed builder_, uint256 builderKickback
 ```
 
 ## Errors
-
-### NotFoundation
-
-```solidity
-error NotFoundation();
-```
 
 ### NotAuthorized
 
