@@ -13,11 +13,12 @@ contract ProtectedTest is BaseTest {
         // GIVEN there is not a changer authorized
         changeExecutorMock.setIsAuthorized(false);
         //  WHEN Governor calls a function protected by the modifier onlyGovernorOrAuthorizedChanger
-        vm.prank(governor);
         address newBuilder = makeAddr("newBuilder");
+        _whitelistBuilder(newBuilder);
+        vm.prank(governor);
         Gauge newGauge = sponsorsManager.createGauge(newBuilder);
         //   THEN the function is successfully executed
-        assertEq(address(sponsorsManager.builderToGauge(newBuilder)), address(newGauge));
+        assertEq(address(builderRegistry.builderGauge(newBuilder)), address(newGauge));
     }
 
     /**

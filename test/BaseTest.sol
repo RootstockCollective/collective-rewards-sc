@@ -38,10 +38,20 @@ contract BaseTest is Test {
         builderRegistry = new BuilderRegistry(governor, address(changeExecutorMock), foundation);
         gaugeFactory = new GaugeFactory();
         sponsorsManager = new SponsorsManager(
-            governor, address(changeExecutorMock), address(rewardToken), address(stakingToken), address(gaugeFactory)
+            governor,
+            address(changeExecutorMock),
+            address(rewardToken),
+            address(stakingToken),
+            address(gaugeFactory),
+            address(builderRegistry)
         );
+
+        _whitelistBuilder(builder);
+        _whitelistBuilder(builder2);
+
         gauge = sponsorsManager.createGauge(builder);
         gauge2 = sponsorsManager.createGauge(builder2);
+
         gaugesArray = [gauge, gauge2];
         epochDuration = EpochLib.WEEK;
         _setUp();
@@ -68,5 +78,12 @@ contract BaseTest is Test {
         _skipAndStartNewEpoch();
         uint256 _currentEpochRemaining = EpochLib.endDistributionWindow(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining);
+    }
+
+    function _whitelistBuilder(address builder_) internal {
+        vm.prank(foundation);
+        builderRegistry.activateBuilder(builder_, builder_, 0);
+        vm.prank(governor);
+        builderRegistry.whitelistBuilder(builder_);
     }
 }

@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { stdError } from "forge-std/src/Test.sol";
-import { BaseTest, Gauge } from "../../BaseTest.sol";
+import { BaseTest, Gauge, BuilderRegistry } from "../../BaseTest.sol";
 import { Governed } from "../../../src/governance/Governed.sol";
 import { ChangeExecutor } from "../../../src/governance/ChangeExecutor.sol";
 import { WhitelistBuilderChangerTemplate } from
@@ -15,6 +15,9 @@ contract WhitelistBuilderChangerTest is BaseTest {
     function _setUp() internal override {
         // GIVEN the ChangeExecutor without isAuthorized mock
         changeExecutorMock.setIsAuthorized(false);
+        // AND a newBuilder activated
+        vm.prank(foundation);
+        builderRegistry.activateBuilder(newBuilder, newBuilder, 0);
         // AND a WhitelistBuilderChanger deployed for a new builder
         changer = new WhitelistBuilderChangerTemplate(sponsorsManager, newBuilder);
     }
@@ -46,8 +49,13 @@ contract WhitelistBuilderChangerTest is BaseTest {
         //  WHEN governor executes the changer
         vm.prank(governor);
         changeExecutorMock.executeChange(changer);
-        //   THEN the change is successfully executed
         Gauge newGauge = changer.newGauge();
-        assertEq(address(sponsorsManager.builderToGauge(newBuilder)), address(newGauge));
+        //  THEN gauge is added on SponsorsManager
+        uint256 newGaugeIndex = sponsorsManager.gaugesLength() - 1;
+        assertEq(address(sponsorsManager.gauges(newGaugeIndex)), address(newGauge));
+        //  THEN gauge is added on BuilderRegistry
+        assertEq(address(builderRegistry.builderGauge(newBuilder)), address(newGauge));
+        //  THEN the new builder is whitelisted
+        assertEq(uint256(builderRegistry.getState(newBuilder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
     }
 }

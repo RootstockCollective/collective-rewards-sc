@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
-import { BaseTest, BuilderRegistry } from "./BaseTest.sol";
+import { BaseTest, Gauge, BuilderRegistry } from "./BaseTest.sol";
 import { Governed } from "../src/governance/Governed.sol";
 
 using stdStorage for StdStorage;
@@ -15,6 +15,8 @@ contract BuilderRegistryTest is BaseTest {
         address indexed builder_, BuilderRegistry.BuilderState previousState_, BuilderRegistry.BuilderState newState_
     );
     event BuilderKickbackPctUpdate(address indexed builder_, uint256 builderKickbackPct_);
+
+    address newBuilder = makeAddr("newBuilder");
 
     /**
      * SCENARIO: functions protected by OnlyGovernor should revert when are not
@@ -30,31 +32,29 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN alice calls whitelistBuilder
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        builderRegistry.whitelistBuilder(builder);
+        builderRegistry.whitelistBuilder(newBuilder);
 
         // WHEN alice calls pauseBuilder
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        builderRegistry.pauseBuilder(builder);
+        builderRegistry.pauseBuilder(newBuilder);
 
         // WHEN alice calls permitBuilder
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        builderRegistry.permitBuilder(builder);
+        builderRegistry.permitBuilder(newBuilder);
 
         // WHEN alice calls setBuilderKickbackPct
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        builderRegistry.setBuilderKickbackPct(builder, 10);
+        builderRegistry.setBuilderKickbackPct(newBuilder, 10);
     }
 
     /**
      * SCENARIO: revokeBuilder should revert if is not called by the builder
      */
     function test_NotAuthorized() public {
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
-
-        // GIVEN a sponsor alice
+        // GIVEN a sponsor alice and a whitelisted builder
         vm.startPrank(alice);
 
         // WHEN alice calls revokeBuilder
@@ -67,31 +67,28 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: Foundation activates a new builder
      */
     function test_ActivateBuilder() public {
-        // GIVEN a Foundation
+        // GIVEN a Foundation and a new builder
         vm.startPrank(foundation);
 
         // WHEN calls activateBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Pending, BuilderRegistry.BuilderState.KYCApproved);
-        builderRegistry.activateBuilder(builder, builder, 0);
+        emit StateUpdate(newBuilder, BuilderRegistry.BuilderState.Pending, BuilderRegistry.BuilderState.KYCApproved);
+        builderRegistry.activateBuilder(newBuilder, newBuilder, 0);
 
         // THEN builder.state is KYCApproved
-        assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.KYCApproved));
+        assertEq(uint256(builderRegistry.getState(newBuilder)), uint256(BuilderRegistry.BuilderState.KYCApproved));
 
         // THEN builder rewards receiver is the same as the builder
-        assertEq(builderRegistry.getRewardReceiver(builder), builder);
+        assertEq(builderRegistry.getRewardReceiver(newBuilder), newBuilder);
     }
 
     /**
      * SCENARIO: activateBuilder should reverts if the state is not Pending
      */
     function test_ActivateBuilderWrongStatus() public {
-        // GIVEN a Foundation
+        // GIVEN a Foundation and a whitelisted builder
         vm.startPrank(foundation);
-
-        // WHEN state is not Pending
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
 
         // WHEN tries to activateBuilder
         //  THEN tx reverts because is not in the required state
@@ -105,65 +102,54 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: activateBuilder should reverts if kickback percentage is higher than 100
      */
     function test_ActivateBuilderInvalidBuilderKickbackPct() public {
-        // GIVEN a Foundation
+        // GIVEN a Foundation and a new builder
         vm.startPrank(foundation);
 
-        // WHEN tries to activateBuilder
+        // WHEN tries to activateBuilder with 200% of kickback
         //  THEN tx reverts because is not a valid kickback percentage
         vm.expectRevert(BuilderRegistry.InvalidBuilderKickbackPct.selector);
-        builderRegistry.activateBuilder(builder, builder, 2 ether);
+        builderRegistry.activateBuilder(newBuilder, newBuilder, 2 ether);
     }
 
     /**
      * SCENARIO: Governor whitelist a new builder
      */
     function test_WhitelistBuilder() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
-        // WHEN state is KYCApproved
-        _setBuilderState(builder, BuilderRegistry.BuilderState.KYCApproved);
+        // GIVEN a new builder
+        //  AND state is KYCApproved
+        vm.prank(foundation);
+        builderRegistry.activateBuilder(newBuilder, newBuilder, 0);
 
         // WHEN calls whitelistBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.KYCApproved, BuilderRegistry.BuilderState.Whitelisted);
-        builderRegistry.whitelistBuilder(builder);
+        emit StateUpdate(newBuilder, BuilderRegistry.BuilderState.KYCApproved, BuilderRegistry.BuilderState.Whitelisted);
+        builderRegistry.whitelistBuilder(newBuilder);
 
         // THEN builder.state is Whitelisted
-        assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
+        assertEq(uint256(builderRegistry.getState(newBuilder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
     }
 
     /**
      * SCENARIO: whitelistBuilder should reverts if the state is not KYCApproved
      */
     function test_WhitelistBuilderWrongStatus() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
-        // WHEN state is not KYCApproved
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
-
-        // WHEN tries to whitelistBuilder
-        //  THEN tx reverts because is not the required state
+        // GIVEN a whitelisted builder
+        //  WHEN governance tries to whitelistBuilder again
+        //   THEN tx reverts because is not the required state
         vm.expectRevert(
             abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.KYCApproved)
         );
-        builderRegistry.whitelistBuilder(builder);
+        builderRegistry.whitelistBuilder(newBuilder);
     }
 
     /**
      * SCENARIO: Governor pause a builder
      */
     function test_PauseBuilder() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
-        // WHEN state is Whitelisted
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
-
-        // WHEN calls pauseBuilder
-        //  THEN StateUpdate event is emitted
+        // GIVEN a whitelisted builder
+        //  WHEN governance calls pauseBuilder
+        //   THEN StateUpdate event is emitted
         vm.expectEmit();
         emit StateUpdate(builder, BuilderRegistry.BuilderState.Whitelisted, BuilderRegistry.BuilderState.Paused);
         builderRegistry.pauseBuilder(builder);
@@ -176,31 +162,38 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: pauseBuilder should reverts if the state is not Whitelisted
      */
     function test_PauseBuilderWrongStatus() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
-        // WHEN state is not Whitelisted
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Revoked);
-
-        // WHEN tries to pauseBuilder
-        //  THEN tx reverts because is not the required state
+        // GIVEN a new builder
+        //  WHEN governance tries to pauseBuilder
+        //   THEN tx reverts because is not the required state
         vm.expectRevert(
             abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
         );
-        builderRegistry.pauseBuilder(builder);
+        builderRegistry.pauseBuilder(newBuilder);
+    }
+
+    /**
+     * SCENARIO: setBuilderGauge should reverts if the state is not Whitelisted
+     */
+    function test_SetBuilderGauge() public {
+        // GIVEN a new builder
+        //  WHEN governance tries to setBuilderGauge
+        //   THEN tx reverts because is not the required state
+        Gauge newGauge = gaugeFactory.createGauge(newBuilder, address(rewardToken));
+        vm.expectRevert(
+            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
+        );
+        builderRegistry.setBuilderGauge(newGauge);
     }
 
     /**
      * SCENARIO: Governor permit a builder
      */
     function test_PermitBuilder() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
+        // GIVEN a revoked builder
+        vm.prank(builder);
+        builderRegistry.revokeBuilder(builder);
 
-        // WHEN state is Revoked
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Revoked);
-
-        // WHEN calls permitBuilder
+        // WHEN governance calls permitBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
         emit StateUpdate(builder, BuilderRegistry.BuilderState.Revoked, BuilderRegistry.BuilderState.Whitelisted);
@@ -214,14 +207,9 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: permitBuilder should reverts if the state is not Revoked
      */
     function test_PermitBuilderWrongStatus() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
-        // WHEN state is not Revoked
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
-
-        // WHEN tries to permitBuilder
-        //  THEN tx reverts because is not the required state
+        // GIVEN a whitelisted builder
+        //  WHEN governance tries to permitBuilder
+        //   THEN tx reverts because is not the required state
         vm.expectRevert(
             abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Revoked)
         );
@@ -232,11 +220,8 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: Builder revoke itself
      */
     function test_RevokeBuilder() public {
-        // GIVEN a builder
+        // GIVEN a builder whitelisted
         vm.startPrank(builder);
-
-        // WHEN state is Whitelisted
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
 
         // WHEN calls revokeBuilder
         //  THEN StateUpdate event is emitted
@@ -252,35 +237,24 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: revokeBuilder should reverts if the state is not Whitelisted
      */
     function test_RevokeBuilderWrongStatus() public {
-        // GIVEN a builder
-        vm.startPrank(builder);
-
-        // WHEN state is not Whitelisted
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Revoked);
+        // GIVEN a new builder
+        vm.startPrank(newBuilder);
 
         // WHEN tries to revokeBuilder
         //  THEN tx reverts because is not the required state
         vm.expectRevert(
             abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
         );
-        builderRegistry.revokeBuilder(builder);
+        builderRegistry.revokeBuilder(newBuilder);
     }
 
     /**
      * SCENARIO: Governor set new builder kickback percentage
      */
     function test_SetBuilderKickbackPct() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
-        // GIVEN builder.builderKickbackPct is 0
-        assertEq(builderRegistry.getBuilderKickbackPct(builder), 0);
-
-        // WHEN state is Whitelisted
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
-
-        // WHEN calls setBuilderKickbackPct
-        //  THEN BuilderKickbackPctUpdate event is emitted
+        // GIVEN a whitelisted builder
+        //  WHEN governance calls setBuilderKickbackPct
+        //   THEN BuilderKickbackPctUpdate event is emitted
         vm.expectEmit();
         emit BuilderKickbackPctUpdate(builder, 5);
         builderRegistry.setBuilderKickbackPct(builder, 5);
@@ -293,93 +267,23 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: setBuilderKickbackPct should reverts if the state is not Whitelisted
      */
     function test_SetBuilderKickbackPctWrongStatus() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
-        // WHEN state is not Whitelisted
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Revoked);
-
-        // WHEN tries to setBuilderKickbackPct
-        //  THEN tx reverts because is not the required state
+        // GIVEN a new builder
+        //  WHEN governance tries to setBuilderKickbackPct
+        //   THEN tx reverts because is not the required state
         vm.expectRevert(
             abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
         );
-        builderRegistry.setBuilderKickbackPct(builder, 5);
+        builderRegistry.setBuilderKickbackPct(newBuilder, 5);
     }
 
     /**
      * SCENARIO: setBuilderKickbackPct should reverts if kickback percentage is higher than 100
      */
     function test_SetBuilderKickbackPctInvalidBuilderKickbackPct() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
-        // WHEN state is Whitelisted
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Whitelisted);
-
-        // WHEN tries to setBuilderKickbackPct
-        //  THEN tx reverts because is not a valid kickback percentage
+        // GIVEN a whitelisted builder
+        //  WHEN governance tries to setBuilderKickbackPct with 200% of kickback
+        //   THEN tx reverts because is not a valid kickback percentage
         vm.expectRevert(BuilderRegistry.InvalidBuilderKickbackPct.selector);
         builderRegistry.setBuilderKickbackPct(builder, 2 ether);
-    }
-
-    /**
-     * SCENARIO: Getting builder state
-     */
-    function test_GetState() public {
-        // GIVEN a builder
-        vm.startPrank(builder);
-
-        // WHEN state is was previously updated to Revoked
-        _setBuilderState(builder, BuilderRegistry.BuilderState.Revoked);
-
-        // THEN builder.state is Revoked
-        assertEq(uint256(builderRegistry.getState(builder)), uint256(BuilderRegistry.BuilderState.Revoked));
-    }
-
-    /**
-     * SCENARIO: Getting builder reward receiver
-     */
-    function test_GetRewardReceiver() public {
-        // GIVEN a foundation
-        vm.startPrank(foundation);
-
-        // WHEN reward receiver was previously updated to builder
-        _setRewardReceiver(builder, builder);
-
-        // THEN builder.rewardReceiver is builder
-        assertEq(builderRegistry.getRewardReceiver(builder), builder);
-    }
-
-    /**
-     * SCENARIO: Getting builder kickback percentage
-     */
-    function test_GetBuilderKickbackPct() public {
-        // GIVEN a governor
-        vm.startPrank(governor);
-
-        // WHEN kickback percentage was previously updated to 10
-        _setBuilderBuilderKickbackPct(builder, 10);
-
-        // THEN builder.builderKickbackPct is 10
-        assertEq(builderRegistry.getBuilderKickbackPct(builder), 10);
-    }
-
-    function _setBuilderState(address builder_, BuilderRegistry.BuilderState state_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderState(address)").with_key(builder_).checked_write(
-            uint256(state_)
-        );
-    }
-
-    function _setRewardReceiver(address builder_, address rewardReceiver_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderRewardReceiver(address)").with_key(builder_).checked_write(
-            rewardReceiver_
-        );
-    }
-
-    function _setBuilderBuilderKickbackPct(address builder_, uint256 builderKickbackPct_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderKickbackPct(address)").with_key(builder_).checked_write(
-            builderKickbackPct_
-        );
     }
 }

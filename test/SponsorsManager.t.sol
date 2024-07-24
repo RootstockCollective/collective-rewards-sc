@@ -39,15 +39,19 @@ contract SponsorsManagerTest is BaseTest {
      * GaugeCreated event is emitted and new gauges added to the list
      */
     function test_CreateGauge() public {
-        address newBuilder = makeAddr("newBuilder");
         // GIVEN a SponsorManager contract
         //  WHEN a gauge is deployed for a new builder
+        address newBuilder = makeAddr("newBuilder");
+        _whitelistBuilder(newBuilder);
         //   THEN a GaugeCreated event is emitted
         vm.expectEmit(true, false, true, true); // ignore new gauge address
         emit GaugeCreated(newBuilder, /*ignored*/ address(0), address(this));
         Gauge newGauge = sponsorsManager.createGauge(newBuilder);
         //   THEN new gauge is assigned to the new builder
-        assertEq(address(sponsorsManager.builderToGauge(newBuilder)), address(newGauge));
+        uint256 newGaugeIndex = sponsorsManager.gaugesLength() - 1;
+        assertEq(address(sponsorsManager.gauges(newGaugeIndex)), address(newGauge));
+        //  THEN gauge is added on BuilderRegistry
+        assertEq(address(builderRegistry.builderGauge(newBuilder)), address(newGauge));
     }
 
     /**
@@ -195,7 +199,9 @@ contract SponsorsManagerTest is BaseTest {
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
-            Gauge _newGauge = sponsorsManager.createGauge(makeAddr(string(abi.encode(i + 10))));
+            address newBuilder = makeAddr(string(abi.encode(i + 10)));
+            _whitelistBuilder(newBuilder);
+            Gauge _newGauge = sponsorsManager.createGauge(newBuilder);
             gaugesArray.push(_newGauge);
             allocationsArray.push(1 ether);
         }
@@ -379,7 +385,9 @@ contract SponsorsManagerTest is BaseTest {
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
-            Gauge _newGauge = sponsorsManager.createGauge(makeAddr(string(abi.encode(i + 10))));
+            address newBuilder = makeAddr(string(abi.encode(i + 10)));
+            _whitelistBuilder(newBuilder);
+            Gauge _newGauge = sponsorsManager.createGauge(newBuilder);
             gaugesArray.push(_newGauge);
             allocationsArray.push(1 ether);
         }
