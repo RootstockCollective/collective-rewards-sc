@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import { IChangeContract } from "../../interfaces/IChangeContract.sol";
 import { SponsorsManager } from "../../SponsorsManager.sol";
+import { BuilderRegistry } from "../../BuilderRegistry.sol";
 import { Gauge } from "../../gauge/Gauge.sol";
 
 /**
@@ -12,6 +13,8 @@ import { Gauge } from "../../gauge/Gauge.sol";
 contract WhitelistBuilderChangerTemplate is IChangeContract {
     /// @notice SponsorsManager contract address
     SponsorsManager public immutable sponsorsManager;
+    /// @notice builder registry contract address
+    BuilderRegistry public immutable builderRegistry;
     /// @notice builder address to be whitelisted
     address public immutable builder;
     /// @notice new Gauge created;
@@ -24,6 +27,7 @@ contract WhitelistBuilderChangerTemplate is IChangeContract {
      */
     constructor(SponsorsManager sponsorsManager_, address builder_) {
         sponsorsManager = sponsorsManager_;
+        builderRegistry = sponsorsManager.builderRegistry();
         builder = builder_;
     }
 
@@ -33,8 +37,7 @@ contract WhitelistBuilderChangerTemplate is IChangeContract {
      * because it is not its responsibility in the current architecture
      */
     function execute() external {
-        // TODO: whitelist the builder on the BuilderRegistry once
-        // https://rsklabs.atlassian.net/browse/TOK-117 is completed
+        builderRegistry.whitelistBuilder(builder);
         newGauge = sponsorsManager.createGauge(builder);
     }
 }

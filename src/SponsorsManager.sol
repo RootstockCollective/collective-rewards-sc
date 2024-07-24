@@ -7,6 +7,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeFactory } from "./gauge/GaugeFactory.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { Governed } from "./governance/Governed.sol";
+import { BuilderRegistry } from "./BuilderRegistry.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { EpochLib } from "./libraries/EpochLib.sol";
 
@@ -56,6 +57,8 @@ contract SponsorsManager is Governed {
     IERC20 public immutable rewardToken;
     /// @notice gauge factory contract address
     GaugeFactory public immutable gaugeFactory;
+    /// @notice builder registry contract address
+    BuilderRegistry public immutable builderRegistry;
     /// @notice total allocation on all the gauges
     uint256 public totalAllocation;
     /// @notice rewards to distribute per sponsor emission [PREC]
@@ -65,8 +68,6 @@ contract SponsorsManager is Governed {
     /// @notice true if distribution period started. Allocations remain blocked until it finishes
     bool public onDistributionPeriod;
 
-    /// @notice gauge contract for a builder
-    mapping(address builder => Gauge gauge) public builderToGauge;
     /// @notice array of all the gauges created
     Gauge[] public gauges;
     /// @notice total amount of stakingToken allocated by a sponsor
@@ -77,13 +78,15 @@ contract SponsorsManager is Governed {
         address changeExecutor_,
         address rewardToken_,
         address stakingToken_,
-        address gaugeFactory_
+        address gaugeFactory_,
+        address builderRegistry_
     )
         Governed(governor_, changeExecutor_)
     {
         rewardToken = IERC20(rewardToken_);
         stakingToken = IERC20(stakingToken_);
         gaugeFactory = GaugeFactory(gaugeFactory_);
+        builderRegistry = BuilderRegistry(builderRegistry_);
     }
 
     // -----------------------------
@@ -96,10 +99,10 @@ contract SponsorsManager is Governed {
      * @return gauge gauge contract
      */
     function createGauge(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge) {
-        // TODO: this function should revert if is not called by governance once the builder is whitelisted
-        if (address(builderToGauge[builder_]) != address(0)) revert GaugeExists();
+        // TODO: only whitelisted builders? If yes, we can remove the onlyGovernorOrAuthorizedChanger
+        if (address(builderRegistry.builderGauge(builder_)) != address(0)) revert GaugeExists();
         gauge = gaugeFactory.createGauge(builder_, address(rewardToken));
-        builderToGauge[builder_] = gauge;
+        builderRegistry.setBuilderGauge(gauge);
         gauges.push(gauge);
         emit GaugeCreated(builder_, address(gauge), msg.sender);
     }
@@ -206,6 +209,14 @@ contract SponsorsManager is Governed {
         for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
             gauges_[i].getSponsorReward(msg.sender);
         }
+    }
+
+    /**
+     * @notice gets gauges array length
+     * @return gaugesLength
+     */
+    function gaugesLength() external view returns (uint256) {
+        return gauges.length;
     }
 
     // -----------------------------

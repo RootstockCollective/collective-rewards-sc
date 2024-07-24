@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import { Governed } from "./governance/Governed.sol";
 import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Gauge } from "./gauge/Gauge.sol";
 
 /**
  * @title BuilderRegistry
@@ -45,6 +46,9 @@ contract BuilderRegistry is Governed, Ownable2Step {
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
+
+    /// @notice gauge contract for a builder
+    mapping(address builder => Gauge gauge) public builderGauge;
 
     /// @notice map of builders state
     mapping(address builder => BuilderState state) public builderState;
@@ -176,6 +180,15 @@ contract BuilderRegistry is Governed, Ownable2Step {
         atState(builder_, BuilderState.Whitelisted)
     {
         _setBuilderKickbackPct(builder_, builderKickbackPct_);
+    }
+
+    /**
+     * @notice set gauge contract to a builder
+     * @dev reverts if builder state is not Whitelisted
+     * @param gauge_ address of the gauge for the builder
+     */
+    function setBuilderGauge(Gauge gauge_) external atState(gauge_.builder(), BuilderState.Whitelisted) {
+        builderGauge[gauge_.builder()] = gauge_;
     }
 
     // -----------------------------
