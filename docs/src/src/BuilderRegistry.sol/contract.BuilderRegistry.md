@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/9daff6e1b77404f7de5d95940913866696480758/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5f35a21cd6c3981ceefbb9cb59cbab117642b659/src/BuilderRegistry.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md), Ownable2Step
 
@@ -42,15 +42,25 @@ modifier atState(address builder_, BuilderState previousState_);
 
 ### constructor
 
+constructor initializes base roles to manipulate the registry
+
 ```solidity
 constructor(
     address governor_,
     address changeExecutor_,
-    address owner_
+    address kycApprover_
 )
     Governed(governor_, changeExecutor_)
-    Ownable(owner_);
+    Ownable(kycApprover_);
 ```
+
+**Parameters**
+
+| Name              | Type      | Description                                                                                  |
+| ----------------- | --------- | -------------------------------------------------------------------------------------------- |
+| `governor_`       | `address` | See Governed doc                                                                             |
+| `changeExecutor_` | `address` | See Governed doc                                                                             |
+| `kycApprover_`    | `address` | account responsible of approving Builder's Know you Costumer policies and Legal requirements |
 
 ### activateBuilder
 

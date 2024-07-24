@@ -55,13 +55,19 @@ contract BuilderRegistry is Governed, Ownable2Step {
     /// @notice map of builders kickback percentage
     mapping(address builder => uint256 percentage) public builderKickbackPct;
 
+    /**
+     * @notice constructor initializes base roles to manipulate the registry
+     * @param governor_ See Governed doc
+     * @param changeExecutor_ See Governed doc
+     * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
+     */
     constructor(
         address governor_,
         address changeExecutor_,
-        address owner_
+        address kycApprover_
     )
         Governed(governor_, changeExecutor_)
-        Ownable(owner_)
+        Ownable(kycApprover_)
     { }
 
     // -----------------------------
