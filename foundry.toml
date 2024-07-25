@@ -14,6 +14,7 @@
   solc = "0.8.20"
   src = "src"
   test = "test"
+  libs = ["dependencies"]
 
 [profile.ci]
   fuzz = { runs = 10_000 }
@@ -33,3 +34,7 @@
 
 [rpc_endpoints]
   localhost = "http://localhost:8545"
+
+[dependencies]
+"@openzeppelin-contracts" = "5.0.2"
+forge-std = "1.9.1"

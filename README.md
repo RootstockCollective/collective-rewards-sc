@@ -100,6 +100,27 @@ This is how to install dependencies:
 2. Add a remapping for the dependency in [remappings.txt](./remappings.txt), e.g.
    `dependency-name=node_modules/dependency-name`
 
+### Soldeer
+
+Install cargo
+
+```sh
+curl https://sh.rustup.rs -sSf | sh
+. "$HOME/.cargo/env"
+```
+
+Install soldeer
+
+```sh
+cargo install soldeer
+```
+
+Install dependencies
+
+```sh
+soldeer install
+```
+
 Note that OpenZeppelin Contracts is pre-installed, so you can follow that as an example.
 
 ## Writing Tests

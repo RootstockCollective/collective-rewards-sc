@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { Test } from "forge-std/src/Test.sol";
+import { Test } from "@forge-std-1.9.1/src/Test.sol";
 import { ChangeExecutorMock } from "./mock/ChangeExecutorMock.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { GaugeFactory } from "../src/gauge/GaugeFactory.sol";

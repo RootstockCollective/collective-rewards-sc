@@ -2,8 +2,8 @@
 pragma solidity 0.8.20;
 
 import { Governed } from "./governance/Governed.sol";
-import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable2Step } from "@openzeppelin-contracts-5.0.2/access/Ownable2Step.sol";
+import { Ownable } from "@openzeppelin-contracts-5.0.2/access/Ownable.sol";
 
 /**
  * @title BuilderRegistry

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { ReentrancyGuard } from "@openzeppelin-contracts-5.0.2/utils/ReentrancyGuard.sol";
 import { IChangeContract } from "../interfaces/IChangeContract.sol";
 
 /**

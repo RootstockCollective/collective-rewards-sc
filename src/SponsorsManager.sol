@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { IERC20 } from "@openzeppelin-contracts-5.0.2/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin-contracts-5.0.2/token/ERC20/utils/SafeERC20.sol";
+import { Math } from "@openzeppelin-contracts-5.0.2/utils/math/Math.sol";
 import { GaugeFactory } from "./gauge/GaugeFactory.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { Governed } from "./governance/Governed.sol";
