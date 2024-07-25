@@ -1,12 +1,18 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/50ee7a6f2d0b293cd774e2821ac7baccb8158e5b/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d42f528b61d0ad9f67bea0aad57398332e9fb745/src/BuilderRegistry.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md), Ownable2Step
 
 Keeps registers of the builders
 
 ## State Variables
+
+### MAX_KICKBACK_PCT
+
+```solidity
+uint256 internal constant MAX_KICKBACK_PCT = 1 ether;
+```
 
 ### builderState
 

@@ -102,7 +102,7 @@ contract BaseTest is Test {
         );
     }
 
-    function _setRewardReceiver(address builder_, address rewardReceiver_) internal {
+    function _setBuilderRewardReceiver(address builder_, address rewardReceiver_) internal {
         stdstore.target(address(builderRegistry)).sig("builderRewardReceiver(address)").with_key(builder_).checked_write(
             rewardReceiver_
         );

@@ -75,6 +75,15 @@ contract SponsorsManager is Governed {
     /// @notice total amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public sponsorTotalAllocation;
 
+    /**
+     * @notice constructor initializes base roles to manipulate the registry
+     * @param governor_ See Governed doc
+     * @param changeExecutor_ See Governed doc
+     * @param rewardToken_ address of the token rewarded to builder and voters
+     * @param stakingToken_ address of the staking token for builder and voters
+     * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param builderRegistry_ address of the BuilderRegistry contract
+     */
     constructor(
         address governor_,
         address changeExecutor_,
@@ -185,10 +194,12 @@ contract SponsorsManager is Governed {
         Gauge[] memory _gauges = gauges;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
         uint256 _lastDistribution = Math.min(_gauges.length, _gaugeIndex + MAX_DISTRIBUTIONS_PER_BATCH);
+        uint256 _rewardsPerShare = rewardsPerShare;
+        BuilderRegistry _builderRegistry = builderRegistry;
 
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
-            _distribute(_gauges[_gaugeIndex]);
+            _distribute(_gauges[_gaugeIndex], _rewardsPerShare, _builderRegistry);
             _gaugeIndex = UtilsLib.unchecked_inc(_gaugeIndex);
         }
         // all the gauges were distributed, so distribution period is finished
@@ -206,21 +217,10 @@ contract SponsorsManager is Governed {
      * @notice claims sponsor rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
      */
-    function claimRewards(Gauge[] memory gauges_) external {
+    function claimSponsorRewards(Gauge[] memory gauges_) external {
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
-            gauges_[i].getSponsorReward(msg.sender);
-        }
-    }
-
-    /**
-     * @notice claims builder rewards form a batch of gauges
-     * @param gauges_ array of gauges to claim
-     */
-    function claimBuilderRewards(Gauge[] memory gauges_) external {
-        uint256 _length = gauges_.length;
-        for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
-            gauges_[i].getBuilderReward();
+            gauges_[i].claimSponsorReward(msg.sender);
         }
     }
 
@@ -282,12 +282,15 @@ contract SponsorsManager is Governed {
     /**
      * @notice internal function used to distribute reward tokens to a gauge
      * @param gauge_ address of the gauge to distribute
+     * @param rewardsPerShare_ cached reward per share
+     * @param builderRegistry_ cached builder registry
      */
-    function _distribute(Gauge gauge_) internal {
-        uint256 _reward = UtilsLib._mulPrec(gauge_.totalAllocation(), rewardsPerShare);
+    function _distribute(Gauge gauge_, uint256 rewardsPerShare_, BuilderRegistry builderRegistry_) internal {
+        uint256 _reward = UtilsLib._mulPrec(gauge_.totalAllocation(), rewardsPerShare_);
+        uint256 _kickbackPct = builderRegistry_.getBuilderKickbackPct(gauge_.builder());
         if (_reward > 0) {
             rewardToken.approve(address(gauge_), _reward);
-            gauge_.notifyRewardAmount(_reward);
+            gauge_.notifyRewardAmount(_reward, _kickbackPct);
             emit DistributeReward(msg.sender, address(gauge_), _reward);
         }
     }

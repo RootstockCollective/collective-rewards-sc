@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/50ee7a6f2d0b293cd774e2821ac7baccb8158e5b/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d42f528b61d0ad9f67bea0aad57398332e9fb745/src/gauge/Gauge.sol)
 
 For each project proposal a Gauge contract will be deployed. It receives all the rewards obtained for that project and
 allows the builder and voters to claim them.
@@ -28,7 +28,7 @@ IERC20 public immutable rewardToken;
 SponsorsManager contract address
 
 ```solidity
-address public immutable sponsorsManager;
+SponsorsManager public immutable sponsorsManager;
 ```
 
 ### totalAllocation
@@ -79,6 +79,14 @@ timestamp end of current rewards period
 uint256 public periodFinish;
 ```
 
+### builderRewards
+
+amount of rewardToken earned for a builder
+
+```solidity
+uint256 public builderRewards;
+```
+
 ### allocationOf
 
 amount of stakingToken allocated by a sponsor
@@ -109,6 +117,12 @@ mapping(address sponsor => uint256 rewards) public rewards;
 
 ```solidity
 modifier onlySponsorsManager();
+```
+
+### onlyBuilder
+
+```solidity
+modifier onlyBuilder();
 ```
 
 ### constructor
@@ -163,14 +177,14 @@ gets total amount of rewards to distribute for the current rewards period
 function left() external view returns (uint256);
 ```
 
-### getSponsorReward
+### claimSponsorReward
 
-gets rewards for an `sponsor_` address
+claim rewards for a `sponsor_` address
 
 _reverts if is not called by the `sponsor_` or the sponsorsManager\_
 
 ```solidity
-function getSponsorReward(address sponsor_) external;
+function claimSponsorReward(address sponsor_) external;
 ```
 
 **Parameters**
@@ -179,6 +193,18 @@ function getSponsorReward(address sponsor_) external;
 | ---------- | --------- | -------------------------------- |
 | `sponsor_` | `address` | address who receives the rewards |
 
+### claimBuilderReward
+
+claim rewards for a builder
+
+_reverts if is not called by the builder_
+
+_rewards are transferred to the builder reward receiver_
+
+```solidity
+function claimBuilderReward() external onlyBuilder;
+```
+
 ### earned
 
 gets `sponsor_` rewards missing to claim
@@ -186,6 +212,12 @@ gets `sponsor_` rewards missing to claim
 ```solidity
 function earned(address sponsor_) public view returns (uint256);
 ```
+
+**Parameters**
+
+| Name       | Type      | Description                    |
+| ---------- | --------- | ------------------------------ |
+| `sponsor_` | `address` | address who earned the rewards |
 
 ### allocate
 
@@ -224,14 +256,15 @@ called on the reward distribution. Transfers reward tokens from sponsorManger to
 _reverts if caller si not the sponsorsManager contract_
 
 ```solidity
-function notifyRewardAmount(uint256 amount_) external onlySponsorsManager;
+function notifyRewardAmount(uint256 amount_, uint256 kickbackPct_) external onlySponsorsManager;
 ```
 
 **Parameters**
 
-| Name      | Type      | Description                           |
-| --------- | --------- | ------------------------------------- |
-| `amount_` | `uint256` | amount of reward tokens to distribute |
+| Name           | Type      | Description                           |
+| -------------- | --------- | ------------------------------------- |
+| `amount_`      | `uint256` | amount of reward tokens to distribute |
+| `kickbackPct_` | `uint256` | builder kickback percentage           |
 
 ### \_updateRewards
 
@@ -247,6 +280,12 @@ function _updateRewards(address sponsor_) internal;
 event SponsorRewardsClaimed(address indexed sponsor_, uint256 amount_);
 ```
 
+### BuilderRewardsClaimed
+
+```solidity
+event BuilderRewardsClaimed(address indexed builder_, uint256 amount_);
+```
+
 ### NewAllocation
 
 ```solidity
@@ -256,7 +295,7 @@ event NewAllocation(address indexed sponsor_, uint256 allocation_);
 ### NotifyReward
 
 ```solidity
-event NotifyReward(uint256 amount_);
+event NotifyReward(uint256 builderAmount_, uint256 sponsorsAmount_);
 ```
 
 ## Errors
@@ -273,14 +312,8 @@ error NotAuthorized();
 error NotSponsorsManager();
 ```
 
-### ZeroRewardRate
+### NotBuilder
 
 ```solidity
-error ZeroRewardRate();
-```
-
-### RewardRateTooHigh
-
-```solidity
-error RewardRateTooHigh();
+error NotBuilder();
 ```

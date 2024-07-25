@@ -1,6 +1,6 @@
 # Governed
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/50ee7a6f2d0b293cd774e2821ac7baccb8158e5b/src/governance/Governed.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d42f528b61d0ad9f67bea0aad57398332e9fb745/src/governance/Governed.sol)
 
 Base contract to be inherited by governed contracts
 

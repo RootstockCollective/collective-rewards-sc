@@ -342,7 +342,7 @@ contract BuilderRegistryTest is BaseTest {
         vm.startPrank(kycApprover);
 
         // WHEN reward receiver was previously updated to builder
-        _setRewardReceiver(builder, builder);
+        _setBuilderRewardReceiver(builder, builder);
 
         // THEN builder.rewardReceiver is builder
         assertEq(builderRegistry.getRewardReceiver(builder), builder);
