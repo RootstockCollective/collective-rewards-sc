@@ -18,4 +18,5 @@
   - [EpochLib](src/libraries/EpochLib.sol/library.EpochLib.md)
   - [UtilsLib](src/libraries/UtilsLib.sol/library.UtilsLib.md)
 - [BuilderRegistry](src/BuilderRegistry.sol/contract.BuilderRegistry.md)
+- [RewardDistributor](src/RewardDistributor.sol/contract.RewardDistributor.md)
 - [SponsorsManager](src/SponsorsManager.sol/contract.SponsorsManager.md)
