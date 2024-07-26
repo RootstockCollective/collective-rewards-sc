@@ -6,6 +6,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
+import { BuilderRegistry } from "src/BuilderRegistry.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
@@ -24,5 +25,10 @@ contract Deploy is Broadcaster, OutputWriter {
             governorAddress, changeExecutorAddress, rewardTokenAddress, stakingTokenAddress, gaugeFactory
         );
         save("SponsorsManager", address(sponsorManager));
+
+        address kycApproverAddress = vm.envAddress("KYC_APPROVER_ADDRESS");
+        BuilderRegistry builderRegistry =
+            new BuilderRegistryDeployer().run(governorAddress, changeExecutorAddress, kycApproverAddress);
+        save("BuilderRegistry", address(builderRegistry));
     }
 }

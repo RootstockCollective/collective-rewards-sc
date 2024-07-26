@@ -29,6 +29,8 @@ The following tools are required to be installed:
 - [direnv](https://direnv.net/docs/installation.html) - Although a large variety of OSs comes with `direnv`
   [packaged](https://direnv.net/docs/installation.html#from-system-packages), the easiest way to install it is by
   running: `curl -sfL https://direnv.net/install.sh | bash`
+- [jq](https://jqlang.github.io/jq/download/) - Again, this is packaged to a variety of OSs, but if you don't have it
+  follow the link to install it for your system
 
 > [!IMPORTANT] Please make sure to install foundry using the branch `f625d0fa7c51e65b4bf1e8f7931cd1c6e2e285e9`. By using
 > the latest version we experienced the following error on RSKj:
@@ -58,7 +60,7 @@ direnv allow
 ```
 
 upon which you'll be asked to present the chain id of the network you wish to use. This will be written in a file called
-`.chain_id`. Alternativelly, you can create this file yourself (content of which is only the chain id number itself)
+`.chain_id`. Alternatively, you can create this file yourself (content of which is only the chain id number itself)
 before calling `direnv allow`. This will subsequently create environment variables (will unload after exiting the
 directory; for more info see [direnv docs](https://direnv.net)) specified for given network inside the `.env.<chain_id>`
 file. If such file does not exist you will be asked to create one for your network. This can be done by copying/moving
@@ -209,6 +211,7 @@ In order to use the Deploy script as is, you will need to configure the addresse
 2. Staking token - see [glossary](#staking-token) - use environment variable `STAKING_TOKEN_ADDRESS`
 3. Governor - see [glossary](#governor) - use environment variable `GOVERNOR_ADDRESS`
 4. Change executor - see [glossary](#change-executor) - use environment variable `CHANGE_EXECUTOR_ADDRESS`
+5. KYC Approver - see [glossary](#kyc-approver) - use environment variable `KYC_APPROVER_ADDRESS`
 
 For development and testing purposes you may like to deploy some of the mock contracts:
 
@@ -333,6 +336,8 @@ TODO:
 ### Change executor
 
 TODO:
+
+### KYC Approver
 
 ## Acknowledgment
 

@@ -7,6 +7,7 @@ import { Deploy as MockTokenDeployer } from "script/test_deploys/MockToken.s.sol
 import { Deploy as ChangeExecutorMockDeployer } from "script/test_deploys/ChangeExecutorMock.s.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
+import { Deploy as BuilderRegistryDeployer } from "script/BuilderRegistry.s.sol";
 import { ChangeExecutorMock } from "./mock/ChangeExecutorMock.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
@@ -43,7 +44,7 @@ contract BaseTest is Test {
         MockTokenDeployer mockTokenDeployer = new MockTokenDeployer();
         stakingToken = mockTokenDeployer.run(0);
         rewardToken = mockTokenDeployer.run(1);
-        builderRegistry = new BuilderRegistry(governor, address(changeExecutorMock), foundation);
+        builderRegistry = new BuilderRegistryDeployer().run(governor, address(changeExecutorMock), foundation);
         gaugeFactory = new GaugeFactoryDeployer().run();
         sponsorsManager = new SponsorsManagerDeployer().run(
             governor, address(changeExecutorMock), address(rewardToken), address(stakingToken), address(gaugeFactory)
