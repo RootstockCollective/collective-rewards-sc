@@ -25,6 +25,6 @@ contract Deploy is Broadcaster {
         require(changeExecutor != address(0), "Change executor address cannot be empty");
         require(kycApprover != address(0), "KYC Approver address cannot be empty");
 
-        builderRegistry = new BuilderRegistry(governor, changeExecutor, kycApprover);
+        builderRegistry = new BuilderRegistry{ salt: _salt }(governor, changeExecutor, kycApprover);
     }
 }

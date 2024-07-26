@@ -6,6 +6,6 @@ import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
 
 contract Deploy is Broadcaster {
     function run() public broadcast returns (GaugeFactory gaugeFactory) {
-        gaugeFactory = new GaugeFactory();
+        gaugeFactory = new GaugeFactory{ salt: _salt }();
     }
 }

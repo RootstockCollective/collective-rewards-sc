@@ -11,6 +11,6 @@ contract Deploy is Broadcaster {
     }
 
     function run(address governorAddress) public broadcast returns (ChangeExecutorMock mockChangeExecutor) {
-        mockChangeExecutor = new ChangeExecutorMock(governorAddress);
+        mockChangeExecutor = new ChangeExecutorMock{ salt: _salt }(governorAddress);
     }
 }

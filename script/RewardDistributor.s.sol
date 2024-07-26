@@ -31,6 +31,6 @@ contract Deploy is Broadcaster {
         require(rewardToken != address(0), "Reward Token address cannot be empty");
         require(sponsorsManager != address(0), "Sponsors Manager address cannot be empty");
 
-        rewardDistributor = new RewardDistributor(foundationTreasury, rewardToken, sponsorsManager);
+        rewardDistributor = new RewardDistributor{ salt: _salt }(foundationTreasury, rewardToken, sponsorsManager);
     }
 }

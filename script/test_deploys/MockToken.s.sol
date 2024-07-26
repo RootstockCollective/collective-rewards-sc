@@ -22,6 +22,6 @@ contract Deploy is Broadcaster {
             symbol = string.concat(symbol, "_", counterString);
         }
 
-        mockToken = new ERC20Mock(name, symbol);
+        mockToken = new ERC20Mock{ salt: _salt }(name, symbol);
     }
 }

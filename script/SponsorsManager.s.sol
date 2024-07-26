@@ -37,6 +37,7 @@ contract Deploy is Broadcaster {
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
         require(gaugeFactory_ != address(0), "Gauge factory address cannot be empty");
 
-        sponsorsManager = new SponsorsManager(governor_, changeExecutor_, rewardToken_, stakingToken_, gaugeFactory_);
+        sponsorsManager =
+            new SponsorsManager{ salt: _salt }(governor_, changeExecutor_, rewardToken_, stakingToken_, gaugeFactory_);
     }
 }
