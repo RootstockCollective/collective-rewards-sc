@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { console } from "forge-std/src/Script.sol";
+import { console } from "forge-std/src/console.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { BuilderRegistry } from "src/BuilderRegistry.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
+import { Deploy as BuilderRegistryDeployer } from "script/BuilderRegistry.s.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
 
 contract Deploy is Broadcaster, OutputWriter {
+    function setUp() public {
+        _outputWriterSetup();
+    }
+
     function run() public {
         address gaugeFactory = address(new GaugeFactoryDeployer().run());
         save("GaugeFactory", gaugeFactory);

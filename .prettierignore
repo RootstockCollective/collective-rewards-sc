@@ -6,6 +6,7 @@ node_modules
 coverage
 broadcast
 out
+deployments
 typechain-types
 
 # files

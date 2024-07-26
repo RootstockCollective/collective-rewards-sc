@@ -181,6 +181,18 @@ bun run clean
 
 ### Deploy
 
+The simples way to deploy is to use the command
+
+```sh
+bun run deploy
+```
+
+This will also generate hardhat-style artifacts unless `OMIT_HARDHAT_ARTIFACTS` is set to `true`:
+
+```sh
+OMIT_HARDHAT_ARTIFACTS=true bun run deploy
+```
+
 When deploying the contracts to RSKj locally, one of the unlocked accounts can be used:
 
 ```sh
