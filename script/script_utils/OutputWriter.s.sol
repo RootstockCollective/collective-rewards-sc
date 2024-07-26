@@ -52,9 +52,9 @@ abstract contract OutputWriter is Script {
 
     function _outputWriterSetup() public {
         string memory root = vm.projectRoot();
-        string memory deployementContext = vm.envString("DEPLOYMENT_CONTEXT");
+        string memory deploymentContext = vm.envString("DEPLOYMENT_CONTEXT");
         string memory deploymentsRootDir = vm.envString("DEPLOYMENTS_DIR");
-        _deploymentsDir = string.concat(root, "/", deploymentsRootDir, deployementContext);
+        _deploymentsDir = string.concat(root, "/", deploymentsRootDir, deploymentContext);
         try vm.createDir(_deploymentsDir, true) { } catch (bytes memory) { }
 
         _outJsonFile = string.concat(_deploymentsDir, "/contract_addresses.json");

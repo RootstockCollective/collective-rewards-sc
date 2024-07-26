@@ -16,7 +16,6 @@ src = "src"
 test = "test"
 extra_output = ['devdoc', 'userdoc', 'metadata', 'storageLayout']
 build_info = true
-build_info_path = 'artifacts/build-info'
 ffi = true # TODO: should we disable this for some envs to prevent arbitrary code execution?
 fs_permissions = [
   { access = "read", path = "./out"},

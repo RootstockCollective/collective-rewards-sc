@@ -5,7 +5,7 @@ import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 
 contract Deploy is Broadcaster {
-    function run() public returns (RewardDistributor rewardDistributor) {
+    function run() public returns (RewardDistributor) {
         address foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
         address rewardTokenAddress = vm.envOr("RewardToken", address(0));
         if (rewardTokenAddress == address(0)) {
@@ -15,7 +15,7 @@ contract Deploy is Broadcaster {
         if (sponsorsManagerAddress == address(0)) {
             sponsorsManagerAddress = vm.envAddress("SPONSORS_MANAGER_ADDRESS");
         }
-        rewardDistributor = run(foundationTreasuryAddress, rewardTokenAddress, sponsorsManagerAddress);
+        return run(foundationTreasuryAddress, rewardTokenAddress, sponsorsManagerAddress);
     }
 
     function run(
@@ -25,12 +25,15 @@ contract Deploy is Broadcaster {
     )
         public
         broadcast
-        returns (RewardDistributor rewardDistributor)
+        returns (RewardDistributor)
     {
         require(foundationTreasury != address(0), "Foundation Treasury address cannot be empty");
         require(rewardToken != address(0), "Reward Token address cannot be empty");
         require(sponsorsManager != address(0), "Sponsors Manager address cannot be empty");
 
-        rewardDistributor = new RewardDistributor{ salt: _salt }(foundationTreasury, rewardToken, sponsorsManager);
+        if (vm.envOr("NO_DD", false)) {
+            return new RewardDistributor(foundationTreasury, rewardToken, sponsorsManager);
+        }
+        return new RewardDistributor{ salt: _salt }(foundationTreasury, rewardToken, sponsorsManager);
     }
 }

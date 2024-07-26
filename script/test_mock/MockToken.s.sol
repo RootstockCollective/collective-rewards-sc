@@ -8,11 +8,11 @@ import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC20Mock, DEFAULT_NAME, DEFAULT_SYMBOL } from "test/mock/ERC20Mock.sol";
 
 contract Deploy is Broadcaster {
-    function run() public returns (ERC20Mock mockToken) {
-        mockToken = run(vm.envOr("MOCK_TOKEN_COUNTER", uint256(0)));
+    function run() public returns (ERC20Mock) {
+        return run(vm.envOr("MOCK_TOKEN_COUNTER", uint256(0)));
     }
 
-    function run(uint256 mockTokenCounter) public broadcast returns (ERC20Mock mockToken) {
+    function run(uint256 mockTokenCounter) public broadcast returns (ERC20Mock) {
         string memory name = DEFAULT_NAME;
         string memory symbol = DEFAULT_SYMBOL;
 
@@ -22,6 +22,9 @@ contract Deploy is Broadcaster {
             symbol = string.concat(symbol, "_", counterString);
         }
 
-        mockToken = new ERC20Mock{ salt: _salt }(name, symbol);
+        if (vm.envOr("NO_DD", false)) {
+            return new ERC20Mock(name, symbol);
+        }
+        return new ERC20Mock{ salt: _salt }(name, symbol);
     }
 }

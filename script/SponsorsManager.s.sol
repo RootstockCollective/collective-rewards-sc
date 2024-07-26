@@ -7,7 +7,7 @@ import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 
 contract Deploy is Broadcaster {
-    function run() public returns (SponsorsManager sponsorsManager) {
+    function run() public returns (SponsorsManager) {
         address governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
         address rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
@@ -19,8 +19,7 @@ contract Deploy is Broadcaster {
         if (gaugeFactoryAddress == address(0)) {
             gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
-        sponsorsManager =
-            run(governorAddress, changeExecutorAddress, rewardTokenAddress, stakingTokenAddress, gaugeFactoryAddress);
+        return run(governorAddress, changeExecutorAddress, rewardTokenAddress, stakingTokenAddress, gaugeFactoryAddress);
     }
 
     function run(
@@ -32,7 +31,7 @@ contract Deploy is Broadcaster {
     )
         public
         broadcast
-        returns (SponsorsManager sponsorsManager)
+        returns (SponsorsManager)
     {
         require(governor_ != address(0), "Governor address cannot be empty");
         require(changeExecutor_ != address(0), "Change executor address cannot be empty");
@@ -40,7 +39,10 @@ contract Deploy is Broadcaster {
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
         require(gaugeFactory_ != address(0), "Gauge factory address cannot be empty");
 
-        sponsorsManager =
+        if (vm.envOr("NO_DD", false)) {
+            return new SponsorsManager(governor_, changeExecutor_, rewardToken_, stakingToken_, gaugeFactory_);
+        }
+        return
             new SponsorsManager{ salt: _salt }(governor_, changeExecutor_, rewardToken_, stakingToken_, gaugeFactory_);
     }
 }

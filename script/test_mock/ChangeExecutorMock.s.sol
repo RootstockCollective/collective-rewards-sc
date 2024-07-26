@@ -5,12 +5,15 @@ import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ChangeExecutorMock } from "test/mock/ChangeExecutorMock.sol";
 
 contract Deploy is Broadcaster {
-    function run() public returns (ChangeExecutorMock mockChangeExecutor) {
+    function run() public returns (ChangeExecutorMock) {
         address governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
-        mockChangeExecutor = run(governorAddress);
+        return run(governorAddress);
     }
 
-    function run(address governorAddress) public broadcast returns (ChangeExecutorMock mockChangeExecutor) {
-        mockChangeExecutor = new ChangeExecutorMock{ salt: _salt }(governorAddress);
+    function run(address governorAddress) public broadcast returns (ChangeExecutorMock) {
+        if (vm.envOr("NO_DD", false)) {
+            return new ChangeExecutorMock(governorAddress);
+        }
+        return new ChangeExecutorMock{ salt: _salt }(governorAddress);
     }
 }
