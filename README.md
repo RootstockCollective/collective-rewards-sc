@@ -80,9 +80,10 @@ export DEPLOYMENT_CONTEXT="regtest"
 export RPC_URL="https://dolphinnet.node"
 export PRIVATE_KEY="0xc85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4"
 export REWARD_TOKEN_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA70"
-export STAKING_TOKEN_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA70"
-export GOVERNOR_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA70"
-export CHANGE_EXECUTOR_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA70"
+export STAKING_TOKEN_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA71"
+export GOVERNOR_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA72"
+export CHANGE_EXECUTOR_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA73"
+export FOUNDATION_TREASURY_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA74"
 
 # Optional
 export DEPLOYER_ADDRESS="0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
@@ -224,6 +225,7 @@ In order to use the Deploy script as is, you will need to configure the addresse
 3. Governor - see [glossary](#governor) - use environment variable `GOVERNOR_ADDRESS`
 4. Change executor - see [glossary](#change-executor) - use environment variable `CHANGE_EXECUTOR_ADDRESS`
 5. KYC Approver - see [glossary](#kyc-approver) - use environment variable `KYC_APPROVER_ADDRESS`
+6. Foundation treasury - see [glossary](#foundation-treasury) - use environment variable `FOUNDATION_TREASURY_ADDRESS`
 
 For development and testing purposes you may like to deploy some of the mock contracts:
 
@@ -350,6 +352,12 @@ TODO:
 TODO:
 
 ### KYC Approver
+
+TODO:
+
+### Foundation treasury
+
+TODO:
 
 ## Acknowledgment
 
