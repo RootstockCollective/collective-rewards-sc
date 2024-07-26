@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { stdError } from "forge-std/src/Test.sol";
+import { stdError } from "forge-std/Test.sol";
 import { BaseTest, RewardDistributor } from "./BaseTest.sol";
 import { EpochLib } from "../src/libraries/EpochLib.sol";
 import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";

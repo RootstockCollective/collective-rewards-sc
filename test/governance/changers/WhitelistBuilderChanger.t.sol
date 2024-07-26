@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { stdError } from "forge-std/src/Test.sol";
+import { stdError } from "forge-std/Test.sol";
 import { BaseTest, Gauge } from "../../BaseTest.sol";
 import { Governed } from "../../../src/governance/Governed.sol";
 import { ChangeExecutor } from "../../../src/governance/ChangeExecutor.sol";

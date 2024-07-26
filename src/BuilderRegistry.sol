@@ -2,14 +2,15 @@
 pragma solidity 0.8.20;
 
 import { Governed } from "./governance/Governed.sol";
-import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /**
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
+ * @custom:oz-upgrades
  */
-contract BuilderRegistry is Governed, Ownable2Step {
+contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
@@ -55,20 +56,25 @@ contract BuilderRegistry is Governed, Ownable2Step {
     /// @notice map of builders kickback percentage
     mapping(address builder => uint256 percentage) public builderKickbackPct;
 
+    // -----------------------------
+    // ------- Initializer ---------
+    // -----------------------------
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
-     * @notice constructor initializes base roles to manipulate the registry
-     * @param governor_ See Governed doc
+     * @notice contract initializer
      * @param changeExecutor_ See Governed doc
      * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
      */
-    constructor(
-        address governor_,
-        address changeExecutor_,
-        address kycApprover_
-    )
-        Governed(governor_, changeExecutor_)
-        Ownable(kycApprover_)
-    { }
+    function initialize(address changeExecutor_, address kycApprover_) external initializer {
+        __Governed_init(changeExecutor_);
+        __Ownable2Step_init();
+        __Ownable_init(kycApprover_);
+    }
 
     // -----------------------------
     // ---- External Functions -----
@@ -216,4 +222,14 @@ contract BuilderRegistry is Governed, Ownable2Step {
 
         emit BuilderKickbackPctUpdate(builder_, builderKickbackPct_);
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    // Purposely left unused to save some state space to allow for future upgrades
+    // slither-disable-next-line unused-state
+    uint256[50] private __gap;
 }

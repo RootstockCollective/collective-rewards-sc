@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
+import { stdStorage, StdStorage } from "forge-std/Test.sol";
 import { BaseTest, BuilderRegistry } from "./BaseTest.sol";
 import { Governed } from "../src/governance/Governed.sol";
 

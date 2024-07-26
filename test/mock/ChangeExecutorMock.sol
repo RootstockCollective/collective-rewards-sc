@@ -9,13 +9,7 @@ import { IChangeContract } from "../../src/interfaces/IChangeContract.sol";
  *   @dev Test only contract to mock Governor behavior
  */
 contract ChangeExecutorMock is ChangeExecutor {
-    bool public isAuthorized = true;
-
-    /**
-     * @notice Constructor
-     * @param governor_ governor contract address
-     */
-    constructor(address governor_) ChangeExecutor(governor_) { }
+    bool public isAuthorized;
 
     function isAuthorizedChanger(address changer_) external view override returns (bool) {
         return isAuthorized || _isAuthorizedChanger(changer_);

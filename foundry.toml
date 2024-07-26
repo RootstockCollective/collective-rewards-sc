@@ -14,6 +14,14 @@
   solc = "0.8.20"
   src = "src"
   test = "test"
+  ffi = true
+  ast = true
+  build_info = true
+  extra_output = ["storageLayout"]
+  ignored_warnings_from = ["node_modules"]
+  fs_permissions = [
+  { access = "read", path = "./out"},
+]
 
 [profile.ci]
   fuzz = { runs = 10_000 }

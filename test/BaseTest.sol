@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { Test } from "forge-std/src/Test.sol";
-import { ChangeExecutorMock } from "./mock/ChangeExecutorMock.sol";
+import { Test } from "forge-std/Test.sol";
+import { Upgrades } from "openzeppelin-foundry-upgrades/Upgrades.sol";
+import { ChangeExecutor, ChangeExecutorMock } from "./mock/ChangeExecutorMock.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { GaugeFactory } from "../src/gauge/GaugeFactory.sol";
 import { Gauge } from "../src/gauge/Gauge.sol";
@@ -34,15 +35,40 @@ contract BaseTest is Test {
     address internal foundation = makeAddr("foundation");
 
     function setUp() public {
-        changeExecutorMock = new ChangeExecutorMock(governor);
         stakingToken = new ERC20Mock();
         rewardToken = new ERC20Mock();
-        builderRegistry = new BuilderRegistry(governor, address(changeExecutorMock), foundation);
         gaugeFactory = new GaugeFactory();
-        sponsorsManager = new SponsorsManager(
-            governor, address(changeExecutorMock), address(rewardToken), address(stakingToken), address(gaugeFactory)
+        changeExecutorMock = ChangeExecutorMock(
+            Upgrades.deployUUPSProxy("ChangeExecutorMock.sol", abi.encodeCall(ChangeExecutor.initialize, (governor)))
         );
-        rewardDistributor = new RewardDistributor(foundation, address(rewardToken), address(sponsorsManager));
+        builderRegistry = BuilderRegistry(
+            Upgrades.deployUUPSProxy(
+                "BuilderRegistry.sol",
+                abi.encodeCall(BuilderRegistry.initialize, (address(changeExecutorMock), foundation))
+            )
+        );
+        sponsorsManager = SponsorsManager(
+            Upgrades.deployUUPSProxy(
+                "SponsorsManager.sol",
+                abi.encodeCall(
+                    SponsorsManager.initialize,
+                    (address(changeExecutorMock), address(rewardToken), address(stakingToken), address(gaugeFactory))
+                )
+            )
+        );
+        rewardDistributor = RewardDistributor(
+            Upgrades.deployUUPSProxy(
+                "RewardDistributor.sol",
+                abi.encodeCall(
+                    RewardDistributor.initialize,
+                    (address(changeExecutorMock), address(foundation), address(sponsorsManager))
+                )
+            )
+        );
+
+        // allow to execute all the functions protected by governance
+        changeExecutorMock.setIsAuthorized(true);
+
         gauge = sponsorsManager.createGauge(builder);
         gauge2 = sponsorsManager.createGauge(builder2);
         gaugesArray = [gauge, gauge2];

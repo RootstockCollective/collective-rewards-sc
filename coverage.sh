@@ -1,4 +1,5 @@
 # generates lcov.info
+forge compile --force
 forge coverage --report lcov
 
 EXCLUDE="*test* *mock* *node_modules* *script*"

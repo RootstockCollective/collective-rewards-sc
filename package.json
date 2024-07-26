@@ -22,7 +22,9 @@
     }
   ],
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.1"
+    "@openzeppelin/contracts": "5.0.2",
+    "@openzeppelin/contracts-upgradeable": "5.0.2",
+    "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
@@ -39,6 +41,7 @@
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
     "husky": "^9.0.11",
     "markdownlint-cli2": "^0.13.0",
+    "openzeppelin-foundry-upgrades": "github:/OpenZeppelin/openzeppelin-foundry-upgrades#v0.3.1",
     "prettier": "^3.0.0",
     "solhint": "^3.6.2",
     "typechain": "^8.3.2",
@@ -55,9 +58,9 @@
     "lint:ts:fix": "eslint . --ext .ts --fix",
     "prettier:check": "prettier --check \"**/*.{json,md,yml,ts}\" --ignore-path \".prettierignore\" && forge fmt --check ",
     "prettier:write": "prettier --write \"**/*.{json,md,yml,ts}\" --ignore-path \".prettierignore\" && forge fmt",
-    "test": "forge test",
+    "test": "forge compile --force && forge test",
     "test:integration": "hardhat test",
-    "test:coverage": "forge coverage",
+    "test:coverage": "forge compile --force && forge coverage",
     "test:coverage:report": "sh ./coverage.sh",
     "prepare": "husky",
     "docgen": "forge doc"
