@@ -2,7 +2,6 @@
 pragma solidity 0.8.20;
 
 import { Test } from "forge-std/src/Test.sol";
-
 import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
 import { Deploy as ChangeExecutorMockDeployer } from "script/test_mock/ChangeExecutorMock.s.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
@@ -31,7 +30,6 @@ contract BaseTest is Test {
     SponsorsManager public sponsorsManager;
     BuilderRegistry public builderRegistry;
     RewardDistributor public rewardDistributor;
-    uint256 public epochDuration;
 
     address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract
     address internal alice = makeAddr("alice");
@@ -46,10 +44,9 @@ contract BaseTest is Test {
         MockTokenDeployer mockTokenDeployer = new MockTokenDeployer();
         stakingToken = mockTokenDeployer.run(0);
         rewardToken = mockTokenDeployer.run(1);
-        builderRegistry = new BuilderRegistryDeployer().run(governor, address(changeExecutorMock), kycApprover);
+        builderRegistry = new BuilderRegistryDeployer().run(address(changeExecutorMock), kycApprover);
         gaugeFactory = new GaugeFactoryDeployer().run();
         sponsorsManager = new SponsorsManagerDeployer().run(
-            governor,
             address(changeExecutorMock),
             address(rewardToken),
             address(stakingToken),
@@ -57,11 +54,14 @@ contract BaseTest is Test {
             address(builderRegistry)
         );
         rewardDistributor =
-            new RewardDistributorDeployer().run(foundation, address(rewardToken), address(sponsorsManager));
+            new RewardDistributorDeployer().run(address(changeExecutorMock), foundation, address(sponsorsManager));
+
+        // allow to execute all the functions protected by governance
+        changeExecutorMock.setIsAuthorized(true);
+
         gauge = sponsorsManager.createGauge(builder);
         gauge2 = sponsorsManager.createGauge(builder2);
         gaugesArray = [gauge, gauge2];
-        epochDuration = EpochLib.WEEK;
 
         // mint some stakingTokens to alice and bob
         stakingToken.mint(alice, 100_000 ether);
