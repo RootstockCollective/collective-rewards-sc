@@ -5,6 +5,8 @@ import { console } from "forge-std/src/console.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
+import { ChangeExecutor } from "src/ChangeExecutor.sol";
+import { Deploy as ChangeExecutorDeployer } from "script/ChangeExecutor.s.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
 import { BuilderRegistry } from "src/BuilderRegistry.sol";
@@ -24,10 +26,11 @@ contract Deploy is Broadcaster, OutputWriter {
         save("GaugeFactory", gaugeFactory);
 
         address governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
-        address changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
+        ChangeExecutor changeExecutor = new ChangeExecutorDeployer().run(governorAddress);
+        save("ChangeExecutor", address(changeExecutor));
+
         address rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
-
         SponsorsManager sponsorManager = new SponsorsManagerDeployer().run(
             governorAddress, changeExecutorAddress, rewardTokenAddress, stakingTokenAddress, gaugeFactory
         );

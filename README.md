@@ -223,9 +223,8 @@ In order to use the Deploy script as is, you will need to configure the addresse
 1. Reward token - see [glossary](#reward-token) - use environment variable `REWARD_TOKEN_ADDRESS`
 2. Staking token - see [glossary](#staking-token) - use environment variable `STAKING_TOKEN_ADDRESS`
 3. Governor - see [glossary](#governor) - use environment variable `GOVERNOR_ADDRESS`
-4. Change executor - see [glossary](#change-executor) - use environment variable `CHANGE_EXECUTOR_ADDRESS`
-5. KYC Approver - see [glossary](#kyc-approver) - use environment variable `KYC_APPROVER_ADDRESS`
-6. Foundation treasury - see [glossary](#foundation-treasury) - use environment variable `FOUNDATION_TREASURY_ADDRESS`
+4. KYC Approver - see [glossary](#kyc-approver) - use environment variable `KYC_APPROVER_ADDRESS`
+5. Foundation treasury - see [glossary](#foundation-treasury) - use environment variable `FOUNDATION_TREASURY_ADDRESS`
 
 For development and testing purposes you may like to deploy some of the mock contracts:
 
@@ -250,19 +249,19 @@ forge script script/MockToken.s.sol -s "run(uint)" 42 #the rest of the command a
 #### mock change executor
 
 ```sh
-forge script script/test_deploys/ChangeExecutorMock.s.sol #the rest of the command arguments
+forge script script/test_mock/ChangeExecutorMock.s.sol #the rest of the command arguments
 ```
 
 to pass a governor to the deployemnt you can either use env var:
 
 ```sh
-GOVERNOR_ADDRESS="0xYOUR_GOV" forge script script/test_deploys/ChangeExecutorMock.s.sol #the rest of the command arguments
+GOVERNOR_ADDRESS="0xYOUR_GOV" forge script script/test_mock/ChangeExecutorMock.s.sol #the rest of the command arguments
 ```
 
 or pass it directly, specifying the function signature that accepts it:
 
 ```sh
-forge script script/test_deploys/ChangeExecutorMock.s.sol -s "run(address)" "0xYOUR_GOV" #the rest of the command arguments
+forge script script/test_mock/ChangeExecutorMock.s.sol -s "run(address)" "0xYOUR_GOV" #the rest of the command arguments
 ```
 
 The script should create a new directory (if it doesn't exist already) `./deployments/$DEPLOYMENT_CONTEXT` and output
@@ -344,10 +343,6 @@ TODO:
 TODO:
 
 ### Governor
-
-TODO:
-
-### Change executor
 
 TODO:
 

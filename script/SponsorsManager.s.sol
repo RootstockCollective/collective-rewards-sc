@@ -9,9 +9,12 @@ import { SponsorsManager } from "src/SponsorsManager.sol";
 contract Deploy is Broadcaster {
     function run() public returns (SponsorsManager sponsorsManager) {
         address governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
-        address changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         address rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
+        address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
+        if (changeExecutorAddress == address(0)) {
+            changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
+        }
         address gaugeFactoryAddress = vm.envOr("GaugeFactory", address(0));
         if (gaugeFactoryAddress == address(0)) {
             gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");

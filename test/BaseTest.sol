@@ -3,8 +3,8 @@ pragma solidity 0.8.20;
 
 import { Test } from "forge-std/src/Test.sol";
 
-import { Deploy as MockTokenDeployer } from "script/test_deploys/MockToken.s.sol";
-import { Deploy as ChangeExecutorMockDeployer } from "script/test_deploys/ChangeExecutorMock.s.sol";
+import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
+import { Deploy as ChangeExecutorMockDeployer } from "script/test_mock/ChangeExecutorMock.s.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
 import { Deploy as BuilderRegistryDeployer } from "script/BuilderRegistry.s.sol";

@@ -7,8 +7,11 @@ import { BuilderRegistry } from "src/BuilderRegistry.sol";
 contract Deploy is Broadcaster {
     function run() public returns (BuilderRegistry builderRegistry) {
         address governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
-        address changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         address kycApprover = vm.envAddress("KYC_APPROVER_ADDRESS");
+        address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
+        if (changeExecutorAddress == address(0)) {
+            changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
+        }
         builderRegistry = run(governorAddress, changeExecutorAddress, kycApprover);
     }
 
