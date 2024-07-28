@@ -10,7 +10,6 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * @notice Keeps registers of the builders
  */
 contract BuilderRegistry is Governed, Ownable2Step {
-    // TODO: MAX_KICKBACK_PCT constant or its configurable?
     uint256 internal constant MAX_KICKBACK_PCT = 1 ether;
 
     // -----------------------------
@@ -214,7 +213,10 @@ contract BuilderRegistry is Governed, Ownable2Step {
     // -----------------------------
 
     function _setBuilderKickbackPct(address builder_, uint256 builderKickbackPct_) internal {
-        if (builderKickbackPct_ > MAX_KICKBACK_PCT) revert InvalidBuilderKickbackPct();
+        // TODO: should we have a minimal amount?
+        if (builderKickbackPct_ > MAX_KICKBACK_PCT) {
+            revert InvalidBuilderKickbackPct();
+        }
         builderKickbackPct[builder_] = builderKickbackPct_;
 
         emit BuilderKickbackPctUpdate(builder_, builderKickbackPct_);

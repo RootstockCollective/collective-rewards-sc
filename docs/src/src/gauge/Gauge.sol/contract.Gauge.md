@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/d42f528b61d0ad9f67bea0aad57398332e9fb745/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/41546c9143c56d780a633252c86982026a849c39/src/gauge/Gauge.sol)
 
 For each project proposal a Gauge contract will be deployed. It receives all the rewards obtained for that project and
 allows the builder and voters to claim them.
@@ -81,7 +81,7 @@ uint256 public periodFinish;
 
 ### builderRewards
 
-amount of rewardToken earned for a builder
+amount of unclaimed token reward earned for the builder
 
 ```solidity
 uint256 public builderRewards;

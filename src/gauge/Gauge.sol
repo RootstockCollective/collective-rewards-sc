@@ -64,7 +64,7 @@ contract Gauge {
     uint256 public lastUpdateTime;
     /// @notice timestamp end of current rewards period
     uint256 public periodFinish;
-    /// @notice amount of rewardToken earned for a builder
+    /// @notice amount of unclaimed token reward earned for the builder
     uint256 public builderRewards;
 
     /// @notice amount of stakingToken allocated by a sponsor
@@ -230,15 +230,19 @@ contract Gauge {
             _leftover = (_periodFinish - block.timestamp) * _rewardRate;
         }
 
-        // [N] = [N] * [PREC] / [PREC]
-        uint256 _sponsorsAmount = UtilsLib._mulPrec(amount_, kickbackPct_);
+        // [N] = [N] * [PREC]
+        uint256 _sponsorsAmount = amount_ * kickbackPct_;
+
+        // [PREC] = ([N] + [PREC] + [PREC]) / [N]
+        _rewardRate = (_sponsorsAmount + rewardMissing + _leftover) / _timeUntilNext;
+
+        // [N] = [N] / [PREC]
+        uint256 _sponsorsAmountNoPrec = _sponsorsAmount / UtilsLib.PRECISION;
+
         // [N] = [N] - [N]
-        uint256 _builderAmount = amount_ - _sponsorsAmount;
+        uint256 _builderAmount = amount_ - _sponsorsAmountNoPrec;
 
         builderRewards += _builderAmount;
-
-        // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
-        _rewardRate = (_sponsorsAmount * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
 
         lastUpdateTime = block.timestamp;
         _periodFinish = block.timestamp + _timeUntilNext;
@@ -250,7 +254,7 @@ contract Gauge {
 
         SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), amount_);
 
-        emit NotifyReward(_builderAmount, _sponsorsAmount);
+        emit NotifyReward(_builderAmount, _sponsorsAmountNoPrec);
     }
 
     // -----------------------------
