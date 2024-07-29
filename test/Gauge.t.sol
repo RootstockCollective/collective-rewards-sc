@@ -59,6 +59,10 @@ contract GaugeTest is BaseTest {
     function test_Allocate() public {
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
+        // AND a new epoch
+        _skipAndStartNewEpoch();
+        // AND half epoch pass
+        _skipRemainingEpochFraction(2);
 
         // WHEN allocates 1 ether to alice
         //  THEN Allocated event is emitted
@@ -72,6 +76,8 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.totalAllocation(), 1 ether);
         // THEN rewardPerTokenStored is 0 because there is not rewards distributed
         assertEq(gauge.rewardPerTokenStored(), 0);
+        // THEN rewardShares is 302400 ether = 1 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 302_400 ether);
         // THEN rewardPerToken is 0 because there is not rewards distributed
         assertEq(gauge.rewardPerToken(), 0);
         // THEN alice reward is 0 because there is not rewards distributed
@@ -88,10 +94,14 @@ contract GaugeTest is BaseTest {
     function test_Deallocate() public {
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
+        // AND a new epoch
+        _skipAndStartNewEpoch();
         // AND 1 ether allocated to alice
         gauge.allocate(alice, 1 ether);
 
-        // WHEN deallocates all
+        // WHEN half epoch pass
+        _skipRemainingEpochFraction(2);
+        // AND deallocates all
         //  THEN Allocated event is emitted
         vm.expectEmit();
         emit NewAllocation(alice, 0 ether);
@@ -101,6 +111,8 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.allocationOf(alice), 0);
         // THEN totalAllocation is 0
         assertEq(gauge.totalAllocation(), 0);
+        // THEN rewardShares is 302400 ether = 1 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 302_400 ether);
         // THEN rewardPerTokenStored is 0 because there is not rewards distributed
         assertEq(gauge.rewardPerTokenStored(), 0);
         // THEN rewardPerToken is 0 because there is not rewards distributed
@@ -119,16 +131,22 @@ contract GaugeTest is BaseTest {
     function test_DeallocatePartial() public {
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
+        // AND a new epoch
+        _skipAndStartNewEpoch();
         // AND 1 ether allocated to alice
         gauge.allocate(alice, 1 ether);
 
-        // WHEN deallocates 0.25 ether
+        // WHEN half epoch pass
+        _skipRemainingEpochFraction(2);
+        // AND deallocates 0.25 ether
         gauge.allocate(alice, 0.75 ether);
 
         // THEN alice allocation is 0.75 ether
         assertEq(gauge.allocationOf(alice), 0.75 ether);
         // THEN totalAllocation is 0.75 ether
         assertEq(gauge.totalAllocation(), 0.75 ether);
+        // THEN rewardShares is 529200 ether = 1 * 1/2 WEEK + 0.75 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 529_200 ether);
     }
 
     /**
@@ -215,6 +233,8 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.periodFinish() - block.timestamp, 518_400);
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate() / 10 ** 18, 192_901_234_567_901);
+        // THEN rewardShares is 3628800 ether = 6 * 1 WEEK
+        assertEq(gauge.rewardShares(), 3_628_800 ether);
 
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
