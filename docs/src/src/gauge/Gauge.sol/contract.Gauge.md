@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/41546c9143c56d780a633252c86982026a849c39/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1c2f800a06b2c84c125a87e09d560c971ffa9852/src/gauge/Gauge.sol)
 
 For each project proposal a Gauge contract will be deployed. It receives all the rewards obtained for that project and
 allows the builder and voters to claim them.
@@ -119,12 +119,6 @@ mapping(address sponsor => uint256 rewards) public rewards;
 modifier onlySponsorsManager();
 ```
 
-### onlyBuilder
-
-```solidity
-modifier onlyBuilder();
-```
-
 ### constructor
 
 constructor
@@ -197,12 +191,12 @@ function claimSponsorReward(address sponsor_) external;
 
 claim rewards for a builder
 
-_reverts if is not called by the builder_
+_reverts if is not called by the builder or reward receiver_
 
 _rewards are transferred to the builder reward receiver_
 
 ```solidity
-function claimBuilderReward() external onlyBuilder;
+function claimBuilderReward(address builder_) external;
 ```
 
 ### earned
@@ -256,15 +250,15 @@ called on the reward distribution. Transfers reward tokens from sponsorManger to
 _reverts if caller si not the sponsorsManager contract_
 
 ```solidity
-function notifyRewardAmount(uint256 amount_, uint256 kickbackPct_) external onlySponsorsManager;
+function notifyRewardAmount(uint256 builderAmount_, uint256 sponsorsAmount_) external onlySponsorsManager;
 ```
 
 **Parameters**
 
-| Name           | Type      | Description                           |
-| -------------- | --------- | ------------------------------------- |
-| `amount_`      | `uint256` | amount of reward tokens to distribute |
-| `kickbackPct_` | `uint256` | builder kickback percentage           |
+| Name              | Type      | Description                        |
+| ----------------- | --------- | ---------------------------------- |
+| `builderAmount_`  | `uint256` | amount of rewards for the builder  |
+| `sponsorsAmount_` | `uint256` | amount of rewards for the sponsors |
 
 ### \_updateRewards
 
@@ -310,10 +304,4 @@ error NotAuthorized();
 
 ```solidity
 error NotSponsorsManager();
-```
-
-### NotBuilder
-
-```solidity
-error NotBuilder();
 ```

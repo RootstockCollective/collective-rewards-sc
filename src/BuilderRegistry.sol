@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import { Governed } from "./governance/Governed.sol";
+import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -10,20 +11,20 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * @notice Keeps registers of the builders
  */
 contract BuilderRegistry is Governed, Ownable2Step {
-    uint256 internal constant MAX_KICKBACK_PCT = 1 ether;
+    uint256 internal constant MAX_KICKBACK = 1 ether;
 
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
     error NotAuthorized();
-    error InvalidBuilderKickbackPct();
+    error InvalidBuilderKickback();
     error RequiredState(BuilderState state);
 
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
     event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
-    event BuilderKickbackPctUpdate(address indexed builder_, uint256 builderKickbackPct_);
+    event BuilderKickbackUpdate(address indexed builder_, uint256 builderKickback_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -54,8 +55,8 @@ contract BuilderRegistry is Governed, Ownable2Step {
     /// @notice map of builders reward receiver
     mapping(address builder => address rewardReceiver) public builderRewardReceiver;
 
-    /// @notice map of builders kickback percentage
-    mapping(address builder => uint256 percentage) public builderKickbackPct;
+    /// @notice map of builders kickback
+    mapping(address builder => uint256 percentage) public builderKickback;
 
     /**
      * @notice constructor initializes base roles to manipulate the registry
@@ -80,104 +81,95 @@ contract BuilderRegistry is Governed, Ownable2Step {
      * @notice activates builder and set reward receiver
      * @dev reverts if is not called by the owner address
      * reverts if builder state is not pending
-     * @param builder_ address of builder
+     * @param builder_ address of the builder
      * @param rewardReceiver_ address of the builder reward receiver
-     * @param builderKickbackPct_ kickback percentage(100% == 1 ether)
+     * @param builderKickback_ kickback(100% == 1 ether)
      */
     function activateBuilder(
         address builder_,
         address rewardReceiver_,
-        uint256 builderKickbackPct_
+        uint256 builderKickback_
     )
         external
         onlyOwner
         atState(builder_, BuilderState.Pending)
     {
-        builderState[builder_] = BuilderState.KYCApproved;
         builderRewardReceiver[builder_] = rewardReceiver_;
-        _setBuilderKickbackPct(builder_, builderKickbackPct_);
+        _setBuilderKickback(builder_, builderKickback_);
 
-        emit StateUpdate(builder_, BuilderState.Pending, BuilderState.KYCApproved);
+        _updateState(builder_, BuilderState.KYCApproved);
     }
 
     /**
      * @notice whitelist builder
      * @dev reverts if is not called by the governor address or authorized changer
      * reverts if builder state is not KYCApproved
-     * @param builder_ address of builder
+     * @param builder_ address of the builder
      */
     function whitelistBuilder(address builder_)
         external
         onlyGovernorOrAuthorizedChanger
         atState(builder_, BuilderState.KYCApproved)
     {
-        builderState[builder_] = BuilderState.Whitelisted;
-
-        emit StateUpdate(builder_, BuilderState.KYCApproved, BuilderState.Whitelisted);
+        _updateState(builder_, BuilderState.Whitelisted);
     }
 
     /**
      * @notice pause builder
      * @dev reverts if is not called by the governor address or authorized changer
      * reverts if builder state is not Whitelisted
-     * @param builder_ address of builder
+     * @param builder_ address of the builder
      */
     function pauseBuilder(address builder_)
         external
         onlyGovernorOrAuthorizedChanger
         atState(builder_, BuilderState.Whitelisted)
     {
-        builderState[builder_] = BuilderState.Paused;
-
-        emit StateUpdate(builder_, BuilderState.Whitelisted, BuilderState.Paused);
+        _updateState(builder_, BuilderState.Paused);
     }
 
     /**
      * @notice permit builder
      * @dev reverts if is not called by the governor address or authorized changer
      * reverts if builder state is not Revoked
-     * @param builder_ address of builder
+     * @param builder_ address of the builder
      */
     function permitBuilder(address builder_)
         external
         onlyGovernorOrAuthorizedChanger
         atState(builder_, BuilderState.Revoked)
     {
-        builderState[builder_] = BuilderState.Whitelisted;
-
-        emit StateUpdate(builder_, BuilderState.Revoked, BuilderState.Whitelisted);
+        _updateState(builder_, BuilderState.Whitelisted);
     }
 
     /**
      * @notice revoke builder
      * @dev reverts if is not called by the builder address
      * reverts if builder state is not Whitelisted
-     * @param builder_ address of builder
+     * @param builder_ address of the builder
      */
     function revokeBuilder(address builder_) external atState(builder_, BuilderState.Whitelisted) {
         if (msg.sender != builder_) revert NotAuthorized();
 
-        builderState[builder_] = BuilderState.Revoked;
-
-        emit StateUpdate(builder_, BuilderState.Whitelisted, BuilderState.Revoked);
+        _updateState(builder_, BuilderState.Revoked);
     }
 
     /**
-     * @notice set builder kickback percentage
+     * @notice set builder kickback
      * @dev reverts if is not called by the governor address or authorized changer
      * reverts if builder state is not Whitelisted
-     * @param builder_ address of builder
-     * @param builderKickbackPct_ kickback percentage(100% == 1 ether)
+     * @param builder_ address of the builder
+     * @param builderKickback_ kickback(100% == 1 ether)
      */
-    function setBuilderKickbackPct(
+    function setBuilderKickback(
         address builder_,
-        uint256 builderKickbackPct_
+        uint256 builderKickback_
     )
         external
         onlyGovernorOrAuthorizedChanger
         atState(builder_, BuilderState.Whitelisted)
     {
-        _setBuilderKickbackPct(builder_, builderKickbackPct_);
+        _setBuilderKickback(builder_, builderKickback_);
     }
 
     // -----------------------------
@@ -186,7 +178,7 @@ contract BuilderRegistry is Governed, Ownable2Step {
 
     /**
      * @notice get builder state
-     * @param builder_ address of builder
+     * @param builder_ address of the builder
      */
     function getState(address builder_) public view returns (BuilderState) {
         return builderState[builder_];
@@ -194,31 +186,47 @@ contract BuilderRegistry is Governed, Ownable2Step {
 
     /**
      * @notice get builder reward receiver
-     * @param builder_ address of builder
+     * @param builder_ address of the builder
      */
     function getRewardReceiver(address builder_) public view returns (address) {
         return builderRewardReceiver[builder_];
     }
 
     /**
-     * @notice get builder kickback percentage
-     * @param builder_ address of builder
+     * @notice get builder kickback
+     * @param builder_ address of thebuilder
      */
-    function getBuilderKickbackPct(address builder_) public view returns (uint256) {
-        return builderKickbackPct[builder_];
+    function getBuilderKickback(address builder_) public view returns (uint256) {
+        return builderKickback[builder_];
+    }
+
+    /**
+     * @notice apply builder kickback
+     * @param builder_ address of the builder
+     * @param amount_ amount to apply the kickback
+     */
+    function applyBuilderKickback(address builder_, uint256 amount_) public view returns (uint256) {
+        // [N] = [N] * [PREC] / [PREC]
+        return builderKickback[builder_] * amount_ / UtilsLib.PRECISION;
     }
 
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
 
-    function _setBuilderKickbackPct(address builder_, uint256 builderKickbackPct_) internal {
+    function _setBuilderKickback(address builder_, uint256 builderKickback_) internal {
         // TODO: should we have a minimal amount?
-        if (builderKickbackPct_ > MAX_KICKBACK_PCT) {
-            revert InvalidBuilderKickbackPct();
+        if (builderKickback_ > MAX_KICKBACK) {
+            revert InvalidBuilderKickback();
         }
-        builderKickbackPct[builder_] = builderKickbackPct_;
+        builderKickback[builder_] = builderKickback_;
 
-        emit BuilderKickbackPctUpdate(builder_, builderKickbackPct_);
+        emit BuilderKickbackUpdate(builder_, builderKickback_);
+    }
+
+    function _updateState(address builder_, BuilderState newState_) internal {
+        BuilderState previousState_ = builderState[builder_];
+        builderState[builder_] = newState_;
+        emit StateUpdate(builder_, previousState_, newState_);
     }
 }

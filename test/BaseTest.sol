@@ -95,22 +95,4 @@ contract BaseTest is Test {
         uint256 _currentEpochRemaining = EpochLib.endDistributionWindow(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining);
     }
-
-    function _setBuilderState(address builder_, BuilderRegistry.BuilderState state_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderState(address)").with_key(builder_).checked_write(
-            uint256(state_)
-        );
-    }
-
-    function _setBuilderRewardReceiver(address builder_, address rewardReceiver_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderRewardReceiver(address)").with_key(builder_).checked_write(
-            rewardReceiver_
-        );
-    }
-
-    function _setBuilderBuilderKickbackPct(address builder_, uint256 builderKickbackPct_) internal {
-        stdstore.target(address(builderRegistry)).sig("builderKickbackPct(address)").with_key(builder_).checked_write(
-            builderKickbackPct_
-        );
-    }
 }

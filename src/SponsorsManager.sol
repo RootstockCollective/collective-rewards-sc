@@ -287,10 +287,12 @@ contract SponsorsManager is Governed {
      */
     function _distribute(Gauge gauge_, uint256 rewardsPerShare_, BuilderRegistry builderRegistry_) internal {
         uint256 _reward = UtilsLib._mulPrec(gauge_.totalAllocation(), rewardsPerShare_);
-        uint256 _kickbackPct = builderRegistry_.getBuilderKickbackPct(gauge_.builder());
+        uint256 _sponsorsAmount = builderRegistry_.applyBuilderKickback(gauge_.builder(), _reward);
+        // [N] = [N] - [N]
+        uint256 _builderAmount = _reward - _sponsorsAmount;
         if (_reward > 0) {
             rewardToken.approve(address(gauge_), _reward);
-            gauge_.notifyRewardAmount(_reward, _kickbackPct);
+            gauge_.notifyRewardAmount(_builderAmount, _sponsorsAmount);
             emit DistributeReward(msg.sender, address(gauge_), _reward);
         }
     }

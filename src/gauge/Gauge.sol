@@ -19,7 +19,6 @@ contract Gauge {
     // -----------------------------
     error NotAuthorized();
     error NotSponsorsManager();
-    error NotBuilder();
 
     // -----------------------------
     // ----------- Events ----------
@@ -34,11 +33,6 @@ contract Gauge {
     // -----------------------------
     modifier onlySponsorsManager() {
         if (msg.sender != address(sponsorsManager)) revert NotSponsorsManager();
-        _;
-    }
-
-    modifier onlyBuilder() {
-        if (msg.sender != builder) revert NotBuilder();
         _;
     }
 
@@ -143,14 +137,16 @@ contract Gauge {
 
     /**
      * @notice claim rewards for a builder
-     * @dev reverts if is not called by the builder
+     * @dev reverts if is not called by the builder or reward receiver
      * @dev rewards are transferred to the builder reward receiver
      */
-    function claimBuilderReward() external onlyBuilder {
+    function claimBuilderReward(address builder_) external {
+        address _rewardReceiver = sponsorsManager.builderRegistry().getRewardReceiver(builder_);
+        if (msg.sender != builder_ && msg.sender != _rewardReceiver) revert NotAuthorized();
+
         uint256 reward = builderRewards;
         if (reward > 0) {
             builderRewards = 0;
-            address _rewardReceiver = sponsorsManager.builderRegistry().getRewardReceiver(builder);
             SafeERC20.safeTransfer(rewardToken, _rewardReceiver, reward);
             emit BuilderRewardsClaimed(_rewardReceiver, builderRewards);
         }
@@ -212,10 +208,10 @@ contract Gauge {
     /**
      * @notice called on the reward distribution. Transfers reward tokens from sponsorManger to this contract
      * @dev reverts if caller si not the sponsorsManager contract
-     * @param amount_ amount of reward tokens to distribute
-     * @param kickbackPct_ builder kickback percentage
+     * @param builderAmount_ amount of rewards for the builder
+     * @param sponsorsAmount_ amount of rewards for the sponsors
      */
-    function notifyRewardAmount(uint256 amount_, uint256 kickbackPct_) external onlySponsorsManager {
+    function notifyRewardAmount(uint256 builderAmount_, uint256 sponsorsAmount_) external onlySponsorsManager {
         // update rewardPerToken storage
         rewardPerTokenStored = rewardPerToken();
         uint256 _timeUntilNext = EpochLib.epochNext(block.timestamp) - block.timestamp;
@@ -230,19 +226,10 @@ contract Gauge {
             _leftover = (_periodFinish - block.timestamp) * _rewardRate;
         }
 
-        // [N] = [N] * [PREC]
-        uint256 _sponsorsAmount = amount_ * kickbackPct_;
+        // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
+        _rewardRate = (sponsorsAmount_ * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
 
-        // [PREC] = ([N] + [PREC] + [PREC]) / [N]
-        _rewardRate = (_sponsorsAmount + rewardMissing + _leftover) / _timeUntilNext;
-
-        // [N] = [N] / [PREC]
-        uint256 _sponsorsAmountNoPrec = _sponsorsAmount / UtilsLib.PRECISION;
-
-        // [N] = [N] - [N]
-        uint256 _builderAmount = amount_ - _sponsorsAmountNoPrec;
-
-        builderRewards += _builderAmount;
+        builderRewards += builderAmount_;
 
         lastUpdateTime = block.timestamp;
         _periodFinish = block.timestamp + _timeUntilNext;
@@ -252,9 +239,9 @@ contract Gauge {
         periodFinish = _periodFinish;
         rewardRate = _rewardRate;
 
-        SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), amount_);
+        SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), builderAmount_ + sponsorsAmount_);
 
-        emit NotifyReward(_builderAmount, _sponsorsAmountNoPrec);
+        emit NotifyReward(builderAmount_, sponsorsAmount_);
     }
 
     // -----------------------------

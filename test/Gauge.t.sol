@@ -46,18 +46,11 @@ contract GaugeTest is BaseTest {
         //  THEN tx reverts because caller is not authorized
         vm.expectRevert(Gauge.NotAuthorized.selector);
         gauge.claimSponsorReward(bob);
-    }
 
-    /**
-     * SCENARIO: claimBuilderReward should revert if is not called by the builder
-     */
-    function test_NotBuilder() public {
-        // GIVEN a sponsor alice
-        vm.startPrank(alice);
-        // WHEN alice calls claimBuilderReward
-        //  THEN tx reverts because caller is not builder
-        vm.expectRevert(Gauge.NotBuilder.selector);
-        gauge.claimBuilderReward();
+        // WHEN alice calls claimBuilderReward using builder address
+        //  THEN tx reverts because caller is not authorized
+        vm.expectRevert(Gauge.NotAuthorized.selector);
+        gauge.claimSponsorReward(builder);
     }
 
     /**
@@ -143,22 +136,22 @@ contract GaugeTest is BaseTest {
      * rewards variables are updated in the middle and at the end of the epoch
      */
     function test_NotifyRewardAmountWithStrategy() public {
+        // GIVEN builder kickback percentage is 70%
+        vm.startPrank(kycApprover);
+        uint256 _kickback = 700_000_000_000_000_000;
+        builderRegistry.activateBuilder(builder, builder, _kickback);
+
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
         // AND 1 ether allocated to alice and 5 ether to bob
         gauge.allocate(alice, 1 ether);
         gauge.allocate(bob, 5 ether);
 
-        uint256 _kickback = 700_000_000_000_000_000;
-
-        // AND builder kickback percentage is 70%
-        _setBuilderBuilderKickbackPct(builder, 700_000_000_000_000_000);
-
         // WHEN 100 ether distributed
         //  THEN notifyRewardAmount event is emitted
         vm.expectEmit();
         emit NotifyReward(30 ether, 70 ether);
-        gauge.notifyRewardAmount(100 ether, _kickback);
+        gauge.notifyRewardAmount(30 ether, 70 ether);
 
         // THEN rewardPerTokenStored is 0
         assertEq(gauge.rewardPerTokenStored(), 0);
@@ -206,7 +199,7 @@ contract GaugeTest is BaseTest {
         //  THEN notifyRewardAmount event is emitted
         vm.expectEmit();
         emit NotifyReward(0 ether, 100 ether);
-        gauge.notifyRewardAmount(100 ether, 1 ether);
+        gauge.notifyRewardAmount(0, 100 ether);
 
         // THEN rewardPerTokenStored is 0
         assertEq(gauge.rewardPerTokenStored(), 0);
@@ -239,19 +232,17 @@ contract GaugeTest is BaseTest {
     /**
      * SCENARIO: builder claim his rewards at any time during the epoch receiving the total amount of rewards.
      */
-    function test_ClaimBuilderRewards() public {
+    function test_ClaimBuilderRewardsBuilder() public {
+        // GIVEN builder kickback percentage is 30% and reward receiver is alice
+        vm.startPrank(kycApprover);
+        uint256 _kickback = 300_000_000_000_000_000;
+        builderRegistry.activateBuilder(builder, alice, _kickback);
+
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
 
-        // AND builder kickback percentage is 30%
-        uint256 _kickback = 300_000_000_000_000_000;
-        _setBuilderBuilderKickbackPct(builder, _kickback);
-
-        // AND builder reward receiver is alice
-        _setBuilderRewardReceiver(builder, alice);
-
-        // WHEN 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, _kickback);
+        // WHEN 70 ether are for builder and 30 ether for sponsors
+        gauge.notifyRewardAmount(70 ether, 30 ether);
 
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
@@ -262,9 +253,40 @@ contract GaugeTest is BaseTest {
         // AND another epoch finish without a new distribution
         _skipAndStartNewEpoch();
 
-        // WHEN builder claims rewards again
+        // WHEN builder claims rewards
         vm.startPrank(builder);
-        gauge.claimBuilderReward();
+        gauge.claimBuilderReward(builder);
+        // THEN alice rewardToken balance is 70% of 100 ether
+        assertEq(rewardToken.balanceOf(alice), 70 ether);
+    }
+
+    /**
+     * SCENARIO: reward receiver claim his rewards at any time during the epoch receiving the total amount of rewards.
+     */
+    function test_ClaimBuilderRewardsRewardReceiver() public {
+        // GIVEN builder kickback percentage is 30% and reward receiver is alice
+        vm.startPrank(kycApprover);
+        uint256 _kickback = 300_000_000_000_000_000;
+        builderRegistry.activateBuilder(builder, alice, _kickback);
+
+        // GIVEN a SponsorsManager contract
+        vm.startPrank(address(sponsorsManager));
+
+        // WHEN 70 ether are for builder and 30 ether for sponsors
+        gauge.notifyRewardAmount(70 ether, 30 ether);
+
+        // AND half epoch pass
+        _skipRemainingEpochFraction(2);
+
+        // THEN builderRewards is 70% of 100 ether
+        assertEq(gauge.builderRewards(), 70 ether);
+
+        // AND another epoch finish without a new distribution
+        _skipAndStartNewEpoch();
+
+        // WHEN builder claims rewards
+        vm.startPrank(alice);
+        gauge.claimBuilderReward(builder);
         // THEN alice rewardToken balance is 70% of 100 ether
         assertEq(rewardToken.balanceOf(alice), 70 ether);
     }
@@ -273,24 +295,22 @@ contract GaugeTest is BaseTest {
      * SCENARIO: there are 2 distributions on the same epoch, builder claim the rewards
      */
     function test_ClaimBuilderRewards2Distributions() public {
+        // GIVEN builder kickback percentage is 30% and reward receiver is alice
+        vm.startPrank(kycApprover);
+        uint256 _kickback = 300_000_000_000_000_000;
+        builderRegistry.activateBuilder(builder, alice, _kickback);
+
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
 
-        // AND builder kickback percentage is 30%
-        uint256 _kickback = 300_000_000_000_000_000;
-        _setBuilderBuilderKickbackPct(builder, _kickback);
-
-        // AND builder reward receiver is alice
-        _setBuilderRewardReceiver(builder, alice);
-
-        // AND 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, _kickback);
+        // WHEN 70 ether are for builder and 30 ether for sponsors
+        gauge.notifyRewardAmount(70 ether, 30 ether);
 
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
 
-        // AND 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, _kickback);
+        // AND 70 ether are for builder and 30 ether for sponsors
+        gauge.notifyRewardAmount(70 ether, 30 ether);
 
         // THEN builderRewards is 70% of 200 ether
         assertEq(gauge.builderRewards(), 140 ether);
@@ -300,7 +320,7 @@ contract GaugeTest is BaseTest {
 
         // WHEN builder claims rewards
         vm.startPrank(builder);
-        gauge.claimBuilderReward();
+        gauge.claimBuilderReward(builder);
 
         // THEN alice rewardToken balance is 70% of 200 ether
         assertEq(rewardToken.balanceOf(alice), 140 ether);
@@ -310,31 +330,29 @@ contract GaugeTest is BaseTest {
      * SCENARIO: there are 2 epochs, builder claim the rewards
      */
     function test_ClaimBuilderRewards2Epochs() public {
+        // GIVEN builder kickback percentage is 30% and reward receiver is alice
+        vm.startPrank(kycApprover);
+        uint256 _kickback = 300_000_000_000_000_000;
+        builderRegistry.activateBuilder(builder, alice, _kickback);
+
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
 
-        // AND builder kickback percentage is 30%
-        uint256 _kickback = 300_000_000_000_000_000;
-        _setBuilderBuilderKickbackPct(builder, _kickback);
-
-        // AND builder reward receiver is alice
-        _setBuilderRewardReceiver(builder, alice);
-
-        // AND 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, _kickback);
+        // AND 70 ether are for builder and 30 ether for sponsors
+        gauge.notifyRewardAmount(70 ether, 30 ether);
 
         // AND another epoch finish without a new distribution
         _skipAndStartNewEpoch();
 
-        // AND 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, _kickback);
+        // AND 70 ether are for builder and 30 ether for sponsors
+        gauge.notifyRewardAmount(70 ether, 30 ether);
 
         // THEN builderRewards is 70% of 200 ether
         assertEq(gauge.builderRewards(), 140 ether);
 
         // WHEN builder claims rewards
         vm.startPrank(builder);
-        gauge.claimBuilderReward();
+        gauge.claimBuilderReward(builder);
 
         // THEN alice rewardToken balance is 70% of 200 ether
         assertEq(rewardToken.balanceOf(alice), 140 ether);
@@ -351,8 +369,8 @@ contract GaugeTest is BaseTest {
         gauge.allocate(alice, 1 ether);
         gauge.allocate(bob, 5 ether);
 
-        // WHEN 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, 1 ether);
+        // AND 100 ether distributed for sponsors
+        gauge.notifyRewardAmount(0, 100 ether);
 
         // AND epoch finish
         _skipAndStartNewEpoch();
@@ -394,8 +412,8 @@ contract GaugeTest is BaseTest {
         gauge.allocate(alice, 1 ether);
         gauge.allocate(bob, 5 ether);
 
-        // WHEN 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, 1 ether);
+        // AND 100 ether distributed for sponsors
+        gauge.notifyRewardAmount(0, 100 ether);
 
         // AND 1/3 epoch pass
         _skipRemainingEpochFraction(3);
@@ -429,12 +447,12 @@ contract GaugeTest is BaseTest {
         gauge.allocate(alice, 1 ether);
         gauge.allocate(bob, 5 ether);
 
-        // AND 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, 1 ether);
+        // AND 100 ether distributed for sponsors
+        gauge.notifyRewardAmount(0, 100 ether);
         // AND epoch finish
         _skipAndStartNewEpoch();
-        // AND 200 ether more are distributed
-        gauge.notifyRewardAmount(200 ether, 1 ether);
+        // AND 200 ether more are distributed for sponsors
+        gauge.notifyRewardAmount(0, 200 ether);
         // AND epoch finish
         _skipAndStartNewEpoch();
 
@@ -470,12 +488,12 @@ contract GaugeTest is BaseTest {
         gauge.allocate(alice, 1 ether);
         gauge.allocate(bob, 5 ether);
 
-        // AND 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, 1 ether);
+        // AND 100 ether distributed for sponsors
+        gauge.notifyRewardAmount(0, 100 ether);
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
-        // AND 200 ether more are distributed
-        gauge.notifyRewardAmount(200 ether, 1 ether);
+        // AND 200 ether more are distributed for sponsors
+        gauge.notifyRewardAmount(0, 200 ether);
         // AND epoch finish
         _skipAndStartNewEpoch();
 
@@ -512,8 +530,8 @@ contract GaugeTest is BaseTest {
         gauge.allocate(alice, 1 ether);
         gauge.allocate(bob, 5 ether);
 
-        // WHEN 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, 1 ether);
+        // AND 100 ether distributed for sponsors
+        gauge.notifyRewardAmount(0, 100 ether);
 
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
@@ -555,8 +573,8 @@ contract GaugeTest is BaseTest {
         gauge.allocate(alice, 1 ether);
         gauge.allocate(bob, 5 ether);
 
-        // WHEN 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, 1 ether);
+        // AND 100 ether distributed for sponsors
+        gauge.notifyRewardAmount(0, 100 ether);
 
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
@@ -600,8 +618,8 @@ contract GaugeTest is BaseTest {
 
         // AND 2 ether allocated to alice
         gauge.allocate(alice, 2 ether);
-        // AND 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, 1 ether);
+        // AND 100 ether distributed for sponsors
+        gauge.notifyRewardAmount(0, 100 ether);
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
         // AND alice deallocates all
@@ -623,8 +641,8 @@ contract GaugeTest is BaseTest {
         // THEN rewardMissing is 49.999999999999999999 = 518400 / 2 * 0.000192901234567901
         assertEq(gauge.rewardMissing() / 10 ** 18, 49_999_999_999_999_999_999);
 
-        // AND 100 ether distributed
-        gauge.notifyRewardAmount(100 ether, 1 ether);
+        // AND 100 ether distributed for sponsors
+        gauge.notifyRewardAmount(0, 100 ether);
         // AND epoch finish
         _skipAndStartNewEpoch();
 

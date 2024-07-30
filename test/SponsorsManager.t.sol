@@ -409,9 +409,14 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: alice claim all the rewards in a single tx
+     * SCENARIO: alice claims all the rewards in a single tx
      */
     function test_ClaimSponsorRewards() public {
+        // GIVEN builder kickback percentage is 100%
+        vm.startPrank(kycApprover);
+        builderRegistry.activateBuilder(builder, builder, 1 ether);
+        builderRegistry.activateBuilder(builder2, builder2, 1 ether);
+
         // GIVEN a sponsor alice
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
@@ -419,10 +424,6 @@ contract SponsorsManagerTest is BaseTest {
         // AND alice allocates 2 ether to builder and 6 ether to builder2
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         vm.stopPrank();
-
-        // AND builder kickback percentage is 100%
-        _setBuilderBuilderKickbackPct(builder, 1 ether);
-        _setBuilderBuilderKickbackPct(builder2, 1 ether);
 
         // AND 100 ether reward are added
         sponsorsManager.notifyRewardAmount(100 ether);
