@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import { BaseTest, Gauge } from "../BaseTest.sol";
 import { Governed } from "../../src/governance/Governed.sol";
+import { ChangeExecutor } from "../../src/governance/ChangeExecutor.sol";
 
 contract ProtectedTest is BaseTest {
     /**
@@ -29,5 +30,30 @@ contract ProtectedTest is BaseTest {
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         sponsorsManager.createGauge(builder);
+    }
+
+    /**
+     * SCENARIO: upgrade should revert if is not called by the governor or an authorized changer
+     */
+    function test_RevertUpgrade() public {
+        // GIVEN the Governor has not authorized the change
+        changeExecutorMock.setIsAuthorized(false);
+        //  WHEN tries to upgrade the SponsorsManager
+        //   THEN tx reverts because NotGovernorOrAuthorizedChanger
+        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
+        address newImplementation = makeAddr("newImplementation");
+        sponsorsManager.upgradeToAndCall(newImplementation, "0x0");
+    }
+
+    /**
+     * SCENARIO: ChangeExecutor upgrade should revert if is not called by the governor
+     */
+    function test_RevertUpgradeNotGovernor() public {
+        // GIVEN a not Governor address
+        //  WHEN tries to upgrade the ChangeExecutor
+        //   THEN tx reverts because NotGovernor
+        vm.expectRevert(ChangeExecutor.NotGovernor.selector);
+        address newImplementation = makeAddr("newImplementation");
+        changeExecutorMock.upgradeToAndCall(newImplementation, "0x0");
     }
 }
