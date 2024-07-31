@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { stdError } from "forge-std/src/Test.sol";
-import { BaseTest, Gauge } from "../../BaseTest.sol";
+import { BaseTest, Gauge, BuilderRegistry } from "../../BaseTest.sol";
 import { Governed } from "../../../src/governance/Governed.sol";
 import { ChangeExecutor } from "../../../src/governance/ChangeExecutor.sol";
 import { WhitelistBuilderChangerTemplate } from
@@ -17,6 +17,9 @@ contract WhitelistBuilderChangerTest is BaseTest {
         changeExecutorMock.setIsAuthorized(false);
         // AND a WhitelistBuilderChanger deployed for a new builder
         changer = new WhitelistBuilderChangerTemplate(sponsorsManager, newBuilder);
+        // AND a newBuilder activated
+        vm.prank(kycApprover);
+        builderRegistry.activateBuilder(newBuilder, newBuilder, 0);
     }
 
     /**
@@ -46,8 +49,11 @@ contract WhitelistBuilderChangerTest is BaseTest {
         //  WHEN governor executes the changer
         vm.prank(governor);
         changeExecutorMock.executeChange(changer);
-        //   THEN the change is successfully executed
+        //  THEN the change is successfully executed
         Gauge newGauge = changer.newGauge();
+        //  THEN gauge is added on SponsorsManager
         assertEq(address(sponsorsManager.builderToGauge(newBuilder)), address(newGauge));
+        //  THEN the new builder is whitelisted
+        assertEq(uint256(builderRegistry.getState(newBuilder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
     }
 }
