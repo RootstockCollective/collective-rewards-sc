@@ -152,10 +152,20 @@ contract SponsorsManager is Governed {
     function notifyRewardAmount(uint256 amount_) external notInDistributionPeriod {
         // if there is no allocation let it revert by division zero
         // [PREC] = [N] * [PREC] / [N]
-        rewardsPerShare += UtilsLib._divPrec(amount_, totalAllocation);
+        rewardsPerShare += UtilsLib._divPrec(amount_, getTotalAccrueAllocation());
 
         emit NotifyReward(msg.sender, amount_);
         SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), amount_);
+    }
+
+    function getTotalAccrueAllocation() public returns (uint256) {
+        uint256 _length = gauges.length;
+        uint256 _totalAccrueAllocations = 0;
+        for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
+            _totalAccrueAllocations += gauges[i].accrueAllocation();
+        }
+
+        return _totalAccrueAllocations;
     }
 
     /**
@@ -268,7 +278,7 @@ contract SponsorsManager is Governed {
      * @param gauge_ address of the gauge to distribute
      */
     function _distribute(Gauge gauge_) internal {
-        uint256 _reward = UtilsLib._mulPrec(gauge_.totalAllocation(), rewardsPerShare);
+        uint256 _reward = UtilsLib._mulPrec(gauge_.accrueAllocation(), rewardsPerShare);
         if (_reward > 0) {
             rewardToken.approve(address(gauge_), _reward);
             gauge_.notifyRewardAmount(_reward);

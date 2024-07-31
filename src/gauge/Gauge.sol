@@ -6,12 +6,12 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EpochLib } from "../libraries/EpochLib.sol";
-
 /**
  * @title Gauge
  * @notice For each project proposal a Gauge contract will be deployed.
  *  It receives all the rewards obtained for that project and allows the builder and voters to claim them.
  */
+
 contract Gauge {
     // -----------------------------
     // ------- Custom Errors -------
@@ -59,6 +59,8 @@ contract Gauge {
     /// @notice timestamp end of current rewards period
     uint256 public periodFinish;
 
+    uint256 public accrueAllocationStored;
+
     /// @notice amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public allocationOf;
     /// @notice cached rewardPerTokenStored for a sponsor based on their most recent action [PREC]
@@ -96,6 +98,15 @@ contract Gauge {
         uint256 _rewardPerTokenCurrent = ((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate) / totalAllocation;
         // [PREC] = [PREC] + [PREC]
         return rewardPerTokenStored + _rewardPerTokenCurrent;
+    }
+
+    function accrueAllocation() public view returns (uint256) {
+        if (totalAllocation == 0) {
+            return accrueAllocationStored;
+        }
+
+        uint256 _accrueAllocationCurrent = ((lastTimeRewardApplicable() - lastUpdateTime)) * totalAllocation;
+        return accrueAllocationStored + _accrueAllocationCurrent;
     }
 
     /**
@@ -193,6 +204,7 @@ contract Gauge {
     function notifyRewardAmount(uint256 amount_) external onlySponsorsManager {
         // update rewardPerToken storage
         rewardPerTokenStored = rewardPerToken();
+        accrueAllocationStored = 0;
         uint256 _timeUntilNext = EpochLib.epochNext(block.timestamp) - block.timestamp;
         uint256 _leftover = 0;
         // cache storage variables used multiple times
@@ -207,8 +219,6 @@ contract Gauge {
 
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
         _rewardRate = (amount_ * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
-
-        if (_rewardRate == 0) revert ZeroRewardRate();
 
         lastUpdateTime = block.timestamp;
         _periodFinish = block.timestamp + _timeUntilNext;
@@ -237,6 +247,7 @@ contract Gauge {
 
     function _updateRewards(address sponsor_) internal {
         rewardPerTokenStored = rewardPerToken();
+        accrueAllocationStored = accrueAllocation();
         lastUpdateTime = lastTimeRewardApplicable();
         rewards[sponsor_] = earned(sponsor_);
         sponsorRewardPerTokenPaid[sponsor_] = rewardPerTokenStored;

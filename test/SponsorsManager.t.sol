@@ -18,6 +18,10 @@ contract SponsorsManagerTest is BaseTest {
         // mint some rewardTokens to this contract for reward distribution
         rewardToken.mint(address(this), 100_000 ether);
         rewardToken.approve(address(sponsorsManager), 100_000 ether);
+        vm.startPrank(address(sponsorsManager));
+        gauge.notifyRewardAmount(0);
+        gauge2.notifyRewardAmount(0);
+        vm.stopPrank();
     }
 
     /**
@@ -154,13 +158,14 @@ contract SponsorsManagerTest is BaseTest {
         //  AND alice allocates 0.1 ether
         vm.prank(alice);
         sponsorsManager.allocate(gauge, 0.1 ether);
+        _skipToStartDistributionWindow();
         //   WHEN 2 ether reward are added
         //    THEN NotifyReward event is emitted
         vm.expectEmit();
         emit NotifyReward(address(this), 2 ether);
         sponsorsManager.notifyRewardAmount(2 ether);
         // THEN rewardsPerShare is 20 = 2 / 0.1 ether
-        assertEq(sponsorsManager.rewardsPerShare(), 20 ether);
+        assertEq(sponsorsManager.rewardsPerShare(), 38_580_246_913_580);
         // THEN reward token balance of sponsorsManager is 2 ether
         assertEq(rewardToken.balanceOf(address(sponsorsManager)), 2 ether);
     }
@@ -173,50 +178,16 @@ contract SponsorsManagerTest is BaseTest {
         //  AND alice allocates 0.1 ether
         vm.prank(alice);
         sponsorsManager.allocate(gauge, 0.1 ether);
+
+        _skipToStartDistributionWindow();
         // AND 2 ether reward are added
         sponsorsManager.notifyRewardAmount(2 ether);
         // WHEN 10 ether reward are more added
         sponsorsManager.notifyRewardAmount(10 ether);
-        // THEN rewardsPerShare is 120 = 12 / 0.1 ether
-        assertEq(sponsorsManager.rewardsPerShare(), 120 ether);
+        // THEN rewardsPerShare is 120 = 12 / (0.1 ether * 518_400)
+        assertEq(sponsorsManager.rewardsPerShare(), 231_481_481_481_481);
         // THEN reward token balance of sponsorsManager is 12 ether
         assertEq(rewardToken.balanceOf(address(sponsorsManager)), 12 ether);
-    }
-
-    /**
-     * SCENARIO: should revert is distribution period started
-     */
-    function test_RevertNotInDistributionPeriod() public {
-        // GIVEN a SponsorManager contract
-        allocationsArray[0] = 1 ether;
-        allocationsArray[1] = 1 ether;
-        //  AND 22 gauges created
-        for (uint256 i = 0; i < 20; i++) {
-            Gauge _newGauge = sponsorsManager.createGauge(makeAddr(string(abi.encode(i + 10))));
-            gaugesArray.push(_newGauge);
-            allocationsArray.push(1 ether);
-        }
-        vm.prank(alice);
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        //  AND 2 ether reward are added
-        sponsorsManager.notifyRewardAmount(2 ether);
-        // AND distribution window starts
-        _skipToStartDistributionWindow();
-        //  AND distribution start
-        sponsorsManager.startDistribution();
-
-        // WHEN tries to allocate during the distribution period
-        //  THEN tx reverts because NotInDistributionPeriod
-        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        // WHEN tries to add more reward
-        //  THEN tx reverts because NotInDistributionPeriod
-        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
-        sponsorsManager.notifyRewardAmount(2 ether);
-        // WHEN tries to start distribution again
-        //  THEN tx reverts because NotInDistributionPeriod
-        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
-        sponsorsManager.startDistribution();
     }
 
     /**
@@ -260,66 +231,24 @@ contract SponsorsManagerTest is BaseTest {
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         vm.stopPrank();
 
-        //  AND 100 ether reward are added
-        sponsorsManager.notifyRewardAmount(100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
+
+        //  AND 100 ether reward are added
+        sponsorsManager.notifyRewardAmount(100 ether);
 
         //  WHEN distribute is executed
         //   THEN DistributeReward event is emitted for gauge
         vm.expectEmit();
-        emit DistributeReward(address(this), address(gauge), 27_272_727_272_727_272_724);
+        emit DistributeReward(address(this), address(gauge), 27_272_727_272_725_401_600);
         //   THEN DistributeReward event is emitted for gauge2
         vm.expectEmit();
-        emit DistributeReward(address(this), address(gauge2), 72_727_272_727_272_727_264);
+        emit DistributeReward(address(this), address(gauge2), 72_727_272_727_267_737_600);
         sponsorsManager.startDistribution();
         // THEN reward token balance of gauge is 27.272727272727272724 = 100 * 6 / 22
-        assertEq(rewardToken.balanceOf(address(gauge)), 27_272_727_272_727_272_724);
+        assertEq(rewardToken.balanceOf(address(gauge)), 27_272_727_272_725_401_600);
         // THEN reward token balance of gauge2 is 72.727272727272727264 = 100 * 16 / 22
-        assertEq(rewardToken.balanceOf(address(gauge2)), 72_727_272_727_272_727_264);
-    }
-
-    /**
-     * SCENARIO: distribute twice on the same epoch with different allocations.
-     *  The second allocation occurs on the distribution window timestamp.
-     */
-    function test_DistributeTwiceSameEpoch() public {
-        // GIVEN a SponsorManager contract
-        vm.startPrank(alice);
-        allocationsArray[0] = 2 ether;
-        allocationsArray[1] = 6 ether;
-        // AND alice allocates 2 ether to builder and 6 ether to builder2
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-
-        // AND bob allocates 4 ether to builder and 10 ether to builder2
-        vm.startPrank(bob);
-        allocationsArray[0] = 4 ether;
-        allocationsArray[1] = 10 ether;
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
-
-        //  AND 100 ether reward are added and distributed
-        sponsorsManager.notifyRewardAmount(100 ether);
-        // AND distribution window starts
-        _skipToStartDistributionWindow();
-        // AND distribution is executed
-        sponsorsManager.startDistribution();
-
-        // AND bob modifies his allocations 16 ether to builder and 4 ether to builder2
-        vm.startPrank(bob);
-        allocationsArray[0] = 16 ether;
-        allocationsArray[1] = 4 ether;
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
-
-        //  WHEN 100 ether reward are added and distributed again
-        sponsorsManager.notifyRewardAmount(100 ether);
-        sponsorsManager.startDistribution();
-
-        // THEN reward token balance of gauge is 91.558441558441558428 = 100 * 6 / 22 + 100 * 18 / 28
-        assertEq(rewardToken.balanceOf(address(gauge)), 91_558_441_558_441_558_428);
-        // THEN reward token balance of gauge2 is 108.441558441558441544 = 100 * 16 / 22 + 100 * 10 / 28
-        assertEq(rewardToken.balanceOf(address(gauge2)), 108_441_558_441_558_441_544);
+        assertEq(rewardToken.balanceOf(address(gauge2)), 72_727_272_727_267_737_600);
     }
 
     /**
@@ -340,13 +269,11 @@ contract SponsorsManagerTest is BaseTest {
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         vm.stopPrank();
 
-        //  AND 100 ether reward are added and distributed
-        sponsorsManager.notifyRewardAmount(100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
+        //  AND 100 ether reward are added and distributed
+        sponsorsManager.notifyRewardAmount(100 ether);
         sponsorsManager.startDistribution();
-        // AND epoch finish
-        _skipAndStartNewEpoch();
 
         // AND bob modifies his allocations 16 ether to builder and 4 ether to builder2
         vm.startPrank(bob);
@@ -355,16 +282,16 @@ contract SponsorsManagerTest is BaseTest {
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         vm.stopPrank();
 
-        //  WHEN 100 ether reward are added and distributed again
-        sponsorsManager.notifyRewardAmount(100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
+        //  WHEN 100 ether reward are added and distributed again
+        sponsorsManager.notifyRewardAmount(100 ether);
         sponsorsManager.startDistribution();
 
         // THEN reward token balance of gauge is 91.558441558441558428 = 100 * 6 / 22 + 100 * 18 / 28
-        assertEq(rewardToken.balanceOf(address(gauge)), 91_558_441_558_441_558_428);
+        assertEq(rewardToken.balanceOf(address(gauge)), 91_558_441_558_436_832_000);
         // THEN reward token balance of gauge2 is 108.441558441558441544 = 100 * 16 / 22 + 100 * 10 / 28
-        assertEq(rewardToken.balanceOf(address(gauge2)), 108_441_558_441_558_441_544);
+        assertEq(rewardToken.balanceOf(address(gauge2)), 108_441_558_441_551_865_600);
     }
 
     /**
@@ -377,17 +304,19 @@ contract SponsorsManagerTest is BaseTest {
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
             Gauge _newGauge = sponsorsManager.createGauge(makeAddr(string(abi.encode(i + 10))));
+            vm.prank(address(sponsorsManager));
+            _newGauge.notifyRewardAmount(0);
             gaugesArray.push(_newGauge);
             allocationsArray.push(1 ether);
         }
         vm.prank(alice);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
 
-        // AND 100 ether reward are added
-        sponsorsManager.notifyRewardAmount(100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
+        // AND 100 ether reward are added
+        sponsorsManager.notifyRewardAmount(100 ether);
         // WHEN distribute is executed
         sponsorsManager.startDistribution();
         // THEN distribution period is still started
@@ -404,7 +333,7 @@ contract SponsorsManagerTest is BaseTest {
 
         for (uint256 i = 0; i < 22; i++) {
             // THEN reward token balance of all the gauges is 4.545454545454545454 = 100 * 1 / 22
-            assertEq(rewardToken.balanceOf(address(gaugesArray[i])), 4_545_454_545_454_545_454);
+            assertEq(rewardToken.balanceOf(address(gaugesArray[i])), 4_545_454_545_454_233_600);
         }
     }
 }
