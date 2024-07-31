@@ -55,7 +55,20 @@ abstract contract OutputWriter is Script {
         string memory deploymentContext = vm.envString("DEPLOYMENT_CONTEXT");
         string memory deploymentsRootDir = vm.envString("DEPLOYMENTS_DIR");
         _deploymentsDir = string.concat(root, "/", deploymentsRootDir, deploymentContext);
-        try vm.createDir(_deploymentsDir, true) { } catch (bytes memory) { }
+        try vm.createDir(_deploymentsDir, true) { }
+        catch (bytes memory revertMessage) {
+            assembly {
+                revertMessage := add(revertMessage, 0x04)
+            }
+            revert(
+                string.concat(
+                    "Failed to create directory at ",
+                    _deploymentsDir,
+                    " with message: ",
+                    abi.decode(revertMessage, (string))
+                )
+            );
+        }
 
         _outJsonFile = string.concat(_deploymentsDir, "/contract_addresses.json");
         try vm.readFile(_outJsonFile) returns (string memory) { }
