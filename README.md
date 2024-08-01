@@ -94,6 +94,10 @@ export RPC_KEY="someRandomJWTToken" # if any
 
 after changing these, the shell should remind you to re-run `direnv allow`, again. Do it even if it doesn't.
 
+If for development purposes you'd like to avoid using the deterministic deployer (CREATE2), so that your node doesn't
+need to be restarted every time you want to redeploy, you can use `NO_DD=true` environment variable to deploy using
+simple CREATE opcode (default if false, meaning it will use CREATE2).
+
 ## Features
 
 This project builds upon the frameworks and libraries mentioned above, so please consult their respective documentation
