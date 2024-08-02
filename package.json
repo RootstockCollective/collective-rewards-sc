@@ -48,6 +48,7 @@
   "scripts": {
     "clean": "rm -rf cache out cache_hardhat artifacts typechain-types",
     "compile": "forge compile --force && hardhat compile --force",
+    "deploy": "./script/deploy.sh",
     "lint": "bun run lint:sol && bun run lint:md && bun run lint:ts",
     "lint:sol": "solhint {script,src,test}/**/*.sol",
     "lint:md": "markdownlint-cli2 .",

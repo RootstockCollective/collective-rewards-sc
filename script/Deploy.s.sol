@@ -1,9 +1,57 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { BaseScript } from "./Base.s.sol";
+import { console } from "forge-std/src/console.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
+import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
+import { ChangeExecutor } from "src/governance/ChangeExecutor.sol";
+import { Deploy as ChangeExecutorDeployer } from "script/governance/ChangeExecutor.s.sol";
+import { SponsorsManager } from "src/SponsorsManager.sol";
+import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
+import { BuilderRegistry } from "src/BuilderRegistry.sol";
+import { Deploy as BuilderRegistryDeployer } from "script/BuilderRegistry.s.sol";
+import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
+import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
+import { RewardDistributor } from "src/RewardDistributor.sol";
+import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
 
-/// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
-contract Deploy is BaseScript {
-    function run() public broadcast { }
+contract Deploy is Broadcaster, OutputWriter {
+    address private _governorAddress;
+    address private _rewardTokenAddress;
+    address private _stakingTokenAddress;
+    address private _kycApproverAddress;
+    address private _foundationTreasuryAddress;
+
+    function setUp() public {
+        _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
+        _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
+        _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
+        _kycApproverAddress = vm.envAddress("KYC_APPROVER_ADDRESS");
+        _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
+
+        _outputWriterSetup();
+    }
+
+    function run() public {
+        GaugeFactory gaugeFactory = new GaugeFactoryDeployer().run();
+        save("GaugeFactory", address(gaugeFactory));
+
+        ChangeExecutor changeExecutor = new ChangeExecutorDeployer().run(_governorAddress);
+        save("ChangeExecutor", address(changeExecutor));
+
+        SponsorsManager sponsorManager = new SponsorsManagerDeployer().run(
+            _governorAddress, address(changeExecutor), _rewardTokenAddress, _stakingTokenAddress, address(gaugeFactory)
+        );
+        save("SponsorsManager", address(sponsorManager));
+
+        BuilderRegistry builderRegistry =
+            new BuilderRegistryDeployer().run(_governorAddress, address(changeExecutor), _kycApproverAddress);
+        save("BuilderRegistry", address(builderRegistry));
+
+        RewardDistributor rewardDistributor = new RewardDistributorDeployer().run(
+            _foundationTreasuryAddress, _rewardTokenAddress, address(sponsorManager)
+        );
+        save("RewardDistributor", address(rewardDistributor));
+    }
 }

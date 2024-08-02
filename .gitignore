@@ -1,6 +1,7 @@
 # directories
 coverage
 node_modules
+.direnv
 
 # foundry
 cache
@@ -18,6 +19,7 @@ lcov.info
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+.chain_id
 
 # broadcasts
 !broadcast
@@ -25,8 +27,13 @@ broadcast/*
 broadcast/*/31337/
 broadcast/*/33/
 
-node_modules
+# deployments
+deployments/regtest/*
+deployments/devnet/*
+
+# config
 .env
+.env.33
 
 # Hardhat files
 /cache_hardhat

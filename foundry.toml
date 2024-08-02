@@ -1,35 +1,40 @@
 # Full reference https://github.com/foundry-rs/foundry/tree/master/crates/config
 
 [profile.default]
-  auto_detect_solc = false
-  block_timestamp = 1_680_220_800 # March 31, 2023 at 00:00 GMT
-  bytecode_hash = "none"
-  evm_version = "london"
-  fuzz = { runs = 1_000 }
-  gas_reports = ["*"]
-  optimizer = true
-  optimizer_runs = 10_000
-  out = "out"
-  script = "script"
-  solc = "0.8.20"
-  src = "src"
-  test = "test"
+auto_detect_solc = false
+block_timestamp = 1_680_220_800 # March 31, 2023 at 00:00 GMT
+bytecode_hash = "none"
+evm_version = "london"
+fuzz = { runs = 1_000 }
+gas_reports = ["*"]
+optimizer = true
+optimizer_runs = 10_000
+out = "out"
+script = "script"
+solc = "0.8.20"
+src = "src"
+test = "test"
+extra_output = ['devdoc', 'userdoc', 'metadata', 'storageLayout']
+build_info = true
+ffi = true # TODO: should we disable this for some envs to prevent arbitrary code execution?
+fs_permissions = [
+  { access = "read", path = "./out"},
+  { access = "read-write", path = "./deployments"}
+]
 
 [profile.ci]
-  fuzz = { runs = 10_000 }
-  verbosity = 4
-
-[etherscan]
+fuzz = { runs = 10_000 }
+verbosity = 4
 
 [fmt]
-  bracket_spacing = true
-  int_types = "long"
-  line_length = 120
-  multiline_func_header = "all"
-  number_underscore = "thousands"
-  quote_style = "double"
-  tab_width = 4
-  wrap_comments = true
+bracket_spacing = true
+int_types = "long"
+line_length = 120
+multiline_func_header = "all"
+number_underscore = "thousands"
+quote_style = "double"
+tab_width = 4
+wrap_comments = true
 
 [rpc_endpoints]
-  localhost = "http://localhost:8545"
+localhost = "http://localhost:4444"
