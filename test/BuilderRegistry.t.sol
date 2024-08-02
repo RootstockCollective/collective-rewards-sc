@@ -120,9 +120,6 @@ contract BuilderRegistryTest is BaseTest {
         vm.startPrank(kycApprover);
         builderRegistry.activateBuilder(builder, builder, 0);
 
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
         // WHEN calls whitelistBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
@@ -140,9 +137,6 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN a builder not in KYCApproved state
         _whitelistBuilder(builder);
 
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
         // WHEN tries to whitelistBuilder
         //  THEN tx reverts because is not the required state
         vm.expectRevert(
@@ -158,9 +152,6 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN  a Whitelisted builder
         _whitelistBuilder(builder);
 
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
         // WHEN calls pauseBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
@@ -175,9 +166,6 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: pauseBuilder should reverts if the state is not Whitelisted
      */
     function test_PauseBuilderWrongStatus() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
         // WHEN tries to pauseBuilder
         //  THEN tx reverts because is not the required state
         vm.expectRevert(
@@ -195,9 +183,6 @@ contract BuilderRegistryTest is BaseTest {
         vm.startPrank(builder);
         builderRegistry.revokeBuilder(builder);
 
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
         // WHEN calls permitBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
@@ -212,9 +197,6 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: permitBuilder should reverts if the state is not Revoked
      */
     function test_PermitBuilderWrongStatus() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
         // WHEN tries to permitBuilder
         //  THEN tx reverts because is not the required state
         vm.expectRevert(
@@ -265,9 +247,6 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN  a Whitelisted builder
         _whitelistBuilder(builder);
 
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
         // GIVEN builder.builderKickback is 0
         assertEq(builderRegistry.getBuilderKickback(builder), 0);
 
@@ -285,9 +264,6 @@ contract BuilderRegistryTest is BaseTest {
      * SCENARIO: setBuilderKickback should reverts if the state is not Whitelisted
      */
     function test_SetBuilderKickbackWrongStatus() public {
-        // GIVEN a Governor
-        vm.startPrank(governor);
-
         // WHEN tries to setBuilderKickback
         //  THEN tx reverts because is not the required state
         vm.expectRevert(
@@ -302,9 +278,6 @@ contract BuilderRegistryTest is BaseTest {
     function test_SetBuilderKickbackInvalidBuilderKickback() public {
         // GIVEN  a Whitelisted builder
         _whitelistBuilder(builder);
-
-        // GIVEN a Governor
-        vm.startPrank(governor);
 
         // WHEN tries to setBuilderKickback
         //  THEN tx reverts because is not a valid kickback
