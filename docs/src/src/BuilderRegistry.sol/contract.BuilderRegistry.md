@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1c2f800a06b2c84c125a87e09d560c971ffa9852/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1dbf2ba5f97fe9f7eaabffcbdae37fcf6d9703c7/src/BuilderRegistry.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md), Ownable2Step
 
@@ -227,9 +227,9 @@ function getBuilderKickback(address builder_) public view returns (uint256);
 
 **Parameters**
 
-| Name       | Type      | Description           |
-| ---------- | --------- | --------------------- |
-| `builder_` | `address` | address of thebuilder |
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
 ### applyBuilderKickback
 

@@ -1,6 +1,6 @@
 # RewardDistributor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1c2f800a06b2c84c125a87e09d560c971ffa9852/src/RewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1dbf2ba5f97fe9f7eaabffcbdae37fcf6d9703c7/src/RewardDistributor.sol)
 
 Accumulates all the rewards to be distributed for each epoch
 

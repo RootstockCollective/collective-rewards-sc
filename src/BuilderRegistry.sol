@@ -194,7 +194,7 @@ contract BuilderRegistry is Governed, Ownable2Step {
 
     /**
      * @notice get builder kickback
-     * @param builder_ address of thebuilder
+     * @param builder_ address of the builder
      */
     function getBuilderKickback(address builder_) public view returns (uint256) {
         return builderKickback[builder_];
