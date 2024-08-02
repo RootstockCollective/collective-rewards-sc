@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
 import { Script, console } from "forge-std/src/Script.sol";
@@ -78,6 +78,9 @@ abstract contract OutputWriter is Script {
         console.log("Storing deployment data in %s", _outJsonFile);
 
         uint256 chainId = vm.envOr("CHAIN_ID", block.chainid);
+        require(
+            chainId == block.chainid, "Please set a CHAIN_ID env var that matches the network set as DEPLOYMENT_CONTEXT"
+        );
         _deployPath = string.concat(root, "/broadcast/Deploy.s.sol/", vm.toString(chainId), "/run-latest.json");
     }
 
