@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/50ee7a6f2d0b293cd774e2821ac7baccb8158e5b/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8d997aa4a4ea93bf6baa71a4d68fb991aefa6dc7/src/SponsorsManager.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
@@ -34,6 +34,14 @@ gauge factory contract address
 
 ```solidity
 GaugeFactory public immutable gaugeFactory;
+```
+
+### builderRegistry
+
+builder registry contract address
+
+```solidity
+BuilderRegistry public immutable builderRegistry;
 ```
 
 ### totalAllocation
@@ -108,16 +116,30 @@ modifier notInDistributionPeriod();
 
 ### constructor
 
+constructor initializes base roles to manipulate the registry
+
 ```solidity
 constructor(
     address governor_,
     address changeExecutor_,
     address rewardToken_,
     address stakingToken_,
-    address gaugeFactory_
+    address gaugeFactory_,
+    address builderRegistry_
 )
     Governed(governor_, changeExecutor_);
 ```
+
+**Parameters**
+
+| Name               | Type      | Description                                         |
+| ------------------ | --------- | --------------------------------------------------- |
+| `governor_`        | `address` | See Governed doc                                    |
+| `changeExecutor_`  | `address` | See Governed doc                                    |
+| `rewardToken_`     | `address` | address of the token rewarded to builder and voters |
+| `stakingToken_`    | `address` | address of the staking token for builder and voters |
+| `gaugeFactory_`    | `address` | address of the GaugeFactory contract                |
+| `builderRegistry_` | `address` | address of the BuilderRegistry contract             |
 
 ### createGauge
 
@@ -210,12 +232,12 @@ distribution are completed, ending the distribution period and voting restrictio
 function distribute() public;
 ```
 
-### claimRewards
+### claimSponsorRewards
 
-claims rewards form a batch of gauges
+claims sponsor rewards from a batch of gauges
 
 ```solidity
-function claimRewards(Gauge[] memory gauges_) external;
+function claimSponsorRewards(Gauge[] memory gauges_) external;
 ```
 
 **Parameters**
@@ -283,14 +305,16 @@ function _updateAllocation(
 internal function used to distribute reward tokens to a gauge
 
 ```solidity
-function _distribute(Gauge gauge_) internal;
+function _distribute(Gauge gauge_, uint256 rewardsPerShare_, BuilderRegistry builderRegistry_) internal;
 ```
 
 **Parameters**
 
-| Name     | Type    | Description                        |
-| -------- | ------- | ---------------------------------- |
-| `gauge_` | `Gauge` | address of the gauge to distribute |
+| Name               | Type              | Description                        |
+| ------------------ | ----------------- | ---------------------------------- |
+| `gauge_`           | `Gauge`           | address of the gauge to distribute |
+| `rewardsPerShare_` | `uint256`         | cached reward per share            |
+| `builderRegistry_` | `BuilderRegistry` | cached builder registry            |
 
 ## Events
 

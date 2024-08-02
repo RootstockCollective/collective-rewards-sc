@@ -19,7 +19,18 @@ contract Deploy is Broadcaster {
         if (gaugeFactoryAddress == address(0)) {
             gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
-        return run(governorAddress, changeExecutorAddress, rewardTokenAddress, stakingTokenAddress, gaugeFactoryAddress);
+        address builderRegistryAddress = vm.envOr("BuilderRegistry", address(0));
+        if (builderRegistryAddress == address(0)) {
+            builderRegistryAddress = vm.envAddress("BUILDER_REGISTRY_ADDRESS");
+        }
+        return run(
+            governorAddress,
+            changeExecutorAddress,
+            rewardTokenAddress,
+            stakingTokenAddress,
+            gaugeFactoryAddress,
+            builderRegistryAddress
+        );
     }
 
     function run(
@@ -27,7 +38,8 @@ contract Deploy is Broadcaster {
         address changeExecutor_,
         address rewardToken_,
         address stakingToken_,
-        address gaugeFactory_
+        address gaugeFactory_,
+        address builderRegistry_
     )
         public
         broadcast
@@ -38,11 +50,15 @@ contract Deploy is Broadcaster {
         require(rewardToken_ != address(0), "Reward token address cannot be empty");
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
         require(gaugeFactory_ != address(0), "Gauge factory address cannot be empty");
+        require(builderRegistry_ != address(0), "Gauge factory address cannot be empty");
 
         if (vm.envOr("NO_DD", false)) {
-            return new SponsorsManager(governor_, changeExecutor_, rewardToken_, stakingToken_, gaugeFactory_);
+            return new SponsorsManager(
+                governor_, changeExecutor_, rewardToken_, stakingToken_, gaugeFactory_, builderRegistry_
+            );
         }
-        return
-            new SponsorsManager{ salt: _salt }(governor_, changeExecutor_, rewardToken_, stakingToken_, gaugeFactory_);
+        return new SponsorsManager{ salt: _salt }(
+            governor_, changeExecutor_, rewardToken_, stakingToken_, gaugeFactory_, builderRegistry_
+        );
     }
 }

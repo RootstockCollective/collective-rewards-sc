@@ -7,6 +7,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeFactory } from "./gauge/GaugeFactory.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { Governed } from "./governance/Governed.sol";
+import { BuilderRegistry } from "./BuilderRegistry.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { EpochLib } from "./libraries/EpochLib.sol";
 
@@ -56,6 +57,8 @@ contract SponsorsManager is Governed {
     IERC20 public immutable rewardToken;
     /// @notice gauge factory contract address
     GaugeFactory public immutable gaugeFactory;
+    /// @notice builder registry contract address
+    BuilderRegistry public immutable builderRegistry;
     /// @notice total allocation on all the gauges
     uint256 public totalAllocation;
     /// @notice rewards to distribute per sponsor emission [PREC]
@@ -72,18 +75,29 @@ contract SponsorsManager is Governed {
     /// @notice total amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public sponsorTotalAllocation;
 
+    /**
+     * @notice constructor initializes base roles to manipulate the registry
+     * @param governor_ See Governed doc
+     * @param changeExecutor_ See Governed doc
+     * @param rewardToken_ address of the token rewarded to builder and voters
+     * @param stakingToken_ address of the staking token for builder and voters
+     * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param builderRegistry_ address of the BuilderRegistry contract
+     */
     constructor(
         address governor_,
         address changeExecutor_,
         address rewardToken_,
         address stakingToken_,
-        address gaugeFactory_
+        address gaugeFactory_,
+        address builderRegistry_
     )
         Governed(governor_, changeExecutor_)
     {
         rewardToken = IERC20(rewardToken_);
         stakingToken = IERC20(stakingToken_);
         gaugeFactory = GaugeFactory(gaugeFactory_);
+        builderRegistry = BuilderRegistry(builderRegistry_);
     }
 
     // -----------------------------
@@ -180,10 +194,12 @@ contract SponsorsManager is Governed {
         Gauge[] memory _gauges = gauges;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
         uint256 _lastDistribution = Math.min(_gauges.length, _gaugeIndex + MAX_DISTRIBUTIONS_PER_BATCH);
+        uint256 _rewardsPerShare = rewardsPerShare;
+        BuilderRegistry _builderRegistry = builderRegistry;
 
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
-            _distribute(_gauges[_gaugeIndex]);
+            _distribute(_gauges[_gaugeIndex], _rewardsPerShare, _builderRegistry);
             _gaugeIndex = UtilsLib.unchecked_inc(_gaugeIndex);
         }
         // all the gauges were distributed, so distribution period is finished
@@ -198,13 +214,13 @@ contract SponsorsManager is Governed {
     }
 
     /**
-     * @notice claims rewards form a batch of gauges
+     * @notice claims sponsor rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
      */
-    function claimRewards(Gauge[] memory gauges_) external {
+    function claimSponsorRewards(Gauge[] memory gauges_) external {
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
-            gauges_[i].getSponsorReward(msg.sender);
+            gauges_[i].claimSponsorReward(msg.sender);
         }
     }
 
@@ -266,12 +282,17 @@ contract SponsorsManager is Governed {
     /**
      * @notice internal function used to distribute reward tokens to a gauge
      * @param gauge_ address of the gauge to distribute
+     * @param rewardsPerShare_ cached reward per share
+     * @param builderRegistry_ cached builder registry
      */
-    function _distribute(Gauge gauge_) internal {
-        uint256 _reward = UtilsLib._mulPrec(gauge_.totalAllocation(), rewardsPerShare);
+    function _distribute(Gauge gauge_, uint256 rewardsPerShare_, BuilderRegistry builderRegistry_) internal {
+        uint256 _reward = UtilsLib._mulPrec(gauge_.totalAllocation(), rewardsPerShare_);
+        uint256 _sponsorsAmount = builderRegistry_.applyBuilderKickback(gauge_.builder(), _reward);
+        // [N] = [N] - [N]
+        uint256 _builderAmount = _reward - _sponsorsAmount;
         if (_reward > 0) {
             rewardToken.approve(address(gauge_), _reward);
-            gauge_.notifyRewardAmount(_reward);
+            gauge_.notifyRewardAmount(_builderAmount, _sponsorsAmount);
             emit DistributeReward(msg.sender, address(gauge_), _reward);
         }
     }

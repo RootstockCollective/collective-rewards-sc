@@ -38,6 +38,7 @@ contract BaseTest is Test {
     address internal bob = makeAddr("bob");
     address internal builder = makeAddr("builder");
     address internal builder2 = makeAddr("builder2");
+    address internal kycApprover = makeAddr("kycApprover");
     address internal foundation = makeAddr("foundation");
 
     function setUp() public {
@@ -45,10 +46,15 @@ contract BaseTest is Test {
         MockTokenDeployer mockTokenDeployer = new MockTokenDeployer();
         stakingToken = mockTokenDeployer.run(0);
         rewardToken = mockTokenDeployer.run(1);
-        builderRegistry = new BuilderRegistryDeployer().run(governor, address(changeExecutorMock), foundation);
+        builderRegistry = new BuilderRegistryDeployer().run(governor, address(changeExecutorMock), kycApprover);
         gaugeFactory = new GaugeFactoryDeployer().run();
         sponsorsManager = new SponsorsManagerDeployer().run(
-            governor, address(changeExecutorMock), address(rewardToken), address(stakingToken), address(gaugeFactory)
+            governor,
+            address(changeExecutorMock),
+            address(rewardToken),
+            address(stakingToken),
+            address(gaugeFactory),
+            address(builderRegistry)
         );
         rewardDistributor =
             new RewardDistributorDeployer().run(foundation, address(rewardToken), address(sponsorsManager));

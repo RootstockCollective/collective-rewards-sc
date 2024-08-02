@@ -2,7 +2,6 @@
 pragma solidity 0.8.20;
 
 import { ChangeExecutor } from "../../src/governance/ChangeExecutor.sol";
-import { IChangeContract } from "../../src/interfaces/IChangeContract.sol";
 
 /**
  * @title ChangeExecutorMock

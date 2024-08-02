@@ -326,7 +326,7 @@ contract SponsorsManagerTest is BaseTest {
      * SCENARIO: distribute on 2 consecutive epoch with different allocations
      */
     function test_DistributeTwice() public {
-        // GIVEN a SponsorManager contract
+        // GIVEN a sponsor alice
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
@@ -371,7 +371,7 @@ contract SponsorsManagerTest is BaseTest {
      * SCENARIO: distribution occurs on different transactions using pagination
      */
     function test_DistributeUsingPagination() public {
-        // GIVEN a SponsorManager contract
+        // GIVEN a sponsor alice
         allocationsArray[0] = 1 ether;
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
@@ -406,5 +406,41 @@ contract SponsorsManagerTest is BaseTest {
             // THEN reward token balance of all the gauges is 4.545454545454545454 = 100 * 1 / 22
             assertEq(rewardToken.balanceOf(address(gaugesArray[i])), 4_545_454_545_454_545_454);
         }
+    }
+
+    /**
+     * SCENARIO: alice claims all the rewards in a single tx
+     */
+    function test_ClaimSponsorRewards() public {
+        // GIVEN builder kickback percentage is 100%
+        vm.startPrank(kycApprover);
+        builderRegistry.activateBuilder(builder, builder, 1 ether);
+        builderRegistry.activateBuilder(builder2, builder2, 1 ether);
+
+        // GIVEN a sponsor alice
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        // AND alice allocates 2 ether to builder and 6 ether to builder2
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 ether reward are added
+        sponsorsManager.notifyRewardAmount(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        // AND distribute is executed
+        sponsorsManager.startDistribution();
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // WHEN alice claim rewards
+        vm.prank(alice);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is all of the distributed amount
+        assertEq(rewardToken.balanceOf(alice), 99_999_999_999_999_999_992);
     }
 }

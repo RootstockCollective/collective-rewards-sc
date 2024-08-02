@@ -1,12 +1,18 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/50ee7a6f2d0b293cd774e2821ac7baccb8158e5b/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8d997aa4a4ea93bf6baa71a4d68fb991aefa6dc7/src/BuilderRegistry.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md), Ownable2Step
 
 Keeps registers of the builders
 
 ## State Variables
+
+### MAX_KICKBACK
+
+```solidity
+uint256 internal constant MAX_KICKBACK = UtilsLib.PRECISION;
+```
 
 ### builderState
 
@@ -24,12 +30,12 @@ map of builders reward receiver
 mapping(address builder => address rewardReceiver) public builderRewardReceiver;
 ```
 
-### builderKickbackPct
+### builderKickback
 
-map of builders kickback percentage
+map of builders kickback
 
 ```solidity
-mapping(address builder => uint256 percentage) public builderKickbackPct;
+mapping(address builder => uint256 percentage) public builderKickback;
 ```
 
 ## Functions
@@ -72,7 +78,7 @@ _reverts if is not called by the owner address reverts if builder state is not p
 function activateBuilder(
     address builder_,
     address rewardReceiver_,
-    uint256 builderKickbackPct_
+    uint256 builderKickback_
 )
     external
     onlyOwner
@@ -81,11 +87,11 @@ function activateBuilder(
 
 **Parameters**
 
-| Name                  | Type      | Description                            |
-| --------------------- | --------- | -------------------------------------- |
-| `builder_`            | `address` | address of builder                     |
-| `rewardReceiver_`     | `address` | address of the builder reward receiver |
-| `builderKickbackPct_` | `uint256` | kickback percentage(100% == 1 ether)   |
+| Name               | Type      | Description                            |
+| ------------------ | --------- | -------------------------------------- |
+| `builder_`         | `address` | address of the builder                 |
+| `rewardReceiver_`  | `address` | address of the builder reward receiver |
+| `builderKickback_` | `uint256` | kickback(100% == 1 ether)              |
 
 ### whitelistBuilder
 
@@ -102,9 +108,9 @@ function whitelistBuilder(address builder_)
 
 **Parameters**
 
-| Name       | Type      | Description        |
-| ---------- | --------- | ------------------ |
-| `builder_` | `address` | address of builder |
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
 ### pauseBuilder
 
@@ -121,9 +127,9 @@ function pauseBuilder(address builder_)
 
 **Parameters**
 
-| Name       | Type      | Description        |
-| ---------- | --------- | ------------------ |
-| `builder_` | `address` | address of builder |
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
 ### permitBuilder
 
@@ -140,9 +146,9 @@ function permitBuilder(address builder_)
 
 **Parameters**
 
-| Name       | Type      | Description        |
-| ---------- | --------- | ------------------ |
-| `builder_` | `address` | address of builder |
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
 ### revokeBuilder
 
@@ -156,20 +162,20 @@ function revokeBuilder(address builder_) external atState(builder_, BuilderState
 
 **Parameters**
 
-| Name       | Type      | Description        |
-| ---------- | --------- | ------------------ |
-| `builder_` | `address` | address of builder |
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
-### setBuilderKickbackPct
+### setBuilderKickback
 
-set builder kickback percentage
+set builder kickback
 
 _reverts if is not called by the governor address or authorized changer reverts if builder state is not Whitelisted_
 
 ```solidity
-function setBuilderKickbackPct(
+function setBuilderKickback(
     address builder_,
-    uint256 builderKickbackPct_
+    uint256 builderKickback_
 )
     external
     onlyGovernorOrAuthorizedChanger
@@ -178,10 +184,10 @@ function setBuilderKickbackPct(
 
 **Parameters**
 
-| Name                  | Type      | Description                          |
-| --------------------- | --------- | ------------------------------------ |
-| `builder_`            | `address` | address of builder                   |
-| `builderKickbackPct_` | `uint256` | kickback percentage(100% == 1 ether) |
+| Name               | Type      | Description               |
+| ------------------ | --------- | ------------------------- |
+| `builder_`         | `address` | address of the builder    |
+| `builderKickback_` | `uint256` | kickback(100% == 1 ether) |
 
 ### getState
 
@@ -193,9 +199,9 @@ function getState(address builder_) public view returns (BuilderState);
 
 **Parameters**
 
-| Name       | Type      | Description        |
-| ---------- | --------- | ------------------ |
-| `builder_` | `address` | address of builder |
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
 ### getRewardReceiver
 
@@ -207,28 +213,49 @@ function getRewardReceiver(address builder_) public view returns (address);
 
 **Parameters**
 
-| Name       | Type      | Description        |
-| ---------- | --------- | ------------------ |
-| `builder_` | `address` | address of builder |
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
-### getBuilderKickbackPct
+### getBuilderKickback
 
-get builder kickback percentage
+get builder kickback
 
 ```solidity
-function getBuilderKickbackPct(address builder_) public view returns (uint256);
+function getBuilderKickback(address builder_) public view returns (uint256);
 ```
 
 **Parameters**
 
-| Name       | Type      | Description        |
-| ---------- | --------- | ------------------ |
-| `builder_` | `address` | address of builder |
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
-### \_setBuilderKickbackPct
+### applyBuilderKickback
+
+apply builder kickback
 
 ```solidity
-function _setBuilderKickbackPct(address builder_, uint256 builderKickbackPct_) internal;
+function applyBuilderKickback(address builder_, uint256 amount_) public view returns (uint256);
+```
+
+**Parameters**
+
+| Name       | Type      | Description                  |
+| ---------- | --------- | ---------------------------- |
+| `builder_` | `address` | address of the builder       |
+| `amount_`  | `uint256` | amount to apply the kickback |
+
+### \_setBuilderKickback
+
+```solidity
+function _setBuilderKickback(address builder_, uint256 builderKickback_) internal;
+```
+
+### \_updateState
+
+```solidity
+function _updateState(address builder_, BuilderState newState_) internal;
 ```
 
 ## Events
@@ -239,10 +266,10 @@ function _setBuilderKickbackPct(address builder_, uint256 builderKickbackPct_) i
 event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
 ```
 
-### BuilderKickbackPctUpdate
+### BuilderKickbackUpdate
 
 ```solidity
-event BuilderKickbackPctUpdate(address indexed builder_, uint256 builderKickbackPct_);
+event BuilderKickbackUpdate(address indexed builder_, uint256 builderKickback_);
 ```
 
 ## Errors
@@ -253,10 +280,10 @@ event BuilderKickbackPctUpdate(address indexed builder_, uint256 builderKickback
 error NotAuthorized();
 ```
 
-### InvalidBuilderKickbackPct
+### InvalidBuilderKickback
 
 ```solidity
-error InvalidBuilderKickbackPct();
+error InvalidBuilderKickback();
 ```
 
 ### RequiredState

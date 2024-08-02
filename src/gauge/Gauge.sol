@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SponsorsManager } from "../SponsorsManager.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EpochLib } from "../libraries/EpochLib.sol";
 
@@ -18,21 +19,20 @@ contract Gauge {
     // -----------------------------
     error NotAuthorized();
     error NotSponsorsManager();
-    error ZeroRewardRate();
-    error RewardRateTooHigh();
 
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
     event SponsorRewardsClaimed(address indexed sponsor_, uint256 amount_);
+    event BuilderRewardsClaimed(address indexed builder_, uint256 amount_);
     event NewAllocation(address indexed sponsor_, uint256 allocation_);
-    event NotifyReward(uint256 amount_);
+    event NotifyReward(uint256 builderAmount_, uint256 sponsorsAmount_);
 
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlySponsorsManager() {
-        if (msg.sender != sponsorsManager) revert NotSponsorsManager();
+        if (msg.sender != address(sponsorsManager)) revert NotSponsorsManager();
         _;
     }
 
@@ -45,7 +45,7 @@ contract Gauge {
     /// @notice address of the token rewarded to builder and voters
     IERC20 public immutable rewardToken;
     /// @notice SponsorsManager contract address
-    address public immutable sponsorsManager;
+    SponsorsManager public immutable sponsorsManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
     /// @notice current reward rate of rewardToken to distribute per second [PREC]
@@ -58,6 +58,8 @@ contract Gauge {
     uint256 public lastUpdateTime;
     /// @notice timestamp end of current rewards period
     uint256 public periodFinish;
+    /// @notice amount of unclaimed token reward earned for the builder
+    uint256 public builderRewards;
 
     /// @notice amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public allocationOf;
@@ -75,7 +77,7 @@ contract Gauge {
     constructor(address builder_, address rewardToken_, address sponsorsManager_) {
         builder = builder_;
         rewardToken = IERC20(rewardToken_);
-        sponsorsManager = sponsorsManager_;
+        sponsorsManager = SponsorsManager(sponsorsManager_);
     }
 
     // -----------------------------
@@ -116,12 +118,12 @@ contract Gauge {
     }
 
     /**
-     * @notice gets rewards for an `sponsor_` address
+     * @notice claim rewards for a `sponsor_` address
      * @dev reverts if is not called by the `sponsor_` or the sponsorsManager
      * @param sponsor_ address who receives the rewards
      */
-    function getSponsorReward(address sponsor_) external {
-        if (msg.sender != sponsor_ && msg.sender != sponsorsManager) revert NotAuthorized();
+    function claimSponsorReward(address sponsor_) external {
+        if (msg.sender != sponsor_ && msg.sender != address(sponsorsManager)) revert NotAuthorized();
 
         _updateRewards(sponsor_);
 
@@ -134,7 +136,25 @@ contract Gauge {
     }
 
     /**
+     * @notice claim rewards for a builder
+     * @dev reverts if is not called by the builder or reward receiver
+     * @dev rewards are transferred to the builder reward receiver
+     */
+    function claimBuilderReward(address builder_) external {
+        address _rewardReceiver = sponsorsManager.builderRegistry().getRewardReceiver(builder_);
+        if (msg.sender != builder_ && msg.sender != _rewardReceiver) revert NotAuthorized();
+
+        uint256 reward = builderRewards;
+        if (reward > 0) {
+            builderRewards = 0;
+            SafeERC20.safeTransfer(rewardToken, _rewardReceiver, reward);
+            emit BuilderRewardsClaimed(_rewardReceiver, builderRewards);
+        }
+    }
+
+    /**
      * @notice gets `sponsor_` rewards missing to claim
+     * @param sponsor_ address who earned the rewards
      */
     function earned(address sponsor_) public view returns (uint256) {
         // [N] = ([N] * ([PREC] - [PREC]) / [PREC])
@@ -188,9 +208,10 @@ contract Gauge {
     /**
      * @notice called on the reward distribution. Transfers reward tokens from sponsorManger to this contract
      * @dev reverts if caller si not the sponsorsManager contract
-     * @param amount_ amount of reward tokens to distribute
+     * @param builderAmount_ amount of rewards for the builder
+     * @param sponsorsAmount_ amount of rewards for the sponsors
      */
-    function notifyRewardAmount(uint256 amount_) external onlySponsorsManager {
+    function notifyRewardAmount(uint256 builderAmount_, uint256 sponsorsAmount_) external onlySponsorsManager {
         // update rewardPerToken storage
         rewardPerTokenStored = rewardPerToken();
         uint256 _timeUntilNext = EpochLib.epochNext(block.timestamp) - block.timestamp;
@@ -206,9 +227,9 @@ contract Gauge {
         }
 
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
-        _rewardRate = (amount_ * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
+        _rewardRate = (sponsorsAmount_ * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
 
-        if (_rewardRate == 0) revert ZeroRewardRate();
+        builderRewards += builderAmount_;
 
         lastUpdateTime = block.timestamp;
         _periodFinish = block.timestamp + _timeUntilNext;
@@ -218,17 +239,9 @@ contract Gauge {
         periodFinish = _periodFinish;
         rewardRate = _rewardRate;
 
-        SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), amount_);
+        SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), builderAmount_ + sponsorsAmount_);
 
-        // Ensure the provided reward amount is not more than the balance in the contract.
-        // This keeps the reward rate in the right range, preventing overflows due to
-        // very high values of rewardRate in the earned and rewardsPerToken functions;
-        // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-        // [PREC] = [N] * [PREC] / [N]
-        uint256 _balanceRate = UtilsLib._divPrec(rewardToken.balanceOf(address(this)), _timeUntilNext);
-        if (rewardRate > _balanceRate) revert RewardRateTooHigh();
-
-        emit NotifyReward(amount_);
+        emit NotifyReward(builderAmount_, sponsorsAmount_);
     }
 
     // -----------------------------
