@@ -11,7 +11,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * @notice Keeps registers of the builders
  */
 contract BuilderRegistry is Governed, Ownable2Step {
-    uint256 internal constant MAX_KICKBACK = 1 ether;
+    uint256 internal constant MAX_KICKBACK = UtilsLib.PRECISION;
 
     // -----------------------------
     // ------- Custom Errors -------
