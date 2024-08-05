@@ -110,7 +110,7 @@ contract SponsorsManager is Governed {
      * @return gauge gauge contract
      */
     function createGauge(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge) {
-        // TODO: this function should revert if is not called by governance once the builder is whitelisted
+        // TODO: only if the builder is whitelisted?
         if (address(builderToGauge[builder_]) != address(0)) revert GaugeExists();
         gauge = gaugeFactory.createGauge(builder_, address(rewardToken));
         builderToGauge[builder_] = gauge;
