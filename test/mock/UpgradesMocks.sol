@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import { SponsorsManager } from "../../src/SponsorsManager.sol";
 import { RewardDistributor } from "../../src/RewardDistributor.sol";
 import { ChangeExecutor } from "../../src/governance/ChangeExecutor.sol";
+import { SimplifiedRewardDistributor } from "../../src/mvp/SimplifiedRewardDistributor.sol";
 
 /**
  * @title UpgradeableMock
@@ -44,6 +45,16 @@ contract RewardDistributorUpgradeMock is RewardDistributor, UpgradeableMock {
  * @dev Only for upgradeability testing purposes. Extends ChangeExecutor adding a new variable.
  */
 contract ChangeExecutorUpgradeMock is ChangeExecutor, UpgradeableMock {
+    function getCustomMockValue() external view override returns (uint256) {
+        return newVariable + uint256(uint160(governor));
+    }
+}
+
+/**
+ * @title SimplifiedRewardDistributorUpgradeMock
+ * @dev Only for upgradeability testing purposes. Extends SimplifiedRewardDistributor adding a new variable.
+ */
+contract SimplifiedRewardDistributorUpgradeMock is SimplifiedRewardDistributor, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
         return newVariable + uint256(uint160(governor));
     }
