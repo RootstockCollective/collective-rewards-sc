@@ -37,25 +37,26 @@ contract Deploy is Broadcaster, OutputWriter {
         GaugeFactory gaugeFactory = new GaugeFactoryDeployer().run();
         save("GaugeFactory", address(gaugeFactory));
 
-        ChangeExecutor changeExecutor = new ChangeExecutorDeployer().run(_governorAddress);
-        save("ChangeExecutor", address(changeExecutor));
+        (ChangeExecutor changeExecutor, address changeExecutorProxy) =
+            new ChangeExecutorDeployer().run(_governorAddress);
+        saveWithProxy("ChangeExecutor", address(changeExecutor), changeExecutorProxy);
 
-        BuilderRegistry builderRegistry =
+        (BuilderRegistry builderRegistry, address builderRegistryProxy) =
             new BuilderRegistryDeployer().run(address(changeExecutor), _kycApproverAddress);
-        save("BuilderRegistry", address(builderRegistry));
+        saveWithProxy("BuilderRegistry", address(builderRegistry), builderRegistryProxy);
 
-        SponsorsManager sponsorManager = new SponsorsManagerDeployer().run(
+        (SponsorsManager sponsorManager, address sponsorManagerProxy) = new SponsorsManagerDeployer().run(
             address(changeExecutor),
             _rewardTokenAddress,
             _stakingTokenAddress,
             address(gaugeFactory),
             address(builderRegistry)
         );
-        save("SponsorsManager", address(sponsorManager));
+        saveWithProxy("SponsorsManager", address(sponsorManager), sponsorManagerProxy);
 
-        RewardDistributor rewardDistributor = new RewardDistributorDeployer().run(
+        (RewardDistributor rewardDistributor, address rewardDistributorProxy) = new RewardDistributorDeployer().run(
             address(changeExecutor), _foundationTreasuryAddress, address(sponsorManager)
         );
-        save("RewardDistributor", address(rewardDistributor));
+        saveWithProxy("RewardDistributor", address(rewardDistributor), rewardDistributorProxy);
     }
 }

@@ -6,7 +6,7 @@ import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (RewardDistributor) {
+    function run() public returns (RewardDistributor, address) {
         address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
         if (changeExecutorAddress == address(0)) {
             changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
@@ -16,6 +16,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         if (sponsorsManagerAddress == address(0)) {
             sponsorsManagerAddress = vm.envAddress("SPONSORS_MANAGER_ADDRESS");
         }
+
         return run(changeExecutorAddress, foundationTreasuryAddress, sponsorsManagerAddress);
     }
 
@@ -26,7 +27,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
     )
         public
         broadcast
-        returns (RewardDistributor)
+        returns (RewardDistributor, address)
     {
         require(changeExecutor_ != address(0), "Change executor address cannot be empty");
         require(foundationTreasury_ != address(0), "Foundation Treasury address cannot be empty");
@@ -35,9 +36,15 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         string memory _contractName = "RewardDistributor.sol";
         bytes memory _initializerData =
             abi.encodeCall(RewardDistributor.initialize, (changeExecutor_, foundationTreasury_, sponsorsManager_));
+        address _implementation;
+        address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            return RewardDistributor(_deployUUPSProxy(_contractName, _initializerData));
+            (_implementation, _proxy) = _deployUUPSProxy(_contractName, _initializerData);
+
+            return (RewardDistributor(_implementation), _proxy);
         }
-        return RewardDistributor(_deployUUPSProxyDD(_contractName, _initializerData, _salt));
+        (_implementation, _proxy) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
+
+        return (RewardDistributor(_implementation), _proxy);
     }
 }

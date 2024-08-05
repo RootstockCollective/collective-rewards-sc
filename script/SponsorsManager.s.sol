@@ -7,7 +7,7 @@ import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (SponsorsManager) {
+    function run() public returns (SponsorsManager, address) {
         address rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
@@ -22,6 +22,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         if (builderRegistryAddress == address(0)) {
             builderRegistryAddress = vm.envAddress("BUILDER_REGISTRY_ADDRESS");
         }
+
         return run(
             changeExecutorAddress, rewardTokenAddress, stakingTokenAddress, gaugeFactoryAddress, builderRegistryAddress
         );
@@ -36,7 +37,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
     )
         public
         broadcast
-        returns (SponsorsManager)
+        returns (SponsorsManager, address)
     {
         require(changeExecutor_ != address(0), "Change executor address cannot be empty");
         require(rewardToken_ != address(0), "Reward token address cannot be empty");
@@ -48,9 +49,15 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         bytes memory _initializerData = abi.encodeCall(
             SponsorsManager.initialize, (changeExecutor_, rewardToken_, stakingToken_, gaugeFactory_, builderRegistry_)
         );
+        address _implementation;
+        address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            return SponsorsManager(_deployUUPSProxy(_contractName, _initializerData));
+            (_implementation, _proxy) = _deployUUPSProxy(_contractName, _initializerData);
+
+            return (SponsorsManager(_implementation), _proxy);
         }
-        return SponsorsManager(_deployUUPSProxyDD(_contractName, _initializerData, _salt));
+        (_implementation, _proxy) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
+
+        return (SponsorsManager(_implementation), _proxy);
     }
 }

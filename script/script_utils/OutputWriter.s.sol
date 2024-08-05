@@ -34,8 +34,8 @@ abstract contract OutputWriter is Script {
     mapping(string name => Deployment deployment) internal _namedDeployments;
     /// @notice The same as `_namedDeployments` but as an array.
     Deployment[] internal _newDeployments;
-    /// @notice Error for when attempting to fetch a deployment and it does not exist
 
+    /// @notice Error for when attempting to fetch a deployment and it does not exist
     error DeploymentDoesNotExist(string);
     /// @notice Error for when trying to save an invalid deployment
     error InvalidDeployment(string);
@@ -375,8 +375,7 @@ abstract contract OutputWriter is Script {
         console.log("Created hard-hat deploy files");
     }
 
-    /// @notice Writes a deployment to disk as a temp deployment so that the
-    ///         hardhat deploy artifact can be generated afterwards.
+    /// @notice Writes a deployment to disk.
     /// @param contractName The name of the deployment.
     /// @param deployedAt The address of the deployment.
     function save(string memory contractName, address deployedAt) public {
@@ -391,5 +390,25 @@ abstract contract OutputWriter is Script {
         _namedDeployments[contractName] = deployment;
         _newDeployments.push(deployment);
         vm.writeJson({ json: stdJson.serialize("", contractName, deployedAt), path: _outJsonFile });
+    }
+
+    /// @notice Fetches a deployment by name.
+    /// @param contractName The name of the deployment.
+    /// @return The deployment.
+    function get(string memory contractName) public view returns (Deployment memory) {
+        Deployment memory deployment = _namedDeployments[contractName];
+        if (bytes(deployment.name).length == 0) {
+            revert DeploymentDoesNotExist(contractName);
+        }
+        return deployment;
+    }
+
+    /// @notice Writes a deployment and the updragable contract address to disk.
+    /// @param contractName The name of the deployment.
+    /// @param deployedAt The address of the deployment.
+    /// @param proxyAddress The address of the proxy contract.
+    function saveWithProxy(string memory contractName, address deployedAt, address proxyAddress) public {
+        save(contractName, deployedAt);
+        save(string.concat(contractName, "Proxy"), proxyAddress);
     }
 }
