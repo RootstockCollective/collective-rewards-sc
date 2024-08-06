@@ -1,8 +1,10 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8d997aa4a4ea93bf6baa71a4d68fb991aefa6dc7/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5faae52322bedd1d2c4eb8f24dbb918c0ac8fcbf/src/SponsorsManager.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
+
+Creates gauges, manages sponsors votes and distribute rewards
 
 ## State Variables
 
@@ -17,7 +19,7 @@ uint256 internal constant MAX_DISTRIBUTIONS_PER_BATCH = 20;
 address of the token used to stake
 
 ```solidity
-IERC20 public immutable stakingToken;
+IERC20 public stakingToken;
 ```
 
 ### rewardToken
@@ -25,7 +27,7 @@ IERC20 public immutable stakingToken;
 address of the token rewarded to builder and voters
 
 ```solidity
-IERC20 public immutable rewardToken;
+IERC20 public rewardToken;
 ```
 
 ### gaugeFactory
@@ -33,7 +35,7 @@ IERC20 public immutable rewardToken;
 gauge factory contract address
 
 ```solidity
-GaugeFactory public immutable gaugeFactory;
+GaugeFactory public gaugeFactory;
 ```
 
 ### builderRegistry
@@ -41,7 +43,7 @@ GaugeFactory public immutable gaugeFactory;
 builder registry contract address
 
 ```solidity
-BuilderRegistry public immutable builderRegistry;
+BuilderRegistry public builderRegistry;
 ```
 
 ### totalAllocation
@@ -100,6 +102,15 @@ total amount of stakingToken allocated by a sponsor
 mapping(address sponsor => uint256 allocation) public sponsorTotalAllocation;
 ```
 
+### \_\_gap
+
+_This empty reserved space is put in place to allow future versions to add new variables without shifting down storage
+in the inheritance chain. See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps_
+
+```solidity
+uint256[50] private __gap;
+```
+
 ## Functions
 
 ### onlyInDistributionWindow
@@ -116,25 +127,30 @@ modifier notInDistributionPeriod();
 
 ### constructor
 
-constructor initializes base roles to manipulate the registry
+```solidity
+constructor();
+```
+
+### initialize
+
+contract initializer
 
 ```solidity
-constructor(
-    address governor_,
+function initialize(
     address changeExecutor_,
     address rewardToken_,
     address stakingToken_,
     address gaugeFactory_,
     address builderRegistry_
 )
-    Governed(governor_, changeExecutor_);
+    external
+    initializer;
 ```
 
 **Parameters**
 
 | Name               | Type      | Description                                         |
 | ------------------ | --------- | --------------------------------------------------- |
-| `governor_`        | `address` | See Governed doc                                    |
 | `changeExecutor_`  | `address` | See Governed doc                                    |
 | `rewardToken_`     | `address` | address of the token rewarded to builder and voters |
 | `stakingToken_`    | `address` | address of the staking token for builder and voters |

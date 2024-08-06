@@ -1,6 +1,8 @@
 # Governed
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8d997aa4a4ea93bf6baa71a4d68fb991aefa6dc7/src/governance/Governed.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5faae52322bedd1d2c4eb8f24dbb918c0ac8fcbf/src/governance/Governed.sol)
+
+**Inherits:** UUPSUpgradeable
 
 Base contract to be inherited by governed contracts
 
@@ -14,7 +16,7 @@ contract is to define some useful modifiers and functions to be used on the gove
 governor contract address
 
 ```solidity
-address public immutable governor;
+address public governor;
 ```
 
 ### changeExecutor
@@ -22,7 +24,16 @@ address public immutable governor;
 contract that can articulate more complex changes executed from the governor
 
 ```solidity
-ChangeExecutor public immutable changeExecutor;
+ChangeExecutor public changeExecutor;
+```
+
+### \_\_gap
+
+_This empty reserved space is put in place to allow future versions to add new variables without shifting down storage
+in the inheritance chain. See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps_
+
+```solidity
+uint256[50] private __gap;
 ```
 
 ## Functions
@@ -37,19 +48,18 @@ _You should use this modifier in any function that should be called through the 
 modifier onlyGovernorOrAuthorizedChanger();
 ```
 
-### constructor
+### \_\_Governed_init
 
-Constructor
+contract initializer
 
 ```solidity
-constructor(address governor_, address changeExecutor_);
+function __Governed_init(address changeExecutor_) internal onlyInitializing;
 ```
 
 **Parameters**
 
 | Name              | Type      | Description                     |
 | ----------------- | --------- | ------------------------------- |
-| `governor_`       | `address` | governor contract address       |
 | `changeExecutor_` | `address` | ChangeExecutor contract address |
 
 ### \_checkIfGovernorOrAuthorizedChanger
@@ -59,6 +69,21 @@ Checks if the msg sender is the governor or an authorized changer, reverts other
 ```solidity
 function _checkIfGovernorOrAuthorizedChanger() internal view;
 ```
+
+### \_authorizeUpgrade
+
+_checks that the changer that will do the upgrade is currently authorized by governance to makes changes within the
+system_
+
+```solidity
+function _authorizeUpgrade(address newImplementation_) internal override onlyGovernorOrAuthorizedChanger;
+```
+
+**Parameters**
+
+| Name                 | Type      | Description                         |
+| -------------------- | --------- | ----------------------------------- |
+| `newImplementation_` | `address` | new implementation contract address |
 
 ## Errors
 
