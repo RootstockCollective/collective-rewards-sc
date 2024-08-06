@@ -1,6 +1,8 @@
 # RewardDistributor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8d997aa4a4ea93bf6baa71a4d68fb991aefa6dc7/src/RewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5faae52322bedd1d2c4eb8f24dbb918c0ac8fcbf/src/RewardDistributor.sol)
+
+**Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
 Accumulates all the rewards to be distributed for each epoch
 
@@ -11,7 +13,7 @@ Accumulates all the rewards to be distributed for each epoch
 foundation treasury address
 
 ```solidity
-address public immutable foundationTreasury;
+address public foundationTreasury;
 ```
 
 ### rewardToken
@@ -19,7 +21,7 @@ address public immutable foundationTreasury;
 address of the token rewarded to builder and sponsors
 
 ```solidity
-IERC20 public immutable rewardToken;
+IERC20 public rewardToken;
 ```
 
 ### sponsorsManager
@@ -27,7 +29,7 @@ IERC20 public immutable rewardToken;
 SponsorsManager contract address
 
 ```solidity
-SponsorsManager public immutable sponsorsManager;
+SponsorsManager public sponsorsManager;
 ```
 
 ### rewardTokenAmountPerEpoch
@@ -36,6 +38,15 @@ tracks amount of reward tokens distributed per epoch
 
 ```solidity
 mapping(uint256 epochTimestampStart => uint256 amount) public rewardTokenAmountPerEpoch;
+```
+
+### \_\_gap
+
+_This empty reserved space is put in place to allow future versions to add new variables without shifting down storage
+in the inheritance chain. See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps_
+
+```solidity
+uint256[50] private __gap;
 ```
 
 ## Functions
@@ -48,19 +59,31 @@ modifier onlyFoundationTreasury();
 
 ### constructor
 
-constructor
+```solidity
+constructor();
+```
+
+### initialize
+
+contract initializer
 
 ```solidity
-constructor(address foundationTreasury_, address rewardToken_, address sponsorsManager_);
+function initialize(
+    address changeExecutor_,
+    address foundationTreasury_,
+    address sponsorsManager_
+)
+    external
+    initializer;
 ```
 
 **Parameters**
 
-| Name                  | Type      | Description                                           |
-| --------------------- | --------- | ----------------------------------------------------- |
-| `foundationTreasury_` | `address` | foundation treasury address                           |
-| `rewardToken_`        | `address` | address of the token rewarded to builder and sponsors |
-| `sponsorsManager_`    | `address` | SponsorsManager contract address                      |
+| Name                  | Type      | Description                      |
+| --------------------- | --------- | -------------------------------- |
+| `changeExecutor_`     | `address` | See Governed doc                 |
+| `foundationTreasury_` | `address` | foundation treasury address      |
+| `sponsorsManager_`    | `address` | SponsorsManager contract address |
 
 ### sendRewardToken
 

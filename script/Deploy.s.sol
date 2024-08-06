@@ -41,11 +41,10 @@ contract Deploy is Broadcaster, OutputWriter {
         save("ChangeExecutor", address(changeExecutor));
 
         BuilderRegistry builderRegistry =
-            new BuilderRegistryDeployer().run(_governorAddress, address(changeExecutor), _kycApproverAddress);
+            new BuilderRegistryDeployer().run(address(changeExecutor), _kycApproverAddress);
         save("BuilderRegistry", address(builderRegistry));
 
         SponsorsManager sponsorManager = new SponsorsManagerDeployer().run(
-            _governorAddress,
             address(changeExecutor),
             _rewardTokenAddress,
             _stakingTokenAddress,
@@ -55,7 +54,7 @@ contract Deploy is Broadcaster, OutputWriter {
         save("SponsorsManager", address(sponsorManager));
 
         RewardDistributor rewardDistributor = new RewardDistributorDeployer().run(
-            _foundationTreasuryAddress, _rewardTokenAddress, address(sponsorManager)
+            address(changeExecutor), _foundationTreasuryAddress, address(sponsorManager)
         );
         save("RewardDistributor", address(rewardDistributor));
     }

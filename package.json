@@ -22,7 +22,8 @@
     }
   ],
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.1"
+    "@openzeppelin/contracts": "5.0.2",
+    "@openzeppelin/contracts-upgradeable": "5.0.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",

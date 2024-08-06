@@ -11,6 +11,10 @@ import { BuilderRegistry } from "./BuilderRegistry.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { EpochLib } from "./libraries/EpochLib.sol";
 
+/**
+ * @title SponsorsManager
+ * @notice Creates gauges, manages sponsors votes and distribute rewards
+ */
 contract SponsorsManager is Governed {
     // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
     uint256 internal constant MAX_DISTRIBUTIONS_PER_BATCH = 20;
@@ -52,13 +56,13 @@ contract SponsorsManager is Governed {
     // -----------------------------
 
     /// @notice address of the token used to stake
-    IERC20 public immutable stakingToken;
+    IERC20 public stakingToken;
     /// @notice address of the token rewarded to builder and voters
-    IERC20 public immutable rewardToken;
+    IERC20 public rewardToken;
     /// @notice gauge factory contract address
-    GaugeFactory public immutable gaugeFactory;
+    GaugeFactory public gaugeFactory;
     /// @notice builder registry contract address
-    BuilderRegistry public immutable builderRegistry;
+    BuilderRegistry public builderRegistry;
     /// @notice total allocation on all the gauges
     uint256 public totalAllocation;
     /// @notice rewards to distribute per sponsor emission [PREC]
@@ -75,25 +79,34 @@ contract SponsorsManager is Governed {
     /// @notice total amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public sponsorTotalAllocation;
 
+    // -----------------------------
+    // ------- Initializer ---------
+    // -----------------------------
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
-     * @notice constructor initializes base roles to manipulate the registry
-     * @param governor_ See Governed doc
+     * @notice contract initializer
      * @param changeExecutor_ See Governed doc
      * @param rewardToken_ address of the token rewarded to builder and voters
      * @param stakingToken_ address of the staking token for builder and voters
      * @param gaugeFactory_ address of the GaugeFactory contract
      * @param builderRegistry_ address of the BuilderRegistry contract
      */
-    constructor(
-        address governor_,
+    function initialize(
         address changeExecutor_,
         address rewardToken_,
         address stakingToken_,
         address gaugeFactory_,
         address builderRegistry_
     )
-        Governed(governor_, changeExecutor_)
+        external
+        initializer
     {
+        __Governed_init(changeExecutor_);
         rewardToken = IERC20(rewardToken_);
         stakingToken = IERC20(stakingToken_);
         gaugeFactory = GaugeFactory(gaugeFactory_);
@@ -296,4 +309,14 @@ contract SponsorsManager is Governed {
             emit DistributeReward(msg.sender, address(gauge_), _reward);
         }
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    // Purposely left unused to save some state space to allow for future upgrades
+    // slither-disable-next-line unused-state
+    uint256[50] private __gap;
 }

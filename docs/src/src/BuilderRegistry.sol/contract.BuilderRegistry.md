@@ -1,8 +1,8 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8d997aa4a4ea93bf6baa71a4d68fb991aefa6dc7/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5faae52322bedd1d2c4eb8f24dbb918c0ac8fcbf/src/BuilderRegistry.sol)
 
-**Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md), Ownable2Step
+**Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md), Ownable2StepUpgradeable
 
 Keeps registers of the builders
 
@@ -38,6 +38,15 @@ map of builders kickback
 mapping(address builder => uint256 percentage) public builderKickback;
 ```
 
+### \_\_gap
+
+_This empty reserved space is put in place to allow future versions to add new variables without shifting down storage
+in the inheritance chain. See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps_
+
+```solidity
+uint256[50] private __gap;
+```
+
 ## Functions
 
 ### atState
@@ -48,23 +57,22 @@ modifier atState(address builder_, BuilderState previousState_);
 
 ### constructor
 
-constructor initializes base roles to manipulate the registry
+```solidity
+constructor();
+```
+
+### initialize
+
+contract initializer
 
 ```solidity
-constructor(
-    address governor_,
-    address changeExecutor_,
-    address kycApprover_
-)
-    Governed(governor_, changeExecutor_)
-    Ownable(kycApprover_);
+function initialize(address changeExecutor_, address kycApprover_) external initializer;
 ```
 
 **Parameters**
 
 | Name              | Type      | Description                                                                                  |
 | ----------------- | --------- | -------------------------------------------------------------------------------------------- |
-| `governor_`       | `address` | See Governed doc                                                                             |
 | `changeExecutor_` | `address` | See Governed doc                                                                             |
 | `kycApprover_`    | `address` | account responsible of approving Builder's Know you Costumer policies and Legal requirements |
 
