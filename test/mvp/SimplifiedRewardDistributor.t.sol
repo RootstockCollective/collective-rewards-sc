@@ -125,43 +125,14 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
     }
 
     /**
-     * SCENARIO: sendRewardToken should revert trying to send more reward tokens than its balance
+     * SCENARIO: distribute reward token and coinbase equally to builders
      */
-    function test_InsufficientBalanceRewardToken() public {
-        // GIVEN a simplifiedRewardDistributor contract with 1 ether of reward token
-        rewardToken.transfer(address(simplifiedRewardDistributor), 1 ether);
-        // WHEN call distributeRewards trying to distribute 1 ether to each builder
-        //  THEN tx reverts because insufficient balance
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IERC20Errors.ERC20InsufficientBalance.selector, address(simplifiedRewardDistributor), 0 ether, 1 ether
-            )
-        );
-        simplifiedRewardDistributor.distributeRewards(2 ether, 0);
-    }
-
-    /**
-     * SCENARIO: distributeRewards should revert trying to send more coinbase than its balance
-     */
-    function test_InsufficientBalanceCoinbase() public {
-        // GIVEN a simplifiedRewardDistributor contract with 1 ether of coinbase
-        Address.sendValue(payable(address(simplifiedRewardDistributor)), 1 ether);
-        // WHEN call distributeRewards trying to distribute 1 ether to each builder
-        //  THEN tx reverts because insufficient balance
-        vm.expectRevert(
-            abi.encodeWithSelector(Address.AddressInsufficientBalance.selector, address(simplifiedRewardDistributor))
-        );
-        simplifiedRewardDistributor.distributeRewards(0, 2 ether);
-    }
-
-    /**
-     * SCENARIO: distributeRewards equally to builders
-     */
-    function test_DistributeRewards() public {
+    function test_Distribute() public {
         // GIVEN a simplifiedRewardDistributor contract with 4 ether of reward token and 3 ether of coinbase
         rewardToken.transfer(address(simplifiedRewardDistributor), 4 ether);
         Address.sendValue(payable(address(simplifiedRewardDistributor)), 3 ether);
-        simplifiedRewardDistributor.distributeRewards(4 ether, 3 ether);
+        // WHEN distribute is executed
+        simplifiedRewardDistributor.distribute();
 
         // THEN simplifiedRewardDistributor reward token balance is 0 ether
         assertEq(rewardToken.balanceOf(address(simplifiedRewardDistributor)), 0);
@@ -169,6 +140,79 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
         assertEq(rewardToken.balanceOf(rewardReceiver), 2 ether);
         // THEN rewardReceiver2 reward token balance is 2 ether
         assertEq(rewardToken.balanceOf(rewardReceiver2), 2 ether);
+
+        // THEN simplifiedRewardDistributor coinbase balance is 0 ether
+        assertEq(address(simplifiedRewardDistributor).balance, 0 ether);
+        // THEN rewardReceiver coinbase balance is 1.5 ether
+        assertEq(rewardReceiver.balance, 1.5 ether);
+        // THEN rewardReceiver2 coinbase balance is 1.5 ether
+        assertEq(rewardReceiver2.balance, 1.5 ether);
+    }
+
+    /**
+     * SCENARIO: distribute sending coinbase
+     */
+    function test_DistributeSendingCoinbase() public {
+        // GIVEN a simplifiedRewardDistributor contract with 4 ether of reward token
+        rewardToken.transfer(address(simplifiedRewardDistributor), 4 ether);
+        // WHEN distribute is executed sending 3 ethers of coinbase
+        simplifiedRewardDistributor.distribute{ value: 3 ether }();
+
+        // THEN simplifiedRewardDistributor reward token balance is 0 ether
+        assertEq(rewardToken.balanceOf(address(simplifiedRewardDistributor)), 0);
+        // THEN rewardReceiver reward token balance is 2 ether
+        assertEq(rewardToken.balanceOf(rewardReceiver), 2 ether);
+        // THEN rewardReceiver2 reward token balance is 2 ether
+        assertEq(rewardToken.balanceOf(rewardReceiver2), 2 ether);
+
+        // THEN simplifiedRewardDistributor coinbase balance is 0 ether
+        assertEq(address(simplifiedRewardDistributor).balance, 0 ether);
+        // THEN rewardReceiver coinbase balance is 1.5 ether
+        assertEq(rewardReceiver.balance, 1.5 ether);
+        // THEN rewardReceiver2 coinbase balance is 1.5 ether
+        assertEq(rewardReceiver2.balance, 1.5 ether);
+    }
+
+    /**
+     * SCENARIO: distribute only reward token equally to builders
+     */
+    function test_DistributeRewardToken() public {
+        // GIVEN a simplifiedRewardDistributor contract with 4 ether of reward token and 3 ether of coinbase
+        rewardToken.transfer(address(simplifiedRewardDistributor), 4 ether);
+        Address.sendValue(payable(address(simplifiedRewardDistributor)), 3 ether);
+        // WHEN distributeRewardToken is executed
+        simplifiedRewardDistributor.distributeRewardToken();
+
+        // THEN simplifiedRewardDistributor reward token balance is 0 ether
+        assertEq(rewardToken.balanceOf(address(simplifiedRewardDistributor)), 0);
+        // THEN rewardReceiver reward token balance is 2 ether
+        assertEq(rewardToken.balanceOf(rewardReceiver), 2 ether);
+        // THEN rewardReceiver2 reward token balance is 2 ether
+        assertEq(rewardToken.balanceOf(rewardReceiver2), 2 ether);
+
+        // THEN simplifiedRewardDistributor coinbase balance is 3 ether
+        assertEq(address(simplifiedRewardDistributor).balance, 3 ether);
+        // THEN rewardReceiver coinbase balance is 0 ether
+        assertEq(rewardReceiver.balance, 0 ether);
+        // THEN rewardReceiver2 coinbase balance is 0 ether
+        assertEq(rewardReceiver2.balance, 0 ether);
+    }
+
+    /**
+     * SCENARIO: distribute only coinbase equally to builders
+     */
+    function test_DistributeCoinbase() public {
+        // GIVEN a simplifiedRewardDistributor contract with 4 ether of reward token
+        rewardToken.transfer(address(simplifiedRewardDistributor), 4 ether);
+        // WHEN distribute is executed sending 3 ethers of coinbase
+        simplifiedRewardDistributor.distributeCoinbase{ value: 3 ether }();
+
+        // THEN simplifiedRewardDistributor reward token balance is 4 ether
+        assertEq(rewardToken.balanceOf(address(simplifiedRewardDistributor)), 4 ether);
+        // THEN rewardReceiver reward token balance is 0 ether
+        assertEq(rewardToken.balanceOf(rewardReceiver), 0 ether);
+        // THEN rewardReceiver2 reward token balance is 0 ether
+        assertEq(rewardToken.balanceOf(rewardReceiver2), 0 ether);
 
         // THEN simplifiedRewardDistributor coinbase balance is 0 ether
         assertEq(address(simplifiedRewardDistributor).balance, 0 ether);

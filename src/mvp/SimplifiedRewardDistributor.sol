@@ -42,13 +42,42 @@ contract SimplifiedRewardDistributor is SimplifiedBuilderRegistry, ReentrancyGua
         rewardToken = IERC20(rewardToken_);
     }
 
+    // -----------------------------
+    // ---- External Functions -----
+    // -----------------------------
+
     /**
-     * @notice distributes rewards equally to all the whitelisted builders
+     * @notice distributes all the reward tokens and coinbase equally to all the whitelisted builders
+     */
+    function distribute() external payable {
+        _distribute(rewardToken.balanceOf(address(this)), address(this).balance);
+    }
+
+    /**
+     * @notice distributes all the reward tokens equally to all the whitelisted builders
+     */
+    function distributeRewardToken() external {
+        _distribute(rewardToken.balanceOf(address(this)), 0);
+    }
+
+    /**
+     * @notice distributes all the coinbase rewards equally to all the whitelisted builders
+     */
+    function distributeCoinbase() external payable {
+        _distribute(0, address(this).balance);
+    }
+
+    // -----------------------------
+    // ---- Internal Functions -----
+    // -----------------------------
+
+    /**
+     * @notice distributes reward tokens and coinbase equally to all the whitelisted builders
      * @dev reverts if there is not enough reward token or coinbase balance
      * @param rewardTokenAmount_ amount of reward token to distribute
-     * @param coinbaseAmount_ See Governed amount of coinbase to distribute
+     * @param coinbaseAmount_ total amount of coinbase to be distribute between builders
      */
-    function distributeRewards(uint256 rewardTokenAmount_, uint256 coinbaseAmount_) external nonReentrant {
+    function _distribute(uint256 rewardTokenAmount_, uint256 coinbaseAmount_) internal nonReentrant {
         uint256 _buildersLength = whitelistedBuilders.length;
         uint256 _rewardTokenPayment = rewardTokenAmount_ / _buildersLength;
         uint256 _coinbasePayment = coinbaseAmount_ / _buildersLength;
