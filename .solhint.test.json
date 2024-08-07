@@ -7,8 +7,10 @@
     "func-visibility": ["error", { "ignoreConstructors": true }],
     "func-param-name-mixedcase": "error",
     "private-vars-leading-underscore": "error",
+    "func-name-mixedcase": "off",
     "bim/avoiding-naming-collision": "error",
     "bim/func-param-name-trailing-underscore": "error",
-    "bim/private-vars-leading-underscore-lib": "error"
+    "bim/private-vars-leading-underscore-lib": "error",
+    "foundry-test-functions": ["warn", ["setUp"]]
   }
 }
