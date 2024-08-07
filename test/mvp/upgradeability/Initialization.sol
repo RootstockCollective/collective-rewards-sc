@@ -13,6 +13,6 @@ contract MVPInitializationTest is MVPBaseTest {
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        simplifiedRewardDistributor.initialize(address(changeExecutorMock), address(rewardToken), address(kycApprover));
+        simplifiedRewardDistributor.initialize(address(changeExecutorMock), address(rewardToken));
     }
 }

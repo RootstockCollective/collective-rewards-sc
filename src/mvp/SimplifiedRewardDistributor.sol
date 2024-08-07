@@ -4,8 +4,9 @@ pragma solidity 0.8.20;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import { SimplifiedBuilderRegistry } from "./SimplifiedBuilderRegistry.sol";
+import { Governed } from "../governance/Governed.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 
 /**
@@ -13,13 +14,18 @@ import { UtilsLib } from "../libraries/UtilsLib.sol";
  * @notice Simplified version for the MVP.
  *  Accumulates all the rewards and distribute them equally to all the builders for each epoch
  */
-contract SimplifiedRewardDistributor is SimplifiedBuilderRegistry, ReentrancyGuardUpgradeable {
+contract SimplifiedRewardDistributor is Governed, ReentrancyGuardUpgradeable {
+    using EnumerableSet for EnumerableSet.AddressSet;
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
 
     /// @notice address of the token rewarded to builders
     IERC20 public rewardToken;
+    /// @notice map of builders reward receiver
+    mapping(address builder => address payable rewardReceiver) public builderRewardReceiver;
+    // @notice array of whitelisted builders
+    EnumerableSet.AddressSet internal whitelistedBuilders;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -34,17 +40,43 @@ contract SimplifiedRewardDistributor is SimplifiedBuilderRegistry, ReentrancyGua
      * @notice contract initializer
      * @param changeExecutor_ See Governed doc
      * @param rewardToken_ address of the token rewarded to builders
-     * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
      */
-    function initialize(address changeExecutor_, address rewardToken_, address kycApprover_) external initializer {
+    function initialize(address changeExecutor_, address rewardToken_) external initializer {
         __ReentrancyGuard_init();
-        ___SimplifiedBuilderRegistry_init(changeExecutor_, kycApprover_);
+        __Governed_init(changeExecutor_);
         rewardToken = IERC20(rewardToken_);
     }
 
     // -----------------------------
     // ---- External Functions -----
     // -----------------------------
+
+    /**
+     * @notice whitelist builder
+     * @dev reverts if is builder is already whitelisted
+     * @param builder_ address of the builder
+     * @param rewardReceiver_ address of the builder reward receiver
+     */
+    function whitelistBuilder(
+        address builder_,
+        address payable rewardReceiver_
+    )
+        external
+        onlyGovernorOrAuthorizedChanger
+    {
+        builderRewardReceiver[builder_] = rewardReceiver_;
+        whitelistedBuilders.add(builder_);
+    }
+
+    /**
+     * @notice remove builder from whitelist
+     * @dev reverts if is builder is not whitelisted
+     * @param builder_ address of the builder
+     */
+    function removeWhitelistedBuilder(address builder_) external onlyGovernorOrAuthorizedChanger {
+        builderRewardReceiver[builder_] = payable(0);
+        whitelistedBuilders.remove(builder_);
+    }
 
     /**
      * @notice distributes all the reward tokens and coinbase equally to all the whitelisted builders
@@ -67,6 +99,27 @@ contract SimplifiedRewardDistributor is SimplifiedBuilderRegistry, ReentrancyGua
         _distribute(0, address(this).balance);
     }
 
+    /**
+     * @notice get length of whitelisted builders array
+     */
+    function getWhitelistedBuildersLength() external view returns (uint256) {
+        return whitelistedBuilders.length();
+    }
+
+    /**
+     * @notice get whitelisted builder from array
+     */
+    function getWhitelistedBuilder(uint256 index_) external view returns (address) {
+        return whitelistedBuilders.at(index_);
+    }
+
+    /**
+     * @notice return true is builder is whitelisted
+     */
+    function isWhitelisted(address builder_) external view returns (bool) {
+        return whitelistedBuilders.contains(builder_);
+    }
+
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
@@ -78,11 +131,11 @@ contract SimplifiedRewardDistributor is SimplifiedBuilderRegistry, ReentrancyGua
      * @param coinbaseAmount_ total amount of coinbase to be distribute between builders
      */
     function _distribute(uint256 rewardTokenAmount_, uint256 coinbaseAmount_) internal nonReentrant {
-        uint256 _buildersLength = whitelistedBuilders.length;
+        uint256 _buildersLength = whitelistedBuilders.length();
         uint256 _rewardTokenPayment = rewardTokenAmount_ / _buildersLength;
         uint256 _coinbasePayment = coinbaseAmount_ / _buildersLength;
         for (uint256 i = 0; i < _buildersLength; i = UtilsLib.unchecked_inc(i)) {
-            address payable rewardReceiver = builderRewardReceiver[whitelistedBuilders[i]];
+            address payable rewardReceiver = builderRewardReceiver[whitelistedBuilders.at(i)];
             if (_rewardTokenPayment > 0) {
                 SafeERC20.safeTransfer(rewardToken, rewardReceiver, _rewardTokenPayment);
             }

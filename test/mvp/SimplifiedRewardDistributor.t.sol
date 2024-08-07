@@ -1,21 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { MVPBaseTest, SimplifiedRewardDistributor } from "./MVPBaseTest.sol";
-import { SimplifiedBuilderRegistry } from "../../src/mvp/SimplifiedBuilderRegistry.sol";
+import { MVPBaseTest } from "./MVPBaseTest.sol";
 import { Governed } from "../../src/governance/Governed.sol";
-import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 contract SimplifiedRewardDistributorTest is MVPBaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event StateUpdate(
-        address indexed builder_,
-        SimplifiedBuilderRegistry.BuilderState previousState_,
-        SimplifiedBuilderRegistry.BuilderState newState_
-    );
 
     /**
      * SCENARIO: functions protected by OnlyGovernor should revert when are not
@@ -31,97 +24,68 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
         // WHEN alice calls whitelistBuilder
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        simplifiedRewardDistributor.whitelistBuilder(builder);
-    }
+        simplifiedRewardDistributor.whitelistBuilder(builder, rewardReceiver);
 
-    /**
-     * SCENARIO: kycApprover activates a new builder
-     */
-    function test_ActivateBuilder() public {
-        // GIVEN a kycApprover
-        vm.startPrank(kycApprover);
-        // AND a new builder
-        address payable newBuilder = payable(makeAddr("newBuilder"));
-        // WHEN calls activateBuilder
-        //  THEN StateUpdate event is emitted
-        vm.expectEmit();
-        emit StateUpdate(
-            newBuilder,
-            SimplifiedBuilderRegistry.BuilderState.Pending,
-            SimplifiedBuilderRegistry.BuilderState.KYCApproved
-        );
-        simplifiedRewardDistributor.activateBuilder(newBuilder, newBuilder);
-
-        // THEN builder.state is KYCApproved
-        assertEq(
-            uint256(simplifiedRewardDistributor.getState(newBuilder)),
-            uint256(SimplifiedBuilderRegistry.BuilderState.KYCApproved)
-        );
-
-        // THEN new builder rewards receiver is the same as the new builder
-        assertEq(simplifiedRewardDistributor.getRewardReceiver(newBuilder), newBuilder);
-    }
-
-    /**
-     * SCENARIO: activateBuilder should reverts if the state is not Pending
-     */
-    function test_ActivateBuilderWrongStatus() public {
-        // GIVEN a kycApprover
-        vm.startPrank(kycApprover);
-        // AND a whitelisted builder
-        //  WHEN tries to activateBuilder
-        //   THEN tx reverts because is not in the required state
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                SimplifiedBuilderRegistry.RequiredState.selector, SimplifiedBuilderRegistry.BuilderState.Pending
-            )
-        );
-        simplifiedRewardDistributor.activateBuilder(builder, rewardReceiver);
+        // WHEN alice calls removeWhitelistedBuilder
+        //  THEN tx reverts because caller is not the Governor
+        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
+        simplifiedRewardDistributor.removeWhitelistedBuilder(builder);
     }
 
     /**
      * SCENARIO: Governor whitelist a new builder
      */
     function test_WhitelistBuilder() public {
-        // GIVEN a kycApprover
-        vm.startPrank(kycApprover);
-        // AND a new builder activated
+        // GIVEN a new builder
         address payable newBuilder = payable(makeAddr("newBuilder"));
-        simplifiedRewardDistributor.activateBuilder(newBuilder, newBuilder);
-
         // WHEN calls whitelistBuilder
-        //  THEN StateUpdate event is emitted
-        vm.expectEmit();
-        emit StateUpdate(
-            newBuilder,
-            SimplifiedBuilderRegistry.BuilderState.KYCApproved,
-            SimplifiedBuilderRegistry.BuilderState.Whitelisted
-        );
-        simplifiedRewardDistributor.whitelistBuilder(newBuilder);
-
-        // THEN newBuilder.state is Whitelisted
-        assertEq(
-            uint256(simplifiedRewardDistributor.getState(newBuilder)),
-            uint256(SimplifiedBuilderRegistry.BuilderState.Whitelisted)
-        );
-
+        simplifiedRewardDistributor.whitelistBuilder(newBuilder, newBuilder);
+        // THEN newBuilder is whitelisted
+        assertTrue(simplifiedRewardDistributor.isWhitelisted(newBuilder));
+        // THEN the new reward receiver is the new builder
+        assertEq(simplifiedRewardDistributor.builderRewardReceiver(newBuilder), newBuilder);
+        // THEN newBuilder is on index 2
+        assertEq(simplifiedRewardDistributor.getWhitelistedBuilder(2), newBuilder);
         // THEN getWhitelistedBuildersLength is 3
         assertEq(simplifiedRewardDistributor.getWhitelistedBuildersLength(), 3);
     }
 
     /**
-     * SCENARIO: whitelistBuilder should reverts if the state is not KYCApproved
+     * SCENARIO: whitelist a whistelited builder does not add it again to the array
      */
-    function test_WhitelistBuilderWrongStatus() public {
+    function test_WhistelitBuilderTwice() public {
         // GIVEN a whitelisted builder
-        //  WHEN tries to whitelistBuilder
-        //   THEN tx reverts because is not the required state
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                SimplifiedBuilderRegistry.RequiredState.selector, SimplifiedBuilderRegistry.BuilderState.KYCApproved
-            )
-        );
-        simplifiedRewardDistributor.whitelistBuilder(builder);
+        //  WHEN tries to whistelist it again
+        simplifiedRewardDistributor.whitelistBuilder(builder, rewardReceiver);
+        // THEN nothing happend, getWhitelistedBuildersLength is still 2
+        assertEq(simplifiedRewardDistributor.getWhitelistedBuildersLength(), 2);
+    }
+
+    /**
+     * SCENARIO: Governor remove builder from whitelist
+     */
+    function test_RemoveWhitelistedBuilder() public {
+        // GIVEN a whitelisted builder
+        //  WHEN calls removeWhitelistedBuilder
+        simplifiedRewardDistributor.removeWhitelistedBuilder(builder);
+        // THEN builder is not whitelisted
+        assertFalse(simplifiedRewardDistributor.isWhitelisted(builder));
+        // THEN the reward receiver is 0
+        assertEq(simplifiedRewardDistributor.builderRewardReceiver(builder), address(0));
+        // THEN getWhitelistedBuildersLength is 1
+        assertEq(simplifiedRewardDistributor.getWhitelistedBuildersLength(), 1);
+    }
+
+    /**
+     * SCENARIO: remove a non-whitelisted builder does not change anything
+     */
+    function test_RemoveNonWhitelistedBuilder() public {
+        // GIVEN a new builder
+        address payable newBuilder = payable(makeAddr("newBuilder"));
+        //  WHEN tries to remove it form the whitelist
+        simplifiedRewardDistributor.removeWhitelistedBuilder(newBuilder);
+        // THEN nothing happend, getWhitelistedBuildersLength is still 2
+        assertEq(simplifiedRewardDistributor.getWhitelistedBuildersLength(), 2);
     }
 
     /**

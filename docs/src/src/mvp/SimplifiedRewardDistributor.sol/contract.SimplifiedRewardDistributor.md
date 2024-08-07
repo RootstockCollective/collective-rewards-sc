@@ -1,9 +1,8 @@
 # SimplifiedRewardDistributor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/38b1618c77e8418aee572d46a56dd13f602978fe/src/mvp/SimplifiedRewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/f9f3df1fb45c6f4c86dcdcae3c3c76656d84ace2/src/mvp/SimplifiedRewardDistributor.sol)
 
-**Inherits:** [SimplifiedBuilderRegistry](/src/mvp/SimplifiedBuilderRegistry.sol/abstract.SimplifiedBuilderRegistry.md),
-ReentrancyGuardUpgradeable
+**Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md), ReentrancyGuardUpgradeable
 
 Simplified version for the MVP. Accumulates all the rewards and distribute them equally to all the builders for each
 epoch
@@ -16,6 +15,20 @@ address of the token rewarded to builders
 
 ```solidity
 IERC20 public rewardToken;
+```
+
+### builderRewardReceiver
+
+map of builders reward receiver
+
+```solidity
+mapping(address builder => address payable rewardReceiver) public builderRewardReceiver;
+```
+
+### whitelistedBuilders
+
+```solidity
+EnumerableSet.AddressSet internal whitelistedBuilders;
 ```
 
 ### \_\_gap
@@ -40,16 +53,48 @@ constructor();
 contract initializer
 
 ```solidity
-function initialize(address changeExecutor_, address rewardToken_, address kycApprover_) external initializer;
+function initialize(address changeExecutor_, address rewardToken_) external initializer;
 ```
 
 **Parameters**
 
-| Name              | Type      | Description                                                                                  |
-| ----------------- | --------- | -------------------------------------------------------------------------------------------- |
-| `changeExecutor_` | `address` | See Governed doc                                                                             |
-| `rewardToken_`    | `address` | address of the token rewarded to builders                                                    |
-| `kycApprover_`    | `address` | account responsible of approving Builder's Know you Costumer policies and Legal requirements |
+| Name              | Type      | Description                               |
+| ----------------- | --------- | ----------------------------------------- |
+| `changeExecutor_` | `address` | See Governed doc                          |
+| `rewardToken_`    | `address` | address of the token rewarded to builders |
+
+### whitelistBuilder
+
+whitelist builder
+
+_reverts if is builder is already whitelisted_
+
+```solidity
+function whitelistBuilder(address builder_, address payable rewardReceiver_) external onlyGovernorOrAuthorizedChanger;
+```
+
+**Parameters**
+
+| Name              | Type              | Description                            |
+| ----------------- | ----------------- | -------------------------------------- |
+| `builder_`        | `address`         | address of the builder                 |
+| `rewardReceiver_` | `address payable` | address of the builder reward receiver |
+
+### removeWhitelistedBuilder
+
+remove builder from whitelist
+
+_reverts if is builder is not whitelisted_
+
+```solidity
+function removeWhitelistedBuilder(address builder_) external onlyGovernorOrAuthorizedChanger;
+```
+
+**Parameters**
+
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
 ### distribute
 
@@ -73,6 +118,30 @@ distributes all the coinbase rewards equally to all the whitelisted builders
 
 ```solidity
 function distributeCoinbase() external payable;
+```
+
+### getWhitelistedBuildersLength
+
+get length of whitelisted builders array
+
+```solidity
+function getWhitelistedBuildersLength() external view returns (uint256);
+```
+
+### getWhitelistedBuilder
+
+get whitelisted builder from array
+
+```solidity
+function getWhitelistedBuilder(uint256 index_) external view returns (address);
+```
+
+### isWhitelisted
+
+return true is builder is whitelisted
+
+```solidity
+function isWhitelisted(address builder_) external view returns (bool);
 ```
 
 ### \_distribute

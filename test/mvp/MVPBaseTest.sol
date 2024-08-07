@@ -22,15 +22,13 @@ contract MVPBaseTest is Test {
     address internal builder2 = makeAddr("builder2");
     address payable internal rewardReceiver = payable(makeAddr("rewardReceiver"));
     address payable internal rewardReceiver2 = payable(makeAddr("rewardReceiver2"));
-    address internal kycApprover = makeAddr("kycApprover");
 
     function setUp() public {
         changeExecutorMock = new ChangeExecutorMockDeployer().run(governor);
         MockTokenDeployer mockTokenDeployer = new MockTokenDeployer();
         rewardToken = mockTokenDeployer.run(0);
-        simplifiedRewardDistributor = new SimplifiedRewardDistributorDeployer().run(
-            address(changeExecutorMock), address(rewardToken), kycApprover
-        );
+        simplifiedRewardDistributor =
+            new SimplifiedRewardDistributorDeployer().run(address(changeExecutorMock), address(rewardToken));
 
         // allow to execute all the functions protected by governance
         changeExecutorMock.setIsAuthorized(true);
@@ -39,14 +37,8 @@ contract MVPBaseTest is Test {
         rewardToken.mint(address(this), 100_000 ether);
         vm.deal(address(this), 100_000 ether);
 
-        vm.prank(kycApprover);
-        simplifiedRewardDistributor.activateBuilder(builder, rewardReceiver);
-        vm.prank(kycApprover);
-        simplifiedRewardDistributor.activateBuilder(builder2, rewardReceiver2);
-        vm.prank(governor);
-        simplifiedRewardDistributor.whitelistBuilder(builder);
-        vm.prank(governor);
-        simplifiedRewardDistributor.whitelistBuilder(builder2);
+        simplifiedRewardDistributor.whitelistBuilder(builder, rewardReceiver);
+        simplifiedRewardDistributor.whitelistBuilder(builder2, rewardReceiver2);
 
         _setUp();
     }

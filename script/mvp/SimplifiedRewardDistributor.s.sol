@@ -7,7 +7,6 @@ import { SimplifiedRewardDistributor } from "src/mvp/SimplifiedRewardDistributor
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
     function run() public returns (SimplifiedRewardDistributor) {
-        address kycApprover = vm.envAddress("KYC_APPROVER_ADDRESS");
         address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
         address rewardTokenAddress = vm.envOr("RewardToken", address(0));
         if (changeExecutorAddress == address(0)) {
@@ -16,13 +15,12 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         if (rewardTokenAddress == address(0)) {
             rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         }
-        return run(changeExecutorAddress, rewardTokenAddress, kycApprover);
+        return run(changeExecutorAddress, rewardTokenAddress);
     }
 
     function run(
         address changeExecutor_,
-        address rewardToken_,
-        address kycApprover_
+        address rewardToken_
     )
         public
         broadcast
@@ -30,11 +28,10 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
     {
         require(changeExecutor_ != address(0), "Change executor address cannot be empty");
         require(rewardToken_ != address(0), "Reward Token address cannot be empty");
-        require(kycApprover_ != address(0), "KYC Approver address cannot be empty");
 
         string memory _contractName = "SimplifiedRewardDistributor.sol";
         bytes memory _initializerData =
-            abi.encodeCall(SimplifiedRewardDistributor.initialize, (changeExecutor_, rewardToken_, kycApprover_));
+            abi.encodeCall(SimplifiedRewardDistributor.initialize, (changeExecutor_, rewardToken_));
         if (vm.envOr("NO_DD", false)) {
             return SimplifiedRewardDistributor(payable(_deployUUPSProxy(_contractName, _initializerData)));
         }

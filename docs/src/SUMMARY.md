@@ -18,7 +18,6 @@
   - [EpochLib](src/libraries/EpochLib.sol/library.EpochLib.md)
   - [UtilsLib](src/libraries/UtilsLib.sol/library.UtilsLib.md)
 - [❱ mvp](src/mvp/README.md)
-  - [SimplifiedBuilderRegistry](src/mvp/SimplifiedBuilderRegistry.sol/abstract.SimplifiedBuilderRegistry.md)
   - [SimplifiedRewardDistributor](src/mvp/SimplifiedRewardDistributor.sol/contract.SimplifiedRewardDistributor.md)
 - [BuilderRegistry](src/BuilderRegistry.sol/contract.BuilderRegistry.md)
 - [RewardDistributor](src/RewardDistributor.sol/contract.RewardDistributor.md)
