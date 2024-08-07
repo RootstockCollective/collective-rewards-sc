@@ -17,7 +17,7 @@ contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
 
     error NotAuthorized();
     error InvalidBuilderKickback();
-    error RequiredState(BuilderState state);
+    error RequiredState(BuilderState state_);
 
     // -----------------------------
     // ----------- Events ----------
