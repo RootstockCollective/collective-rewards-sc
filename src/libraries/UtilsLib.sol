@@ -5,11 +5,11 @@ library UtilsLib {
     // Constants may not be used in child contracts and that is fine as they are
     // not using any space in storage, so we disable the check
     // slither-disable-next-line unused-state
-    uint256 internal constant PRECISION = 10 ** 18;
+    uint256 internal constant _PRECISION = 10 ** 18;
 
     // Saves gas
     // https://github.com/KadenZipfel/gas-optimizations/blob/main/gas-saving-patterns/unchecked-arithmetic.md
-    function unchecked_inc(uint256 i_) internal pure returns (uint256) {
+    function _uncheckedInc(uint256 i_) internal pure returns (uint256) {
         unchecked {
             return i_ + 1;
         }
@@ -22,7 +22,7 @@ library UtilsLib {
      * @return `a_` * PRECISION / `b_`
      */
     function _divPrec(uint256 a_, uint256 b_) internal pure returns (uint256) {
-        return (a_ * PRECISION) / b_;
+        return (a_ * _PRECISION) / b_;
     }
 
     /**
@@ -32,6 +32,6 @@ library UtilsLib {
      * @return `a_` * `b_` / PRECISION
      */
     function _mulPrec(uint256 a_, uint256 b_) internal pure returns (uint256) {
-        return (a_ * b_) / PRECISION;
+        return (a_ * b_) / _PRECISION;
     }
 }

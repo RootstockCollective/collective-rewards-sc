@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 import { Governed } from "./governance/Governed.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { SponsorsManager } from "./SponsorsManager.sol";
 import { EpochLib } from "./libraries/EpochLib.sol";
 
@@ -100,7 +99,7 @@ contract RewardDistributor is Governed {
      */
     function _sendRewardToken(uint256 amount_) internal {
         // TODO: review if we need this
-        rewardTokenAmountPerEpoch[EpochLib.epochStart(block.timestamp)] += amount_;
+        rewardTokenAmountPerEpoch[EpochLib._epochStart(block.timestamp)] += amount_;
         rewardToken.approve(address(sponsorsManager), amount_);
         sponsorsManager.notifyRewardAmount(amount_);
     }

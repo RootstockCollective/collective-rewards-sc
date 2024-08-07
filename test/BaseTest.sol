@@ -79,12 +79,12 @@ contract BaseTest is Test {
     function _setUp() internal virtual { }
 
     function _skipAndStartNewEpoch() internal {
-        uint256 _currentEpochRemaining = EpochLib.epochNext(block.timestamp) - block.timestamp;
+        uint256 _currentEpochRemaining = EpochLib._epochNext(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining);
     }
 
     function _skipRemainingEpochFraction(uint256 fraction_) internal {
-        uint256 _currentEpochRemaining = EpochLib.epochNext(block.timestamp) - block.timestamp;
+        uint256 _currentEpochRemaining = EpochLib._epochNext(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining / fraction_);
     }
 
@@ -94,7 +94,7 @@ contract BaseTest is Test {
 
     function _skipToEndDistributionWindow() internal {
         _skipAndStartNewEpoch();
-        uint256 _currentEpochRemaining = EpochLib.endDistributionWindow(block.timestamp) - block.timestamp;
+        uint256 _currentEpochRemaining = EpochLib._endDistributionWindow(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining);
     }
 }

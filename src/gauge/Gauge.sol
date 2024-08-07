@@ -127,11 +127,11 @@ contract Gauge {
 
         _updateRewards(sponsor_);
 
-        uint256 reward = rewards[sponsor_];
-        if (reward > 0) {
+        uint256 _reward = rewards[sponsor_];
+        if (_reward > 0) {
             rewards[sponsor_] = 0;
-            SafeERC20.safeTransfer(rewardToken, sponsor_, reward);
-            emit SponsorRewardsClaimed(sponsor_, reward);
+            SafeERC20.safeTransfer(rewardToken, sponsor_, _reward);
+            emit SponsorRewardsClaimed(sponsor_, _reward);
         }
     }
 
@@ -144,10 +144,10 @@ contract Gauge {
         address _rewardReceiver = sponsorsManager.builderRegistry().getRewardReceiver(builder_);
         if (msg.sender != builder_ && msg.sender != _rewardReceiver) revert NotAuthorized();
 
-        uint256 reward = builderRewards;
-        if (reward > 0) {
+        uint256 _reward = builderRewards;
+        if (_reward > 0) {
             builderRewards = 0;
-            SafeERC20.safeTransfer(rewardToken, _rewardReceiver, reward);
+            SafeERC20.safeTransfer(rewardToken, _rewardReceiver, _reward);
             emit BuilderRewardsClaimed(_rewardReceiver, builderRewards);
         }
     }
@@ -214,7 +214,7 @@ contract Gauge {
     function notifyRewardAmount(uint256 builderAmount_, uint256 sponsorsAmount_) external onlySponsorsManager {
         // update rewardPerToken storage
         rewardPerTokenStored = rewardPerToken();
-        uint256 _timeUntilNext = EpochLib.epochNext(block.timestamp) - block.timestamp;
+        uint256 _timeUntilNext = EpochLib._epochNext(block.timestamp) - block.timestamp;
         uint256 _leftover = 0;
         // cache storage variables used multiple times
         uint256 _periodFinish = periodFinish;
@@ -227,7 +227,7 @@ contract Gauge {
         }
 
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
-        _rewardRate = (sponsorsAmount_ * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
+        _rewardRate = (sponsorsAmount_ * UtilsLib._PRECISION + rewardMissing + _leftover) / _timeUntilNext;
 
         builderRewards += builderAmount_;
 

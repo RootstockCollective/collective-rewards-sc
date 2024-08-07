@@ -64,7 +64,7 @@ contract RewardDistributorTest is BaseTest {
     function test_SendRewardToken() public {
         // GIVEN a RewardDistributor contract with 10 ether of reward token
         rewardToken.transfer(address(rewardDistributor), 10 ether);
-        uint256 epoch1Timestamp = EpochLib.epochStart(block.timestamp);
+        uint256 epoch1Timestamp = EpochLib._epochStart(block.timestamp);
         // WHEN foundation treasury calls sendRewardToken transferring 2 ethers
         vm.startPrank(foundation);
         rewardDistributor.sendRewardToken(2 ether);
@@ -74,7 +74,7 @@ contract RewardDistributorTest is BaseTest {
         rewardDistributor.sendRewardToken(1 ether);
         // AND epoch finish
         _skipAndStartNewEpoch();
-        uint256 epoch2Timestamp = EpochLib.epochStart(block.timestamp);
+        uint256 epoch2Timestamp = EpochLib._epochStart(block.timestamp);
         // AND foundation treasury calls sendRewardToken transferring 4 ethers
         rewardDistributor.sendRewardToken(4 ether);
 

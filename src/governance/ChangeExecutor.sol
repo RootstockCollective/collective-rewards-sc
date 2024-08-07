@@ -33,7 +33,7 @@ contract ChangeExecutor is UUPSUpgradeable, ReentrancyGuardUpgradeable {
     /// @notice governor address
     address public governor;
     /// @notice changer contract address to be executed
-    address private currentChangeContract;
+    address private _currentChangeContract;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -97,7 +97,7 @@ contract ChangeExecutor is UUPSUpgradeable, ReentrancyGuardUpgradeable {
      * @param changer_ Address of the contract that will be tested
      */
     function _isAuthorizedChanger(address changer_) internal view returns (bool) {
-        return currentChangeContract == changer_;
+        return _currentChangeContract == changer_;
     }
 
     /**
@@ -105,14 +105,14 @@ contract ChangeExecutor is UUPSUpgradeable, ReentrancyGuardUpgradeable {
      * @param changeContract_ Address of the contract that will be authorized
      */
     function _enableChangeContract(IChangeContract changeContract_) internal {
-        currentChangeContract = address(changeContract_);
+        _currentChangeContract = address(changeContract_);
     }
 
     /**
      * @notice UNAuthorize the currentChangeContract address to make changes
      */
     function _disableChangeContract() internal {
-        currentChangeContract = address(0x0);
+        _currentChangeContract = address(0x0);
     }
 
     /**

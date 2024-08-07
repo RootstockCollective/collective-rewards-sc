@@ -3,16 +3,16 @@ pragma solidity 0.8.20;
 
 library EpochLib {
     // TODO: is epoch duration fixed?
-    uint256 internal constant WEEK = 7 days;
+    uint256 internal constant _WEEK = 7 days;
 
     /**
      * @notice gets when an epoch starts based on given `timestamp_`
      * @param timestamp_ timestamp to calculate
      * @return epochStart timestamp when the epoch starts
      */
-    function epochStart(uint256 timestamp_) internal pure returns (uint256) {
+    function _epochStart(uint256 timestamp_) internal pure returns (uint256) {
         unchecked {
-            return timestamp_ - (timestamp_ % WEEK);
+            return timestamp_ - (timestamp_ % _WEEK);
         }
     }
 
@@ -21,9 +21,9 @@ library EpochLib {
      * @param timestamp_ timestamp to calculate
      * @return epochNext timestamp when the epoch ends or the next starts
      */
-    function epochNext(uint256 timestamp_) internal pure returns (uint256) {
+    function _epochNext(uint256 timestamp_) internal pure returns (uint256) {
         unchecked {
-            return timestamp_ - (timestamp_ % WEEK) + WEEK;
+            return timestamp_ - (timestamp_ % _WEEK) + _WEEK;
         }
     }
 
@@ -32,9 +32,9 @@ library EpochLib {
      * @param timestamp_ timestamp to calculate
      * @return endDistributionWindow timestamp when the epoch distribution ends
      */
-    function endDistributionWindow(uint256 timestamp_) internal pure returns (uint256) {
+    function _endDistributionWindow(uint256 timestamp_) internal pure returns (uint256) {
         unchecked {
-            return epochStart(timestamp_) + 1 hours;
+            return _epochStart(timestamp_) + 1 hours;
         }
     }
 }

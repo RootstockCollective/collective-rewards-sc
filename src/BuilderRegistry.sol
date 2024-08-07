@@ -10,7 +10,7 @@ import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/acc
  * @notice Keeps registers of the builders
  */
 contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
-    uint256 internal constant MAX_KICKBACK = UtilsLib.PRECISION;
+    uint256 internal constant _MAX_KICKBACK = UtilsLib._PRECISION;
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
@@ -211,7 +211,7 @@ contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
      */
     function applyBuilderKickback(address builder_, uint256 amount_) public view returns (uint256) {
         // [N] = [N] * [PREC] / [PREC]
-        return builderKickback[builder_] * amount_ / UtilsLib.PRECISION;
+        return builderKickback[builder_] * amount_ / UtilsLib._PRECISION;
     }
 
     // -----------------------------
@@ -220,7 +220,7 @@ contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
 
     function _setBuilderKickback(address builder_, uint256 builderKickback_) internal {
         // TODO: should we have a minimal amount?
-        if (builderKickback_ > MAX_KICKBACK) {
+        if (builderKickback_ > _MAX_KICKBACK) {
             revert InvalidBuilderKickback();
         }
         builderKickback[builder_] = builderKickback_;
@@ -229,9 +229,9 @@ contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
     }
 
     function _updateState(address builder_, BuilderState newState_) internal {
-        BuilderState previousState_ = builderState[builder_];
+        BuilderState _previousState = builderState[builder_];
         builderState[builder_] = newState_;
-        emit StateUpdate(builder_, previousState_, newState_);
+        emit StateUpdate(builder_, _previousState, newState_);
     }
 
     /**

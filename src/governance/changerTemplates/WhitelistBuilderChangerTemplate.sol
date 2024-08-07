@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 import { IChangeContract } from "../../interfaces/IChangeContract.sol";
 import { SponsorsManager } from "../../SponsorsManager.sol";
-import { BuilderRegistry } from "../../BuilderRegistry.sol";
 import { Gauge } from "../../gauge/Gauge.sol";
 
 /**

@@ -17,7 +17,7 @@ import { EpochLib } from "./libraries/EpochLib.sol";
  */
 contract SponsorsManager is Governed {
     // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
-    uint256 internal constant MAX_DISTRIBUTIONS_PER_BATCH = 20;
+    uint256 internal constant _MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
     // -----------------------------
     // ------- Custom Errors -------
@@ -42,7 +42,7 @@ contract SponsorsManager is Governed {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyInDistributionWindow() {
-        if (block.timestamp >= EpochLib.endDistributionWindow(block.timestamp)) revert OnlyInDistributionWindow();
+        if (block.timestamp >= EpochLib._endDistributionWindow(block.timestamp)) revert OnlyInDistributionWindow();
         _;
     }
 
@@ -162,7 +162,7 @@ contract SponsorsManager is Governed {
         // TODO: check length < MAX or let revert by out of gas?
         uint256 _sponsorTotalAllocation = sponsorTotalAllocation[msg.sender];
         uint256 _totalAllocation = totalAllocation;
-        for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
+        for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             (uint256 _newSponsorTotalAllocation, uint256 _newTotalAllocation) =
                 _allocate(gauges_[i], allocations_[i], _sponsorTotalAllocation, _totalAllocation);
             _sponsorTotalAllocation = _newSponsorTotalAllocation;
@@ -206,14 +206,14 @@ contract SponsorsManager is Governed {
         if (onDistributionPeriod == false) revert DistributionPeriodDidNotStart();
         Gauge[] memory _gauges = gauges;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
-        uint256 _lastDistribution = Math.min(_gauges.length, _gaugeIndex + MAX_DISTRIBUTIONS_PER_BATCH);
+        uint256 _lastDistribution = Math.min(_gauges.length, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
         uint256 _rewardsPerShare = rewardsPerShare;
         BuilderRegistry _builderRegistry = builderRegistry;
 
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
             _distribute(_gauges[_gaugeIndex], _rewardsPerShare, _builderRegistry);
-            _gaugeIndex = UtilsLib.unchecked_inc(_gaugeIndex);
+            _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
         }
         // all the gauges were distributed, so distribution period is finished
         if (_lastDistribution == _gauges.length) {
@@ -232,7 +232,7 @@ contract SponsorsManager is Governed {
      */
     function claimSponsorRewards(Gauge[] memory gauges_) external {
         uint256 _length = gauges_.length;
-        for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
+        for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             gauges_[i].claimSponsorReward(msg.sender);
         }
     }
