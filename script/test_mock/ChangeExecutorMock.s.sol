@@ -7,13 +7,13 @@ import { ChangeExecutorMock } from "test/mock/ChangeExecutorMock.sol";
 import { ChangeExecutor } from "src/governance/ChangeExecutor.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (ChangeExecutorMock, address) {
+    function run() public returns (ChangeExecutorMock implementation, ChangeExecutorMock proxy) {
         address governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
 
-        return run(governorAddress);
+        (implementation, proxy) = run(governorAddress);
     }
 
-    function run(address governorAddress_) public broadcast returns (ChangeExecutorMock, address) {
+    function run(address governorAddress_) public broadcast returns (ChangeExecutorMock, ChangeExecutorMock) {
         string memory _contractName = "ChangeExecutorMock.sol";
         bytes memory _initializerData = abi.encodeCall(ChangeExecutor.initialize, (governorAddress_));
         address _implementation;
@@ -21,10 +21,10 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         if (vm.envOr("NO_DD", false)) {
             (_implementation, _proxy) = _deployUUPSProxy(_contractName, _initializerData);
 
-            return (ChangeExecutorMock(_implementation), _proxy);
+            return (ChangeExecutorMock(_implementation), ChangeExecutorMock(_proxy));
         }
         (_implementation, _proxy) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
 
-        return (ChangeExecutorMock(_implementation), _proxy);
+        return (ChangeExecutorMock(_implementation), ChangeExecutorMock(_proxy));
     }
 }

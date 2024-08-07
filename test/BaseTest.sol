@@ -18,8 +18,8 @@ import { RewardDistributor } from "src/RewardDistributor.sol";
 import { EpochLib } from "src/libraries/EpochLib.sol";
 
 contract BaseTest is Test {
+    ChangeExecutorMock public changeExecutorMockImpl;
     ChangeExecutorMock public changeExecutorMock;
-    address public changeExecutorMockProxy;
     ERC20Mock public stakingToken;
     ERC20Mock public rewardToken;
 
@@ -28,12 +28,12 @@ contract BaseTest is Test {
     Gauge public gauge2;
     Gauge[] public gaugesArray;
     uint256[] public allocationsArray = [0, 0];
+    SponsorsManager public sponsorsManagerImpl;
     SponsorsManager public sponsorsManager;
-    address public sponsorsManagerProxy;
+    BuilderRegistry public builderRegistryImpl;
     BuilderRegistry public builderRegistry;
-    address public builderRegistryProxy;
+    RewardDistributor public rewardDistributorImpl;
     RewardDistributor public rewardDistributor;
-    address public rewardDistributorProxy;
 
     address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract
     address internal alice = makeAddr("alice");
@@ -44,21 +44,21 @@ contract BaseTest is Test {
     address internal foundation = makeAddr("foundation");
 
     function setUp() public {
-        (changeExecutorMock, changeExecutorMockProxy) = new ChangeExecutorMockDeployer().run(governor);
+        (changeExecutorMockImpl, changeExecutorMock) = new ChangeExecutorMockDeployer().run(governor);
         MockTokenDeployer mockTokenDeployer = new MockTokenDeployer();
         stakingToken = mockTokenDeployer.run(0);
         rewardToken = mockTokenDeployer.run(1);
-        (builderRegistry, builderRegistryProxy) =
+        (builderRegistryImpl, builderRegistry) =
             new BuilderRegistryDeployer().run(address(changeExecutorMock), kycApprover);
         gaugeFactory = new GaugeFactoryDeployer().run();
-        (sponsorsManager, sponsorsManagerProxy) = new SponsorsManagerDeployer().run(
+        (sponsorsManagerImpl, sponsorsManager) = new SponsorsManagerDeployer().run(
             address(changeExecutorMock),
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),
             address(builderRegistry)
         );
-        (rewardDistributor, rewardDistributorProxy) =
+        (rewardDistributorImpl, rewardDistributor) =
             new RewardDistributorDeployer().run(address(changeExecutorMock), foundation, address(sponsorsManager));
 
         // allow to execute all the functions protected by governance
