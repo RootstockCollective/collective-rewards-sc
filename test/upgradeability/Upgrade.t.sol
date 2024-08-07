@@ -16,10 +16,10 @@ contract UpgradeTest is BaseTest {
     function test_UpgradeSponsorsManager() public {
         // GIVEN a SponsorsManager proxy with an implementation
         // AND a new implementation
-        SponsorsManagerUpgradeMock sponsorsManagerNewImpl = new SponsorsManagerUpgradeMock();
+        SponsorsManagerUpgradeMock _sponsorsManagerNewImpl = new SponsorsManagerUpgradeMock();
         //WHEN the proxy is upgraded and initialized
         sponsorsManager.upgradeToAndCall(
-            address(sponsorsManagerNewImpl), abi.encodeCall(sponsorsManagerNewImpl.initializeMock, (42))
+            address(_sponsorsManagerNewImpl), abi.encodeCall(_sponsorsManagerNewImpl.initializeMock, (42))
         );
         // THEN getCustomMockValue is 44 = 2 gaugeLength + 42 newVariable
         assertEq(SponsorsManagerUpgradeMock(address(sponsorsManager)).getCustomMockValue(), 44);
@@ -31,15 +31,15 @@ contract UpgradeTest is BaseTest {
     function test_UpgradeRewardDistributor() public {
         // GIVEN a RewardDistributor proxy with an implementation
         // AND a new implementation
-        RewardDistributorUpgradeMock rewardDistributorNewImpl = new RewardDistributorUpgradeMock();
+        RewardDistributorUpgradeMock _rewardDistributorNewImpl = new RewardDistributorUpgradeMock();
         //WHEN the proxy is upgraded and initialized
         rewardDistributor.upgradeToAndCall(
-            address(rewardDistributorNewImpl), abi.encodeCall(rewardDistributorNewImpl.initializeMock, (43))
+            address(_rewardDistributorNewImpl), abi.encodeCall(_rewardDistributorNewImpl.initializeMock, (43))
         );
-        uint256 newVar = RewardDistributorUpgradeMock(address(rewardDistributor)).getCustomMockValue()
+        uint256 _newVar = RewardDistributorUpgradeMock(address(rewardDistributor)).getCustomMockValue()
             - (uint256(uint160(foundation)));
         // THEN getCustomMockValue is foundation address + 43 newVariable
-        assertEq(newVar, 43);
+        assertEq(_newVar, 43);
     }
 
     /**
@@ -48,15 +48,15 @@ contract UpgradeTest is BaseTest {
     function test_UpgradeBuilderRegistry() public {
         // GIVEN a BuilderRegistry proxy with an implementation
         // AND a new implementation
-        BuilderRegistryUpgradeMock builderRegistryNewImpl = new BuilderRegistryUpgradeMock();
+        BuilderRegistryUpgradeMock _builderRegistryNewImpl = new BuilderRegistryUpgradeMock();
         //WHEN the proxy is upgraded and initialized
         builderRegistry.upgradeToAndCall(
-            address(builderRegistryNewImpl), abi.encodeCall(builderRegistryNewImpl.initializeMock, (44))
+            address(_builderRegistryNewImpl), abi.encodeCall(_builderRegistryNewImpl.initializeMock, (44))
         );
-        uint256 newVar =
+        uint256 _newVar =
             BuilderRegistryUpgradeMock(address(builderRegistry)).getCustomMockValue() - (uint256(uint160(governor)));
         // THEN getCustomMockValue is governor address + 44 newVariable
-        assertEq(newVar, 44);
+        assertEq(_newVar, 44);
     }
 
     /**
@@ -65,15 +65,15 @@ contract UpgradeTest is BaseTest {
     function test_UpgradeChangeExecutor() public {
         // GIVEN a ChangeExecutor proxy with an implementation
         // AND a new implementation
-        ChangeExecutorUpgradeMock changeExecutorNewImpl = new ChangeExecutorUpgradeMock();
+        ChangeExecutorUpgradeMock _changeExecutorNewImpl = new ChangeExecutorUpgradeMock();
         //WHEN the proxy is upgraded and initialized
         vm.prank(governor);
         changeExecutorMock.upgradeToAndCall(
-            address(changeExecutorNewImpl), abi.encodeCall(changeExecutorNewImpl.initializeMock, (45))
+            address(_changeExecutorNewImpl), abi.encodeCall(_changeExecutorNewImpl.initializeMock, (45))
         );
-        uint256 newVar =
+        uint256 _newVar =
             ChangeExecutorUpgradeMock(address(changeExecutorMock)).getCustomMockValue() - (uint256(uint160(governor)));
         // THEN getCustomMockValue is governor address + 45 newVariable
-        assertEq(newVar, 45);
+        assertEq(_newVar, 45);
     }
 }

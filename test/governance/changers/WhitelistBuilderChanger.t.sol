@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { stdError } from "forge-std/src/Test.sol";
 import { BaseTest, Gauge, BuilderRegistry } from "../../BaseTest.sol";
 import { Governed } from "../../../src/governance/Governed.sol";
 import { ChangeExecutor } from "../../../src/governance/ChangeExecutor.sol";
@@ -9,17 +8,17 @@ import { WhitelistBuilderChangerTemplate } from
     "../../../src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol";
 
 contract WhitelistBuilderChangerTest is BaseTest {
-    WhitelistBuilderChangerTemplate internal changer;
-    address internal newBuilder = makeAddr("newBuilder");
+    WhitelistBuilderChangerTemplate internal _changer;
+    address internal _newBuilder = makeAddr("newBuilder");
 
     function _setUp() internal override {
         // GIVEN the ChangeExecutor without isAuthorized mock
         changeExecutorMock.setIsAuthorized(false);
         // AND a WhitelistBuilderChanger deployed for a new builder
-        changer = new WhitelistBuilderChangerTemplate(sponsorsManager, newBuilder);
+        _changer = new WhitelistBuilderChangerTemplate(sponsorsManager, _newBuilder);
         // AND a newBuilder activated
         vm.prank(kycApprover);
-        builderRegistry.activateBuilder(newBuilder, newBuilder, 0);
+        builderRegistry.activateBuilder(_newBuilder, _newBuilder, 0);
     }
 
     /**
@@ -29,7 +28,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         //  WHEN tries to directly execute the changer
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        changer.execute();
+        _changer.execute();
     }
 
     /**
@@ -39,7 +38,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         //  WHEN tries no governor tries to execute the changer
         //   THEN tx reverts because NotGovernor
         vm.expectRevert(ChangeExecutor.NotGovernor.selector);
-        changeExecutorMock.executeChange(changer);
+        changeExecutorMock.executeChange(_changer);
     }
 
     /**
@@ -48,12 +47,12 @@ contract WhitelistBuilderChangerTest is BaseTest {
     function test_ExecuteChange() public {
         //  WHEN governor executes the changer
         vm.prank(governor);
-        changeExecutorMock.executeChange(changer);
+        changeExecutorMock.executeChange(_changer);
         //  THEN the change is successfully executed
-        Gauge newGauge = changer.newGauge();
+        Gauge _newGauge = _changer.newGauge();
         //  THEN gauge is added on SponsorsManager
-        assertEq(address(sponsorsManager.builderToGauge(newBuilder)), address(newGauge));
+        assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
         //  THEN the new builder is whitelisted
-        assertEq(uint256(builderRegistry.getState(newBuilder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
+        assertEq(uint256(builderRegistry.getState(_newBuilder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
     }
 }

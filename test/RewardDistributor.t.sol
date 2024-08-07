@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { stdError } from "forge-std/src/Test.sol";
 import { BaseTest, RewardDistributor } from "./BaseTest.sol";
 import { EpochLib } from "../src/libraries/EpochLib.sol";
 import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
@@ -64,7 +63,7 @@ contract RewardDistributorTest is BaseTest {
     function test_SendRewardToken() public {
         // GIVEN a RewardDistributor contract with 10 ether of reward token
         rewardToken.transfer(address(rewardDistributor), 10 ether);
-        uint256 epoch1Timestamp = EpochLib._epochStart(block.timestamp);
+        uint256 _epoch1Timestamp = EpochLib._epochStart(block.timestamp);
         // WHEN foundation treasury calls sendRewardToken transferring 2 ethers
         vm.startPrank(foundation);
         rewardDistributor.sendRewardToken(2 ether);
@@ -74,7 +73,7 @@ contract RewardDistributorTest is BaseTest {
         rewardDistributor.sendRewardToken(1 ether);
         // AND epoch finish
         _skipAndStartNewEpoch();
-        uint256 epoch2Timestamp = EpochLib._epochStart(block.timestamp);
+        uint256 _epoch2Timestamp = EpochLib._epochStart(block.timestamp);
         // AND foundation treasury calls sendRewardToken transferring 4 ethers
         rewardDistributor.sendRewardToken(4 ether);
 
@@ -84,9 +83,9 @@ contract RewardDistributorTest is BaseTest {
         assertEq(rewardToken.balanceOf(address(sponsorsManager)), 7 ether);
 
         // THEN reward token sent on epoch 1 is 3 ether
-        assertEq(rewardDistributor.rewardTokenAmountPerEpoch(epoch1Timestamp), 3 ether);
+        assertEq(rewardDistributor.rewardTokenAmountPerEpoch(_epoch1Timestamp), 3 ether);
         // THEN reward token sent on epoch 2 is 4 ether
-        assertEq(rewardDistributor.rewardTokenAmountPerEpoch(epoch2Timestamp), 4 ether);
+        assertEq(rewardDistributor.rewardTokenAmountPerEpoch(_epoch2Timestamp), 4 ether);
     }
 
     /**

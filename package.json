@@ -52,7 +52,7 @@
     "compile": "forge compile --force && hardhat compile --force",
     "deploy": "./script/deploy.sh",
     "lint": "bun run lint:sol && bun run lint:md && bun run lint:ts",
-    "lint:sol": "solhint {src,test/mock}/**/*.sol && npx solhint --config .solhint.test.json test/**/*.t.sol",
+    "lint:sol": "solhint {src,test/mock}/**/*.sol && solhint --config .solhint.test.json test/**/*.t.sol",
     "lint:md": "markdownlint-cli2 .",
     "lint:ts": "eslint . --ext .ts",
     "lint:ts:fix": "eslint . --ext .ts --fix",

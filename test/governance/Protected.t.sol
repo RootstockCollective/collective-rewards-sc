@@ -14,10 +14,10 @@ contract ProtectedTest is BaseTest {
         changeExecutorMock.setIsAuthorized(false);
         //  WHEN Governor calls a function protected by the modifier onlyGovernorOrAuthorizedChanger
         vm.prank(governor);
-        address newBuilder = makeAddr("newBuilder");
-        Gauge newGauge = sponsorsManager.createGauge(newBuilder);
+        address _newBuilder = makeAddr("newBuilder");
+        Gauge _newGauge = sponsorsManager.createGauge(_newBuilder);
         //   THEN the function is successfully executed
-        assertEq(address(sponsorsManager.builderToGauge(newBuilder)), address(newGauge));
+        assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
     }
 
     /**
@@ -41,8 +41,8 @@ contract ProtectedTest is BaseTest {
         //  WHEN tries to upgrade the SponsorsManager
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        address newImplementation = makeAddr("newImplementation");
-        sponsorsManager.upgradeToAndCall(newImplementation, "0x0");
+        address _newImplementation = makeAddr("newImplementation");
+        sponsorsManager.upgradeToAndCall(_newImplementation, "0x0");
     }
 
     /**
@@ -53,7 +53,7 @@ contract ProtectedTest is BaseTest {
         //  WHEN tries to upgrade the ChangeExecutor
         //   THEN tx reverts because NotGovernor
         vm.expectRevert(ChangeExecutor.NotGovernor.selector);
-        address newImplementation = makeAddr("newImplementation");
-        changeExecutorMock.upgradeToAndCall(newImplementation, "0x0");
+        address _newImplementation = makeAddr("newImplementation");
+        changeExecutorMock.upgradeToAndCall(_newImplementation, "0x0");
     }
 }

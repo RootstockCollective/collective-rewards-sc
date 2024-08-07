@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 import { stdError } from "forge-std/src/Test.sol";
 import { BaseTest, SponsorsManager, Gauge } from "./BaseTest.sol";
-import { EpochLib } from "../src/libraries/EpochLib.sol";
 
 contract SponsorsManagerTest is BaseTest {
     // -----------------------------
@@ -36,15 +35,15 @@ contract SponsorsManagerTest is BaseTest {
      * GaugeCreated event is emitted and new gauges added to the list
      */
     function test_CreateGauge() public {
-        address newBuilder = makeAddr("newBuilder");
+        address _newBuilder = makeAddr("newBuilder");
         // GIVEN a SponsorManager contract
         //  WHEN a gauge is deployed for a new builder
         //   THEN a GaugeCreated event is emitted
         vm.expectEmit(true, false, true, true); // ignore new gauge address
-        emit GaugeCreated(newBuilder, /*ignored*/ address(0), address(this));
-        Gauge newGauge = sponsorsManager.createGauge(newBuilder);
+        emit GaugeCreated(_newBuilder, /*ignored*/ address(0), address(this));
+        Gauge _newGauge = sponsorsManager.createGauge(_newBuilder);
         //   THEN new gauge is assigned to the new builder
-        assertEq(address(sponsorsManager.builderToGauge(newBuilder)), address(newGauge));
+        assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
     }
 
     /**
