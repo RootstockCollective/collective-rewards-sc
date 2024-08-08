@@ -2,20 +2,20 @@
 pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
-import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { SimplifiedRewardDistributor } from "src/mvp/SimplifiedRewardDistributor.sol";
 
-contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (SimplifiedRewardDistributor) {
-        address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
-        address rewardTokenAddress = vm.envOr("RewardToken", address(0));
-        if (changeExecutorAddress == address(0)) {
-            changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
+contract Deploy is Broadcaster {
+    function run() public returns (SimplifiedRewardDistributor proxy_, SimplifiedRewardDistributor implementation_) {
+        address _changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
+        address _rewardTokenAddress = vm.envOr("RewardToken", address(0));
+        if (_changeExecutorAddress == address(0)) {
+            _changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }
-        if (rewardTokenAddress == address(0)) {
-            rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
+        if (_rewardTokenAddress == address(0)) {
+            _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         }
-        return run(changeExecutorAddress, rewardTokenAddress);
+        (proxy_, implementation_) = run(_changeExecutorAddress, _rewardTokenAddress);
     }
 
     function run(
@@ -24,17 +24,24 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
     )
         public
         broadcast
-        returns (SimplifiedRewardDistributor)
+        returns (SimplifiedRewardDistributor, SimplifiedRewardDistributor)
     {
         require(changeExecutor_ != address(0), "Change executor address cannot be empty");
         require(rewardToken_ != address(0), "Reward Token address cannot be empty");
 
-        string memory _contractName = "SimplifiedRewardDistributor.sol";
         bytes memory _initializerData =
             abi.encodeCall(SimplifiedRewardDistributor.initialize, (changeExecutor_, rewardToken_));
+        address _implementation;
+        address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            return SimplifiedRewardDistributor(payable(_deployUUPSProxy(_contractName, _initializerData)));
+            _implementation = address(new SimplifiedRewardDistributor());
+            _proxy = address(new ERC1967Proxy(_implementation, _initializerData));
+
+            return (SimplifiedRewardDistributor(payable(_proxy)), SimplifiedRewardDistributor(payable(_implementation)));
         }
-        return SimplifiedRewardDistributor(payable(_deployUUPSProxyDD(_contractName, _initializerData, _salt)));
+        _implementation = address(new SimplifiedRewardDistributor{ salt: _salt }());
+        _proxy = address(new ERC1967Proxy{ salt: _salt }(_implementation, _initializerData));
+
+        return (SimplifiedRewardDistributor(payable(_proxy)), SimplifiedRewardDistributor(payable(_implementation)));
     }
 }

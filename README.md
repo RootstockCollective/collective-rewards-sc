@@ -36,6 +36,12 @@ The following tools are required to be installed:
 > the latest version we experienced the following error on RSKj:
 > `... deserialization error: missing field ``effectiveGasPrice`` ...`
 
+That foundry branch works with cargo >=1.76.0 or <= 1.79.0. So first, switch the version
+
+```sh
+rustup default 1.79.0
+```
+
 ```sh
 foundryup --branch f625d0fa7c51e65b4bf1e8f7931cd1c6e2e285e9
 ```
@@ -51,6 +57,20 @@ Clone the repo and install the dependencies
 git clone https://github.com/rsksmart/builder-incentives-sc.git
 cd builder-incentives-sc
 bun install # install Solhint, Prettier, Hardhat and other Node.js deps
+```
+
+> [!WARNING] `.env.<chain_id>` could be public, don't put your private key or mnemonic there. Use `.env` for that.
+
+```sh
+cp .env.private.example .env
+```
+
+and change the values to
+
+```sh
+# .env
+# Required
+export PRIVATE_KEY="{your-private-key}"
 ```
 
 When you change to the project directory (`cd builder-incentives-sc`), the shell will ask you to run
@@ -78,7 +98,6 @@ and change the values to
 # Required
 export DEPLOYMENT_CONTEXT="regtest"
 export RPC_URL="https://dolphinnet.node"
-export PRIVATE_KEY="0xc85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4"
 export REWARD_TOKEN_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA70"
 export STAKING_TOKEN_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA71"
 export GOVERNOR_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA72"

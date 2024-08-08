@@ -25,7 +25,7 @@ contract SimplifiedRewardDistributor is Governed, ReentrancyGuardUpgradeable {
     /// @notice map of builders reward receiver
     mapping(address builder => address payable rewardReceiver) public builderRewardReceiver;
     // @notice array of whitelisted builders
-    EnumerableSet.AddressSet internal whitelistedBuilders;
+    EnumerableSet.AddressSet internal _whitelistedBuilders;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -65,7 +65,7 @@ contract SimplifiedRewardDistributor is Governed, ReentrancyGuardUpgradeable {
         onlyGovernorOrAuthorizedChanger
     {
         builderRewardReceiver[builder_] = rewardReceiver_;
-        whitelistedBuilders.add(builder_);
+        _whitelistedBuilders.add(builder_);
     }
 
     /**
@@ -75,7 +75,7 @@ contract SimplifiedRewardDistributor is Governed, ReentrancyGuardUpgradeable {
      */
     function removeWhitelistedBuilder(address builder_) external onlyGovernorOrAuthorizedChanger {
         builderRewardReceiver[builder_] = payable(0);
-        whitelistedBuilders.remove(builder_);
+        _whitelistedBuilders.remove(builder_);
     }
 
     /**
@@ -103,21 +103,21 @@ contract SimplifiedRewardDistributor is Governed, ReentrancyGuardUpgradeable {
      * @notice get length of whitelisted builders array
      */
     function getWhitelistedBuildersLength() external view returns (uint256) {
-        return whitelistedBuilders.length();
+        return _whitelistedBuilders.length();
     }
 
     /**
      * @notice get whitelisted builder from array
      */
     function getWhitelistedBuilder(uint256 index_) external view returns (address) {
-        return whitelistedBuilders.at(index_);
+        return _whitelistedBuilders.at(index_);
     }
 
     /**
      * @notice return true is builder is whitelisted
      */
     function isWhitelisted(address builder_) external view returns (bool) {
-        return whitelistedBuilders.contains(builder_);
+        return _whitelistedBuilders.contains(builder_);
     }
 
     // -----------------------------
@@ -131,16 +131,16 @@ contract SimplifiedRewardDistributor is Governed, ReentrancyGuardUpgradeable {
      * @param coinbaseAmount_ total amount of coinbase to be distribute between builders
      */
     function _distribute(uint256 rewardTokenAmount_, uint256 coinbaseAmount_) internal nonReentrant {
-        uint256 _buildersLength = whitelistedBuilders.length();
+        uint256 _buildersLength = _whitelistedBuilders.length();
         uint256 _rewardTokenPayment = rewardTokenAmount_ / _buildersLength;
         uint256 _coinbasePayment = coinbaseAmount_ / _buildersLength;
-        for (uint256 i = 0; i < _buildersLength; i = UtilsLib.unchecked_inc(i)) {
-            address payable rewardReceiver = builderRewardReceiver[whitelistedBuilders.at(i)];
+        for (uint256 i = 0; i < _buildersLength; i = UtilsLib._uncheckedInc(i)) {
+            address payable _rewardReceiver = builderRewardReceiver[_whitelistedBuilders.at(i)];
             if (_rewardTokenPayment > 0) {
-                SafeERC20.safeTransfer(rewardToken, rewardReceiver, _rewardTokenPayment);
+                SafeERC20.safeTransfer(rewardToken, _rewardReceiver, _rewardTokenPayment);
             }
             if (_coinbasePayment > 0) {
-                Address.sendValue(rewardReceiver, _coinbasePayment);
+                Address.sendValue(_rewardReceiver, _coinbasePayment);
             }
         }
     }

@@ -11,16 +11,16 @@ contract MVPUpgradeTest is MVPBaseTest {
     function test_UpgradeSimplifiedRewardDistributorr() public {
         // GIVEN a SimplifiedRewardDistributor proxy with an implementation
         // AND a new implementation
-        SimplifiedRewardDistributorUpgradeMock simplifiedRewardDistributorNewImpl =
+        SimplifiedRewardDistributorUpgradeMock _simplifiedRewardDistributorNewImpl =
             new SimplifiedRewardDistributorUpgradeMock();
         //WHEN the proxy is upgraded and initialized
         simplifiedRewardDistributor.upgradeToAndCall(
-            address(simplifiedRewardDistributorNewImpl),
-            abi.encodeCall(simplifiedRewardDistributorNewImpl.initializeMock, (30))
+            address(_simplifiedRewardDistributorNewImpl),
+            abi.encodeCall(_simplifiedRewardDistributorNewImpl.initializeMock, (30))
         );
-        uint256 newVar = SimplifiedRewardDistributorUpgradeMock(payable(address(simplifiedRewardDistributor)))
+        uint256 _newVar = SimplifiedRewardDistributorUpgradeMock(payable(address(simplifiedRewardDistributor)))
             .getCustomMockValue() - (uint256(uint160(governor)));
         // THEN getCustomMockValue is governor address + 30 newVariable
-        assertEq(newVar, 30);
+        assertEq(_newVar, 30);
     }
 }

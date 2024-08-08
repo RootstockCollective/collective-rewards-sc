@@ -12,8 +12,10 @@ import { SimplifiedRewardDistributor } from "src/mvp/SimplifiedRewardDistributor
 
 contract MVPBaseTest is Test {
     ChangeExecutorMock public changeExecutorMock;
+    ChangeExecutorMock public changeExecutorMockImpl;
     ERC20Mock public rewardToken;
     SimplifiedRewardDistributor public simplifiedRewardDistributor;
+    SimplifiedRewardDistributor public simplifiedRewardDistributorImpl;
 
     address internal governor = makeAddr("governor");
     address internal alice = makeAddr("alice");
@@ -24,10 +26,10 @@ contract MVPBaseTest is Test {
     address payable internal rewardReceiver2 = payable(makeAddr("rewardReceiver2"));
 
     function setUp() public {
-        changeExecutorMock = new ChangeExecutorMockDeployer().run(governor);
+        (changeExecutorMock, changeExecutorMockImpl) = new ChangeExecutorMockDeployer().run(governor);
         MockTokenDeployer mockTokenDeployer = new MockTokenDeployer();
         rewardToken = mockTokenDeployer.run(0);
-        simplifiedRewardDistributor =
+        (simplifiedRewardDistributor, simplifiedRewardDistributorImpl) =
             new SimplifiedRewardDistributorDeployer().run(address(changeExecutorMock), address(rewardToken));
 
         // allow to execute all the functions protected by governance

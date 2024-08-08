@@ -37,15 +37,15 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
      */
     function test_WhitelistBuilder() public {
         // GIVEN a new builder
-        address payable newBuilder = payable(makeAddr("newBuilder"));
+        address payable _newBuilder = payable(makeAddr("newBuilder"));
         // WHEN calls whitelistBuilder
-        simplifiedRewardDistributor.whitelistBuilder(newBuilder, newBuilder);
+        simplifiedRewardDistributor.whitelistBuilder(_newBuilder, _newBuilder);
         // THEN newBuilder is whitelisted
-        assertTrue(simplifiedRewardDistributor.isWhitelisted(newBuilder));
+        assertTrue(simplifiedRewardDistributor.isWhitelisted(_newBuilder));
         // THEN the new reward receiver is the new builder
-        assertEq(simplifiedRewardDistributor.builderRewardReceiver(newBuilder), newBuilder);
+        assertEq(simplifiedRewardDistributor.builderRewardReceiver(_newBuilder), _newBuilder);
         // THEN newBuilder is on index 2
-        assertEq(simplifiedRewardDistributor.getWhitelistedBuilder(2), newBuilder);
+        assertEq(simplifiedRewardDistributor.getWhitelistedBuilder(2), _newBuilder);
         // THEN getWhitelistedBuildersLength is 3
         assertEq(simplifiedRewardDistributor.getWhitelistedBuildersLength(), 3);
     }
@@ -81,9 +81,9 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
      */
     function test_RemoveNonWhitelistedBuilder() public {
         // GIVEN a new builder
-        address payable newBuilder = payable(makeAddr("newBuilder"));
+        address payable _newBuilder = payable(makeAddr("newBuilder"));
         //  WHEN tries to remove it form the whitelist
-        simplifiedRewardDistributor.removeWhitelistedBuilder(newBuilder);
+        simplifiedRewardDistributor.removeWhitelistedBuilder(_newBuilder);
         // THEN nothing happend, getWhitelistedBuildersLength is still 2
         assertEq(simplifiedRewardDistributor.getWhitelistedBuildersLength(), 2);
     }

@@ -33,7 +33,6 @@ deployments/devnet/*
 
 # config
 .env
-.env.33
 
 # Hardhat files
 /cache_hardhat
