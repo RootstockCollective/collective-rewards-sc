@@ -6,7 +6,7 @@ import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (RewardDistributor implementation, RewardDistributor proxy) {
+    function run() public returns (RewardDistributor proxy, RewardDistributor implementation) {
         address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
         if (changeExecutorAddress == address(0)) {
             changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
@@ -17,7 +17,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
             sponsorsManagerAddress = vm.envAddress("SPONSORS_MANAGER_ADDRESS");
         }
 
-        (implementation, proxy) = run(changeExecutorAddress, foundationTreasuryAddress, sponsorsManagerAddress);
+        ((proxy, implementation)) = run(changeExecutorAddress, foundationTreasuryAddress, sponsorsManagerAddress);
     }
 
     function run(
@@ -39,12 +39,12 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            (_implementation, _proxy) = _deployUUPSProxy(_contractName, _initializerData);
+            (_proxy, _implementation) = _deployUUPSProxy(_contractName, _initializerData);
 
-            return (RewardDistributor(_implementation), RewardDistributor(_proxy));
+            return (RewardDistributor(_proxy), RewardDistributor(_implementation));
         }
-        (_implementation, _proxy) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
+        (_proxy, _implementation) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
 
-        return (RewardDistributor(_implementation), RewardDistributor(_proxy));
+        return (RewardDistributor(_proxy), RewardDistributor(_implementation));
     }
 }

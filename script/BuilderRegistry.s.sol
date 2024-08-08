@@ -6,14 +6,14 @@ import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
 import { BuilderRegistry } from "src/BuilderRegistry.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (BuilderRegistry implementation, BuilderRegistry proxy) {
+    function run() public returns (BuilderRegistry proxy, BuilderRegistry implementation) {
         address kycApprover = vm.envAddress("KYC_APPROVER_ADDRESS");
         address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
         if (changeExecutorAddress == address(0)) {
             changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }
 
-        (implementation, proxy) = run(changeExecutorAddress, kycApprover);
+        ((proxy, implementation)) = run(changeExecutorAddress, kycApprover);
     }
 
     function run(
@@ -31,12 +31,12 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            (_implementation, _proxy) = _deployUUPSProxy(_contractName, _initializerData);
+            (_proxy, _implementation) = _deployUUPSProxy(_contractName, _initializerData);
 
-            return (BuilderRegistry(_implementation), BuilderRegistry(_proxy));
+            return (BuilderRegistry(_proxy), BuilderRegistry(_implementation));
         }
-        (_implementation, _proxy) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
+        (_proxy, _implementation) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
 
-        return (BuilderRegistry(_implementation), BuilderRegistry(_proxy));
+        return (BuilderRegistry(_proxy), BuilderRegistry(_implementation));
     }
 }

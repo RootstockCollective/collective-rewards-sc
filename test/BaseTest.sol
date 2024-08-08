@@ -44,21 +44,21 @@ contract BaseTest is Test {
     address internal foundation = makeAddr("foundation");
 
     function setUp() public {
-        (changeExecutorMockImpl, changeExecutorMock) = new ChangeExecutorMockDeployer().run(governor);
+        (changeExecutorMock, changeExecutorMockImpl) = new ChangeExecutorMockDeployer().run(governor);
         MockTokenDeployer mockTokenDeployer = new MockTokenDeployer();
         stakingToken = mockTokenDeployer.run(0);
         rewardToken = mockTokenDeployer.run(1);
-        (builderRegistryImpl, builderRegistry) =
+        (builderRegistry, builderRegistryImpl) =
             new BuilderRegistryDeployer().run(address(changeExecutorMock), kycApprover);
         gaugeFactory = new GaugeFactoryDeployer().run();
-        (sponsorsManagerImpl, sponsorsManager) = new SponsorsManagerDeployer().run(
+        (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerDeployer().run(
             address(changeExecutorMock),
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),
             address(builderRegistry)
         );
-        (rewardDistributorImpl, rewardDistributor) =
+        (rewardDistributor, rewardDistributorImpl) =
             new RewardDistributorDeployer().run(address(changeExecutorMock), foundation, address(sponsorsManager));
 
         // allow to execute all the functions protected by governance
