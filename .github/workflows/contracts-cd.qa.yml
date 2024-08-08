@@ -2,17 +2,13 @@
 name: Deploy Contracts for QA
 
 on:
-  pull_request:
-    branches:
-      - "main"
-      - "TOK-114implement-cd"
   push:
     branches:
-      - "main"
-      - "TOK-114implement-cd"
+      - main
+      - TOK-114/implement-cd
 
 jobs:
-  build:
+  deploy:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Check out the repo"
@@ -33,37 +29,4 @@ jobs:
       - name: "Add build summary"
         run: |
           echo "## Build result" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
-
-  test:
-    needs: ["build"]
-    runs-on: "ubuntu-latest"
-    steps:
-      - name: "Check out the repo"
-        uses: "actions/checkout@v4"
-
-      - name: "Install Foundry"
-        uses: "foundry-rs/foundry-toolchain@v1"
-
-      - name: "Install Bun"
-        uses: "oven-sh/setup-bun@v1"
-
-      - name: "Install the Node.js dependencies"
-        run: "bun install"
-
-      - name: "Show the Foundry config"
-        run: "forge config"
-
-      - name: "Generate a fuzz seed that changes weekly to avoid burning through RPC allowance"
-        run: >
-          echo "FOUNDRY_FUZZ_SEED=$(
-            echo $(($EPOCHSECONDS - $EPOCHSECONDS % 604800))
-          )" >> $GITHUB_ENV
-
-      - name: "Run the tests"
-        run: "forge test"
-
-      - name: "Add test summary"
-        run: |
-          echo "## Tests result" >> $GITHUB_STEP_SUMMARY
           echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
