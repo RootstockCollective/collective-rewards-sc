@@ -17,7 +17,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
             sponsorsManagerAddress = vm.envAddress("SPONSORS_MANAGER_ADDRESS");
         }
 
-        ((proxy, implementation)) = run(changeExecutorAddress, foundationTreasuryAddress, sponsorsManagerAddress);
+        (proxy, implementation) = run(changeExecutorAddress, foundationTreasuryAddress, sponsorsManagerAddress);
     }
 
     function run(

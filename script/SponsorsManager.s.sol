@@ -23,7 +23,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
             builderRegistryAddress = vm.envAddress("BUILDER_REGISTRY_ADDRESS");
         }
 
-        ((proxy, implementation)) = run(
+        (proxy, implementation) = run(
             changeExecutorAddress, rewardTokenAddress, stakingTokenAddress, gaugeFactoryAddress, builderRegistryAddress
         );
     }

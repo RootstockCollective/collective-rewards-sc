@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
+// Some code is copied from the
+// https://github.com/rsksmart/optimism/blob/develop/packages/contracts-bedrock/scripts/Deployer.sol
+// and modified to work for our purposes.
+
 import { Script, console } from "forge-std/src/Script.sol";
 import { stdJson } from "forge-std/src/StdJson.sol";
 

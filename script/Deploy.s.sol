@@ -37,25 +37,25 @@ contract Deploy is Broadcaster, OutputWriter {
         GaugeFactory gaugeFactory = new GaugeFactoryDeployer().run();
         save("GaugeFactory", address(gaugeFactory));
 
-        (ChangeExecutor changeExecutor, ChangeExecutor changeExecutorProxy) =
+        (ChangeExecutor changeExecutorProxy, ChangeExecutor changeExecutorImpl) =
             new ChangeExecutorDeployer().run(_governorAddress);
-        saveWithProxy("ChangeExecutor", address(changeExecutor), address(changeExecutorProxy));
+        saveWithProxy("ChangeExecutor", address(changeExecutorImpl), address(changeExecutorProxy));
 
-        (BuilderRegistry builderRegistry, BuilderRegistry builderRegistryProxy) =
-            new BuilderRegistryDeployer().run(address(changeExecutor), _kycApproverAddress);
-        saveWithProxy("BuilderRegistry", address(builderRegistry), address(builderRegistryProxy));
+        (BuilderRegistry builderRegistryProxy, BuilderRegistry builderRegistryImpl) =
+            new BuilderRegistryDeployer().run(address(changeExecutorImpl), _kycApproverAddress);
+        saveWithProxy("BuilderRegistry", address(builderRegistryImpl), address(builderRegistryProxy));
 
-        (SponsorsManager sponsorManager, SponsorsManager sponsorManagerProxy) = new SponsorsManagerDeployer().run(
-            address(changeExecutor),
+        (SponsorsManager sponsorManagerProxy, SponsorsManager sponsorManagerImpl) = new SponsorsManagerDeployer().run(
+            address(changeExecutorImpl),
             _rewardTokenAddress,
             _stakingTokenAddress,
             address(gaugeFactory),
-            address(builderRegistry)
+            address(builderRegistryImpl)
         );
-        saveWithProxy("SponsorsManager", address(sponsorManager), address(sponsorManagerProxy));
+        saveWithProxy("SponsorsManager", address(sponsorManagerImpl), address(sponsorManagerProxy));
 
-        (RewardDistributor rewardDistributor, RewardDistributor rewardDistributorProxy) = new RewardDistributorDeployer(
-        ).run(address(changeExecutor), _foundationTreasuryAddress, address(sponsorManager));
-        saveWithProxy("RewardDistributor", address(rewardDistributor), address(rewardDistributorProxy));
+        (RewardDistributor rewardDistributorProxy, RewardDistributor rewardDistributorImpl) = new RewardDistributorDeployer(
+        ).run(address(changeExecutorImpl), _foundationTreasuryAddress, address(sponsorManagerImpl));
+        saveWithProxy("RewardDistributor", address(rewardDistributorImpl), address(rewardDistributorProxy));
     }
 }

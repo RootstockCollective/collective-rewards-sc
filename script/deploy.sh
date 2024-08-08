@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Loosly based on https://github.com/rsksmart/optimism/blob/develop/packages/contracts-bedrock/scripts/deploy.sh
+
 # Ensure CREATE2 exists
 if [[ -z "${NO_DD}" || "${NO_DD}" == "false" ]] && [[ $(cast codesize 0x4e59b44847b379578588920cA78FbF26c0B4956C --rpc-url $RPC_URL) -eq 0 ]]; then
   echo "CREATE2 not deployed, deploying ..."

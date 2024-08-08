@@ -13,7 +13,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
             changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }
 
-        ((proxy, implementation)) = run(changeExecutorAddress, kycApprover);
+        (proxy, implementation) = run(changeExecutorAddress, kycApprover);
     }
 
     function run(

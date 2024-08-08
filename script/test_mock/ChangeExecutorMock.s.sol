@@ -10,7 +10,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
     function run() public returns (ChangeExecutorMock proxy, ChangeExecutorMock implementation) {
         address governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
 
-        ((proxy, implementation)) = run(governorAddress);
+        (proxy, implementation) = run(governorAddress);
     }
 
     function run(address governorAddress_) public broadcast returns (ChangeExecutorMock, ChangeExecutorMock) {
