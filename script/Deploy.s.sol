@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { console } from "forge-std/src/console.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
@@ -42,20 +41,20 @@ contract Deploy is Broadcaster, OutputWriter {
         saveWithProxy("ChangeExecutor", address(changeExecutorImpl), address(changeExecutorProxy));
 
         (BuilderRegistry builderRegistryProxy, BuilderRegistry builderRegistryImpl) =
-            new BuilderRegistryDeployer().run(address(changeExecutorImpl), _kycApproverAddress);
+            new BuilderRegistryDeployer().run(address(changeExecutorProxy), _kycApproverAddress);
         saveWithProxy("BuilderRegistry", address(builderRegistryImpl), address(builderRegistryProxy));
 
         (SponsorsManager sponsorManagerProxy, SponsorsManager sponsorManagerImpl) = new SponsorsManagerDeployer().run(
-            address(changeExecutorImpl),
+            address(changeExecutorProxy),
             _rewardTokenAddress,
             _stakingTokenAddress,
             address(gaugeFactory),
-            address(builderRegistryImpl)
+            address(builderRegistryProxy)
         );
         saveWithProxy("SponsorsManager", address(sponsorManagerImpl), address(sponsorManagerProxy));
 
         (RewardDistributor rewardDistributorProxy, RewardDistributor rewardDistributorImpl) = new RewardDistributorDeployer(
-        ).run(address(changeExecutorImpl), _foundationTreasuryAddress, address(sponsorManagerImpl));
+        ).run(address(changeExecutorProxy), _foundationTreasuryAddress, address(sponsorManagerProxy));
         saveWithProxy("RewardDistributor", address(rewardDistributorImpl), address(rewardDistributorProxy));
     }
 }
