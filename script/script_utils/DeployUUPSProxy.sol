@@ -5,9 +5,15 @@ import { Script } from "forge-std/src/Script.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 abstract contract DeployUUPSProxy is Script {
-    function _deployUUPSProxy(string memory contractName_, bytes memory initializerData_) internal returns (address) {
-        address _implementation = _deployFromBytecode(vm.getCode(contractName_));
-        return address(new ERC1967Proxy(_implementation, initializerData_));
+    function _deployUUPSProxy(
+        string memory contractName_,
+        bytes memory initializerData_
+    )
+        internal
+        returns (address proxy, address implementation)
+    {
+        implementation = _deployFromBytecode(vm.getCode(contractName_));
+        proxy = address(new ERC1967Proxy(implementation, initializerData_));
     }
 
     function _deployFromBytecode(bytes memory bytecode_) private returns (address) {
@@ -25,10 +31,10 @@ abstract contract DeployUUPSProxy is Script {
         bytes32 salt_
     )
         internal
-        returns (address)
+        returns (address proxy, address implementation)
     {
-        address _implementation = _deployFromBytecodeDD(vm.getCode(contractName_), salt_);
-        return address(new ERC1967Proxy{ salt: salt_ }(_implementation, initializerData_));
+        implementation = _deployFromBytecodeDD(vm.getCode(contractName_), salt_);
+        proxy = address(new ERC1967Proxy{ salt: salt_ }(implementation, initializerData_));
     }
 
     function _deployFromBytecodeDD(bytes memory bytecode_, bytes32 salt_) private returns (address) {

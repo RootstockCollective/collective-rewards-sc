@@ -6,24 +6,37 @@ import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
 import { BuilderRegistry } from "src/BuilderRegistry.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (BuilderRegistry) {
+    function run() public returns (BuilderRegistry proxy, BuilderRegistry implementation) {
         address kycApprover = vm.envAddress("KYC_APPROVER_ADDRESS");
         address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
         if (changeExecutorAddress == address(0)) {
             changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }
-        return run(changeExecutorAddress, kycApprover);
+
+        (proxy, implementation) = run(changeExecutorAddress, kycApprover);
     }
 
-    function run(address changeExecutor_, address kycApprover_) public broadcast returns (BuilderRegistry) {
+    function run(
+        address changeExecutor_,
+        address kycApprover_
+    )
+        public
+        broadcast
+        returns (BuilderRegistry, BuilderRegistry)
+    {
         require(changeExecutor_ != address(0), "Change executor address cannot be empty");
         require(kycApprover_ != address(0), "KYC Approver address cannot be empty");
-
         string memory _contractName = "BuilderRegistry.sol";
         bytes memory _initializerData = abi.encodeCall(BuilderRegistry.initialize, (changeExecutor_, kycApprover_));
+        address _implementation;
+        address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            return BuilderRegistry(_deployUUPSProxy(_contractName, _initializerData));
+            (_proxy, _implementation) = _deployUUPSProxy(_contractName, _initializerData);
+
+            return (BuilderRegistry(_proxy), BuilderRegistry(_implementation));
         }
-        return BuilderRegistry(_deployUUPSProxyDD(_contractName, _initializerData, _salt));
+        (_proxy, _implementation) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
+
+        return (BuilderRegistry(_proxy), BuilderRegistry(_implementation));
     }
 }

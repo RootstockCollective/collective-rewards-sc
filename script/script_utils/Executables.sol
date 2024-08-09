@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
+// Copied from https://github.com/rsksmart/optimism/blob/develop/packages/contracts-bedrock/scripts/Executables.sol
+
 /// @notice The executables used in ffi commands. These are set here
 ///         to have a single source of truth in case absolute paths
 ///         need to be used.

@@ -6,19 +6,26 @@ import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
 import { ChangeExecutor } from "src/governance/ChangeExecutor.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (ChangeExecutor) {
+    function run() public returns (ChangeExecutor proxy, ChangeExecutor implementation) {
         address governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
-        return run(governorAddress);
+
+        (proxy, implementation) = run(governorAddress);
     }
 
-    function run(address governor_) public broadcast returns (ChangeExecutor) {
+    function run(address governor_) public broadcast returns (ChangeExecutor, ChangeExecutor) {
         require(governor_ != address(0), "Governor address cannot be empty");
 
         string memory _contractName = "ChangeExecutor.sol";
         bytes memory _initializerData = abi.encodeCall(ChangeExecutor.initialize, (governor_));
+        address _implementation;
+        address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            return ChangeExecutor(_deployUUPSProxy(_contractName, _initializerData));
+            (_proxy, _implementation) = _deployUUPSProxy(_contractName, _initializerData);
+
+            return (ChangeExecutor(_proxy), ChangeExecutor(_implementation));
         }
-        return ChangeExecutor(_deployUUPSProxyDD(_contractName, _initializerData, _salt));
+        (_proxy, _implementation) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
+
+        return (ChangeExecutor(_proxy), ChangeExecutor(_implementation));
     }
 }
