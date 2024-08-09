@@ -7,7 +7,8 @@
     "func-visibility": ["error", { "ignoreConstructors": true }],
     "func-param-name-mixedcase": "error",
     "private-vars-leading-underscore": "error",
-    "bim/avoiding-naming-collision": "error",
+    "no-unused-import": "error",
+    "bim/scoped-vars-leading-underscore": "error",
     "bim/func-param-name-trailing-underscore": "error",
     "bim/private-vars-leading-underscore-lib": "error"
   }

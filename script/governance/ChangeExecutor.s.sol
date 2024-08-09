@@ -7,9 +7,9 @@ import { ChangeExecutor } from "src/governance/ChangeExecutor.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
     function run() public returns (ChangeExecutor proxy, ChangeExecutor implementation) {
-        address governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
+        address _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
 
-        (proxy, implementation) = run(governorAddress);
+        (proxy, implementation) = run(_governorAddress);
     }
 
     function run(address governor_) public broadcast returns (ChangeExecutor, ChangeExecutor) {

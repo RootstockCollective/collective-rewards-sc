@@ -1,11 +1,12 @@
 const Base = require("./base");
 const utils = require("./utils");
+const constants = require("./constants");
 
 class PrivateVarsLeadingUnderscoreLib extends Base {
   static ruleId = "private-vars-leading-underscore-lib";
 
   ContractDefinition(node) {
-    if (node.kind === "library") {
+    if (node.kind === constants.LIBRARY) {
       this.inLibrary = true;
     }
   }
@@ -15,35 +16,35 @@ class PrivateVarsLeadingUnderscoreLib extends Base {
   }
 
   FunctionDefinition(node) {
-    if (this.inLibrary) {
-      const isPrivate = node.visibility === "private";
-      const isInternal = node.visibility === "internal" || node.visibility === "default";
-      const shouldHaveLeadingUnderscore = isPrivate || isInternal;
-      this.validateName(node, shouldHaveLeadingUnderscore);
-    }
+    this._validateName(node);
   }
 
   VariableDeclaration(node) {
-    if (this.inLibrary) {
-      const isPrivate = node.visibility === "private";
-      const isInternal = node.visibility === "internal" || node.visibility === "default";
-      const shouldHaveLeadingUnderscore = isPrivate || isInternal;
-      this.validateName(node, shouldHaveLeadingUnderscore);
-    }
+    this._validateName(node);
   }
 
-  validateName(node, shouldHaveLeadingUnderscore) {
-    if (!node.name) {
-      return;
-    }
+  _validateName(node) {
+    if (this.inLibrary) {
+      const isPrivate = node.visibility === constants.PRIVATE;
+      const isInternal = node.visibility === constants.INTERNAL || node.visibility === constants.DEFAULT;
+      const shouldHaveLeadingUnderscore = isPrivate || isInternal;
 
-    if (utils.hasLeadingUnderscore(node.name) !== shouldHaveLeadingUnderscore) {
-      this._error(node, node.name, shouldHaveLeadingUnderscore);
+      const { name } = node;
+      if (!name) {
+        return;
+      }
+
+      if (utils.hasLeadingUnderscore(name) !== shouldHaveLeadingUnderscore) {
+        this._error(node, name, shouldHaveLeadingUnderscore);
+      }
     }
   }
 
   _error(node, name, shouldHaveLeadingUnderscore) {
-    this.error(node, `'${name}' ${shouldHaveLeadingUnderscore ? "should" : "should not"} start with _`);
+    this.error(
+      node,
+      `'${name}' "should"  ${!shouldHaveLeadingUnderscore ? "" : "not"} start with ${constants.UNDERSCORE}`,
+    );
   }
 }
 
