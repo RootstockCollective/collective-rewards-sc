@@ -35,16 +35,12 @@ class PrivateVarsLeadingUnderscoreLib extends Base {
       }
 
       if (utils.hasLeadingUnderscore(name) !== shouldHaveLeadingUnderscore) {
-        this._error(node, name, shouldHaveLeadingUnderscore);
+        this.error(
+          node,
+          `'${name}' should  ${!shouldHaveLeadingUnderscore && "not"} start with ${constants.UNDERSCORE}`,
+        );
       }
     }
-  }
-
-  _error(node, name, shouldHaveLeadingUnderscore) {
-    this.error(
-      node,
-      `'${name}' "should"  ${!shouldHaveLeadingUnderscore ? "" : "not"} start with ${constants.UNDERSCORE}`,
-    );
   }
 }
 
