@@ -7,11 +7,11 @@ import { SponsorsManager } from "src/SponsorsManager.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
     function run() public returns (SponsorsManager proxy, SponsorsManager implementation) {
-        address rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
-        address stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
-        address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
-        if (changeExecutorAddress == address(0)) {
-            changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
+        address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
+        address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
+        address _changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
+        if (_changeExecutorAddress == address(0)) {
+            _changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }
         address _gaugeFactoryAddress = vm.envOr("GaugeFactory", address(0));
         if (_gaugeFactoryAddress == address(0)) {
@@ -23,7 +23,11 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         }
 
         (proxy, implementation) = run(
-            changeExecutorAddress, rewardTokenAddress, stakingTokenAddress, gaugeFactoryAddress, builderRegistryAddress
+            _changeExecutorAddress,
+            _rewardTokenAddress,
+            _stakingTokenAddress,
+            _gaugeFactoryAddress,
+            _builderRegistryAddress
         );
     }
 
