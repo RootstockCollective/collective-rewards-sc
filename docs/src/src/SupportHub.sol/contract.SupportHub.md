@@ -1,10 +1,10 @@
-# SponsorsManager
+# SupportHub
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8ea3c1d859ef1bd73929cdcdcbc3043c2c6fd603/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/fe856b39980e775913dd2a8ffaa77a3ad156e2b5/src/SupportHub.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
-Creates builder gauges, manages sponsors votes and distribute rewards
+Creates builder gauges, manages supporters supports and distribute rewards
 
 ## State Variables
 
@@ -24,7 +24,7 @@ IERC20 public stakingToken;
 
 ### rewardToken
 
-address of the token rewarded to builder and voters
+address of the token rewarded to builder and supportrs
 
 ```solidity
 IERC20 public rewardToken;
@@ -56,7 +56,7 @@ uint256 public totalAllocation;
 
 ### rewardsPerShare
 
-rewards to distribute per sponsor emission [PREC]
+rewards to distribute per supporter emission [PREC]
 
 ```solidity
 uint256 public rewardsPerShare;
@@ -94,12 +94,12 @@ array of all the builderGauges created
 BuilderGauge[] public builderGauges;
 ```
 
-### sponsorTotalAllocation
+### supporterTotalAllocation
 
-total amount of stakingToken allocated by a sponsor
+total amount of stakingToken allocated by a supporter
 
 ```solidity
-mapping(address sponsor => uint256 allocation) public sponsorTotalAllocation;
+mapping(address supporter => uint256 allocation) public supporterTotalAllocation;
 ```
 
 ### \_\_gap
@@ -149,13 +149,13 @@ function initialize(
 
 **Parameters**
 
-| Name                   | Type      | Description                                         |
-| ---------------------- | --------- | --------------------------------------------------- |
-| `changeExecutor_`      | `address` | See Governed doc                                    |
-| `rewardToken_`         | `address` | address of the token rewarded to builder and voters |
-| `stakingToken_`        | `address` | address of the staking token for builder and voters |
-| `builderGaugeFactory_` | `address` | address of the BuilderGaugeFactory contract         |
-| `builderRegistry_`     | `address` | address of the BuilderRegistry contract             |
+| Name                   | Type      | Description                                            |
+| ---------------------- | --------- | ------------------------------------------------------ |
+| `changeExecutor_`      | `address` | See Governed doc                                       |
+| `rewardToken_`         | `address` | address of the token rewarded to builder and supportrs |
+| `stakingToken_`        | `address` | address of the staking token for builder and supportrs |
+| `builderGaugeFactory_` | `address` | address of the BuilderGaugeFactory contract            |
+| `builderRegistry_`     | `address` | address of the BuilderRegistry contract                |
 
 ### createBuilderGauge
 
@@ -182,7 +182,7 @@ function createBuilderGauge(address builder_)
 
 ### allocate
 
-allocates votes for a builderGauge
+allocates supports for a builderGauge
 
 _reverts if it is called during the distribution period_
 
@@ -192,14 +192,14 @@ function allocate(BuilderGauge builderGauge_, uint256 allocation_) external notI
 
 **Parameters**
 
-| Name            | Type           | Description                                                   |
-| --------------- | -------------- | ------------------------------------------------------------- |
-| `builderGauge_` | `BuilderGauge` | address of the builderGauge where the votes will be allocated |
-| `allocation_`   | `uint256`      | amount of votes to allocate                                   |
+| Name            | Type           | Description                                                      |
+| --------------- | -------------- | ---------------------------------------------------------------- |
+| `builderGauge_` | `BuilderGauge` | address of the builderGauge where the supports will be allocated |
+| `allocation_`   | `uint256`      | amount of supports to allocate                                   |
 
 ### allocateBatch
 
-allocates votes for a batch of builderGauges
+allocates supports for a batch of builderGauges
 
 _reverts if it is called during the distribution period_
 
@@ -214,10 +214,10 @@ function allocateBatch(
 
 **Parameters**
 
-| Name             | Type             | Description                                              |
-| ---------------- | ---------------- | -------------------------------------------------------- |
-| `builderGauges_` | `BuilderGauge[]` | array of builderGauges where the votes will be allocated |
-| `allocations_`   | `uint256[]`      | array of amount of votes to allocate                     |
+| Name             | Type             | Description                                                 |
+| ---------------- | ---------------- | ----------------------------------------------------------- |
+| `builderGauges_` | `BuilderGauge[]` | array of builderGauges where the supports will be allocated |
+| `allocations_`   | `uint256[]`      | array of amount of supports to allocate                     |
 
 ### notifyRewardAmount
 
@@ -258,7 +258,7 @@ function distribute() public;
 
 ### claimSponsorRewards
 
-claims sponsor rewards from a batch of builderGauges
+claims supporter rewards from a batch of builderGauges
 
 ```solidity
 function claimSponsorRewards(BuilderGauge[] memory builderGauges_) external;
@@ -272,13 +272,13 @@ function claimSponsorRewards(BuilderGauge[] memory builderGauges_) external;
 
 ### \_allocate
 
-internal function used to allocate votes for a builderGauge or a batch of builderGauges
+internal function used to allocate supports for a builderGauge or a batch of builderGauges
 
 ```solidity
 function _allocate(
     BuilderGauge builderGauge_,
     uint256 allocation_,
-    uint256 sponsorTotalAllocation_,
+    uint256 supporterTotalAllocation_,
     uint256 totalAllocation_
 )
     internal
@@ -287,29 +287,29 @@ function _allocate(
 
 **Parameters**
 
-| Name                      | Type           | Description                                                   |
-| ------------------------- | -------------- | ------------------------------------------------------------- |
-| `builderGauge_`           | `BuilderGauge` | address of the builderGauge where the votes will be allocated |
-| `allocation_`             | `uint256`      | amount of votes to allocate                                   |
-| `sponsorTotalAllocation_` | `uint256`      | current sponsor total allocation                              |
-| `totalAllocation_`        | `uint256`      | current total allocation                                      |
+| Name                        | Type           | Description                                                      |
+| --------------------------- | -------------- | ---------------------------------------------------------------- |
+| `builderGauge_`             | `BuilderGauge` | address of the builderGauge where the supports will be allocated |
+| `allocation_`               | `uint256`      | amount of supports to allocate                                   |
+| `supporterTotalAllocation_` | `uint256`      | current supporter total allocation                               |
+| `totalAllocation_`          | `uint256`      | current total allocation                                         |
 
 **Returns**
 
-| Name                        | Type      | Description                                       |
-| --------------------------- | --------- | ------------------------------------------------- |
-| `newSponsorTotalAllocation` | `uint256` | sponsor total allocation after new the allocation |
-| `newTotalAllocation`        | `uint256` | total allocation after the new allocation         |
+| Name                        | Type      | Description                                         |
+| --------------------------- | --------- | --------------------------------------------------- |
+| `newSponsorTotalAllocation` | `uint256` | supporter total allocation after new the allocation |
+| `newTotalAllocation`        | `uint256` | total allocation after the new allocation           |
 
 ### \_updateAllocation
 
 internal function used to update allocation variables
 
-_reverts if sponsor doesn't have enough staking token balance_
+_reverts if supporter doesn't have enough staking token balance_
 
 ```solidity
 function _updateAllocation(
-    address sponsor_,
+    address supporter_,
     uint256 newSponsorTotalAllocation_,
     uint256 newTotalAllocation_
 )
@@ -318,11 +318,11 @@ function _updateAllocation(
 
 **Parameters**
 
-| Name                         | Type      | Description                                       |
-| ---------------------------- | --------- | ------------------------------------------------- |
-| `sponsor_`                   | `address` | address of the sponsor who allocates              |
-| `newSponsorTotalAllocation_` | `uint256` | sponsor total allocation after new the allocation |
-| `newTotalAllocation_`        | `uint256` | total allocation after the new allocation         |
+| Name                         | Type      | Description                                         |
+| ---------------------------- | --------- | --------------------------------------------------- |
+| `supporter_`                 | `address` | address of the supporter who allocates              |
+| `newSponsorTotalAllocation_` | `uint256` | supporter total allocation after new the allocation |
+| `newTotalAllocation_`        | `uint256` | total allocation after the new allocation           |
 
 ### \_distribute
 
@@ -351,7 +351,7 @@ event BuilderGaugeCreated(address indexed builder_, address indexed builderGauge
 ### NewAllocation
 
 ```solidity
-event NewAllocation(address indexed sponsor_, address indexed builderGauge_, uint256 allocation_);
+event NewAllocation(address indexed supporter_, address indexed builderGauge_, uint256 allocation_);
 ```
 
 ### NotifyReward

@@ -18,7 +18,7 @@ contract BuilderRegistryTest is BaseTest {
      *  called by Governor
      */
     function test_OnlyGovernor() public {
-        // GIVEN a sponsor alice
+        // GIVEN a supporter alice
         vm.startPrank(alice);
 
         // GIVEN mock authorized is false
@@ -52,7 +52,7 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN  a whitelisted builder
         _whitelistBuilder(builder);
 
-        // GIVEN a sponsor alice
+        // GIVEN a supporter alice
         vm.startPrank(alice);
 
         // WHEN alice calls revokeBuilder

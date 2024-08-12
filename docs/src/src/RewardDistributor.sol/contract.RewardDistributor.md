@@ -1,6 +1,6 @@
 # RewardDistributor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8ea3c1d859ef1bd73929cdcdcbc3043c2c6fd603/src/RewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/fe856b39980e775913dd2a8ffaa77a3ad156e2b5/src/RewardDistributor.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
@@ -18,18 +18,18 @@ address public foundationTreasury;
 
 ### rewardToken
 
-address of the token rewarded to builder and sponsors
+address of the token rewarded to builder and supporters
 
 ```solidity
 IERC20 public rewardToken;
 ```
 
-### sponsorsManager
+### supportHub
 
-SponsorsManager contract address
+SupportHub contract address
 
 ```solidity
-SponsorsManager public sponsorsManager;
+SupportHub public supportHub;
 ```
 
 ### rewardTokenAmountPerEpoch
@@ -68,26 +68,20 @@ constructor();
 contract initializer
 
 ```solidity
-function initialize(
-    address changeExecutor_,
-    address foundationTreasury_,
-    address sponsorsManager_
-)
-    external
-    initializer;
+function initialize(address changeExecutor_, address foundationTreasury_, address supportHub_) external initializer;
 ```
 
 **Parameters**
 
-| Name                  | Type      | Description                      |
-| --------------------- | --------- | -------------------------------- |
-| `changeExecutor_`     | `address` | See Governed doc                 |
-| `foundationTreasury_` | `address` | foundation treasury address      |
-| `sponsorsManager_`    | `address` | SponsorsManager contract address |
+| Name                  | Type      | Description                 |
+| --------------------- | --------- | --------------------------- |
+| `changeExecutor_`     | `address` | See Governed doc            |
+| `foundationTreasury_` | `address` | foundation treasury address |
+| `supportHub_`         | `address` | SupportHub contract address |
 
 ### sendRewardToken
 
-sends reward tokens to sponsorsManager contract to be distributed to the builder gauges
+sends reward tokens to supportHub contract to be distributed to the builder gauges
 
 _reverts if is not called by foundation treasury address reverts if reward token balance is insufficient_
 
@@ -97,7 +91,7 @@ function sendRewardToken(uint256 amount_) external onlyFoundationTreasury;
 
 ### sendRewardTokenAndStartDistribution
 
-sends reward tokens to sponsorsManager contract and starts the distribution to the builder gauges
+sends reward tokens to supportHub contract and starts the distribution to the builder gauges
 
 _reverts if is not called by foundation treasury address reverts if reward token balance is insufficient reverts if is
 not in the distribution window_
@@ -108,7 +102,7 @@ function sendRewardTokenAndStartDistribution(uint256 amount_) external onlyFound
 
 ### \_sendRewardToken
 
-internal function to send reward tokens to sponsorsManager contract
+internal function to send reward tokens to supportHub contract
 
 ```solidity
 function _sendRewardToken(uint256 amount_) internal;

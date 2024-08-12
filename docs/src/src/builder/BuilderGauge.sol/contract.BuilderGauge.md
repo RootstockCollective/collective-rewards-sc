@@ -1,9 +1,9 @@
 # BuilderGauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8ea3c1d859ef1bd73929cdcdcbc3043c2c6fd603/src/builder/BuilderGauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/fe856b39980e775913dd2a8ffaa77a3ad156e2b5/src/builder/BuilderGauge.sol)
 
 For each project proposal a BuilderGauge contract will be deployed. It receives all the rewards obtained for that
-project and allows the builder and voters to claim them.
+project and allows the builder and supportrs to claim them.
 
 ## State Variables
 
@@ -17,18 +17,18 @@ address public immutable builder;
 
 ### rewardToken
 
-address of the token rewarded to builder and voters
+address of the token rewarded to builder and supportrs
 
 ```solidity
 IERC20 public immutable rewardToken;
 ```
 
-### sponsorsManager
+### supportHub
 
-SponsorsManager contract address
+SupportHub contract address
 
 ```solidity
-SponsorsManager public immutable sponsorsManager;
+SupportHub public immutable supportHub;
 ```
 
 ### totalAllocation
@@ -89,26 +89,26 @@ uint256 public builderRewards;
 
 ### allocationOf
 
-amount of stakingToken allocated by a sponsor
+amount of stakingToken allocated by a supporter
 
 ```solidity
-mapping(address sponsor => uint256 allocation) public allocationOf;
+mapping(address supporter => uint256 allocation) public allocationOf;
 ```
 
-### sponsorRewardPerTokenPaid
+### supporterRewardPerTokenPaid
 
-cached rewardPerTokenStored for a sponsor based on their most recent action [PREC]
+cached rewardPerTokenStored for a supporter based on their most recent action [PREC]
 
 ```solidity
-mapping(address sponsor => uint256 rewardPerTokenPaid) public sponsorRewardPerTokenPaid;
+mapping(address supporter => uint256 rewardPerTokenPaid) public supporterRewardPerTokenPaid;
 ```
 
 ### rewards
 
-cached amount of rewardToken earned for a sponsor
+cached amount of rewardToken earned for a supporter
 
 ```solidity
-mapping(address sponsor => uint256 rewards) public rewards;
+mapping(address supporter => uint256 rewards) public rewards;
 ```
 
 ## Functions
@@ -124,16 +124,16 @@ modifier onlySponsorsManager();
 constructor
 
 ```solidity
-constructor(address builder_, address rewardToken_, address sponsorsManager_);
+constructor(address builder_, address rewardToken_, address supportHub_);
 ```
 
 **Parameters**
 
-| Name               | Type      | Description                                         |
-| ------------------ | --------- | --------------------------------------------------- |
-| `builder_`         | `address` | address of the builder                              |
-| `rewardToken_`     | `address` | address of the token rewarded to builder and voters |
-| `sponsorsManager_` | `address` | address of the SponsorsManager contract             |
+| Name           | Type      | Description                                            |
+| -------------- | --------- | ------------------------------------------------------ |
+| `builder_`     | `address` | address of the builder                                 |
+| `rewardToken_` | `address` | address of the token rewarded to builder and supportrs |
+| `supportHub_`  | `address` | address of the SupportHub contract                     |
 
 ### rewardPerToken
 
@@ -173,19 +173,19 @@ function left() external view returns (uint256);
 
 ### claimSponsorReward
 
-claim rewards for a `sponsor_` address
+claim rewards for a `supporter_` address
 
-_reverts if is not called by the `sponsor_` or the sponsorsManager\_
+_reverts if is not called by the `supporter_` or the supportHub\_
 
 ```solidity
-function claimSponsorReward(address sponsor_) external;
+function claimSponsorReward(address supporter_) external;
 ```
 
 **Parameters**
 
-| Name       | Type      | Description                      |
-| ---------- | --------- | -------------------------------- |
-| `sponsor_` | `address` | address who receives the rewards |
+| Name         | Type      | Description                      |
+| ------------ | --------- | -------------------------------- |
+| `supporter_` | `address` | address who receives the rewards |
 
 ### claimBuilderReward
 
@@ -201,27 +201,27 @@ function claimBuilderReward(address builder_) external;
 
 ### earned
 
-gets `sponsor_` rewards missing to claim
+gets `supporter_` rewards missing to claim
 
 ```solidity
-function earned(address sponsor_) public view returns (uint256);
+function earned(address supporter_) public view returns (uint256);
 ```
 
 **Parameters**
 
-| Name       | Type      | Description                    |
-| ---------- | --------- | ------------------------------ |
-| `sponsor_` | `address` | address who earned the rewards |
+| Name         | Type      | Description                    |
+| ------------ | --------- | ------------------------------ |
+| `supporter_` | `address` | address who earned the rewards |
 
 ### allocate
 
 allocates stakingTokens
 
-_reverts if caller si not the sponsorsManager contract_
+_reverts if caller si not the supportHub contract_
 
 ```solidity
 function allocate(
-    address sponsor_,
+    address supporter_,
     uint256 allocation_
 )
     external
@@ -233,7 +233,7 @@ function allocate(
 
 | Name          | Type      | Description                          |
 | ------------- | --------- | ------------------------------------ |
-| `sponsor_`    | `address` | address of user who allocates tokens |
+| `supporter_`  | `address` | address of user who allocates tokens |
 | `allocation_` | `uint256` | amount of tokens to allocate         |
 
 **Returns**
@@ -245,25 +245,25 @@ function allocate(
 
 ### notifyRewardAmount
 
-called on the reward distribution. Transfers reward tokens from sponsorManger to this contract
+called on the reward distribution. Transfers reward tokens from supporterManger to this contract
 
-_reverts if caller si not the sponsorsManager contract_
+_reverts if caller si not the supportHub contract_
 
 ```solidity
-function notifyRewardAmount(uint256 builderAmount_, uint256 sponsorsAmount_) external onlySponsorsManager;
+function notifyRewardAmount(uint256 builderAmount_, uint256 supportersAmount_) external onlySponsorsManager;
 ```
 
 **Parameters**
 
-| Name              | Type      | Description                        |
-| ----------------- | --------- | ---------------------------------- |
-| `builderAmount_`  | `uint256` | amount of rewards for the builder  |
-| `sponsorsAmount_` | `uint256` | amount of rewards for the sponsors |
+| Name                | Type      | Description                          |
+| ------------------- | --------- | ------------------------------------ |
+| `builderAmount_`    | `uint256` | amount of rewards for the builder    |
+| `supportersAmount_` | `uint256` | amount of rewards for the supporters |
 
 ### \_updateRewards
 
 ```solidity
-function _updateRewards(address sponsor_) internal;
+function _updateRewards(address supporter_) internal;
 ```
 
 ## Events
@@ -271,7 +271,7 @@ function _updateRewards(address sponsor_) internal;
 ### SponsorRewardsClaimed
 
 ```solidity
-event SponsorRewardsClaimed(address indexed sponsor_, uint256 amount_);
+event SponsorRewardsClaimed(address indexed supporter_, uint256 amount_);
 ```
 
 ### BuilderRewardsClaimed
@@ -283,13 +283,13 @@ event BuilderRewardsClaimed(address indexed builder_, uint256 amount_);
 ### NewAllocation
 
 ```solidity
-event NewAllocation(address indexed sponsor_, uint256 allocation_);
+event NewAllocation(address indexed supporter_, uint256 allocation_);
 ```
 
 ### NotifyReward
 
 ```solidity
-event NotifyReward(uint256 builderAmount_, uint256 sponsorsAmount_);
+event NotifyReward(uint256 builderAmount_, uint256 supportersAmount_);
 ```
 
 ## Errors

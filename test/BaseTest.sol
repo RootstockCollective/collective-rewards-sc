@@ -5,14 +5,14 @@ import { Test } from "forge-std/src/Test.sol";
 import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
 import { Deploy as ChangeExecutorMockDeployer } from "script/test_mock/ChangeExecutorMock.s.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/builder/BuilderGaugeFactory.s.sol";
-import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
+import { Deploy as SupportHubDeployer } from "script/SupportHub.s.sol";
 import { Deploy as BuilderRegistryDeployer } from "script/BuilderRegistry.s.sol";
 import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
 import { ChangeExecutorMock } from "./mock/ChangeExecutorMock.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { BuilderGaugeFactory } from "src/builder/BuilderGaugeFactory.sol";
 import { BuilderGauge } from "src/builder/BuilderGauge.sol";
-import { SponsorsManager } from "src/SponsorsManager.sol";
+import { SupportHub } from "src/SupportHub.sol";
 import { BuilderRegistry } from "src/BuilderRegistry.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { EpochLib } from "src/libraries/EpochLib.sol";
@@ -28,8 +28,8 @@ contract BaseTest is Test {
     BuilderGauge public builderGauge2;
     BuilderGauge[] public builderGaugesArray;
     uint256[] public allocationsArray = [0, 0];
-    SponsorsManager public sponsorsManagerImpl;
-    SponsorsManager public sponsorsManager;
+    SupportHub public supportHubImpl;
+    SupportHub public supportHub;
     BuilderRegistry public builderRegistryImpl;
     BuilderRegistry public builderRegistry;
     RewardDistributor public rewardDistributorImpl;
@@ -51,7 +51,7 @@ contract BaseTest is Test {
         (builderRegistry, builderRegistryImpl) =
             new BuilderRegistryDeployer().run(address(changeExecutorMock), kycApprover);
         builderGaugeFactory = new GaugeFactoryDeployer().run();
-        (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerDeployer().run(
+        (supportHub, supportHubImpl) = new SupportHubDeployer().run(
             address(changeExecutorMock),
             address(rewardToken),
             address(stakingToken),
@@ -59,13 +59,13 @@ contract BaseTest is Test {
             address(builderRegistry)
         );
         (rewardDistributor, rewardDistributorImpl) =
-            new RewardDistributorDeployer().run(address(changeExecutorMock), foundation, address(sponsorsManager));
+            new RewardDistributorDeployer().run(address(changeExecutorMock), foundation, address(supportHub));
 
         // allow to execute all the functions protected by governance
         changeExecutorMock.setIsAuthorized(true);
 
-        builderGauge = sponsorsManager.createBuilderGauge(builder);
-        builderGauge2 = sponsorsManager.createBuilderGauge(builder2);
+        builderGauge = supportHub.createBuilderGauge(builder);
+        builderGauge2 = supportHub.createBuilderGauge(builder2);
         builderGaugesArray = [builderGauge, builderGauge2];
 
         // mint some stakingTokens to alice and bob

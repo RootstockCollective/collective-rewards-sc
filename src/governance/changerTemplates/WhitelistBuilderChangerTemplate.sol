@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { IChangeContract } from "../../interfaces/IChangeContract.sol";
-import { SponsorsManager } from "../../SponsorsManager.sol";
+import { SupportHub } from "../../SupportHub.sol";
 import { BuilderRegistry } from "../../BuilderRegistry.sol";
 import { BuilderGauge } from "../../builder/BuilderGauge.sol";
 
@@ -11,8 +11,8 @@ import { BuilderGauge } from "../../builder/BuilderGauge.sol";
  *   @notice ChangeContract used to whitelist a builder and create their BuilderGauge contract
  */
 contract WhitelistBuilderChangerTemplate is IChangeContract {
-    /// @notice SponsorsManager contract address
-    SponsorsManager public immutable sponsorsManager;
+    /// @notice SupportHub contract address
+    SupportHub public immutable supportHub;
     /// @notice builder address to be whitelisted
     address public immutable builder;
     /// @notice new BuilderGauge created;
@@ -20,11 +20,11 @@ contract WhitelistBuilderChangerTemplate is IChangeContract {
 
     /**
      * @notice Constructor
-     * @param sponsorsManager_ Address of the SponsorsManger contract
+     * @param supportHub_ Address of the SponsorsManger contract
      * @param builder_ Address of the builder
      */
-    constructor(SponsorsManager sponsorsManager_, address builder_) {
-        sponsorsManager = sponsorsManager_;
+    constructor(SupportHub supportHub_, address builder_) {
+        supportHub = supportHub_;
         builder = builder_;
     }
 
@@ -34,7 +34,7 @@ contract WhitelistBuilderChangerTemplate is IChangeContract {
      * because it is not its responsibility in the current architecture
      */
     function execute() external {
-        sponsorsManager.builderRegistry().whitelistBuilder(builder);
-        newBuilderGauge = sponsorsManager.createBuilderGauge(builder);
+        supportHub.builderRegistry().whitelistBuilder(builder);
+        newBuilderGauge = supportHub.createBuilderGauge(builder);
     }
 }

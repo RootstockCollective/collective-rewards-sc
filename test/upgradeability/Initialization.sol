@@ -6,14 +6,14 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 
 contract InitializationTest is BaseTest {
     /**
-     * SCENARIO: SponsorsManager cannot be initialized twice
+     * SCENARIO: SupportHub cannot be initialized twice
      */
     function test_RevertSponsorsManagerInitialize() public {
-        // GIVEN a SponsorsManager initialized
+        // GIVEN a SupportHub initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        sponsorsManager.initialize(
+        supportHub.initialize(
             address(changeExecutorMock),
             address(rewardToken),
             address(stakingToken),
@@ -41,7 +41,7 @@ contract InitializationTest is BaseTest {
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        rewardDistributor.initialize(address(changeExecutorMock), address(foundation), address(sponsorsManager));
+        rewardDistributor.initialize(address(changeExecutorMock), address(foundation), address(supportHub));
     }
 
     /**

@@ -12,18 +12,18 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
             changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }
         address foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
-        address sponsorsManagerAddress = vm.envOr("SponsorsManager", address(0));
-        if (sponsorsManagerAddress == address(0)) {
-            sponsorsManagerAddress = vm.envAddress("SPONSORS_MANAGER_ADDRESS");
+        address supportHubAddress = vm.envOr("SupportHub", address(0));
+        if (supportHubAddress == address(0)) {
+            supportHubAddress = vm.envAddress("SPONSORS_MANAGER_ADDRESS");
         }
 
-        (proxy, implementation) = run(changeExecutorAddress, foundationTreasuryAddress, sponsorsManagerAddress);
+        (proxy, implementation) = run(changeExecutorAddress, foundationTreasuryAddress, supportHubAddress);
     }
 
     function run(
         address changeExecutor_,
         address foundationTreasury_,
-        address sponsorsManager_
+        address supportHub_
     )
         public
         broadcast
@@ -31,11 +31,11 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
     {
         require(changeExecutor_ != address(0), "Change executor address cannot be empty");
         require(foundationTreasury_ != address(0), "Foundation Treasury address cannot be empty");
-        require(sponsorsManager_ != address(0), "Sponsors Manager address cannot be empty");
+        require(supportHub_ != address(0), "Sponsors Manager address cannot be empty");
 
         string memory _contractName = "RewardDistributor.sol";
         bytes memory _initializerData =
-            abi.encodeCall(RewardDistributor.initialize, (changeExecutor_, foundationTreasury_, sponsorsManager_));
+            abi.encodeCall(RewardDistributor.initialize, (changeExecutor_, foundationTreasury_, supportHub_));
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {

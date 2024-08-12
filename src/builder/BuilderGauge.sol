@@ -4,14 +4,14 @@ pragma solidity 0.8.20;
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { SponsorsManager } from "../SponsorsManager.sol";
+import { SupportHub } from "../SupportHub.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EpochLib } from "../libraries/EpochLib.sol";
 
 /**
  * @title BuilderGauge
  * @notice For each project proposal a BuilderGauge contract will be deployed.
- *  It receives all the rewards obtained for that project and allows the builder and voters to claim them.
+ *  It receives all the rewards obtained for that project and allows the builder and supportrs to claim them.
  */
 contract BuilderGauge {
     // -----------------------------
@@ -23,16 +23,16 @@ contract BuilderGauge {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event SponsorRewardsClaimed(address indexed sponsor_, uint256 amount_);
+    event SponsorRewardsClaimed(address indexed supporter_, uint256 amount_);
     event BuilderRewardsClaimed(address indexed builder_, uint256 amount_);
-    event NewAllocation(address indexed sponsor_, uint256 allocation_);
-    event NotifyReward(uint256 builderAmount_, uint256 sponsorsAmount_);
+    event NewAllocation(address indexed supporter_, uint256 allocation_);
+    event NotifyReward(uint256 builderAmount_, uint256 supportersAmount_);
 
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlySponsorsManager() {
-        if (msg.sender != address(sponsorsManager)) revert NotSponsorsManager();
+        if (msg.sender != address(supportHub)) revert NotSponsorsManager();
         _;
     }
 
@@ -42,10 +42,10 @@ contract BuilderGauge {
 
     /// @notice builder address
     address public immutable builder;
-    /// @notice address of the token rewarded to builder and voters
+    /// @notice address of the token rewarded to builder and supportrs
     IERC20 public immutable rewardToken;
-    /// @notice SponsorsManager contract address
-    SponsorsManager public immutable sponsorsManager;
+    /// @notice SupportHub contract address
+    SupportHub public immutable supportHub;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
     /// @notice current reward rate of rewardToken to distribute per second [PREC]
@@ -61,23 +61,23 @@ contract BuilderGauge {
     /// @notice amount of unclaimed token reward earned for the builder
     uint256 public builderRewards;
 
-    /// @notice amount of stakingToken allocated by a sponsor
-    mapping(address sponsor => uint256 allocation) public allocationOf;
-    /// @notice cached rewardPerTokenStored for a sponsor based on their most recent action [PREC]
-    mapping(address sponsor => uint256 rewardPerTokenPaid) public sponsorRewardPerTokenPaid;
-    /// @notice cached amount of rewardToken earned for a sponsor
-    mapping(address sponsor => uint256 rewards) public rewards;
+    /// @notice amount of stakingToken allocated by a supporter
+    mapping(address supporter => uint256 allocation) public allocationOf;
+    /// @notice cached rewardPerTokenStored for a supporter based on their most recent action [PREC]
+    mapping(address supporter => uint256 rewardPerTokenPaid) public supporterRewardPerTokenPaid;
+    /// @notice cached amount of rewardToken earned for a supporter
+    mapping(address supporter => uint256 rewards) public rewards;
 
     /**
      * @notice constructor
      * @param builder_ address of the builder
-     * @param rewardToken_ address of the token rewarded to builder and voters
-     * @param sponsorsManager_ address of the SponsorsManager contract
+     * @param rewardToken_ address of the token rewarded to builder and supportrs
+     * @param supportHub_ address of the SupportHub contract
      */
-    constructor(address builder_, address rewardToken_, address sponsorsManager_) {
+    constructor(address builder_, address rewardToken_, address supportHub_) {
         builder = builder_;
         rewardToken = IERC20(rewardToken_);
-        sponsorsManager = SponsorsManager(sponsorsManager_);
+        supportHub = SupportHub(supportHub_);
     }
 
     // -----------------------------
@@ -118,20 +118,20 @@ contract BuilderGauge {
     }
 
     /**
-     * @notice claim rewards for a `sponsor_` address
-     * @dev reverts if is not called by the `sponsor_` or the sponsorsManager
-     * @param sponsor_ address who receives the rewards
+     * @notice claim rewards for a `supporter_` address
+     * @dev reverts if is not called by the `supporter_` or the supportHub
+     * @param supporter_ address who receives the rewards
      */
-    function claimSponsorReward(address sponsor_) external {
-        if (msg.sender != sponsor_ && msg.sender != address(sponsorsManager)) revert NotAuthorized();
+    function claimSponsorReward(address supporter_) external {
+        if (msg.sender != supporter_ && msg.sender != address(supportHub)) revert NotAuthorized();
 
-        _updateRewards(sponsor_);
+        _updateRewards(supporter_);
 
-        uint256 reward = rewards[sponsor_];
+        uint256 reward = rewards[supporter_];
         if (reward > 0) {
-            rewards[sponsor_] = 0;
-            SafeERC20.safeTransfer(rewardToken, sponsor_, reward);
-            emit SponsorRewardsClaimed(sponsor_, reward);
+            rewards[supporter_] = 0;
+            SafeERC20.safeTransfer(rewardToken, supporter_, reward);
+            emit SponsorRewardsClaimed(supporter_, reward);
         }
     }
 
@@ -141,7 +141,7 @@ contract BuilderGauge {
      * @dev rewards are transferred to the builder reward receiver
      */
     function claimBuilderReward(address builder_) external {
-        address _rewardReceiver = sponsorsManager.builderRegistry().getRewardReceiver(builder_);
+        address _rewardReceiver = supportHub.builderRegistry().getRewardReceiver(builder_);
         if (msg.sender != builder_ && msg.sender != _rewardReceiver) revert NotAuthorized();
 
         uint256 reward = builderRewards;
@@ -153,44 +153,44 @@ contract BuilderGauge {
     }
 
     /**
-     * @notice gets `sponsor_` rewards missing to claim
-     * @param sponsor_ address who earned the rewards
+     * @notice gets `supporter_` rewards missing to claim
+     * @param supporter_ address who earned the rewards
      */
-    function earned(address sponsor_) public view returns (uint256) {
+    function earned(address supporter_) public view returns (uint256) {
         // [N] = ([N] * ([PREC] - [PREC]) / [PREC])
         uint256 _currentReward =
-            UtilsLib._mulPrec(allocationOf[sponsor_], rewardPerToken() - sponsorRewardPerTokenPaid[sponsor_]);
+            UtilsLib._mulPrec(allocationOf[supporter_], rewardPerToken() - supporterRewardPerTokenPaid[supporter_]);
         // [N] = [N] + [N]
-        return rewards[sponsor_] + _currentReward;
+        return rewards[supporter_] + _currentReward;
     }
 
     /**
      * @notice allocates stakingTokens
-     * @dev reverts if caller si not the sponsorsManager contract
-     * @param sponsor_ address of user who allocates tokens
+     * @dev reverts if caller si not the supportHub contract
+     * @param supporter_ address of user who allocates tokens
      * @param allocation_ amount of tokens to allocate
      * @return allocationDeviation deviation between current allocation and the new one
      * @return isNegative true if new allocation is lesser than the current one
      */
     function allocate(
-        address sponsor_,
+        address supporter_,
         uint256 allocation_
     )
         external
         onlySponsorsManager
         returns (uint256 allocationDeviation, bool isNegative)
     {
-        // if sponsors quit before epoch finish we need to store the remaining rewards on first allocation
+        // if supporters quit before epoch finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
             // [PREC] = [PREC] + ([N] - [N]) * [PREC]
             rewardMissing += ((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate);
         }
 
-        _updateRewards(sponsor_);
+        _updateRewards(supporter_);
 
         // to do not deal with signed integers we add allocation if the new one is bigger than the previous one
-        uint256 _previousAllocation = allocationOf[sponsor_];
+        uint256 _previousAllocation = allocationOf[supporter_];
         if (allocation_ >= _previousAllocation) {
             allocationDeviation = allocation_ - _previousAllocation;
             totalAllocation += allocationDeviation;
@@ -199,19 +199,19 @@ contract BuilderGauge {
             totalAllocation -= allocationDeviation;
             isNegative = true;
         }
-        allocationOf[sponsor_] = allocation_;
+        allocationOf[supporter_] = allocation_;
 
-        emit NewAllocation(sponsor_, allocation_);
+        emit NewAllocation(supporter_, allocation_);
         return (allocationDeviation, isNegative);
     }
 
     /**
-     * @notice called on the reward distribution. Transfers reward tokens from sponsorManger to this contract
-     * @dev reverts if caller si not the sponsorsManager contract
+     * @notice called on the reward distribution. Transfers reward tokens from supporterManger to this contract
+     * @dev reverts if caller si not the supportHub contract
      * @param builderAmount_ amount of rewards for the builder
-     * @param sponsorsAmount_ amount of rewards for the sponsors
+     * @param supportersAmount_ amount of rewards for the supporters
      */
-    function notifyRewardAmount(uint256 builderAmount_, uint256 sponsorsAmount_) external onlySponsorsManager {
+    function notifyRewardAmount(uint256 builderAmount_, uint256 supportersAmount_) external onlySponsorsManager {
         // update rewardPerToken storage
         rewardPerTokenStored = rewardPerToken();
         uint256 _timeUntilNext = EpochLib.epochNext(block.timestamp) - block.timestamp;
@@ -227,7 +227,7 @@ contract BuilderGauge {
         }
 
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
-        _rewardRate = (sponsorsAmount_ * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
+        _rewardRate = (supportersAmount_ * UtilsLib.PRECISION + rewardMissing + _leftover) / _timeUntilNext;
 
         builderRewards += builderAmount_;
 
@@ -239,19 +239,19 @@ contract BuilderGauge {
         periodFinish = _periodFinish;
         rewardRate = _rewardRate;
 
-        SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), builderAmount_ + sponsorsAmount_);
+        SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), builderAmount_ + supportersAmount_);
 
-        emit NotifyReward(builderAmount_, sponsorsAmount_);
+        emit NotifyReward(builderAmount_, supportersAmount_);
     }
 
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
 
-    function _updateRewards(address sponsor_) internal {
+    function _updateRewards(address supporter_) internal {
         rewardPerTokenStored = rewardPerToken();
         lastUpdateTime = lastTimeRewardApplicable();
-        rewards[sponsor_] = earned(sponsor_);
-        sponsorRewardPerTokenPaid[sponsor_] = rewardPerTokenStored;
+        rewards[supporter_] = earned(supporter_);
+        supporterRewardPerTokenPaid[supporter_] = rewardPerTokenStored;
     }
 }
