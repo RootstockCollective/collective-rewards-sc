@@ -71,7 +71,7 @@ contract RewardDistributor is Governed {
     // -----------------------------
 
     /**
-     * @notice sends reward tokens to sponsorsManager contract to be distributed to the gauges
+     * @notice sends reward tokens to sponsorsManager contract to be distributed to the builder gauges
      * @dev reverts if is not called by foundation treasury address
      *  reverts if reward token balance is insufficient
      */
@@ -80,7 +80,7 @@ contract RewardDistributor is Governed {
     }
 
     /**
-     * @notice sends reward tokens to sponsorsManager contract and starts the distribution to the gauges
+     * @notice sends reward tokens to sponsorsManager contract and starts the distribution to the builder gauges
      * @dev reverts if is not called by foundation treasury address
      *  reverts if reward token balance is insufficient
      *  reverts if is not in the distribution window

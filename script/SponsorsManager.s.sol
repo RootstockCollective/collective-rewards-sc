@@ -13,9 +13,9 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         if (_changeExecutorAddress == address(0)) {
             _changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }
-        address _gaugeFactoryAddress = vm.envOr("GaugeFactory", address(0));
-        if (_gaugeFactoryAddress == address(0)) {
-            _gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
+        address _builderGaugeFactoryAddress = vm.envOr("BuilderGaugeFactory", address(0));
+        if (_builderGaugeFactoryAddress == address(0)) {
+            _builderGaugeFactoryAddress = vm.envAddress("BUILDER_GAUGE_FACTORY_ADDRESS");
         }
         address _builderRegistryAddress = vm.envOr("BuilderRegistry", address(0));
         if (_builderRegistryAddress == address(0)) {
@@ -26,7 +26,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
             _changeExecutorAddress,
             _rewardTokenAddress,
             _stakingTokenAddress,
-            _gaugeFactoryAddress,
+            _builderGaugeFactoryAddress,
             _builderRegistryAddress
         );
     }
@@ -35,7 +35,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         address changeExecutor_,
         address rewardToken_,
         address stakingToken_,
-        address gaugeFactory_,
+        address builderGaugeFactory_,
         address builderRegistry_
     )
         public
@@ -45,12 +45,13 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         require(changeExecutor_ != address(0), "Change executor address cannot be empty");
         require(rewardToken_ != address(0), "Reward token address cannot be empty");
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
-        require(gaugeFactory_ != address(0), "Gauge factory address cannot be empty");
-        require(builderRegistry_ != address(0), "Gauge factory address cannot be empty");
+        require(builderGaugeFactory_ != address(0), "BuilderGauge factory address cannot be empty");
+        require(builderRegistry_ != address(0), "BuilderGauge factory address cannot be empty");
 
         string memory _contractName = "SponsorsManager.sol";
         bytes memory _initializerData = abi.encodeCall(
-            SponsorsManager.initialize, (changeExecutor_, rewardToken_, stakingToken_, gaugeFactory_, builderRegistry_)
+            SponsorsManager.initialize,
+            (changeExecutor_, rewardToken_, stakingToken_, builderGaugeFactory_, builderRegistry_)
         );
         address _implementation;
         address _proxy;

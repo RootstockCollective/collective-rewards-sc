@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { BaseTest, Gauge, BuilderRegistry } from "../../BaseTest.sol";
+import { BaseTest, BuilderGauge, BuilderRegistry } from "../../BaseTest.sol";
 import { Governed } from "../../../src/governance/Governed.sol";
 import { ChangeExecutor } from "../../../src/governance/ChangeExecutor.sol";
 import { WhitelistBuilderChangerTemplate } from
@@ -49,9 +49,9 @@ contract WhitelistBuilderChangerTest is BaseTest {
         vm.prank(governor);
         changeExecutorMock.executeChange(_changer);
         //  THEN the change is successfully executed
-        Gauge _newGauge = _changer.newGauge();
-        //  THEN gauge is added on SponsorsManager
-        assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
+        BuilderGauge _newBuilderGauge = _changer.newBuilderGauge();
+        //  THEN builderGauge is added on SponsorsManager
+        assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newBuilderGauge));
         //  THEN the new builder is whitelisted
         assertEq(uint256(builderRegistry.getState(_newBuilder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
     }

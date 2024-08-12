@@ -11,7 +11,7 @@ contract RewardDistributorTest is BaseTest {
         rewardToken.mint(address(this), 100_000 ether);
         // add some allocations to don't revert by zero division on the notifyRewardAmount
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 0.1 ether);
+        sponsorsManager.allocate(builderGauge, 0.1 ether);
     }
 
     /**
@@ -99,7 +99,7 @@ contract RewardDistributorTest is BaseTest {
         // WHEN foundation treasury calls sendRewardTokenAndStartDistribution transferring 2 ethers
         vm.startPrank(foundation);
         rewardDistributor.sendRewardTokenAndStartDistribution(2 ether);
-        // THEN reward token balance of gauge is 2 ether
-        assertEq(rewardToken.balanceOf(address(gauge)), 2 ether);
+        // THEN reward token balance of builderGauge is 2 ether
+        assertEq(rewardToken.balanceOf(address(builderGauge)), 2 ether);
     }
 }

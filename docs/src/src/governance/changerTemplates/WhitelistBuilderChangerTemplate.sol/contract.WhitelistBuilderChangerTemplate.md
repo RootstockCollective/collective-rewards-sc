@@ -1,10 +1,10 @@
 # WhitelistBuilderChangerTemplate
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5faae52322bedd1d2c4eb8f24dbb918c0ac8fcbf/src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8ea3c1d859ef1bd73929cdcdcbc3043c2c6fd603/src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol)
 
 **Inherits:** [IChangeContract](/src/interfaces/IChangeContract.sol/interface.IChangeContract.md)
 
-ChangeContract used to whitelist a builder and create its Gauger contract
+ChangeContract used to whitelist a builder and create their BuilderGauge contract
 
 ## State Variables
 
@@ -24,12 +24,12 @@ builder address to be whitelisted
 address public immutable builder;
 ```
 
-### newGauge
+### newBuilderGauge
 
-new Gauge created;
+new BuilderGauge created;
 
 ```solidity
-Gauge public newGauge;
+BuilderGauge public newBuilderGauge;
 ```
 
 ## Functions

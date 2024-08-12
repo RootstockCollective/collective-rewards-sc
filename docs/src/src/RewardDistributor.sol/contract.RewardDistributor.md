@@ -1,6 +1,6 @@
 # RewardDistributor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5faae52322bedd1d2c4eb8f24dbb918c0ac8fcbf/src/RewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8ea3c1d859ef1bd73929cdcdcbc3043c2c6fd603/src/RewardDistributor.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
@@ -87,7 +87,7 @@ function initialize(
 
 ### sendRewardToken
 
-sends reward tokens to sponsorsManager contract to be distributed to the gauges
+sends reward tokens to sponsorsManager contract to be distributed to the builder gauges
 
 _reverts if is not called by foundation treasury address reverts if reward token balance is insufficient_
 
@@ -97,7 +97,7 @@ function sendRewardToken(uint256 amount_) external onlyFoundationTreasury;
 
 ### sendRewardTokenAndStartDistribution
 
-sends reward tokens to sponsorsManager contract and starts the distribution to the gauges
+sends reward tokens to sponsorsManager contract and starts the distribution to the builder gauges
 
 _reverts if is not called by foundation treasury address reverts if reward token balance is insufficient reverts if is
 not in the distribution window_

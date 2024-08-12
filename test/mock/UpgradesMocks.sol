@@ -26,7 +26,7 @@ abstract contract UpgradeableMock {
  */
 contract SponsorsManagerUpgradeMock is SponsorsManager, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
-        return newVariable + gauges.length;
+        return newVariable + builderGauges.length;
     }
 }
 

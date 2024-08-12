@@ -1,6 +1,6 @@
 # Contents
 
-- [gauge](/src/gauge)
+- [builder](/src/builder)
 - [governance](/src/governance)
 - [interfaces](/src/interfaces)
 - [libraries](/src/libraries)
