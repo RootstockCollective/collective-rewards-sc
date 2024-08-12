@@ -30,6 +30,7 @@ jobs:
         run: |
           source .env.31
           echo "RPC_URL=$RPC_URL" >> $GITHUB_ENV
+          echo "CHAIN_ID=$CHAIN_ID" >> $GITHUB_ENV
           echo "DEPLOYMENT_CONTEXT=$DEPLOYMENT_CONTEXT" >> $GITHUB_ENV
           echo "REWARD_TOKEN_ADDRESS=$REWARD_TOKEN_ADDRESS" >> $GITHUB_ENV
           echo "REWARD_TOKEN_ADDRESS=$REWARD_TOKEN_ADDRESS" >> $GITHUB_ENV
