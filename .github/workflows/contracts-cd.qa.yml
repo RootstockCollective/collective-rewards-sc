@@ -10,6 +10,8 @@ on:
 jobs:
   deploy:
     runs-on: "ubuntu-latest"
+    environment:
+      name: QA
     steps:
       - name: "Check out the repo"
         uses: "actions/checkout@v4"
@@ -17,16 +19,18 @@ jobs:
       - name: "Install Foundry"
         uses: "foundry-rs/foundry-toolchain@v1"
 
+      - uses: HatsuneMiku3939/direnv-action@v1
+        with:
+          direnvVersion: 2.34.0
+
       - name: "Install Bun"
         uses: "oven-sh/setup-bun@v1"
 
       - name: "Install the Node.js dependencies"
         run: "bun install"
 
-      - name: "Build the contracts and print their size"
-        run: "forge build --sizes"
+      - name: "Export ENVS"
+        run: "direnv allow .env.31"
 
-      - name: "Add build summary"
-        run: |
-          echo "## Build result" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
+      - name: "Deploy Contract"
+        run: "bun run deploy"
