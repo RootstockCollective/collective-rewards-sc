@@ -26,7 +26,9 @@ jobs:
         run: "bun install"
 
       - name: "Export ENVS"
-        run: "source .env.31"
+        run: |
+          source .env.31
+          echo $RPC_URL
 
       - name: "Deploy Contract"
         run: "bun run deploy"
