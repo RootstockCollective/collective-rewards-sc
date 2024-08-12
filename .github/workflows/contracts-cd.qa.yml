@@ -19,10 +19,6 @@ jobs:
       - name: "Install Foundry"
         uses: "foundry-rs/foundry-toolchain@v1"
 
-      - uses: HatsuneMiku3939/direnv-action@v1
-        with:
-          direnvVersion: 2.34.0
-
       - name: "Install Bun"
         uses: "oven-sh/setup-bun@v1"
 
@@ -30,7 +26,7 @@ jobs:
         run: "bun install"
 
       - name: "Export ENVS"
-        run: "direnv allow .env.31"
+        run: "source .env.31"
 
       - name: "Deploy Contract"
         run: "bun run deploy"
