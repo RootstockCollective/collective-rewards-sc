@@ -8,9 +8,11 @@
     "func-param-name-mixedcase": "error",
     "private-vars-leading-underscore": "error",
     "no-unused-import": "error",
+    "var-name-mixedcase": "error",
     "bim/scoped-vars-leading-underscore": "error",
     "bim/func-param-name-trailing-underscore": "error",
     "bim/private-vars-leading-underscore-lib": "error",
+    "bim/func-return-param-name-trailing-underscore": "error",
     "func-name-mixedcase": "off",
     "foundry-test-functions": ["warn", ["setUp"]]
   }

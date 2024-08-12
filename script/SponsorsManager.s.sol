@@ -6,7 +6,7 @@ import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (SponsorsManager proxy, SponsorsManager implementation) {
+    function run() public returns (SponsorsManager proxy_, SponsorsManager implementation_) {
         address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         address _changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
@@ -22,7 +22,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
             _builderRegistryAddress = vm.envAddress("BUILDER_REGISTRY_ADDRESS");
         }
 
-        (proxy, implementation) = run(
+        (proxy_, implementation_) = run(
             _changeExecutorAddress,
             _rewardTokenAddress,
             _stakingTokenAddress,

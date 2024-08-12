@@ -29,7 +29,7 @@ class ScopedVarsLeadingUnderscore extends Base {
           const { name } = variable;
 
           if (!utils.hasLeadingUnderscore(name)) {
-            this.error(node, `'${name}' should start with ${constants.UNDERSCORE} `);
+            this.error(variable, `'${name}' should start with ${constants.UNDERSCORE} `);
           }
 
           if (utils.hasTrailingUnderscore(name)) {

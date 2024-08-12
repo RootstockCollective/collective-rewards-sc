@@ -169,8 +169,8 @@ contract Gauge {
      * @dev reverts if caller si not the sponsorsManager contract
      * @param sponsor_ address of user who allocates tokens
      * @param allocation_ amount of tokens to allocate
-     * @return allocationDeviation deviation between current allocation and the new one
-     * @return isNegative true if new allocation is lesser than the current one
+     * @return allocationDeviation_ deviation between current allocation and the new one
+     * @return isNegative_ true if new allocation is lesser than the current one
      */
     function allocate(
         address sponsor_,
@@ -178,7 +178,7 @@ contract Gauge {
     )
         external
         onlySponsorsManager
-        returns (uint256 allocationDeviation, bool isNegative)
+        returns (uint256 allocationDeviation_, bool isNegative_)
     {
         // if sponsors quit before epoch finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
@@ -192,17 +192,17 @@ contract Gauge {
         // to do not deal with signed integers we add allocation if the new one is bigger than the previous one
         uint256 _previousAllocation = allocationOf[sponsor_];
         if (allocation_ >= _previousAllocation) {
-            allocationDeviation = allocation_ - _previousAllocation;
-            totalAllocation += allocationDeviation;
+            allocationDeviation_ = allocation_ - _previousAllocation;
+            totalAllocation += allocationDeviation_;
         } else {
-            allocationDeviation = _previousAllocation - allocation_;
-            totalAllocation -= allocationDeviation;
-            isNegative = true;
+            allocationDeviation_ = _previousAllocation - allocation_;
+            totalAllocation -= allocationDeviation_;
+            isNegative_ = true;
         }
         allocationOf[sponsor_] = allocation_;
 
         emit NewAllocation(sponsor_, allocation_);
-        return (allocationDeviation, isNegative);
+        return (allocationDeviation_, isNegative_);
     }
 
     /**

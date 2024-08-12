@@ -120,15 +120,15 @@ contract SponsorsManager is Governed {
     /**
      * @notice creates a new gauge for a builder
      * @param builder_ builder address who can claim the rewards
-     * @return gauge gauge contract
+     * @return gauge_ gauge contract
      */
-    function createGauge(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge) {
+    function createGauge(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge_) {
         // TODO: only if the builder is whitelisted?
         if (address(builderToGauge[builder_]) != address(0)) revert GaugeExists();
-        gauge = gaugeFactory.createGauge(builder_, address(rewardToken));
-        builderToGauge[builder_] = gauge;
-        gauges.push(gauge);
-        emit GaugeCreated(builder_, address(gauge), msg.sender);
+        gauge_ = gaugeFactory.createGauge(builder_, address(rewardToken));
+        builderToGauge[builder_] = gauge_;
+        gauges.push(gauge_);
+        emit GaugeCreated(builder_, address(gauge_), msg.sender);
     }
 
     /**
@@ -247,8 +247,8 @@ contract SponsorsManager is Governed {
      * @param allocation_ amount of votes to allocate
      * @param sponsorTotalAllocation_ current sponsor total allocation
      * @param totalAllocation_ current total allocation
-     * @return newSponsorTotalAllocation sponsor total allocation after new the allocation
-     * @return newTotalAllocation total allocation after the new allocation
+     * @return newSponsorTotalAllocation_ sponsor total allocation after new the allocation
+     * @return newTotalAllocation_ total allocation after the new allocation
      */
     function _allocate(
         Gauge gauge_,
@@ -257,19 +257,19 @@ contract SponsorsManager is Governed {
         uint256 totalAllocation_
     )
         internal
-        returns (uint256 newSponsorTotalAllocation, uint256 newTotalAllocation)
+        returns (uint256 newSponsorTotalAllocation_, uint256 newTotalAllocation_)
     {
         // TODO: validate gauge exists, is whitelisted, is not paused
         (uint256 _allocationDeviation, bool _isNegative) = gauge_.allocate(msg.sender, allocation_);
         if (_isNegative) {
-            newSponsorTotalAllocation = sponsorTotalAllocation_ - _allocationDeviation;
-            newTotalAllocation = totalAllocation_ - _allocationDeviation;
+            newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
+            newTotalAllocation_ = totalAllocation_ - _allocationDeviation;
         } else {
-            newSponsorTotalAllocation = sponsorTotalAllocation_ + _allocationDeviation;
-            newTotalAllocation = totalAllocation_ + _allocationDeviation;
+            newSponsorTotalAllocation_ = sponsorTotalAllocation_ + _allocationDeviation;
+            newTotalAllocation_ = totalAllocation_ + _allocationDeviation;
         }
         emit NewAllocation(msg.sender, address(gauge_), allocation_);
-        return (newSponsorTotalAllocation, newTotalAllocation);
+        return (newSponsorTotalAllocation_, newTotalAllocation_);
     }
 
     /**

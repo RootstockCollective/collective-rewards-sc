@@ -6,7 +6,7 @@ import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (RewardDistributor proxy, RewardDistributor implementation) {
+    function run() public returns (RewardDistributor proxy_, RewardDistributor implementation_) {
         address _changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
         if (_changeExecutorAddress == address(0)) {
             _changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
@@ -17,7 +17,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
             _sponsorsManagerAddress = vm.envAddress("SPONSORS_MANAGER_ADDRESS");
         }
 
-        (proxy, implementation) = run(_changeExecutorAddress, _foundationTreasuryAddress, _sponsorsManagerAddress);
+        (proxy_, implementation_) = run(_changeExecutorAddress, _foundationTreasuryAddress, _sponsorsManagerAddress);
     }
 
     function run(
