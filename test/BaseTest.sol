@@ -35,6 +35,7 @@ contract BaseTest is Test {
     RewardDistributor public rewardDistributorImpl;
     RewardDistributor public rewardDistributor;
 
+    /* solhint-disable private-vars-leading-underscore */
     address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
@@ -42,12 +43,13 @@ contract BaseTest is Test {
     address internal builder2 = makeAddr("builder2");
     address internal kycApprover = makeAddr("kycApprover");
     address internal foundation = makeAddr("foundation");
+    /* solhint-enable private-vars-leading-underscore */
 
     function setUp() public {
         (changeExecutorMock, changeExecutorMockImpl) = new ChangeExecutorMockDeployer().run(governor);
-        MockTokenDeployer mockTokenDeployer = new MockTokenDeployer();
-        stakingToken = mockTokenDeployer.run(0);
-        rewardToken = mockTokenDeployer.run(1);
+        MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
+        stakingToken = _mockTokenDeployer.run(0);
+        rewardToken = _mockTokenDeployer.run(1);
         (builderRegistry, builderRegistryImpl) =
             new BuilderRegistryDeployer().run(address(changeExecutorMock), kycApprover);
         gaugeFactory = new GaugeFactoryDeployer().run();

@@ -33,6 +33,7 @@ struct Artifact {
     string userdoc;
 }
 
+/* solhint-disable no-console */
 abstract contract OutputWriter is Script {
     /// @notice The set of deployments that have been done during execution.
     mapping(string name => Deployment deployment) internal _namedDeployments;
@@ -56,9 +57,9 @@ abstract contract OutputWriter is Script {
 
     function outputWriterSetup() public {
         string memory _root = vm.projectRoot();
-        string memory _deploymentContext = vm.envString("DEPLOYMENT_CONTEXT");
+        string memory _envDeploymentContext = vm.envString("DEPLOYMENT_CONTEXT");
         string memory _deploymentsRootDir = vm.envString("DEPLOYMENTS_DIR");
-        _deploymentsDir = string.concat(_root, "/", _deploymentsRootDir, _deploymentContext);
+        _deploymentsDir = string.concat(_root, "/", _deploymentsRootDir, _envDeploymentContext);
         try vm.createDir(_deploymentsDir, true) { }
         catch (bytes memory revertMessage) {
             assembly {
@@ -95,9 +96,9 @@ abstract contract OutputWriter is Script {
     function _getDeployments() internal returns (Deployment[] memory) {
         string memory _json = vm.readFile(_outJsonFile);
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables.JQ, " 'keys' <<< '", _json, "'");
+        _cmd[2] = string.concat(Executables._JQ, " 'keys' <<< '", _json, "'");
         bytes memory _res = vm.ffi(_cmd);
         string[] memory _names = stdJson.readStringArray(string(_res), "");
 
@@ -113,10 +114,10 @@ abstract contract OutputWriter is Script {
     /// @notice Returns the _json of the deployment transaction given a contract address.
     function _getDeployTransactionByContractAddress(address addr_) internal returns (string memory) {
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
         _cmd[2] = string.concat(
-            Executables.JQ,
+            Executables._JQ,
             " -r '.transactions[] | select(.contractAddress == ",
             "\"",
             vm.toString(addr_),
@@ -138,9 +139,9 @@ abstract contract OutputWriter is Script {
     /// @notice Returns the constructor arguent of a deployment transaction given a transaction _json.
     function _getDeployTransactionConstructorArguments(string memory transaction_) internal returns (string[] memory) {
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables.JQ, " -r '.arguments' <<< '", transaction_, "'");
+        _cmd[2] = string.concat(Executables._JQ, " -r '.arguments' <<< '", transaction_, "'");
         bytes memory _res = vm.ffi(_cmd);
 
         string[] memory _args = new string[](0);
@@ -154,10 +155,10 @@ abstract contract OutputWriter is Script {
     /// more than once with different versions of the compiler.
     function _stripSemver(string memory name_) internal returns (string memory) {
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
         _cmd[2] = string.concat(
-            Executables.ECHO, " ", name_, " | ", Executables.SED, " -E 's/[.][0-9]+\\.[0-9]+\\.[0-9]+//g'"
+            Executables._ECHO, " ", name_, " | ", Executables._SED, " -E 's/[.][0-9]+\\.[0-9]+\\.[0-9]+//g'"
         );
         bytes memory _res = vm.ffi(_cmd);
         return string(_res);
@@ -187,10 +188,10 @@ abstract contract OutputWriter is Script {
     /// @notice Returns the receipt of a deployment transaction.
     function _getDeployReceiptByContractAddress(address addr_) internal returns (string memory receipt_) {
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
         _cmd[2] = string.concat(
-            Executables.JQ,
+            Executables._JQ,
             " -r '.receipts[] | select(.contractAddress == ",
             "\"",
             vm.toString(addr_),
@@ -205,9 +206,9 @@ abstract contract OutputWriter is Script {
 
     function _getForgeArtifactDirectory(string memory name_) internal returns (string memory dir_) {
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables.FORGE, " config --_json | ", Executables.JQ, " -r .out");
+        _cmd[2] = string.concat(Executables._FORGE, " config --_json | ", Executables._JQ, " -r .out");
         bytes memory _res = vm.ffi(_cmd);
         string memory _contractName = _stripSemver(name_);
         dir_ = string.concat(vm.projectRoot(), "/", string(_res), "/", _contractName, ".sol");
@@ -221,14 +222,14 @@ abstract contract OutputWriter is Script {
         if (vm.exists(_path)) return _path;
 
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
         _cmd[2] = string.concat(
-            Executables.LS,
+            Executables._LS,
             " -1 --color=never ",
             _directory,
             " | ",
-            Executables.JQ,
+            Executables._JQ,
             " -R -s -c 'split(\"\n\") | map(select(length > 0))'"
         );
         bytes memory _res = vm.ffi(_cmd);
@@ -245,9 +246,9 @@ abstract contract OutputWriter is Script {
     /// @notice Returns the devdoc for a deployed contract.
     function _getDevDoc(string memory name_) internal returns (string memory doc_) {
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables.JQ, " -r '.devdoc' < ", _getForgeArtifactPath(name_));
+        _cmd[2] = string.concat(Executables._JQ, " -r '.devdoc' < ", _getForgeArtifactPath(name_));
         bytes memory _res = vm.ffi(_cmd);
         doc_ = string(_res);
     }
@@ -255,9 +256,9 @@ abstract contract OutputWriter is Script {
     /// @notice Returns the storage layout for a deployed contract.
     function _getStorageLayout(string memory name_) internal returns (string memory layout_) {
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables.JQ, " -r '.storageLayout' < ", _getForgeArtifactPath(name_));
+        _cmd[2] = string.concat(Executables._JQ, " -r '.storageLayout' < ", _getForgeArtifactPath(name_));
         bytes memory _res = vm.ffi(_cmd);
         layout_ = string(_res);
     }
@@ -265,9 +266,9 @@ abstract contract OutputWriter is Script {
     /// @notice Returns the abi for a deployed contract.
     function getAbi(string memory name_) public returns (string memory abi_) {
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables.JQ, " -r '.abi' < ", _getForgeArtifactPath(name_));
+        _cmd[2] = string.concat(Executables._JQ, " -r '.abi' < ", _getForgeArtifactPath(name_));
         bytes memory _res = vm.ffi(_cmd);
         abi_ = string(_res);
     }
@@ -275,9 +276,9 @@ abstract contract OutputWriter is Script {
     /// @notice
     function getMethodIdentifiers(string memory name_) public returns (string[] memory ids_) {
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables.JQ, " '.methodIdentifiers | keys' < ", _getForgeArtifactPath(name_));
+        _cmd[2] = string.concat(Executables._JQ, " '.methodIdentifiers | keys' < ", _getForgeArtifactPath(name_));
         bytes memory _res = vm.ffi(_cmd);
         ids_ = stdJson.readStringArray(string(_res), "");
     }
@@ -285,9 +286,9 @@ abstract contract OutputWriter is Script {
     /// @notice Returns the userdoc for a deployed contract.
     function _getUserDoc(string memory name_) internal returns (string memory doc_) {
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables.JQ, " -r '.userdoc' < ", _getForgeArtifactPath(name_));
+        _cmd[2] = string.concat(Executables._JQ, " -r '.userdoc' < ", _getForgeArtifactPath(name_));
         bytes memory _res = vm.ffi(_cmd);
         doc_ = string(_res);
     }
@@ -295,9 +296,9 @@ abstract contract OutputWriter is Script {
     /// @notice
     function _getMetadata(string memory name_) internal returns (string memory metadata_) {
         string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables.BASH;
+        _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables.JQ, " '.metadata | tostring' < ", _getForgeArtifactPath(name_));
+        _cmd[2] = string.concat(Executables._JQ, " '.metadata | tostring' < ", _getForgeArtifactPath(name_));
         bytes memory _res = vm.ffi(_cmd);
         metadata_ = string(_res);
     }
@@ -417,3 +418,4 @@ abstract contract OutputWriter is Script {
         save(string.concat(contractName_, "Proxy"), proxyAddress_);
     }
 }
+/* solhint-enable no-console */
