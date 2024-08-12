@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { BaseTest, Gauge } from "../BaseTest.sol";
+import { BaseTest } from "../BaseTest.sol";
 import { Governed } from "../../src/governance/Governed.sol";
 import { ChangeExecutor } from "../../src/governance/ChangeExecutor.sol";
 
@@ -14,22 +14,21 @@ contract ProtectedTest is BaseTest {
         changeExecutorMock.setIsAuthorized(false);
         //  WHEN Governor calls a function protected by the modifier onlyGovernorOrAuthorizedChanger
         vm.prank(governor);
-        address _newBuilder = makeAddr("newBuilder");
-        Gauge _newGauge = sponsorsManager.createGauge(_newBuilder);
+        sponsorsManager.setBuilderKickback(builder, 1);
         //   THEN the function is successfully executed
-        assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
+        assertEq(sponsorsManager.builderKickback(builder), 1);
     }
 
     /**
-     * SCENARIO: createGauge should revert if is not called by the governor or an authorized changer
+     * SCENARIO: protected function should revert if is not called by the governor or an authorized changer
      */
-    function test_RevertSponsorsManagerCreateGauge() public {
+    function test_RevertNotAuthorized() public {
         // GIVEN the Governor has not authorized the change
         changeExecutorMock.setIsAuthorized(false);
-        //  WHEN tries to create a gauge
+        //  WHEN tries to execute a protected function
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        sponsorsManager.createGauge(builder);
+        sponsorsManager.setBuilderKickback(builder, 1);
     }
 
     /**

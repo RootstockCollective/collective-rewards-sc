@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 import { SponsorsManager } from "../../src/SponsorsManager.sol";
 import { RewardDistributor } from "../../src/RewardDistributor.sol";
-import { BuilderRegistry } from "../../src/BuilderRegistry.sol";
 import { ChangeExecutor } from "../../src/governance/ChangeExecutor.sol";
 
 /**
@@ -37,16 +36,6 @@ contract SponsorsManagerUpgradeMock is SponsorsManager, UpgradeableMock {
 contract RewardDistributorUpgradeMock is RewardDistributor, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
         return newVariable + uint256(uint160(foundationTreasury));
-    }
-}
-
-/**
- * @title BuilderRegistryUpgradeMock
- * @dev Only for upgradeability testing purposes. Extends BuilderRegistry adding a new variable.
- */
-contract BuilderRegistryUpgradeMock is BuilderRegistry, UpgradeableMock {
-    function getCustomMockValue() external view override returns (uint256) {
-        return newVariable + uint256(uint160(governor));
     }
 }
 

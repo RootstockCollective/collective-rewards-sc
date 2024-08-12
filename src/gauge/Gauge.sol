@@ -4,9 +4,9 @@ pragma solidity 0.8.20;
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { SponsorsManager } from "../SponsorsManager.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EpochLib } from "../libraries/EpochLib.sol";
+import { BuilderRegistry } from "../BuilderRegistry.sol";
 
 /**
  * @title Gauge
@@ -32,7 +32,7 @@ contract Gauge {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlySponsorsManager() {
-        if (msg.sender != address(sponsorsManager)) revert NotSponsorsManager();
+        if (msg.sender != sponsorsManager) revert NotSponsorsManager();
         _;
     }
 
@@ -40,12 +40,10 @@ contract Gauge {
     // ---------- Storage ----------
     // -----------------------------
 
-    /// @notice builder address
-    address public immutable builder;
     /// @notice address of the token rewarded to builder and voters
     IERC20 public immutable rewardToken;
     /// @notice SponsorsManager contract address
-    SponsorsManager public immutable sponsorsManager;
+    address public immutable sponsorsManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
     /// @notice current reward rate of rewardToken to distribute per second [PREC]
@@ -72,14 +70,12 @@ contract Gauge {
 
     /**
      * @notice constructor
-     * @param builder_ address of the builder
      * @param rewardToken_ address of the token rewarded to builder and voters
      * @param sponsorsManager_ address of the SponsorsManager contract
      */
-    constructor(address builder_, address rewardToken_, address sponsorsManager_) {
-        builder = builder_;
+    constructor(address rewardToken_, address sponsorsManager_) {
         rewardToken = IERC20(rewardToken_);
-        sponsorsManager = SponsorsManager(sponsorsManager_);
+        sponsorsManager = sponsorsManager_;
     }
 
     // -----------------------------
@@ -125,7 +121,7 @@ contract Gauge {
      * @param sponsor_ address who receives the rewards
      */
     function claimSponsorReward(address sponsor_) external {
-        if (msg.sender != sponsor_ && msg.sender != address(sponsorsManager)) revert NotAuthorized();
+        if (msg.sender != sponsor_ && msg.sender != sponsorsManager) revert NotAuthorized();
 
         _updateRewards(sponsor_);
 
@@ -143,7 +139,7 @@ contract Gauge {
      * @dev rewards are transferred to the builder reward receiver
      */
     function claimBuilderReward(address builder_) external {
-        address _rewardReceiver = sponsorsManager.builderRegistry().getRewardReceiver(builder_);
+        address _rewardReceiver = BuilderRegistry(sponsorsManager).builderRewardReceiver(builder_);
         if (msg.sender != builder_ && msg.sender != _rewardReceiver) revert NotAuthorized();
 
         uint256 _reward = builderRewards;

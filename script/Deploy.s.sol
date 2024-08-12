@@ -7,8 +7,6 @@ import { ChangeExecutor } from "src/governance/ChangeExecutor.sol";
 import { Deploy as ChangeExecutorDeployer } from "script/governance/ChangeExecutor.s.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
-import { BuilderRegistry } from "src/BuilderRegistry.sol";
-import { Deploy as BuilderRegistryDeployer } from "script/BuilderRegistry.s.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
@@ -39,16 +37,12 @@ contract Deploy is Broadcaster, OutputWriter {
             new ChangeExecutorDeployer().run(_governorAddress);
         saveWithProxy("ChangeExecutor", address(_changeExecutorImpl), address(_changeExecutorProxy));
 
-        (BuilderRegistry _builderRegistryProxy, BuilderRegistry _builderRegistryImpl) =
-            new BuilderRegistryDeployer().run(address(_changeExecutorProxy), _kycApproverAddress);
-        saveWithProxy("BuilderRegistry", address(_builderRegistryImpl), address(_builderRegistryProxy));
-
         (SponsorsManager _sponsorManagerProxy, SponsorsManager _sponsorManagerImpl) = new SponsorsManagerDeployer().run(
             address(_changeExecutorProxy),
+            _kycApproverAddress,
             _rewardTokenAddress,
             _stakingTokenAddress,
-            address(_gaugeFactory),
-            address(_builderRegistryProxy)
+            address(_gaugeFactory)
         );
         saveWithProxy("SponsorsManager", address(_sponsorManagerImpl), address(_sponsorManagerProxy));
 

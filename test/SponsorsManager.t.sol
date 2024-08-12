@@ -7,7 +7,6 @@ contract SponsorsManagerTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
     event NewAllocation(address indexed sponsor_, address indexed gauge_, uint256 allocation_);
     event NotifyReward(address indexed sender_, uint256 amount_);
     event RewardDistributionStarted(address indexed sender_);
@@ -18,33 +17,6 @@ contract SponsorsManagerTest is BaseTest {
         // mint some rewardTokens to this contract for reward distribution
         rewardToken.mint(address(this), 100_000 ether);
         rewardToken.approve(address(sponsorsManager), 100_000 ether);
-    }
-
-    /**
-     * SCENARIO: createGauge should revert if it is called twice for the same builder
-     */
-    function test_RevertGaugeExists() public {
-        // GIVEN a SponsorManager contract and a gauge deployed for builder
-        //  WHEN tries to deployed a gauge again
-        //   THEN tx reverts because gauge already exists
-        vm.expectRevert(SponsorsManager.GaugeExists.selector);
-        sponsorsManager.createGauge(builder);
-    }
-
-    /**
-     * SCENARIO: createGauge is called for a new builder
-     * GaugeCreated event is emitted and new gauges added to the list
-     */
-    function test_CreateGauge() public {
-        address _newBuilder = makeAddr("newBuilder");
-        // GIVEN a SponsorManager contract
-        //  WHEN a gauge is deployed for a new builder
-        //   THEN a GaugeCreated event is emitted
-        vm.expectEmit(true, false, true, true); // ignore new gauge address
-        emit GaugeCreated(_newBuilder, /*ignored*/ address(0), address(this));
-        Gauge _newGauge = sponsorsManager.createGauge(_newBuilder);
-        //   THEN new gauge is assigned to the new builder
-        assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
     }
 
     /**
@@ -187,7 +159,7 @@ contract SponsorsManagerTest is BaseTest {
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
-            Gauge _newGauge = sponsorsManager.createGauge(makeAddr(string(abi.encode(i + 10))));
+            Gauge _newGauge = _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
             gaugesArray.push(_newGauge);
             allocationsArray.push(1 ether);
         }
@@ -575,7 +547,7 @@ contract SponsorsManagerTest is BaseTest {
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
-            Gauge _newGauge = sponsorsManager.createGauge(makeAddr(string(abi.encode(i + 10))));
+            Gauge _newGauge = _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
             gaugesArray.push(_newGauge);
             allocationsArray.push(1 ether);
         }
@@ -611,12 +583,8 @@ contract SponsorsManagerTest is BaseTest {
      * SCENARIO: alice claims all the rewards in a single tx
      */
     function test_ClaimSponsorRewards() public {
-        // GIVEN builder kickback percentage is 100%
-        vm.startPrank(kycApprover);
-        builderRegistry.activateBuilder(builder, builder, 1 ether);
-        builderRegistry.activateBuilder(builder2, builder2, 1 ether);
-
-        // GIVEN a sponsor alice
+        // GIVEN builder and builder2 which kickback percentage is 100%
+        //  AND a sponsor alice
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;

@@ -14,23 +14,8 @@ contract InitializationTest is BaseTest {
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         sponsorsManager.initialize(
-            address(changeExecutorMock),
-            address(rewardToken),
-            address(stakingToken),
-            address(gaugeFactory),
-            address(builderRegistry)
+            address(changeExecutorMock), kycApprover, address(rewardToken), address(stakingToken), address(gaugeFactory)
         );
-    }
-
-    /**
-     * SCENARIO: BuilderRegistry cannot be initialized twice
-     */
-    function test_RevertBuilderRegistryInitialize() public {
-        // GIVEN a BuilderRegistry initialized
-        //  WHEN tries to initialize the proxy again
-        //   THEN tx reverts because InvalidInitialization
-        vm.expectRevert(Initializable.InvalidInitialization.selector);
-        builderRegistry.initialize(address(changeExecutorMock), foundation);
     }
 
     /**

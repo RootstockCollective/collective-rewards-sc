@@ -4,12 +4,14 @@ pragma solidity 0.8.20;
 import { Governed } from "./governance/Governed.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import { Gauge } from "./gauge/Gauge.sol";
+import { GaugeFactory } from "./gauge/GaugeFactory.sol";
 
 /**
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
  */
-contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
+abstract contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
     uint256 internal constant _MAX_KICKBACK = UtilsLib._PRECISION;
     // -----------------------------
     // ------- Custom Errors -------
@@ -24,6 +26,7 @@ contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
     // -----------------------------
     event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
     event BuilderKickbackUpdate(address indexed builder_, uint256 builderKickback_);
+    event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -47,34 +50,43 @@ contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
-
     /// @notice map of builders state
     mapping(address builder => BuilderState state) public builderState;
-
     /// @notice map of builders reward receiver
     mapping(address builder => address rewardReceiver) public builderRewardReceiver;
-
     /// @notice map of builders kickback
     mapping(address builder => uint256 percentage) public builderKickback;
+    /// @notice array of all the gauges created
+    Gauge[] public gauges;
+    /// @notice gauge factory contract address
+    GaugeFactory public gaugeFactory;
+    /// @notice gauge contract for a builder
+    mapping(address builder => Gauge gauge) public builderToGauge;
+    /// @notice builder address for a gauge contract
+    mapping(Gauge gauge => address builder) public gaugeToBuilder;
 
     // -----------------------------
     // ------- Initializer ---------
     // -----------------------------
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
     /**
      * @notice contract initializer
      * @param changeExecutor_ See Governed doc
      * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
+     * @param gaugeFactory_ address of the GaugeFactory contract
      */
-    function initialize(address changeExecutor_, address kycApprover_) external initializer {
+    function __BuilderRegistry_init(
+        address changeExecutor_,
+        address kycApprover_,
+        address gaugeFactory_
+    )
+        internal
+        onlyInitializing
+    {
         __Governed_init(changeExecutor_);
         __Ownable2Step_init();
         __Ownable_init(kycApprover_);
+        gaugeFactory = GaugeFactory(gaugeFactory_);
     }
 
     // -----------------------------
@@ -105,16 +117,19 @@ contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
     }
 
     /**
-     * @notice whitelist builder
+     * @notice whitelist builder and create its gauge
      * @dev reverts if is not called by the governor address or authorized changer
      * reverts if builder state is not KYCApproved
      * @param builder_ address of the builder
+     * @return gauge_ gauge contract
      */
     function whitelistBuilder(address builder_)
         external
         onlyGovernorOrAuthorizedChanger
         atState(builder_, BuilderState.KYCApproved)
+        returns (Gauge gauge_)
     {
+        gauge_ = _createGauge(builder_);
         _updateState(builder_, BuilderState.Whitelisted);
     }
 
@@ -177,46 +192,21 @@ contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
     }
 
     // -----------------------------
-    // ---- Public Functions -----
-    // -----------------------------
-
-    /**
-     * @notice get builder state
-     * @param builder_ address of the builder
-     */
-    function getState(address builder_) public view returns (BuilderState) {
-        return builderState[builder_];
-    }
-
-    /**
-     * @notice get builder reward receiver
-     * @param builder_ address of the builder
-     */
-    function getRewardReceiver(address builder_) public view returns (address) {
-        return builderRewardReceiver[builder_];
-    }
-
-    /**
-     * @notice get builder kickback
-     * @param builder_ address of the builder
-     */
-    function getBuilderKickback(address builder_) public view returns (uint256) {
-        return builderKickback[builder_];
-    }
-
-    /**
-     * @notice apply builder kickback
-     * @param builder_ address of the builder
-     * @param amount_ amount to apply the kickback
-     */
-    function applyBuilderKickback(address builder_, uint256 amount_) public view returns (uint256) {
-        // [N] = [N] * [PREC] / [PREC]
-        return builderKickback[builder_] * amount_ / UtilsLib._PRECISION;
-    }
-
-    // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
+
+    /**
+     * @notice creates a new gauge for a builder
+     * @param builder_ builder address who can claim the rewards
+     * @return gauge_ gauge contract
+     */
+    function _createGauge(address builder_) internal returns (Gauge gauge_) {
+        gauge_ = gaugeFactory.createGauge();
+        builderToGauge[builder_] = gauge_;
+        gaugeToBuilder[gauge_] = builder_;
+        gauges.push(gauge_);
+        emit GaugeCreated(builder_, address(gauge_), msg.sender);
+    }
 
     function _setBuilderKickback(address builder_, uint256 builderKickback_) internal {
         // TODO: should we have a minimal amount?

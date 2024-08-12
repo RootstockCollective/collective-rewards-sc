@@ -6,14 +6,12 @@ import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
 import { Deploy as ChangeExecutorMockDeployer } from "script/test_mock/ChangeExecutorMock.s.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
-import { Deploy as BuilderRegistryDeployer } from "script/BuilderRegistry.s.sol";
 import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
 import { ChangeExecutorMock } from "./mock/ChangeExecutorMock.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
 import { Gauge } from "src/gauge/Gauge.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
-import { BuilderRegistry } from "src/BuilderRegistry.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { EpochLib } from "src/libraries/EpochLib.sol";
 
@@ -30,8 +28,6 @@ contract BaseTest is Test {
     uint256[] public allocationsArray = [0, 0];
     SponsorsManager public sponsorsManagerImpl;
     SponsorsManager public sponsorsManager;
-    BuilderRegistry public builderRegistryImpl;
-    BuilderRegistry public builderRegistry;
     RewardDistributor public rewardDistributorImpl;
     RewardDistributor public rewardDistributor;
 
@@ -50,15 +46,9 @@ contract BaseTest is Test {
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         stakingToken = _mockTokenDeployer.run(0);
         rewardToken = _mockTokenDeployer.run(1);
-        (builderRegistry, builderRegistryImpl) =
-            new BuilderRegistryDeployer().run(address(changeExecutorMock), kycApprover);
-        gaugeFactory = new GaugeFactoryDeployer().run();
+        gaugeFactory = new GaugeFactoryDeployer().run(address(rewardToken));
         (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerDeployer().run(
-            address(changeExecutorMock),
-            address(rewardToken),
-            address(stakingToken),
-            address(gaugeFactory),
-            address(builderRegistry)
+            address(changeExecutorMock), kycApprover, address(rewardToken), address(stakingToken), address(gaugeFactory)
         );
         (rewardDistributor, rewardDistributorImpl) =
             new RewardDistributorDeployer().run(address(changeExecutorMock), foundation, address(sponsorsManager));
@@ -66,8 +56,8 @@ contract BaseTest is Test {
         // allow to execute all the functions protected by governance
         changeExecutorMock.setIsAuthorized(true);
 
-        gauge = sponsorsManager.createGauge(builder);
-        gauge2 = sponsorsManager.createGauge(builder2);
+        gauge = _whitelistBuilder(builder, builder, 1 ether);
+        gauge2 = _whitelistBuilder(builder2, builder2, 1 ether);
         gaugesArray = [gauge, gauge2];
 
         // mint some stakingTokens to alice and bob
@@ -98,5 +88,19 @@ contract BaseTest is Test {
         _skipAndStartNewEpoch();
         uint256 _currentEpochRemaining = EpochLib._endDistributionWindow(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining);
+    }
+
+    function _whitelistBuilder(
+        address builder_,
+        address rewardReceiver_,
+        uint256 kickbackPct_
+    )
+        internal
+        returns (Gauge)
+    {
+        vm.prank(kycApprover);
+        sponsorsManager.activateBuilder(builder_, rewardReceiver_, kickbackPct_);
+        vm.prank(governor);
+        return sponsorsManager.whitelistBuilder(builder_);
     }
 }
