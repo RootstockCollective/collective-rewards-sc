@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { BaseTest } from "../BaseTest.sol";
 import {
-    SponsorsManagerUpgradeMock,
+    SupportHubUpgradeMock,
     RewardDistributorUpgradeMock,
     BuilderRegistryUpgradeMock,
     ChangeExecutorUpgradeMock
@@ -11,18 +11,16 @@ import {
 
 contract UpgradeTest is BaseTest {
     /**
-     * SCENARIO: SponsorsManager is upgraded
+     * SCENARIO: SupportHub is upgraded
      */
-    function test_UpgradeSponsorsManager() public {
-        // GIVEN a SponsorsManager proxy with an implementation
+    function test_UpgradeSupportHub() public {
+        // GIVEN a SupportHub proxy with an implementation
         // AND a new implementation
-        SponsorsManagerUpgradeMock sponsorsManagerNewImpl = new SponsorsManagerUpgradeMock();
+        SupportHubUpgradeMock supportHubNewImpl = new SupportHubUpgradeMock();
         //WHEN the proxy is upgraded and initialized
-        sponsorsManager.upgradeToAndCall(
-            address(sponsorsManagerNewImpl), abi.encodeCall(sponsorsManagerNewImpl.initializeMock, (42))
-        );
+        supportHub.upgradeToAndCall(address(supportHubNewImpl), abi.encodeCall(supportHubNewImpl.initializeMock, (42)));
         // THEN getCustomMockValue is 44 = 2 builderGaugeLength + 42 newVariable
-        assertEq(SponsorsManagerUpgradeMock(address(sponsorsManager)).getCustomMockValue(), 44);
+        assertEq(SupportHubUpgradeMock(address(supportHub)).getCustomMockValue(), 44);
     }
 
     /**

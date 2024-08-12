@@ -16,7 +16,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         // GIVEN the ChangeExecutor without isAuthorized mock
         changeExecutorMock.setIsAuthorized(false);
         // AND a WhitelistBuilderChanger deployed for a new builder
-        changer = new WhitelistBuilderChangerTemplate(sponsorsManager, newBuilder);
+        changer = new WhitelistBuilderChangerTemplate(supportHub, newBuilder);
         // AND a newBuilder activated
         vm.prank(kycApprover);
         builderRegistry.activateBuilder(newBuilder, newBuilder, 0);
@@ -51,8 +51,8 @@ contract WhitelistBuilderChangerTest is BaseTest {
         changeExecutorMock.executeChange(changer);
         //  THEN the change is successfully executed
         BuilderGauge newBuilderGauge = changer.newBuilderGauge();
-        //  THEN builderGauge is added on SponsorsManager
-        assertEq(address(sponsorsManager.builderToGauge(newBuilder)), address(newBuilderGauge));
+        //  THEN builderGauge is added on SupportHub
+        assertEq(address(supportHub.builderToGauge(newBuilder)), address(newBuilderGauge));
         //  THEN the new builder is whitelisted
         assertEq(uint256(builderRegistry.getState(newBuilder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
     }

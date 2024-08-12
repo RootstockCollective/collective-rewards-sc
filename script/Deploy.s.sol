@@ -7,8 +7,8 @@ import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
 import { ChangeExecutor } from "src/governance/ChangeExecutor.sol";
 import { Deploy as ChangeExecutorDeployer } from "script/governance/ChangeExecutor.s.sol";
-import { SponsorsManager } from "src/SponsorsManager.sol";
-import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
+import { SupportHub } from "src/SupportHub.sol";
+import { Deploy as SupportHubDeployer } from "script/SupportHub.s.sol";
 import { BuilderRegistry } from "src/BuilderRegistry.sol";
 import { Deploy as BuilderRegistryDeployer } from "script/BuilderRegistry.s.sol";
 import { BuilderGaugeFactory } from "src/builder/BuilderGaugeFactory.sol";
@@ -45,17 +45,17 @@ contract Deploy is Broadcaster, OutputWriter {
             new BuilderRegistryDeployer().run(address(changeExecutorImpl), _kycApproverAddress);
         saveWithProxy("BuilderRegistry", address(builderRegistryImpl), address(builderRegistryProxy));
 
-        (SponsorsManager sponsorManagerProxy, SponsorsManager sponsorManagerImpl) = new SponsorsManagerDeployer().run(
+        (SupportHub supporterHubProxy, SupportHub supporterHubImpl) = new SupportHubDeployer().run(
             address(changeExecutorImpl),
             _rewardTokenAddress,
             _stakingTokenAddress,
             address(builderGaugeFactory),
             address(builderRegistryImpl)
         );
-        saveWithProxy("SponsorsManager", address(sponsorManagerImpl), address(sponsorManagerProxy));
+        saveWithProxy("SupportHub", address(supporterHubImpl), address(supporterHubProxy));
 
         (RewardDistributor rewardDistributorProxy, RewardDistributor rewardDistributorImpl) = new RewardDistributorDeployer(
-        ).run(address(changeExecutorImpl), _foundationTreasuryAddress, address(sponsorManagerImpl));
+        ).run(address(changeExecutorImpl), _foundationTreasuryAddress, address(supporterHubImpl));
         saveWithProxy("RewardDistributor", address(rewardDistributorImpl), address(rewardDistributorProxy));
     }
 }

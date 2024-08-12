@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { Governed } from "./governance/Governed.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { SponsorsManager } from "./SponsorsManager.sol";
+import { SupportHub } from "./SupportHub.sol";
 import { EpochLib } from "./libraries/EpochLib.sol";
 
 /**
@@ -31,10 +31,10 @@ contract RewardDistributor is Governed {
 
     /// @notice foundation treasury address
     address public foundationTreasury;
-    /// @notice address of the token rewarded to builder and sponsors
+    /// @notice address of the token rewarded to builder and supporters
     IERC20 public rewardToken;
-    /// @notice SponsorsManager contract address
-    SponsorsManager public sponsorsManager;
+    /// @notice SupportHub contract address
+    SupportHub public supportHub;
     /// @notice tracks amount of reward tokens distributed per epoch
     mapping(uint256 epochTimestampStart => uint256 amount) public rewardTokenAmountPerEpoch;
 
@@ -51,20 +51,20 @@ contract RewardDistributor is Governed {
      * @notice contract initializer
      * @param changeExecutor_ See Governed doc
      * @param foundationTreasury_ foundation treasury address
-     * @param sponsorsManager_ SponsorsManager contract address
+     * @param supportHub_ SupportHub contract address
      */
     function initialize(
         address changeExecutor_,
         address foundationTreasury_,
-        address sponsorsManager_
+        address supportHub_
     )
         external
         initializer
     {
         __Governed_init(changeExecutor_);
         foundationTreasury = foundationTreasury_;
-        sponsorsManager = SponsorsManager(sponsorsManager_);
-        rewardToken = IERC20(SponsorsManager(sponsorsManager_).rewardToken());
+        supportHub = SupportHub(supportHub_);
+        rewardToken = IERC20(SupportHub(supportHub_).rewardToken());
     }
 
     // -----------------------------
@@ -72,7 +72,7 @@ contract RewardDistributor is Governed {
     // -----------------------------
 
     /**
-     * @notice sends reward tokens to sponsorsManager contract to be distributed to the builder gauges
+     * @notice sends reward tokens to supportHub contract to be distributed to the builder gauges
      * @dev reverts if is not called by foundation treasury address
      *  reverts if reward token balance is insufficient
      */
@@ -81,14 +81,14 @@ contract RewardDistributor is Governed {
     }
 
     /**
-     * @notice sends reward tokens to sponsorsManager contract and starts the distribution to the builder gauges
+     * @notice sends reward tokens to supportHub contract and starts the distribution to the builder gauges
      * @dev reverts if is not called by foundation treasury address
      *  reverts if reward token balance is insufficient
      *  reverts if is not in the distribution window
      */
     function sendRewardTokenAndStartDistribution(uint256 amount_) external onlyFoundationTreasury {
         _sendRewardToken(amount_);
-        sponsorsManager.startDistribution();
+        supportHub.startDistribution();
     }
 
     // -----------------------------
@@ -96,13 +96,13 @@ contract RewardDistributor is Governed {
     // -----------------------------
 
     /**
-     * @notice internal function to send reward tokens to sponsorsManager contract
+     * @notice internal function to send reward tokens to supportHub contract
      */
     function _sendRewardToken(uint256 amount_) internal {
         // TODO: review if we need this
         rewardTokenAmountPerEpoch[EpochLib.epochStart(block.timestamp)] += amount_;
-        rewardToken.approve(address(sponsorsManager), amount_);
-        sponsorsManager.notifyRewardAmount(amount_);
+        rewardToken.approve(address(supportHub), amount_);
+        supportHub.notifyRewardAmount(amount_);
     }
 
     /**

@@ -8,17 +8,17 @@ contract BuilderRegistryTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event StateUpdate(
+    event StateUpdated(
         address indexed builder_, BuilderRegistry.BuilderState previousState_, BuilderRegistry.BuilderState newState_
     );
-    event BuilderKickbackUpdate(address indexed builder_, uint256 builderKickback_);
+    event BuilderKickbackUpdated(address indexed builder_, uint256 builderKickback_);
 
     /**
      * SCENARIO: functions protected by OnlyGovernor should revert when are not
      *  called by Governor
      */
     function test_OnlyGovernor() public {
-        // GIVEN a sponsor alice
+        // GIVEN a supporter alice
         vm.startPrank(alice);
 
         // GIVEN mock authorized is false
@@ -52,7 +52,7 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN  a whitelisted builder
         _whitelistBuilder(builder);
 
-        // GIVEN a sponsor alice
+        // GIVEN a supporter alice
         vm.startPrank(alice);
 
         // WHEN alice calls revokeBuilder
@@ -69,9 +69,9 @@ contract BuilderRegistryTest is BaseTest {
         vm.startPrank(kycApprover);
 
         // WHEN calls activateBuilder
-        //  THEN StateUpdate event is emitted
+        //  THEN StateUpdated event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Pending, BuilderRegistry.BuilderState.KYCApproved);
+        emit StateUpdated(builder, BuilderRegistry.BuilderState.Pending, BuilderRegistry.BuilderState.KYCApproved);
         builderRegistry.activateBuilder(builder, builder, 0);
 
         // THEN builder.state is KYCApproved
@@ -121,9 +121,9 @@ contract BuilderRegistryTest is BaseTest {
         builderRegistry.activateBuilder(builder, builder, 0);
 
         // WHEN calls whitelistBuilder
-        //  THEN StateUpdate event is emitted
+        //  THEN StateUpdated event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.KYCApproved, BuilderRegistry.BuilderState.Whitelisted);
+        emit StateUpdated(builder, BuilderRegistry.BuilderState.KYCApproved, BuilderRegistry.BuilderState.Whitelisted);
         builderRegistry.whitelistBuilder(builder);
 
         // THEN builder.state is Whitelisted
@@ -153,9 +153,9 @@ contract BuilderRegistryTest is BaseTest {
         _whitelistBuilder(builder);
 
         // WHEN calls pauseBuilder
-        //  THEN StateUpdate event is emitted
+        //  THEN StateUpdated event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Whitelisted, BuilderRegistry.BuilderState.Paused);
+        emit StateUpdated(builder, BuilderRegistry.BuilderState.Whitelisted, BuilderRegistry.BuilderState.Paused);
         builderRegistry.pauseBuilder(builder);
 
         // THEN builder.state is Paused
@@ -184,9 +184,9 @@ contract BuilderRegistryTest is BaseTest {
         builderRegistry.revokeBuilder(builder);
 
         // WHEN calls permitBuilder
-        //  THEN StateUpdate event is emitted
+        //  THEN StateUpdated event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Revoked, BuilderRegistry.BuilderState.Whitelisted);
+        emit StateUpdated(builder, BuilderRegistry.BuilderState.Revoked, BuilderRegistry.BuilderState.Whitelisted);
         builderRegistry.permitBuilder(builder);
 
         // THEN builder.state is Whitelisted
@@ -216,9 +216,9 @@ contract BuilderRegistryTest is BaseTest {
         vm.startPrank(builder);
 
         // WHEN calls revokeBuilder
-        //  THEN StateUpdate event is emitted
+        //  THEN StateUpdated event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Whitelisted, BuilderRegistry.BuilderState.Revoked);
+        emit StateUpdated(builder, BuilderRegistry.BuilderState.Whitelisted, BuilderRegistry.BuilderState.Revoked);
         builderRegistry.revokeBuilder(builder);
 
         // THEN builder.state is Revoked
@@ -251,9 +251,9 @@ contract BuilderRegistryTest is BaseTest {
         assertEq(builderRegistry.getBuilderKickback(builder), 0);
 
         // WHEN calls setBuilderKickback
-        //  THEN BuilderKickbackUpdate event is emitted
+        //  THEN BuilderKickbackUpdated event is emitted
         vm.expectEmit();
-        emit BuilderKickbackUpdate(builder, 5);
+        emit BuilderKickbackUpdated(builder, 5);
         builderRegistry.setBuilderKickback(builder, 5);
 
         // THEN builder.builderKickback is 5

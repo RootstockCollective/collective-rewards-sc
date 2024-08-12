@@ -22,8 +22,8 @@ contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
-    event BuilderKickbackUpdate(address indexed builder_, uint256 builderKickback_);
+    event StateUpdated(address indexed builder_, BuilderState previousState_, BuilderState newState_);
+    event BuilderKickbackUpdated(address indexed builder_, uint256 builderKickback_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -225,13 +225,13 @@ contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
         }
         builderKickback[builder_] = builderKickback_;
 
-        emit BuilderKickbackUpdate(builder_, builderKickback_);
+        emit BuilderKickbackUpdated(builder_, builderKickback_);
     }
 
     function _updateState(address builder_, BuilderState newState_) internal {
         BuilderState previousState_ = builderState[builder_];
         builderState[builder_] = newState_;
-        emit StateUpdate(builder_, previousState_, newState_);
+        emit StateUpdated(builder_, previousState_, newState_);
     }
 
     /**

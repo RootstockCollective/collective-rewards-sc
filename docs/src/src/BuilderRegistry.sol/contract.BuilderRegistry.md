@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8ea3c1d859ef1bd73929cdcdcbc3043c2c6fd603/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/174ae96f1afdc2654f974f27dfaff3cb0c9d7454/src/BuilderRegistry.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md), Ownable2StepUpgradeable
 
@@ -268,16 +268,16 @@ function _updateState(address builder_, BuilderState newState_) internal;
 
 ## Events
 
-### StateUpdate
+### StateUpdated
 
 ```solidity
-event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
+event StateUpdated(address indexed builder_, BuilderState previousState_, BuilderState newState_);
 ```
 
-### BuilderKickbackUpdate
+### BuilderKickbackUpdated
 
 ```solidity
-event BuilderKickbackUpdate(address indexed builder_, uint256 builderKickback_);
+event BuilderKickbackUpdated(address indexed builder_, uint256 builderKickback_);
 ```
 
 ## Errors

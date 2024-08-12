@@ -1,6 +1,6 @@
 # BuilderGaugeFactory
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8ea3c1d859ef1bd73929cdcdcbc3043c2c6fd603/src/builder/BuilderGaugeFactory.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/174ae96f1afdc2654f974f27dfaff3cb0c9d7454/src/builder/BuilderGaugeFactory.sol)
 
 ## Functions
 

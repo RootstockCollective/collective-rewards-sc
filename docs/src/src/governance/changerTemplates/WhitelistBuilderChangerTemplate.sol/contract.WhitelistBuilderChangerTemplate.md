@@ -1,6 +1,6 @@
 # WhitelistBuilderChangerTemplate
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8ea3c1d859ef1bd73929cdcdcbc3043c2c6fd603/src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/174ae96f1afdc2654f974f27dfaff3cb0c9d7454/src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol)
 
 **Inherits:** [IChangeContract](/src/interfaces/IChangeContract.sol/interface.IChangeContract.md)
 
@@ -8,12 +8,12 @@ ChangeContract used to whitelist a builder and create their BuilderGauge contrac
 
 ## State Variables
 
-### sponsorsManager
+### supportHub
 
-SponsorsManager contract address
+SupportHub contract address
 
 ```solidity
-SponsorsManager public immutable sponsorsManager;
+SupportHub public immutable supportHub;
 ```
 
 ### builder
@@ -39,15 +39,15 @@ BuilderGauge public newBuilderGauge;
 Constructor
 
 ```solidity
-constructor(SponsorsManager sponsorsManager_, address builder_);
+constructor(SupportHub supportHub_, address builder_);
 ```
 
 **Parameters**
 
-| Name               | Type              | Description                            |
-| ------------------ | ----------------- | -------------------------------------- |
-| `sponsorsManager_` | `SponsorsManager` | Address of the SponsorsManger contract |
-| `builder_`         | `address`         | Address of the builder                 |
+| Name          | Type         | Description                        |
+| ------------- | ------------ | ---------------------------------- |
+| `supportHub_` | `SupportHub` | Address of the SupportHub contract |
+| `builder_`    | `address`    | Address of the builder             |
 
 ### execute
 

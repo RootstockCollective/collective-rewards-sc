@@ -12,10 +12,10 @@ import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { EpochLib } from "./libraries/EpochLib.sol";
 
 /**
- * @title SponsorsManager
- * @notice Creates builder gauges, manages sponsors votes and distribute rewards
+ * @title SupportHub
+ * @notice Creates builder gauges, manages supporters supports and distribute rewards
  */
-contract SponsorsManager is Governed {
+contract SupportHub is Governed {
     // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
     uint256 internal constant MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
@@ -34,9 +34,9 @@ contract SponsorsManager is Governed {
     // ----------- Events ----------
     // -----------------------------
     event BuilderGaugeCreated(address indexed builder_, address indexed builderGauge_, address creator_);
-    event NewAllocation(address indexed sponsor_, address indexed builderGauge_, uint256 allocation_);
-    event NotifyReward(address indexed sender_, uint256 amount_);
-    event DistributeReward(address indexed sender_, address indexed builderGauge_, uint256 amount_);
+    event SupportAllocated(address indexed supporter_, address indexed builderGauge_, uint256 allocation_);
+    event RewardsReceived(address indexed sender_, uint256 amount_);
+    event RewardsDistributed(address indexed sender_, address indexed builderGauge_, uint256 amount_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -57,7 +57,7 @@ contract SponsorsManager is Governed {
 
     /// @notice address of the token used to stake
     IERC20 public stakingToken;
-    /// @notice address of the token rewarded to builder and voters
+    /// @notice address of the token rewarded to builder and supportrs
     IERC20 public rewardToken;
     /// @notice builderGauge factory contract address
     BuilderGaugeFactory public builderGaugeFactory;
@@ -65,7 +65,7 @@ contract SponsorsManager is Governed {
     BuilderRegistry public builderRegistry;
     /// @notice total allocation on all the builderGauges
     uint256 public totalAllocation;
-    /// @notice rewards to distribute per sponsor emission [PREC]
+    /// @notice rewards to distribute per supporter emission [PREC]
     uint256 public rewardsPerShare;
     /// @notice index of tha last builderGauge distributed during a distribution period
     uint256 public indexLastGaugeDistributed;
@@ -76,8 +76,8 @@ contract SponsorsManager is Governed {
     mapping(address builder => BuilderGauge builderGauge) public builderToGauge;
     /// @notice array of all the builderGauges created
     BuilderGauge[] public builderGauges;
-    /// @notice total amount of stakingToken allocated by a sponsor
-    mapping(address sponsor => uint256 allocation) public sponsorTotalAllocation;
+    /// @notice total amount of stakingToken allocated by a supporter
+    mapping(address supporter => uint256 allocation) public supporterTotalAllocation;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -91,8 +91,8 @@ contract SponsorsManager is Governed {
     /**
      * @notice contract initializer
      * @param changeExecutor_ See Governed doc
-     * @param rewardToken_ address of the token rewarded to builder and voters
-     * @param stakingToken_ address of the staking token for builder and voters
+     * @param rewardToken_ address of the token rewarded to builder and supportrs
+     * @param stakingToken_ address of the staking token for builder and supportrs
      * @param builderGaugeFactory_ address of the BuilderGaugeFactory contract
      * @param builderRegistry_ address of the BuilderRegistry contract
      */
@@ -136,23 +136,23 @@ contract SponsorsManager is Governed {
     }
 
     /**
-     * @notice allocates votes for a builderGauge
+     * @notice allocates support for a builderGauge
      * @dev reverts if it is called during the distribution period
-     * @param builderGauge_ address of the builderGauge where the votes will be allocated
-     * @param allocation_ amount of votes to allocate
+     * @param builderGauge_ address of the builderGauge where the support will be allocated
+     * @param allocation_ amount of support to allocate
      */
     function allocate(BuilderGauge builderGauge_, uint256 allocation_) external notInDistributionPeriod {
-        (uint256 _newSponsorTotalAllocation, uint256 _newTotalAllocation) =
-            _allocate(builderGauge_, allocation_, sponsorTotalAllocation[msg.sender], totalAllocation);
+        (uint256 _newSupporterTotalAllocation, uint256 _newTotalAllocation) =
+            _allocate(builderGauge_, allocation_, supporterTotalAllocation[msg.sender], totalAllocation);
 
-        _updateAllocation(msg.sender, _newSponsorTotalAllocation, _newTotalAllocation);
+        _updateAllocation(msg.sender, _newSupporterTotalAllocation, _newTotalAllocation);
     }
 
     /**
-     * @notice allocates votes for a batch of builderGauges
+     * @notice allocates support for a batch of builderGauges
      * @dev reverts if it is called during the distribution period
-     * @param builderGauges_ array of builderGauges where the votes will be allocated
-     * @param allocations_ array of amount of votes to allocate
+     * @param builderGauges_ array of builderGauges where the support will be allocated
+     * @param allocations_ array of amount of support to allocate
      */
     function allocateBatch(
         BuilderGauge[] calldata builderGauges_,
@@ -164,15 +164,15 @@ contract SponsorsManager is Governed {
         uint256 _length = builderGauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
         // TODO: check length < MAX or let revert by out of gas?
-        uint256 _sponsorTotalAllocation = sponsorTotalAllocation[msg.sender];
+        uint256 _supporterTotalAllocation = supporterTotalAllocation[msg.sender];
         uint256 _totalAllocation = totalAllocation;
         for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
-            (uint256 _newSponsorTotalAllocation, uint256 _newTotalAllocation) =
-                _allocate(builderGauges_[i], allocations_[i], _sponsorTotalAllocation, _totalAllocation);
-            _sponsorTotalAllocation = _newSponsorTotalAllocation;
+            (uint256 _newSupporterTotalAllocation, uint256 _newTotalAllocation) =
+                _allocate(builderGauges_[i], allocations_[i], _supporterTotalAllocation, _totalAllocation);
+            _supporterTotalAllocation = _newSupporterTotalAllocation;
             _totalAllocation = _newTotalAllocation;
         }
-        _updateAllocation(msg.sender, _sponsorTotalAllocation, _totalAllocation);
+        _updateAllocation(msg.sender, _supporterTotalAllocation, _totalAllocation);
     }
 
     /**
@@ -185,7 +185,7 @@ contract SponsorsManager is Governed {
         // [PREC] = [N] * [PREC] / [N]
         rewardsPerShare += UtilsLib._divPrec(amount_, totalAllocation);
 
-        emit NotifyReward(msg.sender, amount_);
+        emit RewardsReceived(msg.sender, amount_);
         SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), amount_);
     }
 
@@ -231,13 +231,13 @@ contract SponsorsManager is Governed {
     }
 
     /**
-     * @notice claims sponsor rewards from a batch of builderGauges
+     * @notice claims supporter rewards from a batch of builderGauges
      * @param builderGauges_ array of builderGauges to claim
      */
-    function claimSponsorRewards(BuilderGauge[] memory builderGauges_) external {
+    function claimSupporterRewards(BuilderGauge[] memory builderGauges_) external {
         uint256 _length = builderGauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
-            builderGauges_[i].claimSponsorReward(msg.sender);
+            builderGauges_[i].claimSupporterReward(msg.sender);
         }
     }
 
@@ -246,54 +246,54 @@ contract SponsorsManager is Governed {
     // -----------------------------
 
     /**
-     * @notice internal function used to allocate votes for a builderGauge or a batch of builderGauges
-     * @param builderGauge_ address of the builderGauge where the votes will be allocated
-     * @param allocation_ amount of votes to allocate
-     * @param sponsorTotalAllocation_ current sponsor total allocation
+     * @notice internal function used to allocate supports for a builderGauge or a batch of builderGauges
+     * @param builderGauge_ address of the builderGauge where the supports will be allocated
+     * @param allocation_ amount of supports to allocate
+     * @param supporterTotalAllocation_ current supporter total allocation
      * @param totalAllocation_ current total allocation
-     * @return newSponsorTotalAllocation sponsor total allocation after new the allocation
+     * @return newSupporterTotalAllocation supporter total allocation after new the allocation
      * @return newTotalAllocation total allocation after the new allocation
      */
     function _allocate(
         BuilderGauge builderGauge_,
         uint256 allocation_,
-        uint256 sponsorTotalAllocation_,
+        uint256 supporterTotalAllocation_,
         uint256 totalAllocation_
     )
         internal
-        returns (uint256 newSponsorTotalAllocation, uint256 newTotalAllocation)
+        returns (uint256 newSupporterTotalAllocation, uint256 newTotalAllocation)
     {
         // TODO: validate builderGauge exists, is whitelisted, is not paused
         (uint256 _allocationDeviation, bool _isNegative) = builderGauge_.allocate(msg.sender, allocation_);
         if (_isNegative) {
-            newSponsorTotalAllocation = sponsorTotalAllocation_ - _allocationDeviation;
+            newSupporterTotalAllocation = supporterTotalAllocation_ - _allocationDeviation;
             newTotalAllocation = totalAllocation_ - _allocationDeviation;
         } else {
-            newSponsorTotalAllocation = sponsorTotalAllocation_ + _allocationDeviation;
+            newSupporterTotalAllocation = supporterTotalAllocation_ + _allocationDeviation;
             newTotalAllocation = totalAllocation_ + _allocationDeviation;
         }
-        emit NewAllocation(msg.sender, address(builderGauge_), allocation_);
-        return (newSponsorTotalAllocation, newTotalAllocation);
+        emit SupportAllocated(msg.sender, address(builderGauge_), allocation_);
+        return (newSupporterTotalAllocation, newTotalAllocation);
     }
 
     /**
      * @notice internal function used to update allocation variables
-     * @dev reverts if sponsor doesn't have enough staking token balance
-     * @param sponsor_ address of the sponsor who allocates
-     * @param newSponsorTotalAllocation_ sponsor total allocation after new the allocation
+     * @dev reverts if supporter doesn't have enough staking token balance
+     * @param supporter_ address of the supporter who allocates
+     * @param newSupporterTotalAllocation_ supporter total allocation after new the allocation
      * @param newTotalAllocation_ total allocation after the new allocation
      */
     function _updateAllocation(
-        address sponsor_,
-        uint256 newSponsorTotalAllocation_,
+        address supporter_,
+        uint256 newSupporterTotalAllocation_,
         uint256 newTotalAllocation_
     )
         internal
     {
-        sponsorTotalAllocation[sponsor_] = newSponsorTotalAllocation_;
+        supporterTotalAllocation[supporter_] = newSupporterTotalAllocation_;
         totalAllocation = newTotalAllocation_;
 
-        if (newSponsorTotalAllocation_ > stakingToken.balanceOf(sponsor_)) revert NotEnoughStaking();
+        if (newSupporterTotalAllocation_ > stakingToken.balanceOf(supporter_)) revert NotEnoughStaking();
     }
 
     /**
@@ -310,13 +310,13 @@ contract SponsorsManager is Governed {
         internal
     {
         uint256 _reward = UtilsLib._mulPrec(builderGauge_.totalAllocation(), rewardsPerShare_);
-        uint256 _sponsorsAmount = builderRegistry_.applyBuilderKickback(builderGauge_.builder(), _reward);
+        uint256 _supporterReward = builderRegistry_.applyBuilderKickback(builderGauge_.builder(), _reward);
         // [N] = [N] - [N]
-        uint256 _builderAmount = _reward - _sponsorsAmount;
+        uint256 _builderReward = _reward - _supporterReward;
         if (_reward > 0) {
             rewardToken.approve(address(builderGauge_), _reward);
-            builderGauge_.notifyRewardAmount(_builderAmount, _sponsorsAmount);
-            emit DistributeReward(msg.sender, address(builderGauge_), _reward);
+            builderGauge_.notifyRewardAmount(_builderReward, _supporterReward);
+            emit RewardsDistributed(msg.sender, address(builderGauge_), _reward);
         }
     }
 

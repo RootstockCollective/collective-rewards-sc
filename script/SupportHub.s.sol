@@ -4,10 +4,10 @@ pragma solidity 0.8.20;
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
-import { SponsorsManager } from "src/SponsorsManager.sol";
+import { SupportHub } from "src/SupportHub.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (SponsorsManager proxy, SponsorsManager implementation) {
+    function run() public returns (SupportHub proxy, SupportHub implementation) {
         address rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
@@ -41,7 +41,7 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
     )
         public
         broadcast
-        returns (SponsorsManager, SponsorsManager)
+        returns (SupportHub, SupportHub)
     {
         require(changeExecutor_ != address(0), "Change executor address cannot be empty");
         require(rewardToken_ != address(0), "Reward token address cannot be empty");
@@ -49,9 +49,9 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         require(builderGaugeFactory_ != address(0), "BuilderGauge factory address cannot be empty");
         require(builderRegistry_ != address(0), "BuilderGauge factory address cannot be empty");
 
-        string memory _contractName = "SponsorsManager.sol";
+        string memory _contractName = "SupportHub.sol";
         bytes memory _initializerData = abi.encodeCall(
-            SponsorsManager.initialize,
+            SupportHub.initialize,
             (changeExecutor_, rewardToken_, stakingToken_, builderGaugeFactory_, builderRegistry_)
         );
         address _implementation;
@@ -59,10 +59,10 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         if (vm.envOr("NO_DD", false)) {
             (_proxy, _implementation) = _deployUUPSProxy(_contractName, _initializerData);
 
-            return (SponsorsManager(_proxy), SponsorsManager(_implementation));
+            return (SupportHub(_proxy), SupportHub(_implementation));
         }
         (_proxy, _implementation) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
 
-        return (SponsorsManager(_proxy), SponsorsManager(_implementation));
+        return (SupportHub(_proxy), SupportHub(_implementation));
     }
 }

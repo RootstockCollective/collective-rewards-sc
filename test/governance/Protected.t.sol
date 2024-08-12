@@ -15,21 +15,21 @@ contract ProtectedTest is BaseTest {
         //  WHEN Governor calls a function protected by the modifier onlyGovernorOrAuthorizedChanger
         vm.prank(governor);
         address newBuilder = makeAddr("newBuilder");
-        BuilderGauge newBuilderGauge = sponsorsManager.createBuilderGauge(newBuilder);
+        BuilderGauge newBuilderGauge = supportHub.createBuilderGauge(newBuilder);
         //   THEN the function is successfully executed
-        assertEq(address(sponsorsManager.builderToGauge(newBuilder)), address(newBuilderGauge));
+        assertEq(address(supportHub.builderToGauge(newBuilder)), address(newBuilderGauge));
     }
 
     /**
      * SCENARIO: createBuilderGauge should revert if is not called by the governor or an authorized changer
      */
-    function test_RevertSponsorsManagerCreateGauge() public {
+    function test_RevertSupportHubCreateGauge() public {
         // GIVEN the Governor has not authorized the change
         changeExecutorMock.setIsAuthorized(false);
         //  WHEN tries to create a builderGauge
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        sponsorsManager.createBuilderGauge(builder);
+        supportHub.createBuilderGauge(builder);
     }
 
     /**
@@ -38,11 +38,11 @@ contract ProtectedTest is BaseTest {
     function test_RevertUpgrade() public {
         // GIVEN the Governor has not authorized the change
         changeExecutorMock.setIsAuthorized(false);
-        //  WHEN tries to upgrade the SponsorsManager
+        //  WHEN tries to upgrade the SupportHub
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         address newImplementation = makeAddr("newImplementation");
-        sponsorsManager.upgradeToAndCall(newImplementation, "0x0");
+        supportHub.upgradeToAndCall(newImplementation, "0x0");
     }
 
     /**
