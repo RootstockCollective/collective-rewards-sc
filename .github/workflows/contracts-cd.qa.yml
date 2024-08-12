@@ -7,6 +7,10 @@ on:
       - main
       - TOK-114/implement-cd
 
+env:
+  CHAIN_ID: 31
+  DEPLOYMENTS_DIR: "deployments/"
+
 jobs:
   deploy:
     runs-on: "ubuntu-latest"
@@ -30,9 +34,7 @@ jobs:
         run: |
           source .env.31
           echo "RPC_URL=$RPC_URL" >> $GITHUB_ENV
-          echo "CHAIN_ID=31" >> $GITHUB_ENV
           echo "DEPLOYMENT_CONTEXT=$DEPLOYMENT_CONTEXT" >> $GITHUB_ENV
-          echo "REWARD_TOKEN_ADDRESS=$REWARD_TOKEN_ADDRESS" >> $GITHUB_ENV
           echo "REWARD_TOKEN_ADDRESS=$REWARD_TOKEN_ADDRESS" >> $GITHUB_ENV
           echo "GOVERNOR_ADDRESS=$GOVERNOR_ADDRESS" >> $GITHUB_ENV
 
