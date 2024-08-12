@@ -1,6 +1,6 @@
 # SupportHub
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/fe856b39980e775913dd2a8ffaa77a3ad156e2b5/src/SupportHub.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/c4d78ff998298ce9e3dffdd99f32430a3c5ed3af/src/SupportHub.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
@@ -348,22 +348,22 @@ function _distribute(BuilderGauge builderGauge_, uint256 rewardsPerShare_, Build
 event BuilderGaugeCreated(address indexed builder_, address indexed builderGauge_, address creator_);
 ```
 
-### NewAllocation
+### SupportAllocated
 
 ```solidity
-event NewAllocation(address indexed supporter_, address indexed builderGauge_, uint256 allocation_);
+event SupportAllocated(address indexed supporter_, address indexed builderGauge_, uint256 allocation_);
 ```
 
-### NotifyReward
+### RewardsReceived
 
 ```solidity
-event NotifyReward(address indexed sender_, uint256 amount_);
+event RewardsReceived(address indexed sender_, uint256 amount_);
 ```
 
-### DistributeReward
+### RewardsDistributed
 
 ```solidity
-event DistributeReward(address indexed sender_, address indexed builderGauge_, uint256 amount_);
+event RewardsDistributed(address indexed sender_, address indexed builderGauge_, uint256 amount_);
 ```
 
 ## Errors

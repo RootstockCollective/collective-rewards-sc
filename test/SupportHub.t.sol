@@ -10,9 +10,9 @@ contract SupportHubTest is BaseTest {
     // ----------- Events ----------
     // -----------------------------
     event BuilderGaugeCreated(address indexed builder_, address indexed builderGauge_, address creator_);
-    event NewAllocation(address indexed supporter_, address indexed builderGauge_, uint256 allocation_);
-    event NotifyReward(address indexed sender_, uint256 amount_);
-    event DistributeReward(address indexed sender_, address indexed builderGauge_, uint256 amount_);
+    event SupportAllocated(address indexed supporter_, address indexed builderGauge_, uint256 allocation_);
+    event RewardsReceived(address indexed sender_, uint256 amount_);
+    event RewardsDistributed(address indexed sender_, address indexed builderGauge_, uint256 amount_);
 
     function _setUp() internal override {
         // mint some rewardTokens to this contract for reward distribution
@@ -69,11 +69,11 @@ contract SupportHubTest is BaseTest {
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
         // WHEN alice allocates 2 ether to builder and 6 ether to builder2
-        //  THEN 2 NewAllocation events are emitted
+        //  THEN 2 SupportAllocated events are emitted
         vm.expectEmit();
-        emit NewAllocation(alice, address(builderGaugesArray[0]), 2 ether);
+        emit SupportAllocated(alice, address(builderGaugesArray[0]), 2 ether);
         vm.expectEmit();
-        emit NewAllocation(alice, address(builderGaugesArray[1]), 6 ether);
+        emit SupportAllocated(alice, address(builderGaugesArray[1]), 6 ether);
         supportHub.allocateBatch(builderGaugesArray, allocationsArray);
 
         // AND bob allocates 4 ether to builder and 10 ether to builder2
@@ -155,9 +155,9 @@ contract SupportHubTest is BaseTest {
         vm.prank(alice);
         supportHub.allocate(builderGauge, 0.1 ether);
         //   WHEN 2 ether reward are added
-        //    THEN NotifyReward event is emitted
+        //    THEN RewardsReceived event is emitted
         vm.expectEmit();
-        emit NotifyReward(address(this), 2 ether);
+        emit RewardsReceived(address(this), 2 ether);
         supportHub.notifyRewardAmount(2 ether);
         // THEN rewardsPerShare is 20 = 2 / 0.1 ether
         assertEq(supportHub.rewardsPerShare(), 20 ether);
@@ -266,12 +266,12 @@ contract SupportHubTest is BaseTest {
         _skipToStartDistributionWindow();
 
         //  WHEN distribute is executed
-        //   THEN DistributeReward event is emitted for builderGauge
+        //   THEN RewardsDistributed event is emitted for builderGauge
         vm.expectEmit();
-        emit DistributeReward(address(this), address(builderGauge), 27_272_727_272_727_272_724);
-        //   THEN DistributeReward event is emitted for builderGauge2
+        emit RewardsDistributed(address(this), address(builderGauge), 27_272_727_272_727_272_724);
+        //   THEN RewardsDistributed event is emitted for builderGauge2
         vm.expectEmit();
-        emit DistributeReward(address(this), address(builderGauge2), 72_727_272_727_272_727_264);
+        emit RewardsDistributed(address(this), address(builderGauge2), 72_727_272_727_272_727_264);
         supportHub.startDistribution();
         // THEN reward token balance of builderGauge is 27.272727272727272724 = 100 * 6 / 22
         assertEq(rewardToken.balanceOf(address(builderGauge)), 27_272_727_272_727_272_724);

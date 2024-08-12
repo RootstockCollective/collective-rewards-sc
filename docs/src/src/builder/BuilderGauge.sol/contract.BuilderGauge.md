@@ -1,6 +1,6 @@
 # BuilderGauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/fe856b39980e775913dd2a8ffaa77a3ad156e2b5/src/builder/BuilderGauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/c4d78ff998298ce9e3dffdd99f32430a3c5ed3af/src/builder/BuilderGauge.sol)
 
 For each project proposal a BuilderGauge contract will be deployed. It receives all the rewards obtained for that
 project and allows the builder and supportrs to claim them.
@@ -280,16 +280,16 @@ event SponsorRewardsClaimed(address indexed supporter_, uint256 amount_);
 event BuilderRewardsClaimed(address indexed builder_, uint256 amount_);
 ```
 
-### NewAllocation
+### SupportAllocated
 
 ```solidity
-event NewAllocation(address indexed supporter_, uint256 allocation_);
+event SupportAllocated(address indexed supporter_, uint256 allocation_);
 ```
 
-### NotifyReward
+### RewardsReceived
 
 ```solidity
-event NotifyReward(uint256 builderAmount_, uint256 supportersAmount_);
+event RewardsReceived(uint256 builderAmount_, uint256 supportersAmount_);
 ```
 
 ## Errors

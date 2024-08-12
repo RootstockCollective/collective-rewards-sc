@@ -34,9 +34,9 @@ contract SupportHub is Governed {
     // ----------- Events ----------
     // -----------------------------
     event BuilderGaugeCreated(address indexed builder_, address indexed builderGauge_, address creator_);
-    event NewAllocation(address indexed supporter_, address indexed builderGauge_, uint256 allocation_);
-    event NotifyReward(address indexed sender_, uint256 amount_);
-    event DistributeReward(address indexed sender_, address indexed builderGauge_, uint256 amount_);
+    event SupportAllocated(address indexed supporter_, address indexed builderGauge_, uint256 allocation_);
+    event RewardsReceived(address indexed sender_, uint256 amount_);
+    event RewardsDistributed(address indexed sender_, address indexed builderGauge_, uint256 amount_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -185,7 +185,7 @@ contract SupportHub is Governed {
         // [PREC] = [N] * [PREC] / [N]
         rewardsPerShare += UtilsLib._divPrec(amount_, totalAllocation);
 
-        emit NotifyReward(msg.sender, amount_);
+        emit RewardsReceived(msg.sender, amount_);
         SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), amount_);
     }
 
@@ -272,7 +272,7 @@ contract SupportHub is Governed {
             newSponsorTotalAllocation = supporterTotalAllocation_ + _allocationDeviation;
             newTotalAllocation = totalAllocation_ + _allocationDeviation;
         }
-        emit NewAllocation(msg.sender, address(builderGauge_), allocation_);
+        emit SupportAllocated(msg.sender, address(builderGauge_), allocation_);
         return (newSponsorTotalAllocation, newTotalAllocation);
     }
 
@@ -316,7 +316,7 @@ contract SupportHub is Governed {
         if (_reward > 0) {
             rewardToken.approve(address(builderGauge_), _reward);
             builderGauge_.notifyRewardAmount(_builderAmount, _sponsorsAmount);
-            emit DistributeReward(msg.sender, address(builderGauge_), _reward);
+            emit RewardsDistributed(msg.sender, address(builderGauge_), _reward);
         }
     }
 

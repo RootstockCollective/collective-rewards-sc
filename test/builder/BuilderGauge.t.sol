@@ -9,8 +9,8 @@ contract GaugeTest is BaseTest {
     // ----------- Events ----------
     // -----------------------------
     event SponsorRewardsClaimed(address indexed supporter_, uint256 amount_);
-    event NewAllocation(address indexed supporter_, uint256 allocation_);
-    event NotifyReward(uint256 builderAmount_, uint256 supportersAmount_);
+    event SupportAllocated(address indexed supporter_, uint256 allocation_);
+    event RewardsReceived(uint256 builderAmount_, uint256 supportersAmount_);
 
     function _setUp() internal override {
         // mint some rewardTokens to supportHub simulating a distribution
@@ -63,7 +63,7 @@ contract GaugeTest is BaseTest {
         // WHEN allocates 1 ether to alice
         //  THEN Allocated event is emitted
         vm.expectEmit();
-        emit NewAllocation(alice, 1 ether);
+        emit SupportAllocated(alice, 1 ether);
         builderGauge.allocate(alice, 1 ether);
 
         // THEN alice allocation is 1 ether
@@ -94,7 +94,7 @@ contract GaugeTest is BaseTest {
         // WHEN deallocates all
         //  THEN Allocated event is emitted
         vm.expectEmit();
-        emit NewAllocation(alice, 0 ether);
+        emit SupportAllocated(alice, 0 ether);
         builderGauge.allocate(alice, 0 ether);
 
         // THEN alice allocation is 0
@@ -150,7 +150,7 @@ contract GaugeTest is BaseTest {
         // WHEN 100 ether distributed
         //  THEN notifyRewardAmount event is emitted
         vm.expectEmit();
-        emit NotifyReward(30 ether, 70 ether);
+        emit RewardsReceived(30 ether, 70 ether);
         builderGauge.notifyRewardAmount(30 ether, 70 ether);
 
         // THEN rewardPerTokenStored is 0
@@ -198,7 +198,7 @@ contract GaugeTest is BaseTest {
         // WHEN 100 ether distributed
         //  THEN notifyRewardAmount event is emitted
         vm.expectEmit();
-        emit NotifyReward(0 ether, 100 ether);
+        emit RewardsReceived(0 ether, 100 ether);
         builderGauge.notifyRewardAmount(0, 100 ether);
 
         // THEN rewardPerTokenStored is 0

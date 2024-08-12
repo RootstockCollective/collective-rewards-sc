@@ -25,8 +25,8 @@ contract BuilderGauge {
     // -----------------------------
     event SponsorRewardsClaimed(address indexed supporter_, uint256 amount_);
     event BuilderRewardsClaimed(address indexed builder_, uint256 amount_);
-    event NewAllocation(address indexed supporter_, uint256 allocation_);
-    event NotifyReward(uint256 builderAmount_, uint256 supportersAmount_);
+    event SupportAllocated(address indexed supporter_, uint256 allocation_);
+    event RewardsReceived(uint256 builderAmount_, uint256 supportersAmount_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -201,7 +201,7 @@ contract BuilderGauge {
         }
         allocationOf[supporter_] = allocation_;
 
-        emit NewAllocation(supporter_, allocation_);
+        emit SupportAllocated(supporter_, allocation_);
         return (allocationDeviation, isNegative);
     }
 
@@ -241,7 +241,7 @@ contract BuilderGauge {
 
         SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), builderAmount_ + supportersAmount_);
 
-        emit NotifyReward(builderAmount_, supportersAmount_);
+        emit RewardsReceived(builderAmount_, supportersAmount_);
     }
 
     // -----------------------------
