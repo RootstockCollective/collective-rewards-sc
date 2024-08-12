@@ -4,9 +4,9 @@
 
 # src
 
-- [❱ gauge](src/gauge/README.md)
-  - [Gauge](src/gauge/Gauge.sol/contract.Gauge.md)
-  - [GaugeFactory](src/gauge/GaugeFactory.sol/contract.GaugeFactory.md)
+- [❱ builder](src/builder/README.md)
+  - [BuilderGauge](src/builder/BuilderGauge.sol/contract.BuilderGauge.md)
+  - [BuilderGaugeFactory](src/builder/BuilderGaugeFactory.sol/contract.BuilderGaugeFactory.md)
 - [❱ governance](src/governance/README.md)
   - [❱ changerTemplates](src/governance/changerTemplates/README.md)
     - [WhitelistBuilderChangerTemplate](src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol/contract.WhitelistBuilderChangerTemplate.md)

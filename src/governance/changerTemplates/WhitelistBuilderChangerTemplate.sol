@@ -4,19 +4,19 @@ pragma solidity 0.8.20;
 import { IChangeContract } from "../../interfaces/IChangeContract.sol";
 import { SponsorsManager } from "../../SponsorsManager.sol";
 import { BuilderRegistry } from "../../BuilderRegistry.sol";
-import { Gauge } from "../../gauge/Gauge.sol";
+import { BuilderGauge } from "../../builder/BuilderGauge.sol";
 
 /**
  * @title WhitelistBuilderChangerTemplate
- *   @notice ChangeContract used to whitelist a builder and create its Gauger contract
+ *   @notice ChangeContract used to whitelist a builder and create their BuilderGauge contract
  */
 contract WhitelistBuilderChangerTemplate is IChangeContract {
     /// @notice SponsorsManager contract address
     SponsorsManager public immutable sponsorsManager;
     /// @notice builder address to be whitelisted
     address public immutable builder;
-    /// @notice new Gauge created;
-    Gauge public newGauge;
+    /// @notice new BuilderGauge created;
+    BuilderGauge public newBuilderGauge;
 
     /**
      * @notice Constructor
@@ -35,6 +35,6 @@ contract WhitelistBuilderChangerTemplate is IChangeContract {
      */
     function execute() external {
         sponsorsManager.builderRegistry().whitelistBuilder(builder);
-        newGauge = sponsorsManager.createGauge(builder);
+        newBuilderGauge = sponsorsManager.createBuilderGauge(builder);
     }
 }

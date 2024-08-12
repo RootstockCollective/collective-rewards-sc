@@ -1,6 +1,6 @@
 # Governed
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/5faae52322bedd1d2c4eb8f24dbb918c0ac8fcbf/src/governance/Governed.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8ea3c1d859ef1bd73929cdcdcbc3043c2c6fd603/src/governance/Governed.sol)
 
 **Inherits:** UUPSUpgradeable
 

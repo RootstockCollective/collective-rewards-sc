@@ -4,14 +4,14 @@ pragma solidity 0.8.20;
 import { Test } from "forge-std/src/Test.sol";
 import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
 import { Deploy as ChangeExecutorMockDeployer } from "script/test_mock/ChangeExecutorMock.s.sol";
-import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
+import { Deploy as GaugeFactoryDeployer } from "script/builder/BuilderGaugeFactory.s.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
 import { Deploy as BuilderRegistryDeployer } from "script/BuilderRegistry.s.sol";
 import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
 import { ChangeExecutorMock } from "./mock/ChangeExecutorMock.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
-import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
-import { Gauge } from "src/gauge/Gauge.sol";
+import { BuilderGaugeFactory } from "src/builder/BuilderGaugeFactory.sol";
+import { BuilderGauge } from "src/builder/BuilderGauge.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { BuilderRegistry } from "src/BuilderRegistry.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
@@ -23,10 +23,10 @@ contract BaseTest is Test {
     ERC20Mock public stakingToken;
     ERC20Mock public rewardToken;
 
-    GaugeFactory public gaugeFactory;
-    Gauge public gauge;
-    Gauge public gauge2;
-    Gauge[] public gaugesArray;
+    BuilderGaugeFactory public builderGaugeFactory;
+    BuilderGauge public builderGauge;
+    BuilderGauge public builderGauge2;
+    BuilderGauge[] public builderGaugesArray;
     uint256[] public allocationsArray = [0, 0];
     SponsorsManager public sponsorsManagerImpl;
     SponsorsManager public sponsorsManager;
@@ -50,12 +50,12 @@ contract BaseTest is Test {
         rewardToken = mockTokenDeployer.run(1);
         (builderRegistry, builderRegistryImpl) =
             new BuilderRegistryDeployer().run(address(changeExecutorMock), kycApprover);
-        gaugeFactory = new GaugeFactoryDeployer().run();
+        builderGaugeFactory = new GaugeFactoryDeployer().run();
         (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerDeployer().run(
             address(changeExecutorMock),
             address(rewardToken),
             address(stakingToken),
-            address(gaugeFactory),
+            address(builderGaugeFactory),
             address(builderRegistry)
         );
         (rewardDistributor, rewardDistributorImpl) =
@@ -64,9 +64,9 @@ contract BaseTest is Test {
         // allow to execute all the functions protected by governance
         changeExecutorMock.setIsAuthorized(true);
 
-        gauge = sponsorsManager.createGauge(builder);
-        gauge2 = sponsorsManager.createGauge(builder2);
-        gaugesArray = [gauge, gauge2];
+        builderGauge = sponsorsManager.createBuilderGauge(builder);
+        builderGauge2 = sponsorsManager.createBuilderGauge(builder2);
+        builderGaugesArray = [builderGauge, builderGauge2];
 
         // mint some stakingTokens to alice and bob
         stakingToken.mint(alice, 100_000 ether);

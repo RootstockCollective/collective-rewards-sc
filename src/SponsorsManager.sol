@@ -4,8 +4,8 @@ pragma solidity 0.8.20;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { GaugeFactory } from "./gauge/GaugeFactory.sol";
-import { Gauge } from "./gauge/Gauge.sol";
+import { BuilderGaugeFactory } from "./builder/BuilderGaugeFactory.sol";
+import { BuilderGauge } from "./builder/BuilderGauge.sol";
 import { Governed } from "./governance/Governed.sol";
 import { BuilderRegistry } from "./BuilderRegistry.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
@@ -13,7 +13,7 @@ import { EpochLib } from "./libraries/EpochLib.sol";
 
 /**
  * @title SponsorsManager
- * @notice Creates gauges, manages sponsors votes and distribute rewards
+ * @notice Creates builder gauges, manages sponsors votes and distribute rewards
  */
 contract SponsorsManager is Governed {
     // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
@@ -23,8 +23,8 @@ contract SponsorsManager is Governed {
     // ------- Custom Errors -------
     // -----------------------------
     error UnequalLengths();
-    error GaugeExists();
-    error GaugeDoesNotExist(address builder_);
+    error BuilderGaugeExists();
+    error BuilderGaugeDoesNotExist(address builder_);
     error NotEnoughStaking();
     error OnlyInDistributionWindow();
     error NotInDistributionPeriod();
@@ -33,10 +33,10 @@ contract SponsorsManager is Governed {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
-    event NewAllocation(address indexed sponsor_, address indexed gauge_, uint256 allocation_);
+    event BuilderGaugeCreated(address indexed builder_, address indexed builderGauge_, address creator_);
+    event NewAllocation(address indexed sponsor_, address indexed builderGauge_, uint256 allocation_);
     event NotifyReward(address indexed sender_, uint256 amount_);
-    event DistributeReward(address indexed sender_, address indexed gauge_, uint256 amount_);
+    event DistributeReward(address indexed sender_, address indexed builderGauge_, uint256 amount_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -59,23 +59,23 @@ contract SponsorsManager is Governed {
     IERC20 public stakingToken;
     /// @notice address of the token rewarded to builder and voters
     IERC20 public rewardToken;
-    /// @notice gauge factory contract address
-    GaugeFactory public gaugeFactory;
+    /// @notice builderGauge factory contract address
+    BuilderGaugeFactory public builderGaugeFactory;
     /// @notice builder registry contract address
     BuilderRegistry public builderRegistry;
-    /// @notice total allocation on all the gauges
+    /// @notice total allocation on all the builderGauges
     uint256 public totalAllocation;
     /// @notice rewards to distribute per sponsor emission [PREC]
     uint256 public rewardsPerShare;
-    /// @notice index of tha last gauge distributed during a distribution period
+    /// @notice index of tha last builderGauge distributed during a distribution period
     uint256 public indexLastGaugeDistributed;
     /// @notice true if distribution period started. Allocations remain blocked until it finishes
     bool public onDistributionPeriod;
 
-    /// @notice gauge contract for a builder
-    mapping(address builder => Gauge gauge) public builderToGauge;
-    /// @notice array of all the gauges created
-    Gauge[] public gauges;
+    /// @notice builderGauge contract for a builder
+    mapping(address builder => BuilderGauge builderGauge) public builderToGauge;
+    /// @notice array of all the builderGauges created
+    BuilderGauge[] public builderGauges;
     /// @notice total amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public sponsorTotalAllocation;
 
@@ -93,14 +93,14 @@ contract SponsorsManager is Governed {
      * @param changeExecutor_ See Governed doc
      * @param rewardToken_ address of the token rewarded to builder and voters
      * @param stakingToken_ address of the staking token for builder and voters
-     * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param builderGaugeFactory_ address of the BuilderGaugeFactory contract
      * @param builderRegistry_ address of the BuilderRegistry contract
      */
     function initialize(
         address changeExecutor_,
         address rewardToken_,
         address stakingToken_,
-        address gaugeFactory_,
+        address builderGaugeFactory_,
         address builderRegistry_
     )
         external
@@ -109,7 +109,7 @@ contract SponsorsManager is Governed {
         __Governed_init(changeExecutor_);
         rewardToken = IERC20(rewardToken_);
         stakingToken = IERC20(stakingToken_);
-        gaugeFactory = GaugeFactory(gaugeFactory_);
+        builderGaugeFactory = BuilderGaugeFactory(builderGaugeFactory_);
         builderRegistry = BuilderRegistry(builderRegistry_);
     }
 
@@ -118,53 +118,57 @@ contract SponsorsManager is Governed {
     // -----------------------------
 
     /**
-     * @notice creates a new gauge for a builder
+     * @notice creates a new builder builderGauge for a builder
      * @param builder_ builder address who can claim the rewards
-     * @return gauge gauge contract
+     * @return builderGauge builder builderGauge contract
      */
-    function createGauge(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge) {
+    function createBuilderGauge(address builder_)
+        external
+        onlyGovernorOrAuthorizedChanger
+        returns (BuilderGauge builderGauge)
+    {
         // TODO: only if the builder is whitelisted?
-        if (address(builderToGauge[builder_]) != address(0)) revert GaugeExists();
-        gauge = gaugeFactory.createGauge(builder_, address(rewardToken));
-        builderToGauge[builder_] = gauge;
-        gauges.push(gauge);
-        emit GaugeCreated(builder_, address(gauge), msg.sender);
+        if (address(builderToGauge[builder_]) != address(0)) revert BuilderGaugeExists();
+        builderGauge = builderGaugeFactory.createBuilderGauge(builder_, address(rewardToken));
+        builderToGauge[builder_] = builderGauge;
+        builderGauges.push(builderGauge);
+        emit BuilderGaugeCreated(builder_, address(builderGauge), msg.sender);
     }
 
     /**
-     * @notice allocates votes for a gauge
+     * @notice allocates votes for a builderGauge
      * @dev reverts if it is called during the distribution period
-     * @param gauge_ address of the gauge where the votes will be allocated
+     * @param builderGauge_ address of the builderGauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
      */
-    function allocate(Gauge gauge_, uint256 allocation_) external notInDistributionPeriod {
+    function allocate(BuilderGauge builderGauge_, uint256 allocation_) external notInDistributionPeriod {
         (uint256 _newSponsorTotalAllocation, uint256 _newTotalAllocation) =
-            _allocate(gauge_, allocation_, sponsorTotalAllocation[msg.sender], totalAllocation);
+            _allocate(builderGauge_, allocation_, sponsorTotalAllocation[msg.sender], totalAllocation);
 
         _updateAllocation(msg.sender, _newSponsorTotalAllocation, _newTotalAllocation);
     }
 
     /**
-     * @notice allocates votes for a batch of gauges
+     * @notice allocates votes for a batch of builderGauges
      * @dev reverts if it is called during the distribution period
-     * @param gauges_ array of gauges where the votes will be allocated
+     * @param builderGauges_ array of builderGauges where the votes will be allocated
      * @param allocations_ array of amount of votes to allocate
      */
     function allocateBatch(
-        Gauge[] calldata gauges_,
+        BuilderGauge[] calldata builderGauges_,
         uint256[] calldata allocations_
     )
         external
         notInDistributionPeriod
     {
-        uint256 _length = gauges_.length;
+        uint256 _length = builderGauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
         // TODO: check length < MAX or let revert by out of gas?
         uint256 _sponsorTotalAllocation = sponsorTotalAllocation[msg.sender];
         uint256 _totalAllocation = totalAllocation;
         for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
             (uint256 _newSponsorTotalAllocation, uint256 _newTotalAllocation) =
-                _allocate(gauges_[i], allocations_[i], _sponsorTotalAllocation, _totalAllocation);
+                _allocate(builderGauges_[i], allocations_[i], _sponsorTotalAllocation, _totalAllocation);
             _sponsorTotalAllocation = _newSponsorTotalAllocation;
             _totalAllocation = _newTotalAllocation;
         }
@@ -172,7 +176,7 @@ contract SponsorsManager is Governed {
     }
 
     /**
-     * @notice transfers reward tokens from the sender to be distributed to the gauges
+     * @notice transfers reward tokens from the sender to be distributed to the builderGauges
      * @dev reverts if it is called during the distribution period
      * @param amount_ amount of reward tokens to distribute
      */
@@ -187,7 +191,7 @@ contract SponsorsManager is Governed {
 
     /**
      * @notice starts the distribution period blocking all the allocations
-     *  until all the gauges were distributed
+     *  until all the builderGauges were distributed
      * @dev reverts if is called outside the distribution window
      *  reverts if it is called during the distribution period
      */
@@ -197,14 +201,14 @@ contract SponsorsManager is Governed {
     }
 
     /**
-     * @notice distribute accumulated reward tokens to the gauges
+     * @notice distribute accumulated reward tokens to the builderGauges
      * @dev reverts if distribution period has not yet started
-     *  This function is paginated and it finishes once all gauges distribution are completed,
+     *  This function is paginated and it finishes once all builderGauges distribution are completed,
      *  ending the distribution period and voting restrictions.
      */
     function distribute() public {
         if (onDistributionPeriod == false) revert DistributionPeriodDidNotStart();
-        Gauge[] memory _gauges = gauges;
+        BuilderGauge[] memory _gauges = builderGauges;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
         uint256 _lastDistribution = Math.min(_gauges.length, _gaugeIndex + MAX_DISTRIBUTIONS_PER_BATCH);
         uint256 _rewardsPerShare = rewardsPerShare;
@@ -215,7 +219,7 @@ contract SponsorsManager is Governed {
             _distribute(_gauges[_gaugeIndex], _rewardsPerShare, _builderRegistry);
             _gaugeIndex = UtilsLib.unchecked_inc(_gaugeIndex);
         }
-        // all the gauges were distributed, so distribution period is finished
+        // all the builderGauges were distributed, so distribution period is finished
         if (_lastDistribution == _gauges.length) {
             indexLastGaugeDistributed = 0;
             rewardsPerShare = 0;
@@ -227,13 +231,13 @@ contract SponsorsManager is Governed {
     }
 
     /**
-     * @notice claims sponsor rewards from a batch of gauges
-     * @param gauges_ array of gauges to claim
+     * @notice claims sponsor rewards from a batch of builderGauges
+     * @param builderGauges_ array of builderGauges to claim
      */
-    function claimSponsorRewards(Gauge[] memory gauges_) external {
-        uint256 _length = gauges_.length;
+    function claimSponsorRewards(BuilderGauge[] memory builderGauges_) external {
+        uint256 _length = builderGauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib.unchecked_inc(i)) {
-            gauges_[i].claimSponsorReward(msg.sender);
+            builderGauges_[i].claimSponsorReward(msg.sender);
         }
     }
 
@@ -242,8 +246,8 @@ contract SponsorsManager is Governed {
     // -----------------------------
 
     /**
-     * @notice internal function used to allocate votes for a gauge or a batch of gauges
-     * @param gauge_ address of the gauge where the votes will be allocated
+     * @notice internal function used to allocate votes for a builderGauge or a batch of builderGauges
+     * @param builderGauge_ address of the builderGauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
      * @param sponsorTotalAllocation_ current sponsor total allocation
      * @param totalAllocation_ current total allocation
@@ -251,7 +255,7 @@ contract SponsorsManager is Governed {
      * @return newTotalAllocation total allocation after the new allocation
      */
     function _allocate(
-        Gauge gauge_,
+        BuilderGauge builderGauge_,
         uint256 allocation_,
         uint256 sponsorTotalAllocation_,
         uint256 totalAllocation_
@@ -259,8 +263,8 @@ contract SponsorsManager is Governed {
         internal
         returns (uint256 newSponsorTotalAllocation, uint256 newTotalAllocation)
     {
-        // TODO: validate gauge exists, is whitelisted, is not paused
-        (uint256 _allocationDeviation, bool _isNegative) = gauge_.allocate(msg.sender, allocation_);
+        // TODO: validate builderGauge exists, is whitelisted, is not paused
+        (uint256 _allocationDeviation, bool _isNegative) = builderGauge_.allocate(msg.sender, allocation_);
         if (_isNegative) {
             newSponsorTotalAllocation = sponsorTotalAllocation_ - _allocationDeviation;
             newTotalAllocation = totalAllocation_ - _allocationDeviation;
@@ -268,7 +272,7 @@ contract SponsorsManager is Governed {
             newSponsorTotalAllocation = sponsorTotalAllocation_ + _allocationDeviation;
             newTotalAllocation = totalAllocation_ + _allocationDeviation;
         }
-        emit NewAllocation(msg.sender, address(gauge_), allocation_);
+        emit NewAllocation(msg.sender, address(builderGauge_), allocation_);
         return (newSponsorTotalAllocation, newTotalAllocation);
     }
 
@@ -293,20 +297,26 @@ contract SponsorsManager is Governed {
     }
 
     /**
-     * @notice internal function used to distribute reward tokens to a gauge
-     * @param gauge_ address of the gauge to distribute
+     * @notice internal function used to distribute reward tokens to a builderGauge
+     * @param builderGauge_ address of the builderGauge to distribute
      * @param rewardsPerShare_ cached reward per share
      * @param builderRegistry_ cached builder registry
      */
-    function _distribute(Gauge gauge_, uint256 rewardsPerShare_, BuilderRegistry builderRegistry_) internal {
-        uint256 _reward = UtilsLib._mulPrec(gauge_.totalAllocation(), rewardsPerShare_);
-        uint256 _sponsorsAmount = builderRegistry_.applyBuilderKickback(gauge_.builder(), _reward);
+    function _distribute(
+        BuilderGauge builderGauge_,
+        uint256 rewardsPerShare_,
+        BuilderRegistry builderRegistry_
+    )
+        internal
+    {
+        uint256 _reward = UtilsLib._mulPrec(builderGauge_.totalAllocation(), rewardsPerShare_);
+        uint256 _sponsorsAmount = builderRegistry_.applyBuilderKickback(builderGauge_.builder(), _reward);
         // [N] = [N] - [N]
         uint256 _builderAmount = _reward - _sponsorsAmount;
         if (_reward > 0) {
-            rewardToken.approve(address(gauge_), _reward);
-            gauge_.notifyRewardAmount(_builderAmount, _sponsorsAmount);
-            emit DistributeReward(msg.sender, address(gauge_), _reward);
+            rewardToken.approve(address(builderGauge_), _reward);
+            builderGauge_.notifyRewardAmount(_builderAmount, _sponsorsAmount);
+            emit DistributeReward(msg.sender, address(builderGauge_), _reward);
         }
     }
 

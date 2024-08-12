@@ -17,7 +17,7 @@ contract InitializationTest is BaseTest {
             address(changeExecutorMock),
             address(rewardToken),
             address(stakingToken),
-            address(gaugeFactory),
+            address(builderGaugeFactory),
             address(builderRegistry)
         );
     }

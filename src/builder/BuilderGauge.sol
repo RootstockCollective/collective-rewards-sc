@@ -9,11 +9,11 @@ import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EpochLib } from "../libraries/EpochLib.sol";
 
 /**
- * @title Gauge
- * @notice For each project proposal a Gauge contract will be deployed.
+ * @title BuilderGauge
+ * @notice For each project proposal a BuilderGauge contract will be deployed.
  *  It receives all the rewards obtained for that project and allows the builder and voters to claim them.
  */
-contract Gauge {
+contract BuilderGauge {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------

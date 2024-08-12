@@ -21,7 +21,7 @@ contract UpgradeTest is BaseTest {
         sponsorsManager.upgradeToAndCall(
             address(sponsorsManagerNewImpl), abi.encodeCall(sponsorsManagerNewImpl.initializeMock, (42))
         );
-        // THEN getCustomMockValue is 44 = 2 gaugeLength + 42 newVariable
+        // THEN getCustomMockValue is 44 = 2 builderGaugeLength + 42 newVariable
         assertEq(SponsorsManagerUpgradeMock(address(sponsorsManager)).getCustomMockValue(), 44);
     }
 
