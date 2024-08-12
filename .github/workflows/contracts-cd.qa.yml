@@ -30,6 +30,31 @@ jobs:
         run: |
           source .env.31
           echo "RPC_URL=$RPC_URL" >> $GITHUB_ENV
+          echo "DEPLOYMENT_CONTEXT=$DEPLOYMENT_CONTEXT" >> $GITHUB_ENV
+          echo "REWARD_TOKEN_ADDRESS=$REWARD_TOKEN_ADDRESS" >> $GITHUB_ENV
+          echo "REWARD_TOKEN_ADDRESS=$REWARD_TOKEN_ADDRESS" >> $GITHUB_ENV
+          echo "GOVERNOR_ADDRESS=$GOVERNOR_ADDRESS" >> $GITHUB_ENV
+
+          echo "KYC_APPROVER_ADDRESS=$KYC_APPROVER_ADDRESS" >> $GITHUB_ENV
+          echo "NO_DD=$NO_DD" >> $GITHUB_ENV
+          echo "GAS_PRICE=$GAS_PRICE" >> $GITHUB_ENV
+          echo "STAKING_TOKEN_ADDRESS=$STAKING_TOKEN_ADDRESS" >> $GITHUB_ENV
+
+          echo "CHANGE_EXECUTOR_ADDRESS=$CHANGE_EXECUTOR_ADDRESS" >> $GITHUB_ENV
+          echo "STAKING_TOKEN_ADDRESS=$STAKING_TOKEN_ADDRESS" >> $GITHUB_ENV
+          echo "CHANGE_EXECUTOR_ADDRESS=$CHANGE_EXECUTOR_ADDRESS" >> $GITHUB_ENV
+          echo "FOUNDATION_TREASURY_ADDRESS=$FOUNDATION_TREASURY_ADDRESS" >> $GITHUB_ENV
+
+          echo "DEPLOYER_ADDRESS=$DEPLOYER_ADDRESS" >> $GITHUB_ENV
+          echo "RPC_KEY=$RPC_KEY" >> $GITHUB_ENV
+
+          export PRIVATE_KEY=${{ secrets.QA_DEPLOYMENT_PRIVATE_KEY }} >> $GITHUB_ENV
 
       - name: "Deploy Contract"
         run: "bun run deploy"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: contract-addresses-qa.json
+          path: deployments/testnet/contract-addresses.json
