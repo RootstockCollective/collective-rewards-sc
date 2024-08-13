@@ -3,7 +3,9 @@ const utils = require("./utils");
 const constants = require("./constants");
 
 class ScopedVarsLeadingUnderscore extends Base {
-  static ruleId = "scoped-vars-leading-underscore";
+  constructor(reporter) {
+    super(reporter, "scoped-vars-leading-underscore");
+  }
 
   ForStatement(node) {
     this._validateVariables(node);
@@ -28,11 +30,11 @@ class ScopedVarsLeadingUnderscore extends Base {
         variables.forEach((variable) => {
           const { name } = variable;
 
-          if (!utils.hasLeadingUnderscore(name)) {
+          if (!utils.startsWithUnderscore(name)) {
             this.error(variable, `'${name}' should start with ${constants.UNDERSCORE} `);
           }
 
-          if (utils.hasTrailingUnderscore(name)) {
+          if (utils.endsWithUnderscore(name)) {
             this.error(variable, `'${name}' should not end with ${constants.UNDERSCORE} `);
           }
         });

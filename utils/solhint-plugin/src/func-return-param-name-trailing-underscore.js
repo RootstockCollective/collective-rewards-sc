@@ -3,7 +3,9 @@ const utils = require("./utils");
 const constants = require("./constants");
 
 class FuncReturnParamNameLeadingUnderscore extends Base {
-  static ruleId = "func-return-param-name-trailing-underscore";
+  constructor(reporter) {
+    super(reporter, "func-return-param-name-trailing-underscore");
+  }
 
   FunctionDefinition(node) {
     this._validateParameters(node);
@@ -16,11 +18,11 @@ class FuncReturnParamNameLeadingUnderscore extends Base {
         return;
       }
 
-      if (!utils.hasTrailingUnderscore(name)) {
+      if (!utils.endsWithUnderscore(name)) {
         this.error(parameter, `'${name}' should end with ${constants.UNDERSCORE} `);
       }
 
-      if (utils.hasLeadingUnderscore(name)) {
+      if (utils.startsWithUnderscore(name)) {
         this.error(parameter, `'${name}' should not start with ${constants.UNDERSCORE} `);
       }
     });

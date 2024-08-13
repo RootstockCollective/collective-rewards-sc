@@ -3,7 +3,9 @@ const utils = require("./utils");
 const constants = require("./constants");
 
 class FuncParamNameTrailingUnderscore extends Base {
-  static ruleId = "func-param-name-trailing-underscore";
+  constructor(reporter) {
+    super(reporter, "func-param-name-trailing-underscore");
+  }
 
   ModifierDefinition(node) {
     this._validateParameters(node);
@@ -28,11 +30,11 @@ class FuncParamNameTrailingUnderscore extends Base {
         return;
       }
 
-      if (!utils.hasTrailingUnderscore(name)) {
+      if (!utils.endsWithUnderscore(name)) {
         this.error(parameter, `'${name}' should end with ${constants.UNDERSCORE} `);
       }
 
-      if (utils.hasLeadingUnderscore(name)) {
+      if (utils.startsWithUnderscore(name)) {
         this.error(parameter, `'${name}' should not start with ${constants.UNDERSCORE} `);
       }
     });

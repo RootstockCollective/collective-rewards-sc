@@ -1,11 +1,7 @@
 class Base {
-  constructor(reporter, config) {
+  constructor(reporter, ruleId) {
     this.reporter = reporter;
-    this.ruleId = this.constructor.ruleId;
-    if (this.ruleId === undefined) {
-      throw Error("missing ruleId static property");
-    }
-    this.config = config;
+    this.ruleId = ruleId;
   }
 
   error(ctx, message) {

@@ -3,7 +3,7 @@ parser: "@typescript-eslint/parser"
 plugins:
   - "@typescript-eslint"
   - "mocha"
-extends: 
+extends:
   - "eslint:recommended"
   - "plugin:@typescript-eslint/recommended"
   - "plugin:@typescript-eslint/recommended-requiring-type-checking"

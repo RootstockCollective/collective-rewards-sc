@@ -1,12 +1,14 @@
-function hasLeadingUnderscore(text) {
-  return text && text[0] === "_";
+const constants = require("./constants");
+
+function startsWithUnderscore(text) {
+  return text && text[0] === constants.UNDERSCORE;
 }
 
-function hasTrailingUnderscore(text) {
-  return text && text[text.length - 1] === "_";
+function endsWithUnderscore(text) {
+  return text && text[text.length - 1] === constants.UNDERSCORE;
 }
 
 module.exports = {
-  hasLeadingUnderscore,
-  hasTrailingUnderscore,
+  startsWithUnderscore,
+  endsWithUnderscore,
 };

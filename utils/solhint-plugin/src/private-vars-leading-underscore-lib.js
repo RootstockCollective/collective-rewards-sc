@@ -3,7 +3,9 @@ const utils = require("./utils");
 const constants = require("./constants");
 
 class PrivateVarsLeadingUnderscoreLib extends Base {
-  static ruleId = "private-vars-leading-underscore-lib";
+  constructor(reporter) {
+    super(reporter, "private-vars-leading-underscore-lib");
+  }
 
   ContractDefinition(node) {
     if (node.kind === constants.LIBRARY) {
@@ -34,7 +36,7 @@ class PrivateVarsLeadingUnderscoreLib extends Base {
         return;
       }
 
-      if (utils.hasLeadingUnderscore(name) !== shouldHaveLeadingUnderscore) {
+      if (utils.startsWithUnderscore(name) !== shouldHaveLeadingUnderscore) {
         this.error(
           node,
           `'${name}' should  ${!shouldHaveLeadingUnderscore && "not"} start with ${constants.UNDERSCORE}`,
