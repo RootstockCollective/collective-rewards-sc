@@ -17,7 +17,7 @@ if [ $? -ne 0 ]; then
   exit $?
 fi
 # Reload env with contract addresses
-# direnv allow
+direnv allow
 
 # Create hardhat artifacts
 if [[ ! -n "${OMIT_HARDHAT_ARTIFACTS:-}" || "${OMIT_HARDHAT_ARTIFACTS}" == "false" ]]; then
