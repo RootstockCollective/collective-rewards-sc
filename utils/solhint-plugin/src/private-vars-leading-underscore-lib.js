@@ -36,7 +36,7 @@ class PrivateVarsLeadingUnderscoreLib extends Base {
         return;
       }
 
-      if (utils.startsWithUnderscore(name) !== shouldHaveLeadingUnderscore) {
+      if (utils.hasLeadingUnderscore(name) !== shouldHaveLeadingUnderscore) {
         this.error(
           node,
           `'${name}' should  ${!shouldHaveLeadingUnderscore && "not"} start with ${constants.UNDERSCORE}`,

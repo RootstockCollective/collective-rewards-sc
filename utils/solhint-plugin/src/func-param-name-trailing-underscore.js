@@ -30,11 +30,11 @@ class FuncParamNameTrailingUnderscore extends Base {
         return;
       }
 
-      if (!utils.endsWithUnderscore(name)) {
+      if (!utils.hasTrailingUnderscore(name)) {
         this.error(parameter, `'${name}' should end with ${constants.UNDERSCORE} `);
       }
 
-      if (utils.startsWithUnderscore(name)) {
+      if (utils.hasLeadingUnderscore(name)) {
         this.error(parameter, `'${name}' should not start with ${constants.UNDERSCORE} `);
       }
     });

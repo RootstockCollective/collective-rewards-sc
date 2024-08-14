@@ -30,11 +30,11 @@ class ScopedVarsLeadingUnderscore extends Base {
         variables.forEach((variable) => {
           const { name } = variable;
 
-          if (!utils.startsWithUnderscore(name)) {
+          if (!utils.hasLeadingUnderscore(name)) {
             this.error(variable, `'${name}' should start with ${constants.UNDERSCORE} `);
           }
 
-          if (utils.endsWithUnderscore(name)) {
+          if (utils.hasTrailingUnderscore(name)) {
             this.error(variable, `'${name}' should not end with ${constants.UNDERSCORE} `);
           }
         });
