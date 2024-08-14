@@ -75,7 +75,7 @@ abstract contract OutputWriter is Script {
             );
         }
 
-        _outJsonFile = string.concat(_deploymentsDir, "/contract_addresses._json");
+        _outJsonFile = string.concat(_deploymentsDir, "/contract_addresses.json");
         try vm.readFile(_outJsonFile) returns (string memory) { }
         catch {
             vm.writeJson("{}", _outJsonFile);
@@ -87,7 +87,7 @@ abstract contract OutputWriter is Script {
             _chainId == block.chainid,
             "Please set a CHAIN_ID env var that matches the network set as DEPLOYMENT_CONTEXT"
         );
-        _deployPath = string.concat(_root, "/broadcast/Deploy.s.sol/", vm.toString(_chainId), "/run-latest._json");
+        _deployPath = string.concat(_root, "/broadcast/Deploy.s.sol/", vm.toString(_chainId), "/run-latest.json");
     }
 
     /// @notice Reads the deployments from disk that were generated
@@ -111,7 +111,7 @@ abstract contract OutputWriter is Script {
         return _deployments;
     }
 
-    /// @notice Returns the _json of the deployment transaction given a contract address.
+    /// @notice Returns the json of the deployment transaction given a contract address.
     function _getDeployTransactionByContractAddress(address addr_) internal returns (string memory) {
         string[] memory _cmd = new string[](3);
         _cmd[0] = Executables._BASH;
@@ -136,7 +136,7 @@ abstract contract OutputWriter is Script {
         return stdJson.readString(deployTx_, ".contractName");
     }
 
-    /// @notice Returns the constructor arguent of a deployment transaction given a transaction _json.
+    /// @notice Returns the constructor arguent of a deployment transaction given a transaction json.
     function _getDeployTransactionConstructorArguments(string memory transaction_) internal returns (string[] memory) {
         string[] memory _cmd = new string[](3);
         _cmd[0] = Executables._BASH;
@@ -208,7 +208,7 @@ abstract contract OutputWriter is Script {
         string[] memory _cmd = new string[](3);
         _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables._FORGE, " config --_json | ", Executables._JQ, " -r .out");
+        _cmd[2] = string.concat(Executables._FORGE, " config --json | ", Executables._JQ, " -r .out");
         bytes memory _res = vm.ffi(_cmd);
         string memory _contractName = _stripSemver(name_);
         dir_ = string.concat(vm.projectRoot(), "/", string(_res), "/", _contractName, ".sol");
@@ -218,7 +218,7 @@ abstract contract OutputWriter is Script {
     ///         with multiple solidity versions then return the first one based on the result of `LS`.
     function _getForgeArtifactPath(string memory name_) internal returns (string memory) {
         string memory _directory = _getForgeArtifactDirectory(name_);
-        string memory _path = string.concat(_directory, "/", name_, "._json");
+        string memory _path = string.concat(_directory, "/", name_, ".json");
         if (vm.exists(_path)) return _path;
 
         string[] memory _cmd = new string[](3);
@@ -303,9 +303,9 @@ abstract contract OutputWriter is Script {
         metadata_ = string(_res);
     }
 
-    /// @notice Turns an Artifact into a _json serialized string
+    /// @notice Turns an Artifact into a json serialized string
     /// @param artifact_ The artifact to serialize
-    /// @return The _json serialized string
+    /// @return The json serialized string
     function _serializeArtifact(Artifact memory artifact_) internal returns (string memory) {
         string memory _json = "";
         _json = stdJson.serialize("", "address", artifact_.addr);
@@ -348,7 +348,7 @@ abstract contract OutputWriter is Script {
             bytes memory _deployedCode = _getDeployedCode(_contractName);
             string memory _receipt = _getDeployReceiptByContractAddress(_addr);
 
-            string memory _artifactPath = string.concat(_deploymentsDir, "/", _deploymentName, "._json");
+            string memory _artifactPath = string.concat(_deploymentsDir, "/", _deploymentName, ".json");
 
             uint256 _numDeployments = 0;
             try vm.readFile(_artifactPath) returns (string memory _res) {
