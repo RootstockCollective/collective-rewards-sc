@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
 import { ChangeExecutor } from "src/governance/ChangeExecutor.sol";
@@ -29,32 +28,32 @@ contract Deploy is Broadcaster, OutputWriter {
         _kycApproverAddress = vm.envAddress("KYC_APPROVER_ADDRESS");
         _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
 
-        _outputWriterSetup();
+        outputWriterSetup();
     }
 
     function run() public {
-        GaugeFactory gaugeFactory = new GaugeFactoryDeployer().run();
-        save("GaugeFactory", address(gaugeFactory));
+        GaugeFactory _gaugeFactory = new GaugeFactoryDeployer().run();
+        save("GaugeFactory", address(_gaugeFactory));
 
-        (ChangeExecutor changeExecutorProxy, ChangeExecutor changeExecutorImpl) =
+        (ChangeExecutor _changeExecutorProxy, ChangeExecutor _changeExecutorImpl) =
             new ChangeExecutorDeployer().run(_governorAddress);
-        saveWithProxy("ChangeExecutor", address(changeExecutorImpl), address(changeExecutorProxy));
+        saveWithProxy("ChangeExecutor", address(_changeExecutorImpl), address(_changeExecutorProxy));
 
-        (BuilderRegistry builderRegistryProxy, BuilderRegistry builderRegistryImpl) =
-            new BuilderRegistryDeployer().run(address(changeExecutorProxy), _kycApproverAddress);
-        saveWithProxy("BuilderRegistry", address(builderRegistryImpl), address(builderRegistryProxy));
+        (BuilderRegistry _builderRegistryProxy, BuilderRegistry _builderRegistryImpl) =
+            new BuilderRegistryDeployer().run(address(_changeExecutorProxy), _kycApproverAddress);
+        saveWithProxy("BuilderRegistry", address(_builderRegistryImpl), address(_builderRegistryProxy));
 
-        (SponsorsManager sponsorManagerProxy, SponsorsManager sponsorManagerImpl) = new SponsorsManagerDeployer().run(
-            address(changeExecutorProxy),
+        (SponsorsManager _sponsorManagerProxy, SponsorsManager _sponsorManagerImpl) = new SponsorsManagerDeployer().run(
+            address(_changeExecutorProxy),
             _rewardTokenAddress,
             _stakingTokenAddress,
-            address(gaugeFactory),
-            address(builderRegistryProxy)
+            address(_gaugeFactory),
+            address(_builderRegistryProxy)
         );
-        saveWithProxy("SponsorsManager", address(sponsorManagerImpl), address(sponsorManagerProxy));
+        saveWithProxy("SponsorsManager", address(_sponsorManagerImpl), address(_sponsorManagerProxy));
 
-        (RewardDistributor rewardDistributorProxy, RewardDistributor rewardDistributorImpl) = new RewardDistributorDeployer(
-        ).run(address(changeExecutorProxy), _foundationTreasuryAddress, address(sponsorManagerProxy));
-        saveWithProxy("RewardDistributor", address(rewardDistributorImpl), address(rewardDistributorProxy));
+        (RewardDistributor _rewardDistributorProxy, RewardDistributor _rewardDistributorImpl) = new RewardDistributorDeployer(
+        ).run(address(_changeExecutorProxy), _foundationTreasuryAddress, address(_sponsorManagerProxy));
+        saveWithProxy("RewardDistributor", address(_rewardDistributorImpl), address(_rewardDistributorProxy));
     }
 }

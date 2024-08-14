@@ -6,14 +6,14 @@ import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
 import { BuilderRegistry } from "src/BuilderRegistry.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (BuilderRegistry proxy, BuilderRegistry implementation) {
-        address kycApprover = vm.envAddress("KYC_APPROVER_ADDRESS");
-        address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
-        if (changeExecutorAddress == address(0)) {
-            changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
+    function run() public returns (BuilderRegistry proxy_, BuilderRegistry implementation_) {
+        address _kycApprover = vm.envAddress("KYC_APPROVER_ADDRESS");
+        address _changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
+        if (_changeExecutorAddress == address(0)) {
+            _changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }
 
-        (proxy, implementation) = run(changeExecutorAddress, kycApprover);
+        (proxy_, implementation_) = run(_changeExecutorAddress, _kycApprover);
     }
 
     function run(

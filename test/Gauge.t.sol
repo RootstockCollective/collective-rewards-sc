@@ -162,7 +162,7 @@ contract GaugeTest is BaseTest {
         // THEN lastUpdateTime is the current one
         assertEq(gauge.lastUpdateTime(), block.timestamp);
         // THEN periodFinish is updated with the timestamp when the epoch finish
-        assertEq(gauge.periodFinish(), EpochLib.epochNext(block.timestamp));
+        assertEq(gauge.periodFinish(), EpochLib._epochNext(block.timestamp));
         // THEN time until next epoch is 518400
         assertEq(gauge.periodFinish() - block.timestamp, 518_400);
         // THEN rewardRate is 0.000135030864197530 = 70 ether / 518400 sec
@@ -210,7 +210,7 @@ contract GaugeTest is BaseTest {
         // THEN lastUpdateTime is the current one
         assertEq(gauge.lastUpdateTime(), block.timestamp);
         // THEN periodFinish is updated with the timestamp when the epoch finish
-        assertEq(gauge.periodFinish(), EpochLib.epochNext(block.timestamp));
+        assertEq(gauge.periodFinish(), EpochLib._epochNext(block.timestamp));
         // THEN time until next epoch is 518400
         assertEq(gauge.periodFinish() - block.timestamp, 518_400);
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec

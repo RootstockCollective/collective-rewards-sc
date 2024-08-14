@@ -10,10 +10,10 @@ abstract contract DeployUUPSProxy is Script {
         bytes memory initializerData_
     )
         internal
-        returns (address proxy, address implementation)
+        returns (address proxy_, address implementation_)
     {
-        implementation = _deployFromBytecode(vm.getCode(contractName_));
-        proxy = address(new ERC1967Proxy(implementation, initializerData_));
+        implementation_ = _deployFromBytecode(vm.getCode(contractName_));
+        proxy_ = address(new ERC1967Proxy(implementation_, initializerData_));
     }
 
     function _deployFromBytecode(bytes memory bytecode_) private returns (address) {
@@ -31,10 +31,10 @@ abstract contract DeployUUPSProxy is Script {
         bytes32 salt_
     )
         internal
-        returns (address proxy, address implementation)
+        returns (address proxy_, address implementation_)
     {
-        implementation = _deployFromBytecodeDD(vm.getCode(contractName_), salt_);
-        proxy = address(new ERC1967Proxy{ salt: salt_ }(implementation, initializerData_));
+        implementation_ = _deployFromBytecodeDD(vm.getCode(contractName_), salt_);
+        proxy_ = address(new ERC1967Proxy{ salt: salt_ }(implementation_, initializerData_));
     }
 
     function _deployFromBytecodeDD(bytes memory bytecode_, bytes32 salt_) private returns (address) {

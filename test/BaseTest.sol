@@ -35,6 +35,7 @@ contract BaseTest is Test {
     RewardDistributor public rewardDistributorImpl;
     RewardDistributor public rewardDistributor;
 
+    /* solhint-disable private-vars-leading-underscore */
     address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
@@ -42,12 +43,13 @@ contract BaseTest is Test {
     address internal builder2 = makeAddr("builder2");
     address internal kycApprover = makeAddr("kycApprover");
     address internal foundation = makeAddr("foundation");
+    /* solhint-enable private-vars-leading-underscore */
 
     function setUp() public {
         (changeExecutorMock, changeExecutorMockImpl) = new ChangeExecutorMockDeployer().run(governor);
-        MockTokenDeployer mockTokenDeployer = new MockTokenDeployer();
-        stakingToken = mockTokenDeployer.run(0);
-        rewardToken = mockTokenDeployer.run(1);
+        MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
+        stakingToken = _mockTokenDeployer.run(0);
+        rewardToken = _mockTokenDeployer.run(1);
         (builderRegistry, builderRegistryImpl) =
             new BuilderRegistryDeployer().run(address(changeExecutorMock), kycApprover);
         gaugeFactory = new GaugeFactoryDeployer().run();
@@ -79,12 +81,12 @@ contract BaseTest is Test {
     function _setUp() internal virtual { }
 
     function _skipAndStartNewEpoch() internal {
-        uint256 _currentEpochRemaining = EpochLib.epochNext(block.timestamp) - block.timestamp;
+        uint256 _currentEpochRemaining = EpochLib._epochNext(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining);
     }
 
     function _skipRemainingEpochFraction(uint256 fraction_) internal {
-        uint256 _currentEpochRemaining = EpochLib.epochNext(block.timestamp) - block.timestamp;
+        uint256 _currentEpochRemaining = EpochLib._epochNext(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining / fraction_);
     }
 
@@ -94,7 +96,7 @@ contract BaseTest is Test {
 
     function _skipToEndDistributionWindow() internal {
         _skipAndStartNewEpoch();
-        uint256 _currentEpochRemaining = EpochLib.endDistributionWindow(block.timestamp) - block.timestamp;
+        uint256 _currentEpochRemaining = EpochLib._endDistributionWindow(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining);
     }
 }

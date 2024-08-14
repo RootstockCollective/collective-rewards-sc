@@ -1,30 +1,33 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
-    function run() public returns (SponsorsManager proxy, SponsorsManager implementation) {
-        address rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
-        address stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
-        address changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
-        if (changeExecutorAddress == address(0)) {
-            changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
+    function run() public returns (SponsorsManager proxy_, SponsorsManager implementation_) {
+        address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
+        address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
+        address _changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
+        if (_changeExecutorAddress == address(0)) {
+            _changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }
-        address gaugeFactoryAddress = vm.envOr("GaugeFactory", address(0));
-        if (gaugeFactoryAddress == address(0)) {
-            gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
+        address _gaugeFactoryAddress = vm.envOr("GaugeFactory", address(0));
+        if (_gaugeFactoryAddress == address(0)) {
+            _gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
-        address builderRegistryAddress = vm.envOr("BuilderRegistry", address(0));
-        if (builderRegistryAddress == address(0)) {
-            builderRegistryAddress = vm.envAddress("BUILDER_REGISTRY_ADDRESS");
+        address _builderRegistryAddress = vm.envOr("BuilderRegistry", address(0));
+        if (_builderRegistryAddress == address(0)) {
+            _builderRegistryAddress = vm.envAddress("BUILDER_REGISTRY_ADDRESS");
         }
 
-        (proxy, implementation) = run(
-            changeExecutorAddress, rewardTokenAddress, stakingTokenAddress, gaugeFactoryAddress, builderRegistryAddress
+        (proxy_, implementation_) = run(
+            _changeExecutorAddress,
+            _rewardTokenAddress,
+            _stakingTokenAddress,
+            _gaugeFactoryAddress,
+            _builderRegistryAddress
         );
     }
 
