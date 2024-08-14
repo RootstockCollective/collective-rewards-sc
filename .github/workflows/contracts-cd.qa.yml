@@ -31,6 +31,9 @@ jobs:
       - name: "Install the Node.js dependencies"
         run: "bun install"
 
+      - name: "Install the jq"
+        run: "apt-get update && apt-get install jq"
+
       - name: "Load and export environment variables"
         id: load-env
         run: |
@@ -55,8 +58,8 @@ jobs:
 
           echo $PWD
 
-      - name: "Check BASH version"
-        run: "BASH --version"
+      - name: "Check bash version"
+        run: "bash --version"
       
       - name: "Check jq version"
         run: "jq --version"
