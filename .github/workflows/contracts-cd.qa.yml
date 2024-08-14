@@ -32,7 +32,7 @@ jobs:
         run: "bun install"
 
       - name: "Install the jq"
-        run: "sudo apt-get update && sudo apt-get install jq"
+        run: "sudo apt-get update && sudo apt-get install jq direnv"
 
       - name: "Load and export environment variables"
         id: load-env
