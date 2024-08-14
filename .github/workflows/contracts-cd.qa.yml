@@ -61,5 +61,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: contract-addresses-qa.json
+          name: deployments/testnet/contract-addresses.json
           path: deployments/testnet/contract-addresses.json
