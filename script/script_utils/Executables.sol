@@ -7,11 +7,11 @@ pragma solidity ^0.8.20;
 ///         to have a single source of truth in case absolute paths
 ///         need to be used.
 library Executables {
-    string internal constant _BASH = "BASH";
-    string internal constant _JQ = "JQ";
-    string internal constant _FORGE = "FORGE";
-    string internal constant _ECHO = "ECHO";
-    string internal constant _SED = "SED";
-    string internal constant _FIND = "FIND";
-    string internal constant _LS = "LS";
+    string internal constant _BASH = "bash";
+    string internal constant _JQ = "jq";
+    string internal constant _FORGE = "forge";
+    string internal constant _ECHO = "echo";
+    string internal constant _SED = "sed";
+    string internal constant _FIND = "find";
+    string internal constant _LS = "ls";
 }
