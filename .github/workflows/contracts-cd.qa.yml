@@ -10,6 +10,7 @@ on:
 env:
   CHAIN_ID: 31
   DEPLOYMENTS_DIR: "deployments/"
+  FOUNDRY_PROFILE: "default"
 
 jobs:
   deploy:
@@ -21,7 +22,7 @@ jobs:
         uses: "actions/checkout@v4"
 
       - name: "Install Foundry"
-        uses: "foundry-rs/foundry-toolchain@v1"
+        uses: "foundry-rs/foundry-toolchain@f625d0fa7c51e65b4bf1e8f7931cd1c6e2e285e9"
 
       - name: "Install Bun"
         uses: "oven-sh/setup-bun@v1"
