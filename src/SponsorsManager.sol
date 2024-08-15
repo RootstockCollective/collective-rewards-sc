@@ -36,7 +36,9 @@ contract SponsorsManager is Governed {
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
     event NewAllocation(address indexed sponsor_, address indexed gauge_, uint256 allocation_);
     event NotifyReward(address indexed sender_, uint256 amount_);
-    event DistributeReward(address indexed sender_, address indexed gauge_, uint256 amount_);
+    event RewardDistributionStarted(address indexed sender_);
+    event RewardDistributed(address indexed sender_);
+    event RewardDistributionFinished(address indexed sender_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -63,10 +65,10 @@ contract SponsorsManager is Governed {
     GaugeFactory public gaugeFactory;
     /// @notice builder registry contract address
     BuilderRegistry public builderRegistry;
-    /// @notice total allocation on all the gauges
-    uint256 public totalAllocation;
-    /// @notice rewards to distribute per sponsor emission [PREC]
-    uint256 public rewardsPerShare;
+    /// @notice total potential reward
+    uint256 public totalPotentialReward;
+    /// @notice rewards to distribute [PREC]
+    uint256 public rewards;
     /// @notice index of tha last gauge distributed during a distribution period
     uint256 public indexLastGaugeDistributed;
     /// @notice true if distribution period started. Allocations remain blocked until it finishes
@@ -138,10 +140,10 @@ contract SponsorsManager is Governed {
      * @param allocation_ amount of votes to allocate
      */
     function allocate(Gauge gauge_, uint256 allocation_) external notInDistributionPeriod {
-        (uint256 _newSponsorTotalAllocation, uint256 _newTotalAllocation) =
-            _allocate(gauge_, allocation_, sponsorTotalAllocation[msg.sender], totalAllocation);
+        (uint256 _newSponsorTotalAllocation, uint256 _newTotalPotentialReward) =
+            _allocate(gauge_, allocation_, sponsorTotalAllocation[msg.sender], totalPotentialReward);
 
-        _updateAllocation(msg.sender, _newSponsorTotalAllocation, _newTotalAllocation);
+        _updateAllocation(msg.sender, _newSponsorTotalAllocation, _newTotalPotentialReward);
     }
 
     /**
@@ -161,14 +163,14 @@ contract SponsorsManager is Governed {
         if (_length != allocations_.length) revert UnequalLengths();
         // TODO: check length < MAX or let revert by out of gas?
         uint256 _sponsorTotalAllocation = sponsorTotalAllocation[msg.sender];
-        uint256 _totalAllocation = totalAllocation;
+        uint256 _totalPotentialReward = totalPotentialReward;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-            (uint256 _newSponsorTotalAllocation, uint256 _newTotalAllocation) =
-                _allocate(gauges_[i], allocations_[i], _sponsorTotalAllocation, _totalAllocation);
+            (uint256 _newSponsorTotalAllocation, uint256 _newTotalPotentialReward) =
+                _allocate(gauges_[i], allocations_[i], _sponsorTotalAllocation, _totalPotentialReward);
             _sponsorTotalAllocation = _newSponsorTotalAllocation;
-            _totalAllocation = _newTotalAllocation;
+            _totalPotentialReward = _newTotalPotentialReward;
         }
-        _updateAllocation(msg.sender, _sponsorTotalAllocation, _totalAllocation);
+        _updateAllocation(msg.sender, _sponsorTotalAllocation, _totalPotentialReward);
     }
 
     /**
@@ -177,9 +179,7 @@ contract SponsorsManager is Governed {
      * @param amount_ amount of reward tokens to distribute
      */
     function notifyRewardAmount(uint256 amount_) external notInDistributionPeriod {
-        // if there is no allocation let it revert by division zero
-        // [PREC] = [N] * [PREC] / [N]
-        rewardsPerShare += UtilsLib._divPrec(amount_, totalAllocation);
+        rewards += amount_;
 
         emit NotifyReward(msg.sender, amount_);
         SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), amount_);
@@ -193,6 +193,7 @@ contract SponsorsManager is Governed {
      */
     function startDistribution() external onlyInDistributionWindow notInDistributionPeriod {
         onDistributionPeriod = true;
+        emit RewardDistributionStarted(msg.sender);
         distribute();
     }
 
@@ -205,21 +206,28 @@ contract SponsorsManager is Governed {
     function distribute() public {
         if (onDistributionPeriod == false) revert DistributionPeriodDidNotStart();
         Gauge[] memory _gauges = gauges;
+        uint256 _newTotalPotentialReward;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
         uint256 _lastDistribution = Math.min(_gauges.length, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
-        uint256 _rewardsPerShare = rewardsPerShare;
-        BuilderRegistry _builderRegistry = builderRegistry;
 
+        // cache variables read in the loop
+        uint256 _rewards = rewards;
+        uint256 _totalPotentialReward = totalPotentialReward;
+        BuilderRegistry _builderRegistry = builderRegistry;
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
-            _distribute(_gauges[_gaugeIndex], _rewardsPerShare, _builderRegistry);
+            _newTotalPotentialReward +=
+                _distribute(_gauges[_gaugeIndex], _rewards, _totalPotentialReward, _builderRegistry);
             _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
         }
+        emit RewardDistributed(msg.sender);
         // all the gauges were distributed, so distribution period is finished
         if (_lastDistribution == _gauges.length) {
+            emit RewardDistributionFinished(msg.sender);
             indexLastGaugeDistributed = 0;
-            rewardsPerShare = 0;
             onDistributionPeriod = false;
+            rewards = 0;
+            totalPotentialReward = _newTotalPotentialReward;
         } else {
             // Define new reference to batch beginning
             indexLastGaugeDistributed = _gaugeIndex;
@@ -246,30 +254,31 @@ contract SponsorsManager is Governed {
      * @param gauge_ address of the gauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
      * @param sponsorTotalAllocation_ current sponsor total allocation
-     * @param totalAllocation_ current total allocation
+     * @param totalPotentialReward_ current total potential reward
      * @return newSponsorTotalAllocation_ sponsor total allocation after new the allocation
-     * @return newTotalAllocation_ total allocation after the new allocation
+     * @return newTotalPotentialReward_ total potential reward  after the new allocation
      */
     function _allocate(
         Gauge gauge_,
         uint256 allocation_,
         uint256 sponsorTotalAllocation_,
-        uint256 totalAllocation_
+        uint256 totalPotentialReward_
     )
         internal
-        returns (uint256 newSponsorTotalAllocation_, uint256 newTotalAllocation_)
+        returns (uint256 newSponsorTotalAllocation_, uint256 newTotalPotentialReward_)
     {
         // TODO: validate gauge exists, is whitelisted, is not paused
+        uint256 _timeUntilNext = EpochLib._epochNext(block.timestamp) - block.timestamp;
         (uint256 _allocationDeviation, bool _isNegative) = gauge_.allocate(msg.sender, allocation_);
         if (_isNegative) {
             newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
-            newTotalAllocation_ = totalAllocation_ - _allocationDeviation;
+            newTotalPotentialReward_ = totalPotentialReward_ - (_allocationDeviation * _timeUntilNext);
         } else {
             newSponsorTotalAllocation_ = sponsorTotalAllocation_ + _allocationDeviation;
-            newTotalAllocation_ = totalAllocation_ + _allocationDeviation;
+            newTotalPotentialReward_ = totalPotentialReward_ + (_allocationDeviation * _timeUntilNext);
         }
         emit NewAllocation(msg.sender, address(gauge_), allocation_);
-        return (newSponsorTotalAllocation_, newTotalAllocation_);
+        return (newSponsorTotalAllocation_, newTotalPotentialReward_);
     }
 
     /**
@@ -277,17 +286,17 @@ contract SponsorsManager is Governed {
      * @dev reverts if sponsor doesn't have enough staking token balance
      * @param sponsor_ address of the sponsor who allocates
      * @param newSponsorTotalAllocation_ sponsor total allocation after new the allocation
-     * @param newTotalAllocation_ total allocation after the new allocation
+     * @param newTotalPotentialReward_ total potential reward after the new allocation
      */
     function _updateAllocation(
         address sponsor_,
         uint256 newSponsorTotalAllocation_,
-        uint256 newTotalAllocation_
+        uint256 newTotalPotentialReward_
     )
         internal
     {
         sponsorTotalAllocation[sponsor_] = newSponsorTotalAllocation_;
-        totalAllocation = newTotalAllocation_;
+        totalPotentialReward = newTotalPotentialReward_;
 
         if (newSponsorTotalAllocation_ > stakingToken.balanceOf(sponsor_)) revert NotEnoughStaking();
     }
@@ -295,19 +304,27 @@ contract SponsorsManager is Governed {
     /**
      * @notice internal function used to distribute reward tokens to a gauge
      * @param gauge_ address of the gauge to distribute
-     * @param rewardsPerShare_ cached reward per share
+     * @param rewards_ cached rewards
+     * @param totalPotentialReward_ cached total potential reward
      * @param builderRegistry_ cached builder registry
+     * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
-    function _distribute(Gauge gauge_, uint256 rewardsPerShare_, BuilderRegistry builderRegistry_) internal {
-        uint256 _reward = UtilsLib._mulPrec(gauge_.totalAllocation(), rewardsPerShare_);
-        uint256 _sponsorsAmount = builderRegistry_.applyBuilderKickback(gauge_.builder(), _reward);
+    function _distribute(
+        Gauge gauge_,
+        uint256 rewards_,
+        uint256 totalPotentialReward_,
+        BuilderRegistry builderRegistry_
+    )
+        internal
+        returns (uint256 newGaugeRewardShares_)
+    {
+        // [N] = [N] * [N] / [N]
+        uint256 _gaugeReward = (gauge_.rewardShares() * rewards_) / totalPotentialReward_;
+        uint256 _sponsorsAmount = builderRegistry_.applyBuilderKickback(gauge_.builder(), _gaugeReward);
         // [N] = [N] - [N]
-        uint256 _builderAmount = _reward - _sponsorsAmount;
-        if (_reward > 0) {
-            rewardToken.approve(address(gauge_), _reward);
-            gauge_.notifyRewardAmount(_builderAmount, _sponsorsAmount);
-            emit DistributeReward(msg.sender, address(gauge_), _reward);
-        }
+        uint256 _builderAmount = _gaugeReward - _sponsorsAmount;
+        rewardToken.approve(address(gauge_), _gaugeReward);
+        return gauge_.notifyRewardAmount(_builderAmount, _sponsorsAmount);
     }
 
     /**

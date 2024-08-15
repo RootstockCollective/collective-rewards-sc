@@ -60,6 +60,8 @@ contract Gauge {
     uint256 public periodFinish;
     /// @notice amount of unclaimed token reward earned for the builder
     uint256 public builderRewards;
+    /// @notice epoch rewards shares, optimistically tracking the time weighted votes allocations for this gauge
+    uint256 public rewardShares;
 
     /// @notice amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public allocationOf;
@@ -191,12 +193,15 @@ contract Gauge {
 
         // to do not deal with signed integers we add allocation if the new one is bigger than the previous one
         uint256 _previousAllocation = allocationOf[sponsor_];
+        uint256 _timeUntilNext = EpochLib._epochNext(block.timestamp) - block.timestamp;
         if (allocation_ >= _previousAllocation) {
             allocationDeviation_ = allocation_ - _previousAllocation;
             totalAllocation += allocationDeviation_;
+            rewardShares += allocationDeviation_ * _timeUntilNext;
         } else {
             allocationDeviation_ = _previousAllocation - allocation_;
             totalAllocation -= allocationDeviation_;
+            rewardShares -= allocationDeviation_ * _timeUntilNext;
             isNegative_ = true;
         }
         allocationOf[sponsor_] = allocation_;
@@ -210,8 +215,16 @@ contract Gauge {
      * @dev reverts if caller si not the sponsorsManager contract
      * @param builderAmount_ amount of rewards for the builder
      * @param sponsorsAmount_ amount of rewards for the sponsors
+     * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
-    function notifyRewardAmount(uint256 builderAmount_, uint256 sponsorsAmount_) external onlySponsorsManager {
+    function notifyRewardAmount(
+        uint256 builderAmount_,
+        uint256 sponsorsAmount_
+    )
+        external
+        onlySponsorsManager
+        returns (uint256 newGaugeRewardShares_)
+    {
         // update rewardPerToken storage
         rewardPerTokenStored = rewardPerToken();
         uint256 _timeUntilNext = EpochLib._epochNext(block.timestamp) - block.timestamp;
@@ -234,10 +247,12 @@ contract Gauge {
         lastUpdateTime = block.timestamp;
         _periodFinish = block.timestamp + _timeUntilNext;
         rewardMissing = 0;
+        newGaugeRewardShares_ = totalAllocation * EpochLib._WEEK;
 
         // update cached variables on storage
         periodFinish = _periodFinish;
         rewardRate = _rewardRate;
+        rewardShares = newGaugeRewardShares_;
 
         SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), builderAmount_ + sponsorsAmount_);
 
