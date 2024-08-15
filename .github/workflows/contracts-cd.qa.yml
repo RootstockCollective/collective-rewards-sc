@@ -2,10 +2,10 @@
 name: Deploy Contracts for QA
 
 on:
-  push:
-    branches:
-      - main
-      - TOK-114/implement-cd
+  pull_request_review:
+    types: [submitted]
+  issue_comment:
+    types: [created]
 
 env:
   CHAIN_ID: 31
@@ -17,6 +17,21 @@ jobs:
     environment:
       name: QA
     steps:
+      - name: Check pull request review or comment
+        id: check
+        run: |
+          echo "Review state: ${{ github.event.review.state }}"
+          echo "Comment body: ${{ github.event.comment.body }}"
+          if [[ "${{ github.event.review.state }}" == "approved" ]]; then
+            echo "Approved"
+            echo "status=approved" >> $GITHUB_ENV
+          elif [[ "${{ github.event.comment.body }}" == *"Dev approved"* ]]; then
+            echo "Dev approved comment found"
+            echo "status=dev_approved" >> $GITHUB_ENV
+          else
+            echo "No action needed"
+            exit 1
+
       - name: "Check out the repo"
         uses: "actions/checkout@v4"
 
@@ -61,9 +76,11 @@ jobs:
           echo $PWD
 
       - name: "Deploy Contract"
+        if: env.status == 'approved' || env.status == 'dev_approved'
         run: "bun run deploy"
 
       - name: Upload artifact
+        if: env.status == 'approved' || env.status == 'dev_approved'
         uses: actions/upload-artifact@v4
         with:
           name: contracts
