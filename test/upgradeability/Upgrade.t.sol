@@ -5,7 +5,6 @@ import { BaseTest } from "../BaseTest.sol";
 import {
     SponsorsManagerUpgradeMock,
     RewardDistributorUpgradeMock,
-    BuilderRegistryUpgradeMock,
     ChangeExecutorUpgradeMock
 } from "../mock/UpgradesMocks.sol";
 
@@ -40,23 +39,6 @@ contract UpgradeTest is BaseTest {
             - (uint256(uint160(foundation)));
         // THEN getCustomMockValue is foundation address + 43 newVariable
         assertEq(_newVar, 43);
-    }
-
-    /**
-     * SCENARIO: BuilderRegistry is upgraded
-     */
-    function test_UpgradeBuilderRegistry() public {
-        // GIVEN a BuilderRegistry proxy with an implementation
-        // AND a new implementation
-        BuilderRegistryUpgradeMock _builderRegistryNewImpl = new BuilderRegistryUpgradeMock();
-        //WHEN the proxy is upgraded and initialized
-        builderRegistry.upgradeToAndCall(
-            address(_builderRegistryNewImpl), abi.encodeCall(_builderRegistryNewImpl.initializeMock, (44))
-        );
-        uint256 _newVar =
-            BuilderRegistryUpgradeMock(address(builderRegistry)).getCustomMockValue() - (uint256(uint160(governor)));
-        // THEN getCustomMockValue is governor address + 44 newVariable
-        assertEq(_newVar, 44);
     }
 
     /**

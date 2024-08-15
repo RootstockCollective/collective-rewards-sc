@@ -33,7 +33,6 @@ contract WhitelistBuilderChangerTemplate is IChangeContract {
      * because it is not its responsibility in the current architecture
      */
     function execute() external {
-        sponsorsManager.builderRegistry().whitelistBuilder(builder);
-        newGauge = sponsorsManager.createGauge(builder);
+        newGauge = sponsorsManager.whitelistBuilder(builder);
     }
 }

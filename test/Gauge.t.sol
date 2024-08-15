@@ -155,9 +155,9 @@ contract GaugeTest is BaseTest {
      */
     function test_NotifyRewardAmountWithStrategy() public {
         // GIVEN builder kickback percentage is 70%
-        vm.startPrank(kycApprover);
+        address _newBuilder = makeAddr("newBuilder");
         uint256 _kickback = 700_000_000_000_000_000;
-        builderRegistry.activateBuilder(builder, builder, _kickback);
+        _whitelistBuilder(_newBuilder, _newBuilder, _kickback);
 
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
@@ -254,9 +254,9 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimBuilderRewardsBuilder() public {
         // GIVEN builder kickback percentage is 30% and reward receiver is alice
-        vm.startPrank(kycApprover);
+        address _newBuilder = makeAddr("newBuilder");
         uint256 _kickback = 300_000_000_000_000_000;
-        builderRegistry.activateBuilder(builder, alice, _kickback);
+        _whitelistBuilder(_newBuilder, alice, _kickback);
 
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
@@ -274,8 +274,8 @@ contract GaugeTest is BaseTest {
         _skipAndStartNewEpoch();
 
         // WHEN builder claims rewards
-        vm.startPrank(builder);
-        gauge.claimBuilderReward(builder);
+        vm.startPrank(_newBuilder);
+        gauge.claimBuilderReward(_newBuilder);
         // THEN alice rewardToken balance is 70% of 100 ether
         assertEq(rewardToken.balanceOf(alice), 70 ether);
     }
@@ -285,9 +285,9 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimBuilderRewardsRewardReceiver() public {
         // GIVEN builder kickback percentage is 30% and reward receiver is alice
-        vm.startPrank(kycApprover);
+        address _newBuilder = makeAddr("newBuilder");
         uint256 _kickback = 300_000_000_000_000_000;
-        builderRegistry.activateBuilder(builder, alice, _kickback);
+        _whitelistBuilder(_newBuilder, alice, _kickback);
 
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
@@ -306,7 +306,7 @@ contract GaugeTest is BaseTest {
 
         // WHEN builder claims rewards
         vm.startPrank(alice);
-        gauge.claimBuilderReward(builder);
+        gauge.claimBuilderReward(_newBuilder);
         // THEN alice rewardToken balance is 70% of 100 ether
         assertEq(rewardToken.balanceOf(alice), 70 ether);
     }
@@ -316,9 +316,9 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimBuilderRewards2Distributions() public {
         // GIVEN builder kickback percentage is 30% and reward receiver is alice
-        vm.startPrank(kycApprover);
+        address _newBuilder = makeAddr("newBuilder");
         uint256 _kickback = 300_000_000_000_000_000;
-        builderRegistry.activateBuilder(builder, alice, _kickback);
+        _whitelistBuilder(_newBuilder, alice, _kickback);
 
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
@@ -339,8 +339,8 @@ contract GaugeTest is BaseTest {
         _skipAndStartNewEpoch();
 
         // WHEN builder claims rewards
-        vm.startPrank(builder);
-        gauge.claimBuilderReward(builder);
+        vm.startPrank(_newBuilder);
+        gauge.claimBuilderReward(_newBuilder);
 
         // THEN alice rewardToken balance is 70% of 200 ether
         assertEq(rewardToken.balanceOf(alice), 140 ether);
@@ -351,9 +351,9 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimBuilderRewards2Epochs() public {
         // GIVEN builder kickback percentage is 30% and reward receiver is alice
-        vm.startPrank(kycApprover);
+        address _newBuilder = makeAddr("newBuilder");
         uint256 _kickback = 300_000_000_000_000_000;
-        builderRegistry.activateBuilder(builder, alice, _kickback);
+        _whitelistBuilder(_newBuilder, alice, _kickback);
 
         // GIVEN a SponsorsManager contract
         vm.startPrank(address(sponsorsManager));
@@ -371,8 +371,8 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.builderRewards(), 140 ether);
 
         // WHEN builder claims rewards
-        vm.startPrank(builder);
-        gauge.claimBuilderReward(builder);
+        vm.startPrank(_newBuilder);
+        gauge.claimBuilderReward(_newBuilder);
 
         // THEN alice rewardToken balance is 70% of 200 ether
         assertEq(rewardToken.balanceOf(alice), 140 ether);

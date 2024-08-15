@@ -7,6 +7,7 @@ import { SponsorsManager } from "src/SponsorsManager.sol";
 
 contract Deploy is Broadcaster, DeployUUPSProxy {
     function run() public returns (SponsorsManager proxy_, SponsorsManager implementation_) {
+        address _kycApprover = vm.envAddress("KYC_APPROVER_ADDRESS");
         address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         address _changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
@@ -17,40 +18,31 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         if (_gaugeFactoryAddress == address(0)) {
             _gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
-        address _builderRegistryAddress = vm.envOr("BuilderRegistry", address(0));
-        if (_builderRegistryAddress == address(0)) {
-            _builderRegistryAddress = vm.envAddress("BUILDER_REGISTRY_ADDRESS");
-        }
 
-        (proxy_, implementation_) = run(
-            _changeExecutorAddress,
-            _rewardTokenAddress,
-            _stakingTokenAddress,
-            _gaugeFactoryAddress,
-            _builderRegistryAddress
-        );
+        (proxy_, implementation_) =
+            run(_changeExecutorAddress, _kycApprover, _rewardTokenAddress, _stakingTokenAddress, _gaugeFactoryAddress);
     }
 
     function run(
         address changeExecutor_,
+        address kycApprover_,
         address rewardToken_,
         address stakingToken_,
-        address gaugeFactory_,
-        address builderRegistry_
+        address gaugeFactory_
     )
         public
         broadcast
         returns (SponsorsManager, SponsorsManager)
     {
         require(changeExecutor_ != address(0), "Change executor address cannot be empty");
+        require(kycApprover_ != address(0), "KYC Approver address cannot be empty");
         require(rewardToken_ != address(0), "Reward token address cannot be empty");
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
         require(gaugeFactory_ != address(0), "Gauge factory address cannot be empty");
-        require(builderRegistry_ != address(0), "Gauge factory address cannot be empty");
 
         string memory _contractName = "SponsorsManager.sol";
         bytes memory _initializerData = abi.encodeCall(
-            SponsorsManager.initialize, (changeExecutor_, rewardToken_, stakingToken_, gaugeFactory_, builderRegistry_)
+            SponsorsManager.initialize, (changeExecutor_, kycApprover_, rewardToken_, stakingToken_, gaugeFactory_)
         );
         address _implementation;
         address _proxy;
