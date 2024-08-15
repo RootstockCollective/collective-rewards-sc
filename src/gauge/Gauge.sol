@@ -4,7 +4,8 @@ pragma solidity 0.8.20;
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EpochLib } from "../libraries/EpochLib.sol";
 import { BuilderRegistry } from "../BuilderRegistry.sol";
@@ -14,20 +15,21 @@ import { BuilderRegistry } from "../BuilderRegistry.sol";
  * @notice For each project proposal a Gauge contract will be deployed.
  *  It receives all the rewards obtained for that project and allows the builder and voters to claim them.
  */
-contract Gauge is Initializable {
+contract Gauge is ReentrancyGuardUpgradeable {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
     error NotAuthorized();
     error NotSponsorsManager();
+    error InvalidRewardAmount();
 
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event SponsorRewardsClaimed(address indexed sponsor_, uint256 amount_);
-    event BuilderRewardsClaimed(address indexed builder_, uint256 amount_);
+    event SponsorRewardsClaimed(address indexed rewardToken_, address indexed sponsor_, uint256 amount_);
+    event BuilderRewardsClaimed(address indexed rewardToken_, address indexed builder_, uint256 amount_);
     event NewAllocation(address indexed sponsor_, uint256 allocation_);
-    event NotifyReward(uint256 builderAmount_, uint256 sponsorsAmount_);
+    event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 sponsorsAmount_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -38,36 +40,44 @@ contract Gauge is Initializable {
     }
 
     // -----------------------------
+    // ---------- Structs ----------
+    // -----------------------------
+    struct RewardData {
+        /// @notice current reward rate of rewardToken to distribute per second [PREC]
+        uint256 rewardRate;
+        /// @notice most recent stored value of rewardPerToken [PREC]
+        uint256 rewardPerTokenStored;
+        /// @notice missing rewards where there is not allocation [PREC]
+        uint256 rewardMissing;
+        /// @notice most recent timestamp contract has updated state
+        uint256 lastUpdateTime;
+        /// @notice amount of unclaimed token reward earned for the builder
+        uint256 builderRewards;
+        /// @notice cached rewardPerTokenStored for a sponsor based on their most recent action [PREC]
+        mapping(address sponsor => uint256 rewardPerTokenPaid) sponsorRewardPerTokenPaid;
+        /// @notice cached amount of rewardToken earned for a sponsor
+        mapping(address sponsor => uint256 rewards) rewards;
+    }
+
+    // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
 
     /// @notice address of the token rewarded to builder and voters
-    IERC20 public rewardToken;
+    address public rewardToken;
     /// @notice SponsorsManager contract address
     address public sponsorsManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
-    /// @notice current reward rate of rewardToken to distribute per second [PREC]
-    uint256 public rewardRate;
-    /// @notice most recent stored value of rewardPerToken [PREC]
-    uint256 public rewardPerTokenStored;
-    /// @notice missing rewards where there is not allocation [PREC]
-    uint256 public rewardMissing;
-    /// @notice most recent timestamp contract has updated state
-    uint256 public lastUpdateTime;
     /// @notice timestamp end of current rewards period
     uint256 public periodFinish;
-    /// @notice amount of unclaimed token reward earned for the builder
-    uint256 public builderRewards;
     /// @notice epoch rewards shares, optimistically tracking the time weighted votes allocations for this gauge
     uint256 public rewardShares;
-
     /// @notice amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public allocationOf;
-    /// @notice cached rewardPerTokenStored for a sponsor based on their most recent action [PREC]
-    mapping(address sponsor => uint256 rewardPerTokenPaid) public sponsorRewardPerTokenPaid;
-    /// @notice cached amount of rewardToken earned for a sponsor
-    mapping(address sponsor => uint256 rewards) public rewards;
+    /// @notice rewards data to each token
+    /// @dev address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+    mapping(address rewardToken => RewardData rewardData) public rewardData;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -84,7 +94,8 @@ contract Gauge is Initializable {
      * @param sponsorsManager_ address of the SponsorsManager contract
      */
     function initialize(address rewardToken_, address sponsorsManager_) external initializer {
-        rewardToken = IERC20(rewardToken_);
+        __ReentrancyGuard_init(); 
+        rewardToken = rewardToken_;
         sponsorsManager = sponsorsManager_;
     }
 
@@ -93,19 +104,67 @@ contract Gauge is Initializable {
     // -----------------------------
 
     /**
-     * @notice gets the current reward rate per unit of stakingToken allocated
-     * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
+     * @notice gets reward rate
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function rewardPerToken() public view returns (uint256) {
-        if (totalAllocation == 0) {
-            // [PREC]
-            return rewardPerTokenStored;
-        }
-        // [PREC] = (([N] - [N]) * [PREC]) / [N]
-        // TODO: could be lastUpdateTime > lastTimeRewardApplicable()??
-        uint256 _rewardPerTokenCurrent = ((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate) / totalAllocation;
-        // [PREC] = [PREC] + [PREC]
-        return rewardPerTokenStored + _rewardPerTokenCurrent;
+    function rewardRate(address rewardToken_) public view returns (uint256) {
+        return rewardData[rewardToken_].rewardRate;
+    }
+
+    /**
+     * @notice gets reward per token stored
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     */
+    function rewardPerTokenStored(address rewardToken_) public view returns (uint256) {
+        return rewardData[rewardToken_].rewardPerTokenStored;
+    }
+
+    /**
+     * @notice gets reward missing
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     */
+    function rewardMissing(address rewardToken_) public view returns (uint256) {
+        return rewardData[rewardToken_].rewardMissing;
+    }
+
+    /**
+     * @notice gets last update time
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     */
+    function lastUpdateTime(address rewardToken_) public view returns (uint256) {
+        return rewardData[rewardToken_].lastUpdateTime;
+    }
+
+    /**
+     * @notice gets builder rewards
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     */
+    function builderRewards(address rewardToken_) public view returns (uint256) {
+        return rewardData[rewardToken_].builderRewards;
+    }
+
+    /**
+     * @notice gets sponsor reward per token paid
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     */
+    function sponsorRewardPerTokenPaid(address rewardToken_, address sponsor_) public view returns (uint256) {
+        return rewardData[rewardToken_].sponsorRewardPerTokenPaid[sponsor_];
+    }
+
+    /**
+     * @notice gets amount of rewardToken earned for a sponsor
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param sponsor_ address of the sponsor
+     */
+    function rewards(address rewardToken_, address sponsor_) public view returns (uint256) {
+        return rewardData[rewardToken_].rewards[sponsor_];
     }
 
     /**
@@ -117,29 +176,75 @@ contract Gauge is Initializable {
     }
 
     /**
-     * @notice gets total amount of rewards to distribute for the current rewards period
+     * @notice gets the current reward rate per unit of stakingToken allocated
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
      */
-    function left() external view returns (uint256) {
+    function rewardPerToken(address rewardToken_) public view returns (uint256) {
+        RewardData storage _rewardData = rewardData[rewardToken_];
+
+        if (totalAllocation == 0) {
+            // [PREC]
+            return _rewardData.rewardPerTokenStored;
+        }
+        // [PREC] = (([N] - [N]) * [PREC]) / [N]
+        // TODO: could be lastUpdateTime > lastTimeRewardApplicable()??
+        uint256 _rewardPerTokenCurrent =
+            ((lastTimeRewardApplicable() - _rewardData.lastUpdateTime) * _rewardData.rewardRate) / totalAllocation;
+        // [PREC] = [PREC] + [PREC]
+        return _rewardData.rewardPerTokenStored + _rewardPerTokenCurrent;
+    }
+
+    /**
+     * @notice gets total amount of rewards to distribute for the current rewards period
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     */
+    function left(address rewardToken_) external view returns (uint256) {
+        RewardData storage _rewardData = rewardData[rewardToken_];
+
         if (block.timestamp >= periodFinish) return 0;
         // [N] = ([N] - [N]) * [PREC] / [PREC]
-        return UtilsLib._mulPrec(periodFinish - block.timestamp, rewardRate);
+        return UtilsLib._mulPrec(periodFinish - block.timestamp, _rewardData.rewardRate);
+    }
+
+    /**
+     * @notice gets `sponsor_` rewards missing to claim
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param sponsor_ address who earned the rewards
+     */
+    function earned(address rewardToken_, address sponsor_) public view returns (uint256) {
+        RewardData storage _rewardData = rewardData[rewardToken_];
+
+        // [N] = ([N] * ([PREC] - [PREC]) / [PREC])
+        uint256 _currentReward = UtilsLib._mulPrec(
+            allocationOf[sponsor_], rewardPerToken(rewardToken_) - _rewardData.sponsorRewardPerTokenPaid[sponsor_]
+        );
+        // [N] = [N] + [N]
+        return _rewardData.rewards[sponsor_] + _currentReward;
     }
 
     /**
      * @notice claim rewards for a `sponsor_` address
      * @dev reverts if is not called by the `sponsor_` or the sponsorsManager
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      * @param sponsor_ address who receives the rewards
      */
-    function claimSponsorReward(address sponsor_) external {
-        if (msg.sender != sponsor_ && msg.sender != sponsorsManager) revert NotAuthorized();
+    function claimSponsorReward(address rewardToken_, address sponsor_) external {
+        if (msg.sender != sponsor_ && msg.sender != address(sponsorsManager)) revert NotAuthorized();
 
-        _updateRewards(sponsor_);
+        RewardData storage _rewardData = rewardData[rewardToken_];
 
-        uint256 _reward = rewards[sponsor_];
+        _updateRewards(rewardToken_, sponsor_);
+
+        uint256 _reward = _rewardData.rewards[sponsor_];
         if (_reward > 0) {
-            rewards[sponsor_] = 0;
-            SafeERC20.safeTransfer(rewardToken, sponsor_, _reward);
-            emit SponsorRewardsClaimed(sponsor_, _reward);
+            _rewardData.rewards[sponsor_] = 0;
+            _transferRewardToken(rewardToken_, sponsor_, _reward);
+            emit SponsorRewardsClaimed(rewardToken_, sponsor_, _reward);
         }
     }
 
@@ -147,30 +252,22 @@ contract Gauge is Initializable {
      * @notice claim rewards for a builder
      * @dev reverts if is not called by the builder or reward receiver
      * @dev rewards are transferred to the builder reward receiver
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function claimBuilderReward() external {
+    function claimBuilderReward(address rewardToken_) external {
         address _builder = BuilderRegistry(sponsorsManager).gaugeToBuilder(Gauge(address(this)));
         address _rewardReceiver = BuilderRegistry(sponsorsManager).builderRewardReceiver(_builder);
         if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();
 
-        uint256 _reward = builderRewards;
-        if (_reward > 0) {
-            builderRewards = 0;
-            SafeERC20.safeTransfer(rewardToken, _rewardReceiver, _reward);
-            emit BuilderRewardsClaimed(_rewardReceiver, builderRewards);
-        }
-    }
+        RewardData storage _rewardData = rewardData[rewardToken_];
 
-    /**
-     * @notice gets `sponsor_` rewards missing to claim
-     * @param sponsor_ address who earned the rewards
-     */
-    function earned(address sponsor_) public view returns (uint256) {
-        // [N] = ([N] * ([PREC] - [PREC]) / [PREC])
-        uint256 _currentReward =
-            UtilsLib._mulPrec(allocationOf[sponsor_], rewardPerToken() - sponsorRewardPerTokenPaid[sponsor_]);
-        // [N] = [N] + [N]
-        return rewards[sponsor_] + _currentReward;
+        uint256 _reward = _rewardData.builderRewards;
+        if (_reward > 0) {
+            _rewardData.builderRewards = 0;
+            _transferRewardToken(rewardToken_, _rewardReceiver, _reward);
+            emit BuilderRewardsClaimed(rewardToken_, _rewardReceiver, _reward);
+        }
     }
 
     /**
@@ -192,11 +289,12 @@ contract Gauge is Initializable {
         // if sponsors quit before epoch finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
-            // [PREC] = [PREC] + ([N] - [N]) * [PREC]
-            rewardMissing += ((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate);
+            _upadateRewardMissing(rewardToken);
+            _upadateRewardMissing(UtilsLib._COINBASE_ADDRESS);
         }
 
-        _updateRewards(sponsor_);
+        _updateRewards(rewardToken, sponsor_);
+        _updateRewards(UtilsLib._COINBASE_ADDRESS, sponsor_);
 
         // to do not deal with signed integers we add allocation if the new one is bigger than the previous one
         uint256 _previousAllocation = allocationOf[sponsor_];
@@ -218,27 +316,75 @@ contract Gauge is Initializable {
     }
 
     /**
-     * @notice called on the reward distribution. Transfers reward tokens from sponsorManger to this contract
-     * @dev reverts if caller si not the sponsorsManager contract
+     * @notice transfers reward tokens to this contract
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      * @param builderAmount_ amount of rewards for the builder
      * @param sponsorsAmount_ amount of rewards for the sponsors
-     * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
     function notifyRewardAmount(
+        address rewardToken_,
         uint256 builderAmount_,
         uint256 sponsorsAmount_
     )
         external
+        payable
+    {
+        _notifyRewardAmount(rewardToken_, builderAmount_, sponsorsAmount_);
+        if (rewardToken_ == UtilsLib._COINBASE_ADDRESS) {
+            if (builderAmount_ + sponsorsAmount_ != msg.value) revert InvalidRewardAmount();
+        } else {
+            SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), builderAmount_ + sponsorsAmount_);
+        }
+    }
+
+    /**
+     * @notice called on the reward distribution. Transfers reward tokens from sponsorManger to this contract
+     * @dev reverts if caller si not the sponsorsManager contract
+     * @param amountERC20_ amount of ERC20 rewards
+     * @param builderKickback_  builder kickback percetange
+     * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
+     */
+    function notifyRewardAmountAndUpdateShares(
+        uint256 amountERC20_,
+        uint256 builderKickback_
+    )
+        external
+        payable
         onlySponsorsManager
         returns (uint256 newGaugeRewardShares_)
     {
+        uint256 _sponsorAmountERC20 = UtilsLib._mulPrec(builderKickback_, amountERC20_);
+        uint256 _sponsorAmountCoinbase = UtilsLib._mulPrec(builderKickback_, msg.value);
+        _notifyRewardAmount(rewardToken, amountERC20_ - _sponsorAmountERC20, _sponsorAmountERC20);
+        _notifyRewardAmount(UtilsLib._COINBASE_ADDRESS, msg.value - _sponsorAmountCoinbase, _sponsorAmountCoinbase);
+
+        newGaugeRewardShares_ = totalAllocation * EpochLib._WEEK;
+        rewardShares = newGaugeRewardShares_;
+
+        SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amountERC20_);
+    }
+
+    // -----------------------------
+    // ---- Internal Functions -----
+    // -----------------------------
+
+    /**
+     * @notice transfers reward tokens to this contract
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param builderAmount_ amount of rewards for the builder
+     * @param sponsorsAmount_ amount of rewards for the sponsors
+     */
+    function _notifyRewardAmount(address rewardToken_, uint256 builderAmount_, uint256 sponsorsAmount_) internal {
+        RewardData storage _rewardData = rewardData[rewardToken_];
         // update rewardPerToken storage
-        rewardPerTokenStored = rewardPerToken();
+        _rewardData.rewardPerTokenStored = rewardPerToken(rewardToken_);
         uint256 _timeUntilNext = EpochLib._epochNext(block.timestamp) - block.timestamp;
         uint256 _leftover = 0;
         // cache storage variables used multiple times
         uint256 _periodFinish = periodFinish;
-        uint256 _rewardRate = rewardRate;
+        uint256 _rewardRate = _rewardData.rewardRate;
 
         // if period finished there is not remaining reward
         if (block.timestamp < _periodFinish) {
@@ -247,34 +393,62 @@ contract Gauge is Initializable {
         }
 
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
-        _rewardRate = (sponsorsAmount_ * UtilsLib._PRECISION + rewardMissing + _leftover) / _timeUntilNext;
+        _rewardRate = (sponsorsAmount_ * UtilsLib._PRECISION + _rewardData.rewardMissing + _leftover) / _timeUntilNext;
 
-        builderRewards += builderAmount_;
+        _rewardData.builderRewards += builderAmount_;
 
-        lastUpdateTime = block.timestamp;
+        _rewardData.lastUpdateTime = block.timestamp;
         _periodFinish = block.timestamp + _timeUntilNext;
-        rewardMissing = 0;
-        newGaugeRewardShares_ = totalAllocation * EpochLib._WEEK;
+
+        _rewardData.rewardMissing = 0;
 
         // update cached variables on storage
         periodFinish = _periodFinish;
-        rewardRate = _rewardRate;
-        rewardShares = newGaugeRewardShares_;
+        _rewardData.rewardRate = _rewardRate;
 
-        SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), builderAmount_ + sponsorsAmount_);
-
-        emit NotifyReward(builderAmount_, sponsorsAmount_);
+        emit NotifyReward(rewardToken_, builderAmount_, sponsorsAmount_);
     }
 
-    // -----------------------------
-    // ---- Internal Functions -----
-    // -----------------------------
+    /**
+     * @notice update rewards variables when a sponsor interacts
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param sponsor_ address of the sponsors
+     */
+    function _updateRewards(address rewardToken_, address sponsor_) internal {
+        RewardData storage _rewardData = rewardData[rewardToken_];
 
-    function _updateRewards(address sponsor_) internal {
-        rewardPerTokenStored = rewardPerToken();
-        lastUpdateTime = lastTimeRewardApplicable();
-        rewards[sponsor_] = earned(sponsor_);
-        sponsorRewardPerTokenPaid[sponsor_] = rewardPerTokenStored;
+        _rewardData.rewardPerTokenStored = rewardPerToken(rewardToken_);
+        _rewardData.lastUpdateTime = lastTimeRewardApplicable();
+        _rewardData.rewards[sponsor_] = earned(rewardToken_, sponsor_);
+        _rewardData.sponsorRewardPerTokenPaid[sponsor_] = _rewardData.rewardPerTokenStored;
+    }
+
+    /**
+     * @notice update reward missing variable
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     */
+    function _upadateRewardMissing(address rewardToken_) internal {
+        RewardData storage _rewardData = rewardData[rewardToken_];
+        // [PREC] = [PREC] + ([N] - [N]) * [PREC]
+        _rewardData.rewardMissing +=
+            ((lastTimeRewardApplicable() - _rewardData.lastUpdateTime) * _rewardData.rewardRate);
+    }
+
+    /**
+     * @notice transfers reward token
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param to_ address who receives the tokens
+     * @param amount_ amount of tokens to send
+     */
+    function _transferRewardToken(address rewardToken_, address to_, uint256 amount_) internal nonReentrant {
+        if (rewardToken_ == UtilsLib._COINBASE_ADDRESS) {
+            Address.sendValue(payable(to_), amount_);
+        } else {
+            SafeERC20.safeTransfer(IERC20(rewardToken_), to_, amount_);
+        }
     }
 
     /**

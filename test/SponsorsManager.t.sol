@@ -8,7 +8,7 @@ contract SponsorsManagerTest is BaseTest {
     // ----------- Events ----------
     // -----------------------------
     event NewAllocation(address indexed sponsor_, address indexed gauge_, uint256 allocation_);
-    event NotifyReward(address indexed sender_, uint256 amount_);
+    event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
     event RewardDistributionStarted(address indexed sender_);
     event RewardDistributed(address indexed sender_);
     event RewardDistributionFinished(address indexed sender_);
@@ -124,10 +124,10 @@ contract SponsorsManagerTest is BaseTest {
         //   WHEN 2 ether reward are added
         //    THEN NotifyReward event is emitted
         vm.expectEmit();
-        emit NotifyReward(address(this), 2 ether);
+        emit NotifyReward(address(rewardToken), address(this), 2 ether);
         sponsorsManager.notifyRewardAmount(2 ether);
         // THEN rewards is 2 ether
-        assertEq(sponsorsManager.rewards(), 2 ether);
+        assertEq(sponsorsManager.rewardsERC20(), 2 ether);
         // THEN reward token balance of sponsorsManager is 2 ether
         assertEq(rewardToken.balanceOf(address(sponsorsManager)), 2 ether);
     }
@@ -144,8 +144,8 @@ contract SponsorsManagerTest is BaseTest {
         sponsorsManager.notifyRewardAmount(2 ether);
         // WHEN 10 ether reward are more added
         sponsorsManager.notifyRewardAmount(10 ether);
-        // THEN rewardsPerShare is 12 ether
-        assertEq(sponsorsManager.rewards(), 12 ether);
+        // THEN rewards is is 12 ether
+        assertEq(sponsorsManager.rewardsERC20(), 12 ether);
         // THEN reward token balance of sponsorsManager is 12 ether
         assertEq(rewardToken.balanceOf(address(sponsorsManager)), 12 ether);
     }

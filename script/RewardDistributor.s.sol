@@ -41,11 +41,11 @@ contract Deploy is Broadcaster {
             _implementation = address(new RewardDistributor());
             _proxy = address(new ERC1967Proxy(_implementation, _initializerData));
 
-            return (RewardDistributor(_proxy), RewardDistributor(_implementation));
+            return (RewardDistributor(payable(_proxy)), RewardDistributor(payable(_implementation)));
         }
         _implementation = address(new RewardDistributor{ salt: _salt }());
         _proxy = address(new ERC1967Proxy{ salt: _salt }(_implementation, _initializerData));
 
-        return (RewardDistributor(_proxy), RewardDistributor(_implementation));
+        return (RewardDistributor(payable(_proxy)), RewardDistributor(payable(_implementation)));
     }
 }

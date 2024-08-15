@@ -24,11 +24,11 @@ contract RewardDistributorTest is BaseTest {
         // WHEN alice calls sendRewardToken
         //  THEN tx reverts because caller is not the foundation treasury address
         vm.expectRevert(RewardDistributor.NotFoundationTreasury.selector);
-        rewardDistributor.sendRewardToken(1 ether);
+        rewardDistributor.sendRewardToken(1 ether, 1 ether);
         // WHEN alice calls sendRewardTokenAndStartDistribution
         //  THEN tx reverts because caller is not the foundation treasury address
         vm.expectRevert(RewardDistributor.NotFoundationTreasury.selector);
-        rewardDistributor.sendRewardTokenAndStartDistribution(1 ether);
+        rewardDistributor.sendRewardTokenAndStartDistribution(1 ether, 1 ether);
     }
 
     /**
@@ -45,7 +45,7 @@ contract RewardDistributorTest is BaseTest {
                 IERC20Errors.ERC20InsufficientBalance.selector, address(rewardDistributor), 1 ether, 2 ether
             )
         );
-        rewardDistributor.sendRewardToken(2 ether);
+        rewardDistributor.sendRewardToken(2 ether, 0 ether);
 
         // WHEN foundation treasury calls sendRewardTokenAndStartDistribution trying to transfer 2 ethers
         //  THEN tx reverts because insufficient balance
@@ -54,7 +54,7 @@ contract RewardDistributorTest is BaseTest {
                 IERC20Errors.ERC20InsufficientBalance.selector, address(rewardDistributor), 1 ether, 2 ether
             )
         );
-        rewardDistributor.sendRewardTokenAndStartDistribution(2 ether);
+        rewardDistributor.sendRewardTokenAndStartDistribution(2 ether, 0 ether);
     }
 
     /**
@@ -66,16 +66,16 @@ contract RewardDistributorTest is BaseTest {
         uint256 _epoch1Timestamp = EpochLib._epochStart(block.timestamp);
         // WHEN foundation treasury calls sendRewardToken transferring 2 ethers
         vm.startPrank(foundation);
-        rewardDistributor.sendRewardToken(2 ether);
+        rewardDistributor.sendRewardToken(2 ether, 0 ether);
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
         // AND foundation treasury calls sendRewardToken transferring 1 ethers again
-        rewardDistributor.sendRewardToken(1 ether);
+        rewardDistributor.sendRewardToken(1 ether, 0 ether);
         // AND epoch finish
         _skipAndStartNewEpoch();
         uint256 _epoch2Timestamp = EpochLib._epochStart(block.timestamp);
         // AND foundation treasury calls sendRewardToken transferring 4 ethers
-        rewardDistributor.sendRewardToken(4 ether);
+        rewardDistributor.sendRewardToken(4 ether, 0 ether);
 
         // THEN reward token balance of rewardDistributor is 3 ether
         assertEq(rewardToken.balanceOf(address(rewardDistributor)), 3 ether);
@@ -98,7 +98,7 @@ contract RewardDistributorTest is BaseTest {
         _skipToStartDistributionWindow();
         // WHEN foundation treasury calls sendRewardTokenAndStartDistribution transferring 2 ethers
         vm.startPrank(foundation);
-        rewardDistributor.sendRewardTokenAndStartDistribution(2 ether);
+        rewardDistributor.sendRewardTokenAndStartDistribution(2 ether, 0 ether);
         // THEN reward token balance of gauge is 2 ether
         assertEq(rewardToken.balanceOf(address(gauge)), 2 ether);
     }

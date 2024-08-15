@@ -36,7 +36,7 @@ contract UpgradeTest is BaseTest {
         rewardDistributor.upgradeToAndCall(
             address(_rewardDistributorNewImpl), abi.encodeCall(_rewardDistributorNewImpl.initializeMock, (43))
         );
-        uint256 _newVar = RewardDistributorUpgradeMock(address(rewardDistributor)).getCustomMockValue()
+        uint256 _newVar = RewardDistributorUpgradeMock(payable(rewardDistributor)).getCustomMockValue()
             - (uint256(uint160(foundation)));
         // THEN getCustomMockValue is foundation address + 43 newVariable
         assertEq(_newVar, 43);
