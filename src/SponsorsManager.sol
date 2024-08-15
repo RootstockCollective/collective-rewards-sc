@@ -35,7 +35,7 @@ contract SponsorsManager is Governed {
     // -----------------------------
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
     event NewAllocation(address indexed sponsor_, address indexed gauge_, uint256 allocation_);
-    event NotifyReward(address indexed sender_, uint256 amount_);
+    event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
     event DistributeReward(address indexed sender_, address indexed gauge_, uint256 amount_);
 
     // -----------------------------
@@ -58,7 +58,7 @@ contract SponsorsManager is Governed {
     /// @notice address of the token used to stake
     IERC20 public stakingToken;
     /// @notice address of the token rewarded to builder and voters
-    IERC20 public rewardToken;
+    address public rewardToken;
     /// @notice gauge factory contract address
     GaugeFactory public gaugeFactory;
     /// @notice builder registry contract address
@@ -66,7 +66,7 @@ contract SponsorsManager is Governed {
     /// @notice total allocation on all the gauges
     uint256 public totalAllocation;
     /// @notice rewards to distribute per sponsor emission [PREC]
-    uint256 public rewardsPerShare;
+    mapping(address rewardToken => uint256 rewardsPerShare) public rewardsPerShare;
     /// @notice index of tha last gauge distributed during a distribution period
     uint256 public indexLastGaugeDistributed;
     /// @notice true if distribution period started. Allocations remain blocked until it finishes
@@ -107,7 +107,7 @@ contract SponsorsManager is Governed {
         initializer
     {
         __Governed_init(changeExecutor_);
-        rewardToken = IERC20(rewardToken_);
+        rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
         gaugeFactory = GaugeFactory(gaugeFactory_);
         builderRegistry = BuilderRegistry(builderRegistry_);
@@ -172,17 +172,21 @@ contract SponsorsManager is Governed {
     }
 
     /**
-     * @notice transfers reward tokens from the sender to be distributed to the gauges
+     * @notice transfers ERC20 reward tokens from the sender to be distributed to the gauges
      * @dev reverts if it is called during the distribution period
      * @param amount_ amount of reward tokens to distribute
      */
-    function notifyRewardAmount(uint256 amount_) external notInDistributionPeriod {
-        // if there is no allocation let it revert by division zero
-        // [PREC] = [N] * [PREC] / [N]
-        rewardsPerShare += UtilsLib._divPrec(amount_, totalAllocation);
+    function notifyRewardAmountERC20(uint256 amount_) external notInDistributionPeriod {
+        _notifyRewardAmount(address(rewardToken), amount_);
+        SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
+    }
 
-        emit NotifyReward(msg.sender, amount_);
-        SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), amount_);
+    /**
+     * @notice transfers Coinbase reward tokens from the sender to be distributed to the gauges
+     * @dev reverts if it is called during the distribution period
+     */
+    function notifyRewardAmountCoinbase() external payable notInDistributionPeriod {
+        _notifyRewardAmount(UtilsLib._COINBASE_ADDRESS, msg.value);
     }
 
     /**
@@ -207,18 +211,20 @@ contract SponsorsManager is Governed {
         Gauge[] memory _gauges = gauges;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
         uint256 _lastDistribution = Math.min(_gauges.length, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
-        uint256 _rewardsPerShare = rewardsPerShare;
+        uint256 _rewardsPerShare = rewardsPerShare[rewardToken];
+        uint256 _rewardsPerShareCoinbase = rewardsPerShare[UtilsLib._COINBASE_ADDRESS];
         BuilderRegistry _builderRegistry = builderRegistry;
 
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
-            _distribute(_gauges[_gaugeIndex], _rewardsPerShare, _builderRegistry);
+            _distribute(_gauges[_gaugeIndex], _rewardsPerShare, _rewardsPerShareCoinbase, _builderRegistry);
             _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
         }
         // all the gauges were distributed, so distribution period is finished
         if (_lastDistribution == _gauges.length) {
             indexLastGaugeDistributed = 0;
-            rewardsPerShare = 0;
+            rewardsPerShare[rewardToken] = 0;
+            rewardsPerShare[UtilsLib._COINBASE_ADDRESS] = 0;
             onDistributionPeriod = false;
         } else {
             // Define new reference to batch beginning
@@ -233,7 +239,7 @@ contract SponsorsManager is Governed {
     function claimSponsorRewards(Gauge[] memory gauges_) external {
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-            gauges_[i].claimSponsorReward(msg.sender);
+            gauges_[i].claimSponsorRewardERC20(msg.sender);
         }
     }
 
@@ -293,21 +299,43 @@ contract SponsorsManager is Governed {
     }
 
     /**
+     * @notice transfers reward tokens from the sender to be distributed to the gauges
+     * @dev reverts if it is called during the distribution period
+     * @param amount_ amount of reward tokens to distribute
+     */
+    function _notifyRewardAmount(address rewardToken_, uint256 amount_) internal {
+        // if there is no allocation let it revert by division zero
+        // [PREC] = [N] * [PREC] / [N]
+        rewardsPerShare[rewardToken_] += UtilsLib._divPrec(amount_, totalAllocation);
+
+        emit NotifyReward(rewardToken_, msg.sender, amount_);
+    }
+
+    /**
      * @notice internal function used to distribute reward tokens to a gauge
      * @param gauge_ address of the gauge to distribute
      * @param rewardsPerShare_ cached reward per share
      * @param builderRegistry_ cached builder registry
      */
-    function _distribute(Gauge gauge_, uint256 rewardsPerShare_, BuilderRegistry builderRegistry_) internal {
+    function _distribute(
+        Gauge gauge_,
+        uint256 rewardsPerShare_,
+        uint256 rewardsPerShareCoinbase_,
+        BuilderRegistry builderRegistry_
+    )
+        internal
+    {
         uint256 _reward = UtilsLib._mulPrec(gauge_.totalAllocation(), rewardsPerShare_);
         uint256 _sponsorsAmount = builderRegistry_.applyBuilderKickback(gauge_.builder(), _reward);
-        // [N] = [N] - [N]
         uint256 _builderAmount = _reward - _sponsorsAmount;
-        if (_reward > 0) {
-            rewardToken.approve(address(gauge_), _reward);
-            gauge_.notifyRewardAmount(_builderAmount, _sponsorsAmount);
-            emit DistributeReward(msg.sender, address(gauge_), _reward);
-        }
+        IERC20(rewardToken).approve(address(gauge_), _reward);
+        gauge_.notifyRewardAmountERC20(_builderAmount, _sponsorsAmount);
+        emit DistributeReward(msg.sender, address(gauge_), _reward);
+
+        _reward = UtilsLib._mulPrec(gauge_.totalAllocation(), rewardsPerShareCoinbase_);
+        _sponsorsAmount = builderRegistry_.applyBuilderKickback(gauge_.builder(), _reward);
+        _builderAmount = _reward - _sponsorsAmount;
+        gauge_.notifyRewardAmountCoinbase(_builderAmount, _sponsorsAmount);
     }
 
     /**

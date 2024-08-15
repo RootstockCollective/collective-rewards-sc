@@ -101,7 +101,7 @@ contract RewardDistributor is Governed {
         // TODO: review if we need this
         rewardTokenAmountPerEpoch[EpochLib._epochStart(block.timestamp)] += amount_;
         rewardToken.approve(address(sponsorsManager), amount_);
-        sponsorsManager.notifyRewardAmount(amount_);
+        sponsorsManager.notifyRewardAmountERC20(amount_);
     }
 
     /**

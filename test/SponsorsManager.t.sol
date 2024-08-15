@@ -10,7 +10,7 @@ contract SponsorsManagerTest is BaseTest {
     // -----------------------------
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
     event NewAllocation(address indexed sponsor_, address indexed gauge_, uint256 allocation_);
-    event NotifyReward(address indexed sender_, uint256 amount_);
+    event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
     event DistributeReward(address indexed sender_, address indexed gauge_, uint256 amount_);
 
     function _setUp() internal override {
@@ -142,7 +142,7 @@ contract SponsorsManagerTest is BaseTest {
         //  WHEN notifyRewardAmount is called without allocations
         //   THEN tx reverts because division by zero
         vm.expectRevert(stdError.divisionError);
-        sponsorsManager.notifyRewardAmount(2 ether);
+        sponsorsManager.notifyRewardAmountERC20(2 ether);
     }
 
     /**
@@ -156,10 +156,10 @@ contract SponsorsManagerTest is BaseTest {
         //   WHEN 2 ether reward are added
         //    THEN NotifyReward event is emitted
         vm.expectEmit();
-        emit NotifyReward(address(this), 2 ether);
-        sponsorsManager.notifyRewardAmount(2 ether);
+        emit NotifyReward(address(rewardToken), address(this), 2 ether);
+        sponsorsManager.notifyRewardAmountERC20(2 ether);
         // THEN rewardsPerShare is 20 = 2 / 0.1 ether
-        assertEq(sponsorsManager.rewardsPerShare(), 20 ether);
+        assertEq(sponsorsManager.rewardsPerShare(address(rewardToken)), 20 ether);
         // THEN reward token balance of sponsorsManager is 2 ether
         assertEq(rewardToken.balanceOf(address(sponsorsManager)), 2 ether);
     }
@@ -173,11 +173,11 @@ contract SponsorsManagerTest is BaseTest {
         vm.prank(alice);
         sponsorsManager.allocate(gauge, 0.1 ether);
         // AND 2 ether reward are added
-        sponsorsManager.notifyRewardAmount(2 ether);
+        sponsorsManager.notifyRewardAmountERC20(2 ether);
         // WHEN 10 ether reward are more added
-        sponsorsManager.notifyRewardAmount(10 ether);
+        sponsorsManager.notifyRewardAmountERC20(10 ether);
         // THEN rewardsPerShare is 120 = 12 / 0.1 ether
-        assertEq(sponsorsManager.rewardsPerShare(), 120 ether);
+        assertEq(sponsorsManager.rewardsPerShare(address(rewardToken)), 120 ether);
         // THEN reward token balance of sponsorsManager is 12 ether
         assertEq(rewardToken.balanceOf(address(sponsorsManager)), 12 ether);
     }
@@ -198,7 +198,7 @@ contract SponsorsManagerTest is BaseTest {
         vm.prank(alice);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         //  AND 2 ether reward are added
-        sponsorsManager.notifyRewardAmount(2 ether);
+        sponsorsManager.notifyRewardAmountERC20(2 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         //  AND distribution start
@@ -211,7 +211,7 @@ contract SponsorsManagerTest is BaseTest {
         // WHEN tries to add more reward
         //  THEN tx reverts because NotInDistributionPeriod
         vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
-        sponsorsManager.notifyRewardAmount(2 ether);
+        sponsorsManager.notifyRewardAmountERC20(2 ether);
         // WHEN tries to start distribution again
         //  THEN tx reverts because NotInDistributionPeriod
         vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
@@ -260,7 +260,7 @@ contract SponsorsManagerTest is BaseTest {
         vm.stopPrank();
 
         //  AND 100 ether reward are added
-        sponsorsManager.notifyRewardAmount(100 ether);
+        sponsorsManager.notifyRewardAmountERC20(100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -298,7 +298,7 @@ contract SponsorsManagerTest is BaseTest {
         vm.stopPrank();
 
         //  AND 100 ether reward are added and distributed
-        sponsorsManager.notifyRewardAmount(100 ether);
+        sponsorsManager.notifyRewardAmountERC20(100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         // AND distribution is executed
@@ -312,7 +312,7 @@ contract SponsorsManagerTest is BaseTest {
         vm.stopPrank();
 
         //  WHEN 100 ether reward are added and distributed again
-        sponsorsManager.notifyRewardAmount(100 ether);
+        sponsorsManager.notifyRewardAmountERC20(100 ether);
         sponsorsManager.startDistribution();
 
         // THEN reward token balance of gauge is 91.558441558441558428 = 100 * 6 / 22 + 100 * 18 / 28
@@ -340,7 +340,7 @@ contract SponsorsManagerTest is BaseTest {
         vm.stopPrank();
 
         //  AND 100 ether reward are added and distributed
-        sponsorsManager.notifyRewardAmount(100 ether);
+        sponsorsManager.notifyRewardAmountERC20(100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         sponsorsManager.startDistribution();
@@ -355,7 +355,7 @@ contract SponsorsManagerTest is BaseTest {
         vm.stopPrank();
 
         //  WHEN 100 ether reward are added and distributed again
-        sponsorsManager.notifyRewardAmount(100 ether);
+        sponsorsManager.notifyRewardAmountERC20(100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         sponsorsManager.startDistribution();
@@ -383,7 +383,7 @@ contract SponsorsManagerTest is BaseTest {
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
 
         // AND 100 ether reward are added
-        sponsorsManager.notifyRewardAmount(100 ether);
+        sponsorsManager.notifyRewardAmountERC20(100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -425,7 +425,7 @@ contract SponsorsManagerTest is BaseTest {
         vm.stopPrank();
 
         // AND 100 ether reward are added
-        sponsorsManager.notifyRewardAmount(100 ether);
+        sponsorsManager.notifyRewardAmountERC20(100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
