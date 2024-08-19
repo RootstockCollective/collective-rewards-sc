@@ -2,10 +2,10 @@
 pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
-import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 
-contract Deploy is Broadcaster, DeployUUPSProxy {
+contract Deploy is Broadcaster {
     function run() public returns (RewardDistributor proxy_, RewardDistributor implementation_) {
         address _changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
         if (_changeExecutorAddress == address(0)) {
@@ -33,17 +33,18 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         require(foundationTreasury_ != address(0), "Foundation Treasury address cannot be empty");
         require(sponsorsManager_ != address(0), "Sponsors Manager address cannot be empty");
 
-        string memory _contractName = "RewardDistributor.sol";
         bytes memory _initializerData =
             abi.encodeCall(RewardDistributor.initialize, (changeExecutor_, foundationTreasury_, sponsorsManager_));
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            (_proxy, _implementation) = _deployUUPSProxy(_contractName, _initializerData);
+            _implementation = address(new RewardDistributor());
+            _proxy = address(new ERC1967Proxy(_implementation, _initializerData));
 
             return (RewardDistributor(_proxy), RewardDistributor(_implementation));
         }
-        (_proxy, _implementation) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
+        _implementation = address(new RewardDistributor{ salt: _salt }());
+        _proxy = address(new ERC1967Proxy{ salt: _salt }(_implementation, _initializerData));
 
         return (RewardDistributor(_proxy), RewardDistributor(_implementation));
     }
