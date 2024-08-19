@@ -7,6 +7,8 @@ import { ChangeExecutor } from "src/governance/ChangeExecutor.sol";
 import { Deploy as ChangeExecutorDeployer } from "script/governance/ChangeExecutor.s.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
+import { UpgradeableBeacon as GaugeBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import { Deploy as GaugeBeaconDeployer } from "script/gauge/GaugeBeacon.s.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
@@ -30,6 +32,9 @@ contract Deploy is Broadcaster, OutputWriter {
     }
 
     function run() public {
+        GaugeBeacon _gaugeBeacon = new GaugeBeaconDeployer().run();
+        save("GaugeBeacon", address(_gaugeBeacon));
+
         GaugeFactory _gaugeFactory = new GaugeFactoryDeployer().run();
         save("GaugeFactory", address(_gaugeFactory));
 

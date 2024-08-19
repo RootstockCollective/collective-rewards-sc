@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EpochLib } from "../libraries/EpochLib.sol";
 import { BuilderRegistry } from "../BuilderRegistry.sol";
@@ -13,7 +14,7 @@ import { BuilderRegistry } from "../BuilderRegistry.sol";
  * @notice For each project proposal a Gauge contract will be deployed.
  *  It receives all the rewards obtained for that project and allows the builder and voters to claim them.
  */
-contract Gauge {
+contract Gauge is Initializable {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
@@ -41,9 +42,9 @@ contract Gauge {
     // -----------------------------
 
     /// @notice address of the token rewarded to builder and voters
-    IERC20 public immutable rewardToken;
+    IERC20 public rewardToken;
     /// @notice SponsorsManager contract address
-    address public immutable sponsorsManager;
+    address public sponsorsManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
     /// @notice current reward rate of rewardToken to distribute per second [PREC]
@@ -68,12 +69,21 @@ contract Gauge {
     /// @notice cached amount of rewardToken earned for a sponsor
     mapping(address sponsor => uint256 rewards) public rewards;
 
+    // -----------------------------
+    // ------- Initializer ---------
+    // -----------------------------
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
-     * @notice constructor
+     * @notice contract initializer
      * @param rewardToken_ address of the token rewarded to builder and voters
      * @param sponsorsManager_ address of the SponsorsManager contract
      */
-    constructor(address rewardToken_, address sponsorsManager_) {
+    function initialize(address rewardToken_, address sponsorsManager_) external initializer {
         rewardToken = IERC20(rewardToken_);
         sponsorsManager = sponsorsManager_;
     }
@@ -266,4 +276,14 @@ contract Gauge {
         rewards[sponsor_] = earned(sponsor_);
         sponsorRewardPerTokenPaid[sponsor_] = rewardPerTokenStored;
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    // Purposely left unused to save some state space to allow for future upgrades
+    // slither-disable-next-line unused-state
+    uint256[50] private __gap;
 }
