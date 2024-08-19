@@ -30,6 +30,17 @@ contract InitializationTest is BaseTest {
     }
 
     /**
+     * SCENARIO: Gauge cannot be initialized twice
+     */
+    function test_RevertGaugeInitialize() public {
+        // GIVEN a Gauge initialized
+        //  WHEN tries to initialize the proxy again
+        //   THEN tx reverts because InvalidInitialization
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        gauge.initialize(address(rewardToken), address(sponsorsManager));
+    }
+
+    /**
      * SCENARIO: ChangeExecutor cannot be initialized twice
      */
     function test_RevertChangeExecutorInitialize() public {
