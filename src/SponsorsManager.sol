@@ -186,8 +186,7 @@ contract SponsorsManager is BuilderRegistry {
         uint256 _totalPotentialReward = totalPotentialReward;
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
-            _newTotalPotentialReward +=
-                _distribute(_gauges[_gaugeIndex], _rewards, _totalPotentialReward);
+            _newTotalPotentialReward += _distribute(_gauges[_gaugeIndex], _rewards, _totalPotentialReward);
             _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
         }
         emit RewardDistributed(msg.sender);
@@ -288,7 +287,7 @@ contract SponsorsManager is BuilderRegistry {
     {
         // [N] = [N] * [N] / [N]
         uint256 _gaugeReward = (gauge_.rewardShares() * rewards_) / totalPotentialReward_;
-       uint256 _sponsorsAmount = UtilsLib._mulPrec(builderKickback[gaugeToBuilder[gauge_]], _gaugeReward);
+        uint256 _sponsorsAmount = UtilsLib._mulPrec(builderKickback[gaugeToBuilder[gauge_]], _gaugeReward);
         // [N] = [N] - [N]
         uint256 _builderAmount = _gaugeReward - _sponsorsAmount;
         rewardToken.approve(address(gauge_), _gaugeReward);

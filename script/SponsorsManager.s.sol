@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { DeployUUPSProxy } from "script/script_utils/DeployUUPSProxy.sol";
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 
-contract Deploy is Broadcaster, DeployUUPSProxy {
+contract Deploy is Broadcaster {
     function run() public returns (SponsorsManager proxy_, SponsorsManager implementation_) {
         address _kycApprover = vm.envAddress("KYC_APPROVER_ADDRESS");
         address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
@@ -40,19 +40,19 @@ contract Deploy is Broadcaster, DeployUUPSProxy {
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
         require(gaugeFactory_ != address(0), "Gauge factory address cannot be empty");
 
-        string memory _contractName = "SponsorsManager.sol";
         bytes memory _initializerData = abi.encodeCall(
             SponsorsManager.initialize, (changeExecutor_, kycApprover_, rewardToken_, stakingToken_, gaugeFactory_)
         );
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            (_proxy, _implementation) = _deployUUPSProxy(_contractName, _initializerData);
+            _implementation = address(new SponsorsManager());
+            _proxy = address(new ERC1967Proxy(_implementation, _initializerData));
 
             return (SponsorsManager(_proxy), SponsorsManager(_implementation));
         }
-        (_proxy, _implementation) = _deployUUPSProxyDD(_contractName, _initializerData, _salt);
-
+        _implementation = address(new SponsorsManager{ salt: _salt }());
+        _proxy = address(new ERC1967Proxy{ salt: _salt }(_implementation, _initializerData));
         return (SponsorsManager(_proxy), SponsorsManager(_implementation));
     }
 }
