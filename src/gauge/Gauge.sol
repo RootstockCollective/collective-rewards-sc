@@ -334,7 +334,9 @@ contract Gauge is ReentrancyGuardUpgradeable {
         if (rewardToken_ == UtilsLib._COINBASE_ADDRESS) {
             if (builderAmount_ + sponsorsAmount_ != msg.value) revert InvalidRewardAmount();
         } else {
-            SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), builderAmount_ + sponsorsAmount_);
+            SafeERC20.safeTransferFrom(
+                IERC20(rewardToken_), msg.sender, address(this), builderAmount_ + sponsorsAmount_
+            );
         }
     }
 

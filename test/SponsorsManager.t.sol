@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, SponsorsManager, Gauge } from "./BaseTest.sol";
+import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 
 contract SponsorsManagerTest is BaseTest {
     // -----------------------------
@@ -114,9 +115,9 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: notifyRewardAmount is called and values are updated
+     * SCENARIO: notifyRewardAmount is called using ERC20 and values are updated
      */
-    function test_NotifyRewardAmount() public {
+    function test_NotifyRewardAmountERC20() public {
         // GIVEN a SponsorManager contract
         //  AND alice allocates 0.1 ether
         vm.prank(alice);
@@ -128,8 +129,35 @@ contract SponsorsManagerTest is BaseTest {
         sponsorsManager.notifyRewardAmount(2 ether);
         // THEN rewards is 2 ether
         assertEq(sponsorsManager.rewardsERC20(), 2 ether);
+        // THEN Coinbase rewards is 0
+        assertEq(sponsorsManager.rewardsCoinbase(), 0);
         // THEN reward token balance of sponsorsManager is 2 ether
         assertEq(rewardToken.balanceOf(address(sponsorsManager)), 2 ether);
+        // THEN Coinbase balance of sponsorsManager is 0
+        assertEq(address(sponsorsManager).balance, 0);
+    }
+
+    /**
+     * SCENARIO: notifyRewardAmount is called using Coinbase and values are updated
+     */
+    function test_NotifyRewardAmountCoinbase() public {
+        // GIVEN a SponsorManager contract
+        //  AND alice allocates 0.1 ether
+        vm.prank(alice);
+        sponsorsManager.allocate(gauge, 0.1 ether);
+        //   WHEN 2 ether reward are added
+        //    THEN NotifyReward event is emitted
+        vm.expectEmit();
+        emit NotifyReward(UtilsLib._COINBASE_ADDRESS, address(this), 2 ether);
+        sponsorsManager.notifyRewardAmount{ value: 2 ether }(0);
+        // THEN Coinbase rewards is 2 ether
+        assertEq(sponsorsManager.rewardsCoinbase(), 2 ether);
+        // THEN ERC20 rewards is 0
+        assertEq(sponsorsManager.rewardsERC20(), 0);
+        // THEN Coinbase balance of sponsorsManager is 2 ether
+        assertEq(address(sponsorsManager).balance, 2 ether);
+        // THEN reward token balance of sponsorsManager is 0
+        assertEq(rewardToken.balanceOf(address(sponsorsManager)), 0);
     }
 
     /**
@@ -247,6 +275,41 @@ contract SponsorsManagerTest is BaseTest {
         assertEq(rewardToken.balanceOf(address(gauge)), 27_272_727_272_727_272_727);
         // THEN reward token balance of gauge2 is 72.727272727272727272 = 100 * 16 / 22
         assertEq(rewardToken.balanceOf(address(gauge2)), 72_727_272_727_272_727_272);
+    }
+
+    /**
+     * SCENARIO: alice and bob allocates to 2 gauges and recieve coinbase rewards
+     */
+    function test_DistributeCoinbase() public {
+        // GIVEN a SponsorManager contract
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        // AND alice allocates 2 ether to builder and 6 ether to builder2
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // AND bob allocates 4 ether to builder and 10 ether to builder2
+        vm.startPrank(bob);
+        allocationsArray[0] = 4 ether;
+        allocationsArray[1] = 10 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        //  AND 100 ether rewarToken and 50 ether coinbase are added
+        sponsorsManager.notifyRewardAmount{ value: 50 ether }(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        //  WHEN distribute is executed
+        sponsorsManager.startDistribution();
+        // THEN reward token balance of gauge is 27.272727272727272727 = 100 * 6 / 22
+        assertEq(rewardToken.balanceOf(address(gauge)), 27_272_727_272_727_272_727);
+        // THEN reward token balance of gauge2 is 72.727272727272727272 = 100 * 16 / 22
+        assertEq(rewardToken.balanceOf(address(gauge2)), 72_727_272_727_272_727_272);
+        // THEN coinbase balance of gauge is 13.636363636363636363 = 50 * 6 / 22
+        assertEq(address(gauge).balance, 13_636_363_636_363_636_363);
+        // THEN coinbase balance of gauge2 is 36.363636363636363636 = 50 * 16 / 22
+        assertEq(address(gauge2).balance, 36_363_636_363_636_363_636);
     }
 
     /**

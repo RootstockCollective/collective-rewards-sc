@@ -59,6 +59,20 @@ contract GaugeTest is BaseTest {
     }
 
     /**
+     * SCENARIO: notifyRewardAmount reverts if msg.value is wrong
+     */
+    function test_RevertInvalidRewardAmount() public {
+        // GIVEN a SponsorsManager contract
+        vm.startPrank(address(sponsorsManager));
+        // WHEN tries to distribute coinbase sending invalid value
+        //  THEN tx reverts because value sent is wrong
+        vm.expectRevert(Gauge.InvalidRewardAmount.selector);
+        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 1 ether, 100 ether);
+        vm.expectRevert(Gauge.InvalidRewardAmount.selector);
+        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 1 ether, 98 ether);
+    }
+
+    /**
      * SCENARIO: SponsorsManager allocates to alice without no rewards distributed
      */
     function test_Allocate() public {
@@ -707,5 +721,40 @@ contract GaugeTest is BaseTest {
         gauge.claimSponsorReward(address(rewardToken), bob);
         // THEN bob rewardToken balance is 124.999999999999999995 = 5 * (49.999999999999999998 - 24.999999999999999999)
         assertEq(rewardToken.balanceOf(bob), 124_999_999_999_999_999_995);
+    }
+
+    /**
+     * SCENARIO: alice and bob receive rewards on Coinbase
+     */
+    function test_ClaimCoinbaseRewards() public {
+        // GIVEN a SponsorsManager contract
+        vm.startPrank(address(sponsorsManager));
+        // AND alice allocates 1 ether
+        gauge.allocate(alice, 1 ether);
+        // AND bob allocates 1 ether
+        gauge.allocate(bob, 5 ether);
+
+        // AND 100 ether distributed for sponsors
+        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 0, 100 ether);
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // time until next epoch is 518400
+        // rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
+        // THEN rewardPerToken is 16.666666666666666666 = 518400 * 0.000192901234567901 / 6 ether
+        assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 16_666_666_666_666_666_666);
+
+        // WHEN alice claims rewards
+        vm.startPrank(alice);
+        gauge.claimSponsorReward(UtilsLib._COINBASE_ADDRESS, alice);
+        // THEN alice coinbase balance is 16.666666666666666666 = 1 * 16.666666666666666666
+        assertEq(alice.balance, 16_666_666_666_666_666_666);
+
+        // WHEN bob claims rewards
+        vm.startPrank(bob);
+        gauge.claimSponsorReward(UtilsLib._COINBASE_ADDRESS, bob);
+        // THEN bob coinbase balance is 83.333333333333333330 = 5 * 16.666666666666666666
+        assertEq(bob.balance, 83_333_333_333_333_333_330);
     }
 }
