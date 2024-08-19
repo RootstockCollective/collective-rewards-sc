@@ -1,4 +1,4 @@
-name: pull request comment
+name: pull request approval
 
 on:
   pull_request_review:
