@@ -5,6 +5,7 @@ import { BaseTest } from "../BaseTest.sol";
 import {
     SponsorsManagerUpgradeMock,
     RewardDistributorUpgradeMock,
+    GaugeUpgradeMock,
     ChangeExecutorUpgradeMock
 } from "../mock/UpgradesMocks.sol";
 
@@ -57,5 +58,39 @@ contract UpgradeTest is BaseTest {
             ChangeExecutorUpgradeMock(address(changeExecutorMock)).getCustomMockValue() - (uint256(uint160(governor)));
         // THEN getCustomMockValue is governor address + 45 newVariable
         assertEq(_newVar, 45);
+    }
+
+    /**
+     * SCENARIO: Gauge is upgraded
+     */
+    function test_UpgradeGauge() public {
+        // GIVEN a Gauge proxy with an implementation
+        // AND a new implementation
+        GaugeUpgradeMock _gaugeNewImpl = new GaugeUpgradeMock();
+        //WHEN the proxy is upgraded
+        vm.prank(governor);
+        gaugeBeacon.upgradeTo(address(_gaugeNewImpl));
+        // AND gauge initialized
+        GaugeUpgradeMock(address(gauge)).initializeMock(46);
+        uint256 _newVar =
+            GaugeUpgradeMock(address(gauge)).getCustomMockValue() - (uint256(uint160(address(sponsorsManager))));
+        // THEN getCustomMockValue is sponsorsManager address + 46 newVariable
+        assertEq(_newVar, 46);
+        // AND gauge2 initialized
+        GaugeUpgradeMock(address(gauge2)).initializeMock(47);
+        uint256 _newVar2 =
+            GaugeUpgradeMock(address(gauge2)).getCustomMockValue() - (uint256(uint160(address(sponsorsManager))));
+        // THEN getCustomMockValue is sponsorsManager address + 47 newVariable
+        assertEq(_newVar2, 47);
+
+        // WHEN new gauge is created through the factory
+        address _newBuilder = makeAddr("newBuilder");
+        address _newGauge = address(_whitelistBuilder(_newBuilder, _newBuilder, 1 ether));
+        // AND gauge3 initialized
+        GaugeUpgradeMock(_newGauge).initializeMock(48);
+        uint256 _newVar3 =
+            GaugeUpgradeMock(_newGauge).getCustomMockValue() - (uint256(uint160(address(sponsorsManager))));
+        // THEN getCustomMockValue is sponsorsManager address + 48 newVariable
+        assertEq(_newVar3, 48);
     }
 }
