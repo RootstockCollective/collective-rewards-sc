@@ -2,7 +2,6 @@
 pragma solidity 0.8.20;
 
 import { Test } from "forge-std/src/Test.sol";
-import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
 import { Deploy as ChangeExecutorMockDeployer } from "script/test_mock/ChangeExecutorMock.s.sol";
 import { Deploy as GaugeBeaconDeployer } from "script/gauge/GaugeBeacon.s.sol";
@@ -11,6 +10,7 @@ import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol"
 import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
 import { ChangeExecutorMock } from "./mock/ChangeExecutorMock.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
+import { GaugeBeacon } from "src/gauge/GaugeBeacon.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
 import { Gauge } from "src/gauge/Gauge.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
@@ -23,7 +23,7 @@ contract BaseTest is Test {
     ERC20Mock public stakingToken;
     ERC20Mock public rewardToken;
 
-    UpgradeableBeacon public gaugeBeacon;
+    GaugeBeacon public gaugeBeacon;
     GaugeFactory public gaugeFactory;
     Gauge public gauge;
     Gauge public gauge2;
@@ -50,7 +50,7 @@ contract BaseTest is Test {
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         stakingToken = _mockTokenDeployer.run(0);
         rewardToken = _mockTokenDeployer.run(1);
-        gaugeBeacon = new GaugeBeaconDeployer().run(governor);
+        gaugeBeacon = new GaugeBeaconDeployer().run(address(changeExecutorMock));
         gaugeFactory = new GaugeFactoryDeployer().run(address(gaugeBeacon), address(rewardToken));
         (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerDeployer().run(
             address(changeExecutorMock), kycApprover, address(rewardToken), address(stakingToken), address(gaugeFactory)
