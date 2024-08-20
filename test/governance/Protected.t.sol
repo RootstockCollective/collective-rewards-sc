@@ -4,7 +4,6 @@ pragma solidity 0.8.20;
 import { BaseTest } from "../BaseTest.sol";
 import { Governed } from "../../src/governance/Governed.sol";
 import { ChangeExecutor } from "../../src/governance/ChangeExecutor.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ProtectedTest is BaseTest {
     /**
@@ -58,13 +57,14 @@ contract ProtectedTest is BaseTest {
     }
 
     /**
-     * SCENARIO: Gauge upgrade should revert if is not called by the governor
+     * SCENARIO: Gauge upgrade should revert if is not called by the governor or an authorized changer
      */
     function test_RevertGaugeUpgradeNotGovernor() public {
-        // GIVEN a not Governor address
+        // GIVEN the Governor has not authorized the change
+        changeExecutorMock.setIsAuthorized(false);
         //  WHEN tries to upgrade the GaugeBeacon
-        //   THEN tx reverts because OwnableUnauthorizedAccount
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        //   THEN tx reverts because NotGovernorOrAuthorizedChanger
+        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         address _newImplementation = makeAddr("newImplementation");
         gaugeBeacon.upgradeTo(_newImplementation);
     }
