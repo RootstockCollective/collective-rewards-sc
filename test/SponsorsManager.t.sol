@@ -561,6 +561,8 @@ contract SponsorsManagerTest is BaseTest {
 
         // WHEN distribute is executed
         sponsorsManager.startDistribution();
+        // THEN temporal total potential rewards is 12096000 ether = 20 * 1 WEEK
+        assertEq(sponsorsManager.tempTotalPotentialReward(), 12_096_000 ether);
         // THEN distribution period is still started
         assertEq(sponsorsManager.onDistributionPeriod(), true);
         // THEN last gauge distributed is gauge 20
@@ -568,6 +570,10 @@ contract SponsorsManagerTest is BaseTest {
 
         // AND distribute is executed again
         sponsorsManager.distribute();
+        // THEN temporal total potential rewards is 0
+        assertEq(sponsorsManager.tempTotalPotentialReward(), 0);
+        // THEN total potential rewards is 13305600 ether = 22 * 1 WEEK
+        assertEq(sponsorsManager.totalPotentialReward(), 13_305_600 ether);
         // THEN distribution period finished
         assertEq(sponsorsManager.onDistributionPeriod(), false);
         // THEN last gauge distributed is 0

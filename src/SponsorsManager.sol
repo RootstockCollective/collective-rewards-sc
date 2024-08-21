@@ -58,6 +58,8 @@ contract SponsorsManager is BuilderRegistry {
     IERC20 public rewardToken;
     /// @notice total potential reward
     uint256 public totalPotentialReward;
+    /// @notice on a paginated distribution we need to temporarily store the totalPotentialReward
+    uint256 public tempTotalPotentialReward;
     /// @notice rewards to distribute [PREC]
     uint256 public rewards;
     /// @notice index of tha last gauge distributed during a distribution period
@@ -177,7 +179,7 @@ contract SponsorsManager is BuilderRegistry {
     function distribute() public {
         if (onDistributionPeriod == false) revert DistributionPeriodDidNotStart();
         Gauge[] memory _gauges = gauges;
-        uint256 _newTotalPotentialReward;
+        uint256 _newTotalPotentialReward = tempTotalPotentialReward;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
         uint256 _lastDistribution = Math.min(_gauges.length, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
 
@@ -196,10 +198,12 @@ contract SponsorsManager is BuilderRegistry {
             indexLastGaugeDistributed = 0;
             onDistributionPeriod = false;
             rewards = 0;
+            tempTotalPotentialReward = 0;
             totalPotentialReward = _newTotalPotentialReward;
         } else {
             // Define new reference to batch beginning
             indexLastGaugeDistributed = _gaugeIndex;
+            tempTotalPotentialReward = _newTotalPotentialReward;
         }
     }
 
