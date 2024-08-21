@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 import { BaseTest } from "../BaseTest.sol";
 import { Governed } from "../../src/governance/Governed.sol";
-import { ChangeExecutor } from "../../src/governance/ChangeExecutor.sol";
 
 contract ProtectedTest is BaseTest {
     /**
@@ -51,7 +50,7 @@ contract ProtectedTest is BaseTest {
         // GIVEN a not Governor address
         //  WHEN tries to upgrade the ChangeExecutor
         //   THEN tx reverts because NotGovernor
-        vm.expectRevert(ChangeExecutor.NotGovernor.selector);
+        vm.expectRevert(Governed.NotGovernor.selector);
         address _newImplementation = makeAddr("newImplementation");
         changeExecutorMock.upgradeToAndCall(_newImplementation, "0x0");
     }

@@ -4,7 +4,6 @@ pragma solidity 0.8.20;
 import { BaseTest, Gauge } from "../../BaseTest.sol";
 import { Governed } from "../../../src/governance/Governed.sol";
 import { BuilderRegistry } from "../../../src/BuilderRegistry.sol";
-import { ChangeExecutor } from "../../../src/governance/ChangeExecutor.sol";
 import { WhitelistBuilderChangerTemplate } from
     "../../../src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol";
 
@@ -38,7 +37,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
     function test_RevertWhenIsNotCalledByGovernor() public {
         //  WHEN tries no governor tries to execute the changer
         //   THEN tx reverts because NotGovernor
-        vm.expectRevert(ChangeExecutor.NotGovernor.selector);
+        vm.expectRevert(Governed.NotGovernor.selector);
         changeExecutorMock.executeChange(_changer);
     }
 

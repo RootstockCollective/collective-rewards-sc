@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
+import { Governed } from "./Governed.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { IChangeContract } from "../interfaces/IChangeContract.sol";
@@ -12,26 +13,13 @@ import { IChangeContract } from "../interfaces/IChangeContract.sol";
  *  All the governed protected function can be executed when are called through this contract but only can be performed
  *  by the Governor.
  */
-contract ChangeExecutor is UUPSUpgradeable, ReentrancyGuardUpgradeable {
-    // -----------------------------
-    // ------- Custom Errors -------
-    // -----------------------------
-    error NotGovernor();
-
-    // -----------------------------
-    // --------- Modifiers ---------
-    // -----------------------------
-    modifier onlyGovernor() {
-        if (msg.sender != governor) revert NotGovernor();
-        _;
-    }
-
+contract ChangeExecutor is ReentrancyGuardUpgradeable, UUPSUpgradeable, Governed {
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
 
     /// @notice governor address
-    address public governor;
+    address internal _governor;
     /// @notice changer contract address to be executed
     address private _currentChangeContract;
 
@@ -51,12 +39,19 @@ contract ChangeExecutor is UUPSUpgradeable, ReentrancyGuardUpgradeable {
     function initialize(address governor_) external initializer {
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
-        governor = governor_;
+        _governor = governor_;
     }
 
     // -----------------------------
     // ---- External Functions -----
     // -----------------------------
+
+    /**
+     * @notice maintains Governed interface. Returns governed address
+     */
+    function governor() public view override returns (address) {
+        return _governor;
+    }
 
     /**
      * @notice Function to be called to make the changes in changeContract

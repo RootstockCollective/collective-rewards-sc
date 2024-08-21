@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { Governed } from "./governance/Governed.sol";
+import { Upgradeable } from "./governance/Upgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SponsorsManager } from "./SponsorsManager.sol";
 import { EpochLib } from "./libraries/EpochLib.sol";
@@ -10,7 +10,7 @@ import { EpochLib } from "./libraries/EpochLib.sol";
  * @title RewardDistributor
  * @notice Accumulates all the rewards to be distributed for each epoch
  */
-contract RewardDistributor is Governed {
+contract RewardDistributor is Upgradeable {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
@@ -60,7 +60,7 @@ contract RewardDistributor is Governed {
         external
         initializer
     {
-        __Governed_init(changeExecutor_);
+        __Upgradeable_init(changeExecutor_);
         foundationTreasury = foundationTreasury_;
         sponsorsManager = SponsorsManager(sponsorsManager_);
         rewardToken = IERC20(SponsorsManager(sponsorsManager_).rewardToken());

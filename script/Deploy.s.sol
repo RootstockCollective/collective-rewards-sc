@@ -32,15 +32,15 @@ contract Deploy is Broadcaster, OutputWriter {
     }
 
     function run() public {
-        GaugeBeacon _gaugeBeacon = new GaugeBeaconDeployer().run();
-        save("GaugeBeacon", address(_gaugeBeacon));
-
-        GaugeFactory _gaugeFactory = new GaugeFactoryDeployer().run();
-        save("GaugeFactory", address(_gaugeFactory));
-
         (ChangeExecutor _changeExecutorProxy, ChangeExecutor _changeExecutorImpl) =
             new ChangeExecutorDeployer().run(_governorAddress);
         saveWithProxy("ChangeExecutor", address(_changeExecutorImpl), address(_changeExecutorProxy));
+
+        GaugeBeacon _gaugeBeacon = new GaugeBeaconDeployer().run(address(_changeExecutorProxy));
+        save("GaugeBeacon", address(_gaugeBeacon));
+
+        GaugeFactory _gaugeFactory = new GaugeFactoryDeployer().run(address(_gaugeBeacon), _rewardTokenAddress);
+        save("GaugeFactory", address(_gaugeFactory));
 
         (SponsorsManager _sponsorManagerProxy, SponsorsManager _sponsorManagerImpl) = new SponsorsManagerDeployer().run(
             address(_changeExecutorProxy),
