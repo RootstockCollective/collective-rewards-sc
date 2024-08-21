@@ -2,35 +2,9 @@
 pragma solidity 0.8.20;
 
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
-import { ChangeExecutor } from "../governance/ChangeExecutor.sol";
+import { Governed, IChangeExecutor } from "../governance/Governed.sol";
 
-contract GaugeBeacon is UpgradeableBeacon {
-    // -----------------------------
-    // ------- Custom Errors -------
-    // -----------------------------
-    error NotGovernorOrAuthorizedChanger();
-
-    // -----------------------------
-    // --------- Modifiers ---------
-    // -----------------------------
-
-    /**
-     * @notice Modifier that protects the function
-     * @dev You should use this modifier in any function that should be called through
-     * the governance system
-     */
-    modifier onlyGovernorOrAuthorizedChanger() {
-        _checkIfGovernorOrAuthorizedChanger();
-        _;
-    }
-
-    // -----------------------------
-    // ---------- Storage ----------
-    // -----------------------------
-
-    /// @notice contract that can articulate more complex changes executed from the governor
-    ChangeExecutor public immutable changeExecutor;
-
+contract GaugeBeacon is UpgradeableBeacon, Governed {
     /**
      * @notice constructor
      * @param changeExecutor_ ChangeExecutor contract address
@@ -40,9 +14,9 @@ contract GaugeBeacon is UpgradeableBeacon {
         address changeExecutor_,
         address gaugeImplementation_
     )
-        UpgradeableBeacon(gaugeImplementation_, ChangeExecutor(changeExecutor_).governor())
+        UpgradeableBeacon(gaugeImplementation_, IChangeExecutor(changeExecutor_).governor())
     {
-        changeExecutor = ChangeExecutor(changeExecutor_);
+        changeExecutor = IChangeExecutor(changeExecutor_);
     }
 
     // -----------------------------
@@ -52,22 +26,13 @@ contract GaugeBeacon is UpgradeableBeacon {
     /**
      * @notice maintains Governed interface. Returns governed address
      */
-    function governor() public view returns (address) {
+    function governor() public view override returns (address) {
         return owner();
     }
 
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
-
-    /**
-     * @notice Checks if the msg sender is the governor or an authorized changer, reverts otherwise
-     */
-    function _checkIfGovernorOrAuthorizedChanger() internal view {
-        if (msg.sender != governor() && !changeExecutor.isAuthorizedChanger(msg.sender)) {
-            revert NotGovernorOrAuthorizedChanger();
-        }
-    }
 
     /**
      * @notice The owner is the governor but we need more flexibility to allow changes.

@@ -57,7 +57,7 @@ contract GaugeUpgradeMock is Gauge, UpgradeableMock {
  */
 contract ChangeExecutorUpgradeMock is ChangeExecutor, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
-        return newVariable + uint256(uint160(governor));
+        return newVariable + uint256(uint160(governor()));
     }
 }
 

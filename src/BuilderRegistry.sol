@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { Governed } from "./governance/Governed.sol";
+import { Upgradeable } from "./governance/Upgradeable.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { Gauge } from "./gauge/Gauge.sol";
@@ -11,7 +11,7 @@ import { GaugeFactory } from "./gauge/GaugeFactory.sol";
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
  */
-abstract contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
+abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     uint256 internal constant _MAX_KICKBACK = UtilsLib._PRECISION;
     // -----------------------------
     // ------- Custom Errors -------
@@ -83,7 +83,7 @@ abstract contract BuilderRegistry is Governed, Ownable2StepUpgradeable {
         internal
         onlyInitializing
     {
-        __Governed_init(changeExecutor_);
+        __Upgradeable_init(changeExecutor_);
         __Ownable2Step_init();
         __Ownable_init(kycApprover_);
         gaugeFactory = GaugeFactory(gaugeFactory_);

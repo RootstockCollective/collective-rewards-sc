@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { ChangeExecutor } from "./ChangeExecutor.sol";
-import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { IChangeExecutor } from "../interfaces/IChangeExecutor.sol";
 
 /**
  * @title Governed
@@ -11,11 +10,12 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
  * The only purpose of this contract is to define some useful modifiers and functions to be used on the
  * governance aspect of the child contract
  */
-abstract contract Governed is UUPSUpgradeable {
+abstract contract Governed {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
     error NotGovernorOrAuthorizedChanger();
+    error NotGovernor();
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -31,28 +31,29 @@ abstract contract Governed is UUPSUpgradeable {
         _;
     }
 
+    /**
+     * @notice Reverts if caller is not the governor
+     */
+    modifier onlyGovernor() {
+        if (msg.sender != governor()) revert NotGovernor();
+        _;
+    }
+
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
 
-    /// @notice governor contract address
-    address public governor;
     /// @notice contract that can articulate more complex changes executed from the governor
-    ChangeExecutor public changeExecutor;
+    IChangeExecutor public changeExecutor;
 
     // -----------------------------
-    // ------- Initializer ---------
+    // ---- External Functions -----
     // -----------------------------
 
     /**
-     * @notice contract initializer
-     * @param changeExecutor_ ChangeExecutor contract address
+     * @notice maintains Governed interface. Returns governed address
      */
-    function __Governed_init(address changeExecutor_) internal onlyInitializing {
-        __UUPSUpgradeable_init();
-        changeExecutor = ChangeExecutor(changeExecutor_);
-        governor = ChangeExecutor(changeExecutor_).governor();
-    }
+    function governor() public view virtual returns (address) { }
 
     // -----------------------------
     // ---- Internal Functions -----
@@ -62,19 +63,10 @@ abstract contract Governed is UUPSUpgradeable {
      * @notice Checks if the msg sender is the governor or an authorized changer, reverts otherwise
      */
     function _checkIfGovernorOrAuthorizedChanger() internal view {
-        if (msg.sender != governor && !changeExecutor.isAuthorizedChanger(msg.sender)) {
+        if (msg.sender != governor() && !changeExecutor.isAuthorizedChanger(msg.sender)) {
             revert NotGovernorOrAuthorizedChanger();
         }
     }
-
-    /**
-     * @inheritdoc UUPSUpgradeable
-     * @dev checks that the changer that will do the upgrade is currently authorized by governance to makes
-     * changes within the system
-     * @param newImplementation_ new implementation contract address
-     */
-    /* solhint-disable-next-line no-empty-blocks */
-    function _authorizeUpgrade(address newImplementation_) internal override onlyGovernorOrAuthorizedChanger { }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
