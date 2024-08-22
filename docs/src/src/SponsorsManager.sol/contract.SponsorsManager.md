@@ -27,7 +27,7 @@ IERC20 public stakingToken;
 address of the token rewarded to builder and voters
 
 ```solidity
-IERC20 public rewardToken;
+address public rewardToken;
 ```
 
 ### totalPotentialReward
@@ -174,14 +174,8 @@ transfers reward tokens from the sender to be distributed to the gauges
 _reverts if it is called during the distribution period_
 
 ```solidity
-function notifyRewardAmount(uint256 amount_) external notInDistributionPeriod;
+function notifyRewardAmount(uint256 amount_) external payable notInDistributionPeriod;
 ```
-
-**Parameters**
-
-| Name      | Type      | Description                           |
-| --------- | --------- | ------------------------------------- |
-| `amount_` | `uint256` | amount of reward tokens to distribute |
 
 ### startDistribution
 
@@ -311,7 +305,7 @@ event NewAllocation(address indexed sponsor_, address indexed gauge_, uint256 al
 ### NotifyReward
 
 ```solidity
-event NotifyReward(address indexed sender_, uint256 amount_);
+event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
 ```
 
 ### RewardDistributionStarted

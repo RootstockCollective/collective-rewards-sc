@@ -40,6 +40,14 @@ tracks amount of reward tokens distributed per epoch
 mapping(uint256 epochTimestampStart => uint256 amount) public rewardTokenAmountPerEpoch;
 ```
 
+### rewardCoinbaseAmountPerEpoch
+
+tracks amount of coinbase distributed per epoch
+
+```solidity
+mapping(uint256 epochTimestampStart => uint256 amount) public rewardCoinbaseAmountPerEpoch;
+```
+
 ### \_\_gap
 
 _This empty reserved space is put in place to allow future versions to add new variables without shifting down storage
@@ -85,33 +93,68 @@ function initialize(
 | `foundationTreasury_` | `address` | foundation treasury address      |
 | `sponsorsManager_`    | `address` | SponsorsManager contract address |
 
-### sendRewardToken
+### sendRewards
 
-sends reward tokens to sponsorsManager contract to be distributed to the gauges
+sends rewards to sponsorsManager contract to be distributed to the gauges
 
-_reverts if is not called by foundation treasury address reverts if reward token balance is insufficient_
+_reverts if is not called by foundation treasury address reverts if rewards balance is insufficient_
 
 ```solidity
-function sendRewardToken(uint256 amount_) external onlyFoundationTreasury;
+function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) external payable onlyFoundationTreasury;
 ```
 
-### sendRewardTokenAndStartDistribution
+**Parameters**
 
-sends reward tokens to sponsorsManager contract and starts the distribution to the gauges
+| Name              | Type      | Description                             |
+| ----------------- | --------- | --------------------------------------- |
+| `amountERC20_`    | `uint256` | amount of ERC20 reward token to send    |
+| `amountCoinbase_` | `uint256` | amount of Coinbase reward token to send |
 
-_reverts if is not called by foundation treasury address reverts if reward token balance is insufficient reverts if is
-not in the distribution window_
+### sendRewardsAndStartDistribution
+
+sends rewards to sponsorsManager contract and starts the distribution to the gauges
+
+_reverts if is not called by foundation treasury address reverts if rewards balance is insufficient reverts if is not in
+the distribution window_
 
 ```solidity
-function sendRewardTokenAndStartDistribution(uint256 amount_) external onlyFoundationTreasury;
+function sendRewardsAndStartDistribution(
+    uint256 amountERC20_,
+    uint256 amountCoinbase_
+)
+    external
+    payable
+    onlyFoundationTreasury;
 ```
 
-### \_sendRewardToken
+**Parameters**
 
-internal function to send reward tokens to sponsorsManager contract
+| Name              | Type      | Description                             |
+| ----------------- | --------- | --------------------------------------- |
+| `amountERC20_`    | `uint256` | amount of ERC20 reward token to send    |
+| `amountCoinbase_` | `uint256` | amount of Coinbase reward token to send |
+
+### \_sendRewards
+
+internal function to send rewards to sponsorsManager contract
 
 ```solidity
-function _sendRewardToken(uint256 amount_) internal;
+function _sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) internal;
+```
+
+**Parameters**
+
+| Name              | Type      | Description                             |
+| ----------------- | --------- | --------------------------------------- |
+| `amountERC20_`    | `uint256` | amount of ERC20 reward token to send    |
+| `amountCoinbase_` | `uint256` | amount of Coinbase reward token to send |
+
+### receive
+
+receives coinbase to distribute for rewards
+
+```solidity
+receive() external payable;
 ```
 
 ## Errors

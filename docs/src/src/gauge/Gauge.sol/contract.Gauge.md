@@ -12,7 +12,7 @@ allows the builder and voters to claim them.
 address of the token rewarded to builder and voters
 
 ```solidity
-IERC20 public immutable rewardToken;
+address public immutable rewardToken;
 ```
 
 ### sponsorsManager
@@ -31,38 +31,6 @@ total amount of stakingToken allocated for rewards
 uint256 public totalAllocation;
 ```
 
-### rewardRate
-
-current reward rate of rewardToken to distribute per second [PREC]
-
-```solidity
-uint256 public rewardRate;
-```
-
-### rewardPerTokenStored
-
-most recent stored value of rewardPerToken [PREC]
-
-```solidity
-uint256 public rewardPerTokenStored;
-```
-
-### rewardMissing
-
-missing rewards where there is not allocation [PREC]
-
-```solidity
-uint256 public rewardMissing;
-```
-
-### lastUpdateTime
-
-most recent timestamp contract has updated state
-
-```solidity
-uint256 public lastUpdateTime;
-```
-
 ### periodFinish
 
 timestamp end of current rewards period
@@ -71,12 +39,12 @@ timestamp end of current rewards period
 uint256 public periodFinish;
 ```
 
-### builderRewards
+### rewardShares
 
-amount of unclaimed token reward earned for the builder
+epoch rewards shares, optimistically tracking the time weighted votes allocations for this gauge
 
 ```solidity
-uint256 public builderRewards;
+uint256 public rewardShares;
 ```
 
 ### rewardShares
@@ -95,20 +63,14 @@ amount of stakingToken allocated by a sponsor
 mapping(address sponsor => uint256 allocation) public allocationOf;
 ```
 
-### sponsorRewardPerTokenPaid
+### rewardData
 
-cached rewardPerTokenStored for a sponsor based on their most recent action [PREC]
+rewards data to each token
 
-```solidity
-mapping(address sponsor => uint256 rewardPerTokenPaid) public sponsorRewardPerTokenPaid;
-```
-
-### rewards
-
-cached amount of rewardToken earned for a sponsor
+_address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address_
 
 ```solidity
-mapping(address sponsor => uint256 rewards) public rewards;
+mapping(address rewardToken => RewardData rewardData) public rewardData;
 ```
 
 ## Functions
@@ -134,19 +96,105 @@ constructor(address rewardToken_, address sponsorsManager_);
 | `rewardToken_`     | `address` | address of the token rewarded to builder and voters |
 | `sponsorsManager_` | `address` | address of the SponsorsManager contract             |
 
-### rewardPerToken
+### rewardRate
 
-gets the current reward rate per unit of stakingToken allocated
+gets reward rate
 
 ```solidity
-function rewardPerToken() public view returns (uint256);
+function rewardRate(address rewardToken_) public view returns (uint256);
 ```
 
-**Returns**
+**Parameters**
 
-| Name     | Type      | Description                                          |
-| -------- | --------- | ---------------------------------------------------- |
-| `<none>` | `uint256` | rewardPerToken rewardToken:stakingToken ratio [PREC] |
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+
+### rewardPerTokenStored
+
+gets reward per token stored
+
+```solidity
+function rewardPerTokenStored(address rewardToken_) public view returns (uint256);
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+
+### rewardMissing
+
+gets reward missing
+
+```solidity
+function rewardMissing(address rewardToken_) public view returns (uint256);
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+
+### lastUpdateTime
+
+gets last update time
+
+```solidity
+function lastUpdateTime(address rewardToken_) public view returns (uint256);
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+
+### builderRewards
+
+gets builder rewards
+
+```solidity
+function builderRewards(address rewardToken_) public view returns (uint256);
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+
+### sponsorRewardPerTokenPaid
+
+gets sponsor reward per token paid
+
+```solidity
+function sponsorRewardPerTokenPaid(address rewardToken_, address sponsor_) public view returns (uint256);
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `sponsor_`     | `address` |                                                                                                                     |
+
+### rewards
+
+gets amount of rewardToken earned for a sponsor
+
+```solidity
+function rewards(address rewardToken_, address sponsor_) public view returns (uint256);
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `sponsor_`     | `address` | address of the sponsor                                                                                              |
 
 ### lastTimeRewardApplicable
 
@@ -162,13 +210,54 @@ function lastTimeRewardApplicable() public view returns (uint256);
 | -------- | --------- | -------------------------------------------------------------------------- |
 | `<none>` | `uint256` | lastTimeRewardApplicable minimum between current timestamp or periodFinish |
 
+### rewardPerToken
+
+gets the current reward rate per unit of stakingToken allocated
+
+```solidity
+function rewardPerToken(address rewardToken_) public view returns (uint256);
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+
+**Returns**
+
+| Name     | Type      | Description                                          |
+| -------- | --------- | ---------------------------------------------------- |
+| `<none>` | `uint256` | rewardPerToken rewardToken:stakingToken ratio [PREC] |
+
 ### left
 
 gets total amount of rewards to distribute for the current rewards period
 
 ```solidity
-function left() external view returns (uint256);
+function left(address rewardToken_) external view returns (uint256);
 ```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+
+### earned
+
+gets `sponsor_` rewards missing to claim
+
+```solidity
+function earned(address rewardToken_, address sponsor_) public view returns (uint256);
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `sponsor_`     | `address` | address who earned the rewards                                                                                      |
 
 ### claimSponsorReward
 
@@ -177,7 +266,7 @@ claim rewards for a `sponsor_` address
 _reverts if is not called by the `sponsor_` or the sponsorsManager\_
 
 ```solidity
-function claimSponsorReward(address sponsor_) external;
+function claimSponsorReward(address sponsor_) public;
 ```
 
 **Parameters**
@@ -185,6 +274,23 @@ function claimSponsorReward(address sponsor_) external;
 | Name       | Type      | Description                      |
 | ---------- | --------- | -------------------------------- |
 | `sponsor_` | `address` | address who receives the rewards |
+
+### claimSponsorReward
+
+claim rewards for a `sponsor_` address
+
+_reverts if is not called by the `sponsor_` or the sponsorsManager\_
+
+```solidity
+function claimSponsorReward(address rewardToken_, address sponsor_) public;
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `sponsor_`     | `address` | address who receives the rewards                                                                                    |
 
 ### claimBuilderReward
 
@@ -198,25 +304,29 @@ _rewards are transferred to the builder reward receiver_
 function claimBuilderReward() external;
 ```
 
-### earned
+### claimBuilderReward
 
-gets `sponsor_` rewards missing to claim
+claim rewards for a builder
+
+_reverts if is not called by the builder or reward receiver_
+
+_rewards are transferred to the builder reward receiver_
 
 ```solidity
-function earned(address sponsor_) public view returns (uint256);
+function claimBuilderReward(address rewardToken_) public;
 ```
 
 **Parameters**
 
-| Name       | Type      | Description                    |
-| ---------- | --------- | ------------------------------ |
-| `sponsor_` | `address` | address who earned the rewards |
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
 
 ### allocate
 
 allocates stakingTokens
 
-_reverts if caller si not the sponsorsManager contract_
+_reverts if caller is not the sponsorsManager contract_
 
 ```solidity
 function allocate(
@@ -244,9 +354,7 @@ function allocate(
 
 ### notifyRewardAmount
 
-called on the reward distribution. Transfers reward tokens from sponsorManger to this contract
-
-_reverts if caller si not the sponsorsManager contract_
+transfers reward tokens to this contract
 
 ```solidity
 function notifyRewardAmount(
@@ -260,10 +368,57 @@ function notifyRewardAmount(
 
 **Parameters**
 
-| Name              | Type      | Description                        |
-| ----------------- | --------- | ---------------------------------- |
-| `builderAmount_`  | `uint256` | amount of rewards for the builder  |
-| `sponsorsAmount_` | `uint256` | amount of rewards for the sponsors |
+| Name              | Type      | Description                                                                                                         |
+| ----------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_`    | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `builderAmount_`  | `uint256` | amount of rewards for the builder                                                                                   |
+| `sponsorsAmount_` | `uint256` | amount of rewards for the sponsors                                                                                  |
+
+### notifyRewardAmountAndUpdateShares
+
+called on the reward distribution. Transfers reward tokens from sponsorManger to this contract
+
+_reverts if caller is not the sponsorsManager contract_
+
+```solidity
+function notifyRewardAmountAndUpdateShares(
+    uint256 amountERC20_,
+    uint256 builderKickback_
+)
+    external
+    payable
+    onlySponsorsManager
+    returns (uint256 newGaugeRewardShares_);
+```
+
+**Parameters**
+
+| Name               | Type      | Description                 |
+| ------------------ | --------- | --------------------------- |
+| `amountERC20_`     | `uint256` | amount of ERC20 rewards     |
+| `builderKickback_` | `uint256` | builder kickback percetange |
+
+**Returns**
+
+| Name                    | Type      | Description                                            |
+| ----------------------- | --------- | ------------------------------------------------------ |
+| `newGaugeRewardShares_` | `uint256` | new gauge rewardShares, updated after the distribution |
+
+### \_notifyRewardAmount
+
+transfers reward tokens to this contract
+
+```solidity
+function _notifyRewardAmount(address rewardToken_, uint256 builderAmount_, uint256 sponsorsAmount_) internal;
+```
+
+**Parameters**
+
+| Name              | Type      | Description                                                                                                         |
+| ----------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_`    | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `builderAmount_`  | `uint256` | amount of rewards for the builder                                                                                   |
+| `sponsorsAmount_` | `uint256` | amount of rewards for the sponsors                                                                                  |
 
 **Returns**
 
@@ -273,22 +428,61 @@ function notifyRewardAmount(
 
 ### \_updateRewards
 
+update rewards variables when a sponsor interacts
+
 ```solidity
-function _updateRewards(address sponsor_) internal;
+function _updateRewards(address rewardToken_, address sponsor_) internal;
 ```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `sponsor_`     | `address` | address of the sponsors                                                                                             |
+
+### \_upadateRewardMissing
+
+update reward missing variable
+
+```solidity
+function _upadateRewardMissing(address rewardToken_) internal;
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+
+### \_transferRewardToken
+
+transfers reward token
+
+```solidity
+function _transferRewardToken(address rewardToken_, address to_, uint256 amount_) internal nonReentrant;
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `to_`          | `address` | address who receives the tokens                                                                                     |
+| `amount_`      | `uint256` | amount of tokens to send                                                                                            |
 
 ## Events
 
 ### SponsorRewardsClaimed
 
 ```solidity
-event SponsorRewardsClaimed(address indexed sponsor_, uint256 amount_);
+event SponsorRewardsClaimed(address indexed rewardToken_, address indexed sponsor_, uint256 amount_);
 ```
 
 ### BuilderRewardsClaimed
 
 ```solidity
-event BuilderRewardsClaimed(address indexed builder_, uint256 amount_);
+event BuilderRewardsClaimed(address indexed rewardToken_, address indexed builder_, uint256 amount_);
 ```
 
 ### NewAllocation
@@ -300,7 +494,7 @@ event NewAllocation(address indexed sponsor_, uint256 allocation_);
 ### NotifyReward
 
 ```solidity
-event NotifyReward(uint256 builderAmount_, uint256 sponsorsAmount_);
+event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 sponsorsAmount_);
 ```
 
 ## Errors
@@ -315,4 +509,26 @@ error NotAuthorized();
 
 ```solidity
 error NotSponsorsManager();
+```
+
+### InvalidRewardAmount
+
+```solidity
+error InvalidRewardAmount();
+```
+
+## Structs
+
+### RewardData
+
+```solidity
+struct RewardData {
+    uint256 rewardRate;
+    uint256 rewardPerTokenStored;
+    uint256 rewardMissing;
+    uint256 lastUpdateTime;
+    uint256 builderRewards;
+    mapping(address sponsor => uint256 rewardPerTokenPaid) sponsorRewardPerTokenPaid;
+    mapping(address sponsor => uint256 rewards) rewards;
+}
 ```
