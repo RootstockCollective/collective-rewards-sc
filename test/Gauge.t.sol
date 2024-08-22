@@ -52,10 +52,20 @@ contract GaugeTest is BaseTest {
         vm.expectRevert(Gauge.NotAuthorized.selector);
         gauge.claimSponsorReward(address(rewardToken), bob);
 
+        // WHEN alice calls claimSponsorReward using bob address
+        //  THEN tx reverts because caller is not authorized
+        vm.expectRevert(Gauge.NotAuthorized.selector);
+        gauge.claimSponsorReward(bob);
+
         // WHEN alice calls claimBuilderReward using builder address
         //  THEN tx reverts because caller is not authorized
         vm.expectRevert(Gauge.NotAuthorized.selector);
         gauge.claimBuilderReward(address(rewardToken));
+
+        // WHEN alice calls claimBuilderReward using builder address
+        //  THEN tx reverts because caller is not authorized
+        vm.expectRevert(Gauge.NotAuthorized.selector);
+        gauge.claimBuilderReward();
     }
 
     /**
@@ -93,19 +103,19 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.allocationOf(alice), 1 ether);
         // THEN totalAllocation is 1 ether
         assertEq(gauge.totalAllocation(), 1 ether);
-        // THEN rewardPerTokenStored is 0 because there is not rewards distributed
+        // THEN rewardPerTokenStored is 0 because there are not rewards distributed
         assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
         // THEN rewardShares is 302400 ether = 1 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 302_400 ether);
-        // THEN rewardPerToken is 0 because there is not rewards distributed
+        // THEN rewardPerToken is 0 because there are not rewards distributed
         assertEq(gauge.rewardPerToken(address(rewardToken)), 0);
-        // THEN rewardPerToken is 0 because there is not rewards distributed
+        // THEN rewardPerToken is 0 because there are not rewards distributed
         assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);
-        // THEN alice reward is 0 because there is not rewards distributed
+        // THEN alice reward is 0 because there are not rewards distributed
         assertEq(gauge.rewards(address(rewardToken), alice), 0);
-        // THEN alice sponsorRewardPerTokenPaid is 0 because there is not rewards distributed
+        // THEN alice sponsorRewardPerTokenPaid is 0 because there are not rewards distributed
         assertEq(gauge.sponsorRewardPerTokenPaid(address(rewardToken), alice), 0);
-        // THEN alice lastUpdateTime is 0 because there is not rewards distributed
+        // THEN alice lastUpdateTime is 0 because there are not rewards distributed
         assertEq(gauge.lastUpdateTime(address(rewardToken)), 0);
     }
 
@@ -134,17 +144,17 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.totalAllocation(), 0);
         // THEN rewardShares is 302400 ether = 1 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 302_400 ether);
-        // THEN rewardPerTokenStored is 0 because there is not rewards distributed
+        // THEN rewardPerTokenStored is 0 because there are not rewards distributed
         assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
-        // THEN rewardPerToken is 0 because there is not rewards distributed
+        // THEN rewardPerToken is 0 because there are not rewards distributed
         assertEq(gauge.rewardPerToken(address(rewardToken)), 0);
-        // THEN rewardPerToken is 0 because there is not rewards distributed
+        // THEN rewardPerToken is 0 because there are not rewards distributed
         assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);
-        // THEN alice reward is 0 because there is not rewards distributed
+        // THEN alice reward is 0 because there are not rewards distributed
         assertEq(gauge.rewards(address(rewardToken), alice), 0);
-        // THEN alice sponsorRewardPerTokenPaid is 0 because there is not rewards distributed
+        // THEN alice sponsorRewardPerTokenPaid is 0 because there are not rewards distributed
         assertEq(gauge.sponsorRewardPerTokenPaid(address(rewardToken), alice), 0);
-        // THEN alice lastUpdateTime is 0 because there is not rewards distributed
+        // THEN alice lastUpdateTime is 0 because there are not rewards distributed
         assertEq(gauge.lastUpdateTime(address(rewardToken)), 0);
     }
 
@@ -279,20 +289,20 @@ contract GaugeTest is BaseTest {
 
         // WHEN builder claims rewards on gauge
         vm.startPrank(builder);
-        gauge.claimBuilderReward(address(rewardToken));
+        gauge.claimBuilderReward();
         // THEN builder rewardToken balance is 70 ether
         assertEq(rewardToken.balanceOf(builder), 70 ether);
         // WHEN builder claims rewards on gauge2
         //  THEN tx reverts because caller is not authorized
         vm.expectRevert(Gauge.NotAuthorized.selector);
         vm.startPrank(builder);
-        gauge2.claimBuilderReward(address(rewardToken));
+        gauge2.claimBuilderReward();
         // THEN builder rewardToken balance is still 70 ether
         assertEq(rewardToken.balanceOf(builder), 70 ether);
 
         // WHEN builder2 claims rewards on gauge2
         vm.startPrank(builder2);
-        gauge2.claimBuilderReward(address(rewardToken));
+        gauge2.claimBuilderReward();
         // THEN builder2Receiver rewardToken balance is 170 ether
         assertEq(rewardToken.balanceOf(builder2Receiver), 170 ether);
     }
@@ -306,6 +316,7 @@ contract GaugeTest is BaseTest {
 
         // WHEN 70 ether are sent for builder and 30 ether for sponsors
         gauge.notifyRewardAmount(address(rewardToken), 70 ether, 30 ether);
+        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 70 ether, 30 ether);
 
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
@@ -318,9 +329,11 @@ contract GaugeTest is BaseTest {
 
         // WHEN builder claims rewards
         vm.startPrank(builder);
-        gauge.claimBuilderReward(address(rewardToken));
+        gauge.claimBuilderReward();
         // THEN builder rewardToken balance is 70 ether
         assertEq(rewardToken.balanceOf(builder), 70 ether);
+        // THEN builder coinbase balance is 70 ether
+        assertEq(builder.balance, 70 ether);
     }
 
     /**
@@ -332,6 +345,7 @@ contract GaugeTest is BaseTest {
 
         // WHEN 70 ether are sent for builder and 30 ether for sponsors
         gauge2.notifyRewardAmount(address(rewardToken), 70 ether, 30 ether);
+        gauge2.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 70 ether, 30 ether);
 
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
@@ -344,18 +358,23 @@ contract GaugeTest is BaseTest {
 
         // WHEN builder2Receiver claims rewards
         vm.startPrank(builder2Receiver);
-        gauge2.claimBuilderReward(address(rewardToken));
+        gauge2.claimBuilderReward();
         // THEN builder2Receiver rewardToken balance is 70 ether
         assertEq(rewardToken.balanceOf(builder2Receiver), 70 ether);
+        // THEN builder2Receiver coinbase balance is 70 ether
+        assertEq(builder2Receiver.balance, 70 ether);
 
         // AND 70 ether are set for builder and 30 ether for sponsors
         vm.startPrank(address(sponsorsManager));
         gauge2.notifyRewardAmount(address(rewardToken), 70 ether, 30 ether);
+        gauge2.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 70 ether, 30 ether);
         // WHEN builder2 claims rewards
         vm.startPrank(builder2);
-        gauge2.claimBuilderReward(address(rewardToken));
+        gauge2.claimBuilderReward();
         // THEN builder2Receiver rewardToken balance is 140 ether
         assertEq(rewardToken.balanceOf(builder2Receiver), 140 ether);
+        // THEN builder2Receiver coinbase balance is 140 ether
+        assertEq(builder2Receiver.balance, 140 ether);
     }
 
     /**
@@ -382,7 +401,7 @@ contract GaugeTest is BaseTest {
 
         // WHEN builder claims rewards
         vm.startPrank(builder);
-        gauge.claimBuilderReward(address(rewardToken));
+        gauge.claimBuilderReward();
 
         // THEN builder rewardToken balance is 140 ether
         assertEq(rewardToken.balanceOf(builder), 140 ether);
@@ -409,7 +428,7 @@ contract GaugeTest is BaseTest {
 
         // WHEN builder claims rewards
         vm.startPrank(builder);
-        gauge.claimBuilderReward(address(rewardToken));
+        gauge.claimBuilderReward();
 
         // THEN builder rewardToken balance is 140 ether
         assertEq(rewardToken.balanceOf(builder), 140 ether);
@@ -439,13 +458,13 @@ contract GaugeTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
-        gauge.claimSponsorReward(address(rewardToken), alice);
+        gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
-        gauge.claimSponsorReward(address(rewardToken), bob);
+        gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
 
@@ -454,7 +473,7 @@ contract GaugeTest is BaseTest {
 
         // WHEN alice claims rewards again
         vm.startPrank(alice);
-        gauge.claimSponsorReward(address(rewardToken), alice);
+        gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance didn't change
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
     }
@@ -482,13 +501,13 @@ contract GaugeTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
-        gauge.claimSponsorReward(address(rewardToken), alice);
+        gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 5.555555555555555555 = 1 * 5.555555555555555555
         assertEq(rewardToken.balanceOf(alice), 5_555_555_555_555_555_555);
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
-        gauge.claimSponsorReward(address(rewardToken), bob);
+        gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 27.777777777777777775 = 5 * 5.555555555555555555
         assertEq(rewardToken.balanceOf(bob), 27_777_777_777_777_777_775);
     }
@@ -524,13 +543,13 @@ contract GaugeTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
-        gauge.claimSponsorReward(address(rewardToken), alice);
+        gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 49.999999999999999999 = 1 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_999);
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
-        gauge.claimSponsorReward(address(rewardToken), bob);
+        gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 249.999999999999999995 = 5 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(bob), 249_999_999_999_999_999_995);
     }
@@ -566,13 +585,13 @@ contract GaugeTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
-        gauge.claimSponsorReward(address(rewardToken), alice);
+        gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 49.999999999999999999 = 1 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_999);
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
-        gauge.claimSponsorReward(address(rewardToken), bob);
+        gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 249.999999999999999995 = 5 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(bob), 249_999_999_999_999_999_995);
     }
@@ -609,13 +628,13 @@ contract GaugeTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
-        gauge.claimSponsorReward(address(rewardToken), alice);
+        gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 8.333333333333333333 = 1 * 8.333333333333333333
         assertEq(rewardToken.balanceOf(alice), 8_333_333_333_333_333_333);
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
-        gauge.claimSponsorReward(address(rewardToken), bob);
+        gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 91.666666666666666660 = 5 * 18.333333333333333332
         assertEq(rewardToken.balanceOf(bob), 91_666_666_666_666_666_660);
     }
@@ -652,14 +671,14 @@ contract GaugeTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
-        gauge.claimSponsorReward(address(rewardToken), alice);
+        gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is
         //  22.619047619047619047 = 1 * 8.333333333333333333 + 2 * (15.476190476190476190 - 8.333333333333333333)
         assertEq(rewardToken.balanceOf(alice), 22_619_047_619_047_619_047);
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
-        gauge.claimSponsorReward(address(rewardToken), bob);
+        gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 91.666666666666666660 = 5 * 15.476190476190476190
         assertEq(rewardToken.balanceOf(bob), 77_380_952_380_952_380_950);
     }
@@ -711,16 +730,51 @@ contract GaugeTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
-        gauge.claimSponsorReward(address(rewardToken), alice);
+        gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is
         //  74.999999999999999997 = 2 * 24.999999999999999999 + 1 * (49.999999999999999998 - 24.999999999999999999)
         assertEq(rewardToken.balanceOf(alice), 74_999_999_999_999_999_997);
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
-        gauge.claimSponsorReward(address(rewardToken), bob);
+        gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 124.999999999999999995 = 5 * (49.999999999999999998 - 24.999999999999999999)
         assertEq(rewardToken.balanceOf(bob), 124_999_999_999_999_999_995);
+    }
+
+    /**
+     * SCENARIO: alice and bob receive rewards on ERC20
+     */
+    function test_ClaimERC20Rewards() public {
+        // GIVEN a SponsorsManager contract
+        vm.startPrank(address(sponsorsManager));
+        // AND alice allocates 1 ether
+        gauge.allocate(alice, 1 ether);
+        // AND bob allocates 1 ether
+        gauge.allocate(bob, 5 ether);
+
+        // AND 100 ether distributed for sponsors
+        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // time until next epoch is 518400
+        // rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
+        // THEN rewardPerToken is 16.666666666666666666 = 518400 * 0.000192901234567901 / 6 ether
+        assertEq(gauge.rewardPerToken(address(rewardToken)), 16_666_666_666_666_666_666);
+
+        // WHEN alice claims rewards
+        vm.startPrank(alice);
+        gauge.claimSponsorReward(address(rewardToken), alice);
+        // THEN alice coinbase balance is 16.666666666666666666 = 1 * 16.666666666666666666
+        assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
+
+        // WHEN bob claims rewards
+        vm.startPrank(bob);
+        gauge.claimSponsorReward(address(rewardToken), bob);
+        // THEN bob coinbase balance is 83.333333333333333330 = 5 * 16.666666666666666666
+        assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
     }
 
     /**

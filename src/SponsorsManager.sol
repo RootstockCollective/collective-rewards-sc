@@ -220,11 +220,9 @@ contract SponsorsManager is BuilderRegistry {
      * @param gauges_ array of gauges to claim
      */
     function claimSponsorRewards(Gauge[] memory gauges_) external {
-        address _rewardToken = rewardToken;
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-            gauges_[i].claimSponsorReward(_rewardToken, msg.sender);
-            gauges_[i].claimSponsorReward(UtilsLib._COINBASE_ADDRESS, msg.sender);
+            gauges_[i].claimSponsorReward(msg.sender);
         }
     }
 

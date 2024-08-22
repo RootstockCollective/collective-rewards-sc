@@ -73,25 +73,25 @@ contract RewardDistributor is Upgradeable {
     // -----------------------------
 
     /**
-     * @notice sends reward tokens to sponsorsManager contract to be distributed to the gauges
+     * @notice sends rewards to sponsorsManager contract to be distributed to the gauges
      * @dev reverts if is not called by foundation treasury address
-     *  reverts if reward token balance is insufficient
+     *  reverts if rewards balance is insufficient
      * @param amountERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function sendRewardToken(uint256 amountERC20_, uint256 amountCoinbase_) external payable onlyFoundationTreasury {
-        _sendRewardToken(amountERC20_, amountCoinbase_);
+    function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) external payable onlyFoundationTreasury {
+        _sendRewards(amountERC20_, amountCoinbase_);
     }
 
     /**
-     * @notice sends reward tokens to sponsorsManager contract and starts the distribution to the gauges
+     * @notice sends rewards to sponsorsManager contract and starts the distribution to the gauges
      * @dev reverts if is not called by foundation treasury address
-     *  reverts if reward token balance is insufficient
+     *  reverts if rewards balance is insufficient
      *  reverts if is not in the distribution window
      * @param amountERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function sendRewardTokenAndStartDistribution(
+    function sendRewardsAndStartDistribution(
         uint256 amountERC20_,
         uint256 amountCoinbase_
     )
@@ -99,7 +99,7 @@ contract RewardDistributor is Upgradeable {
         payable
         onlyFoundationTreasury
     {
-        _sendRewardToken(amountERC20_, amountCoinbase_);
+        _sendRewards(amountERC20_, amountCoinbase_);
         sponsorsManager.startDistribution();
     }
 
@@ -108,11 +108,11 @@ contract RewardDistributor is Upgradeable {
     // -----------------------------
 
     /**
-     * @notice internal function to send reward tokens to sponsorsManager contract
+     * @notice internal function to send rewards to sponsorsManager contract
      * @param amountERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function _sendRewardToken(uint256 amountERC20_, uint256 amountCoinbase_) internal {
+    function _sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) internal {
         // TODO: review if we need this
         rewardTokenAmountPerEpoch[EpochLib._epochStart(block.timestamp)] += amountERC20_;
         rewardCoinbaseAmountPerEpoch[EpochLib._epochStart(block.timestamp)] += amountCoinbase_;

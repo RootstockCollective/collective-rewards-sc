@@ -229,11 +229,21 @@ contract Gauge is ReentrancyGuardUpgradeable {
     /**
      * @notice claim rewards for a `sponsor_` address
      * @dev reverts if is not called by the `sponsor_` or the sponsorsManager
+     * @param sponsor_ address who receives the rewards
+     */
+    function claimSponsorReward(address sponsor_) public {
+        claimSponsorReward(rewardToken, sponsor_);
+        claimSponsorReward(UtilsLib._COINBASE_ADDRESS, sponsor_);
+    }
+
+    /**
+     * @notice claim rewards for a `sponsor_` address
+     * @dev reverts if is not called by the `sponsor_` or the sponsorsManager
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      * @param sponsor_ address who receives the rewards
      */
-    function claimSponsorReward(address rewardToken_, address sponsor_) external {
+    function claimSponsorReward(address rewardToken_, address sponsor_) public {
         if (msg.sender != sponsor_ && msg.sender != address(sponsorsManager)) revert NotAuthorized();
 
         RewardData storage _rewardData = rewardData[rewardToken_];
@@ -252,10 +262,20 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @notice claim rewards for a builder
      * @dev reverts if is not called by the builder or reward receiver
      * @dev rewards are transferred to the builder reward receiver
+     */
+    function claimBuilderReward() public {
+        claimBuilderReward(rewardToken);
+        claimBuilderReward(UtilsLib._COINBASE_ADDRESS);
+    }
+
+    /**
+     * @notice claim rewards for a builder
+     * @dev reverts if is not called by the builder or reward receiver
+     * @dev rewards are transferred to the builder reward receiver
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function claimBuilderReward(address rewardToken_) external {
+    function claimBuilderReward(address rewardToken_) public {
         address _builder = BuilderRegistry(sponsorsManager).gaugeToBuilder(Gauge(address(this)));
         address _rewardReceiver = BuilderRegistry(sponsorsManager).builderRewardReceiver(_builder);
         if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();
@@ -272,7 +292,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
 
     /**
      * @notice allocates stakingTokens
-     * @dev reverts if caller si not the sponsorsManager contract
+     * @dev reverts if caller is not the sponsorsManager contract
      * @param sponsor_ address of user who allocates tokens
      * @param allocation_ amount of tokens to allocate
      * @return allocationDeviation_ deviation between current allocation and the new one
@@ -342,7 +362,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
 
     /**
      * @notice called on the reward distribution. Transfers reward tokens from sponsorManger to this contract
-     * @dev reverts if caller si not the sponsorsManager contract
+     * @dev reverts if caller is not the sponsorsManager contract
      * @param amountERC20_ amount of ERC20 rewards
      * @param builderKickback_  builder kickback percetange
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
