@@ -37,6 +37,7 @@ contract BaseTest is Test {
     address internal bob = makeAddr("bob");
     address internal builder = makeAddr("builder");
     address internal builder2 = makeAddr("builder2");
+    address internal builder2Receiver = makeAddr("builder2Receiver");
     address internal kycApprover = makeAddr("kycApprover");
     address internal foundation = makeAddr("foundation");
     /* solhint-enable private-vars-leading-underscore */
@@ -56,8 +57,8 @@ contract BaseTest is Test {
         // allow to execute all the functions protected by governance
         changeExecutorMock.setIsAuthorized(true);
 
-        gauge = _whitelistBuilder(builder, builder, 1 ether);
-        gauge2 = _whitelistBuilder(builder2, builder2, 1 ether);
+        gauge = _whitelistBuilder(builder, builder, 0.5 ether);
+        gauge2 = _whitelistBuilder(builder2, builder2Receiver, 0.5 ether);
         gaugesArray = [gauge, gauge2];
 
         // mint some stakingTokens to alice and bob
