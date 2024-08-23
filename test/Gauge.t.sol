@@ -504,6 +504,51 @@ contract GaugeTest is BaseTest {
     }
 
     /**
+     * SCENARIO: alice claims sponsors rewards on a wrong gauge
+     */
+    function test_ClaimSponsorRewardsWrongGauge() public {
+        // GIVEN a SponsorsManager contract
+        vm.startPrank(address(sponsorsManager));
+        // AND 1 ether allocated to alice on gauge
+        gauge.allocate(alice, 1 ether);
+        // AND 5 ether to bob on gauge2
+        gauge2.allocate(bob, 5 ether);
+
+        // AND 100 ether distributed for sponsors on both gauges
+        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        gauge2.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        // simulates a distribution setting the periodFinish
+        _setPeriodFinish();
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // WHEN alice claims rewards on gauge2
+        vm.startPrank(alice);
+        gauge2.claimSponsorReward(alice);
+        // THEN alice rewardToken balance is 0
+        assertEq(rewardToken.balanceOf(alice), 0);
+
+        // WHEN alice claims rewards on gauge
+        vm.startPrank(alice);
+        gauge.claimSponsorReward(alice);
+        // THEN alice rewardToken balance is 100
+        assertApproxEqAbs(rewardToken.balanceOf(alice), 100 ether, 10);
+
+        // WHEN bob claims rewards on gauge
+        vm.startPrank(bob);
+        gauge.claimSponsorReward(bob);
+        // THEN bob rewardToken balance is 0
+        assertEq(rewardToken.balanceOf(bob), 0);
+
+        // WHEN bob claims rewards on gauge2
+        vm.startPrank(bob);
+        gauge2.claimSponsorReward(bob);
+        // THEN bob rewardToken balance is 100
+        assertApproxEqAbs(rewardToken.balanceOf(bob), 100 ether, 10);
+    }
+
+    /**
      * SCENARIO: alice and bob claim his rewards in the middle of the epoch receiving partial rewards.
      */
     function test_ClaimSponsorRewardsPartial() public {

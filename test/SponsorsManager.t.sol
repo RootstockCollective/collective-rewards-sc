@@ -66,6 +66,97 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
+     * SCENARIO: alice allocates on a batch passing the same gauge twice
+     */
+    function test_AllocateBatchGaugeRepeated() public {
+        // GIVEN a SponsorManager contract
+        vm.startPrank(alice);
+        // AND a new epoch
+        _skipAndStartNewEpoch();
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+
+        gaugesArray.push(gauge);
+        allocationsArray.push(10 ether);
+        // WHEN alice allocates to [gauge, gauge2, gauge] = [2, 6, 10]
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // THEN is considered the last allocation
+        //  alice gauge allocation is 10 ether
+        assertEq(gauge.allocationOf(alice), 10 ether);
+        // THEN alice gauge2 allocation is 6 ether
+        assertEq(gauge2.allocationOf(alice), 6 ether);
+        // THEN total potential rewards is 9676800 ether = 16 * 1 WEEK
+        assertEq(sponsorsManager.totalPotentialReward(), 9_676_800 ether);
+        // THEN alice total allocation is 16 ether
+        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 16 ether);
+    }
+
+    /**
+     * SCENARIO: alice override her allocaition
+     */
+    function test_AllocateOverride() public {
+        // GIVEN a SponsorManager contract
+        vm.startPrank(alice);
+        // AND a new epoch
+        _skipAndStartNewEpoch();
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        // WHEN alice allocates 2 ether to builder and 6 ether to builder2
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // AND alice override gauge allocation from 2 ether to 10 ether
+        sponsorsManager.allocate(gauge, 10 ether);
+
+        // THEN is considered the last allocation
+        //  alice gauge allocation is 10 ether
+        assertEq(gauge.allocationOf(alice), 10 ether);
+        // THEN alice gauge2 allocation is 6 ether
+        assertEq(gauge2.allocationOf(alice), 6 ether);
+        // THEN total potential rewards is 9676800 ether = 16 * 1 WEEK
+        assertEq(sponsorsManager.totalPotentialReward(), 9_676_800 ether);
+        // THEN alice total allocation is 16 ether
+        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 16 ether);
+    }
+
+    /**
+     * SCENARIO: alice allocates on a batch to gauge and gauge2. After, allocates again
+     *  adding allocation to gauge3. Previous allocation is not modified
+     */
+    function test_AllocateBatchOverride() public {
+        // GIVEN a SponsorManager contract
+        vm.startPrank(alice);
+        // AND a new epoch
+        _skipAndStartNewEpoch();
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+
+        // WHEN alice allocates to [gauge, gauge2] = [2, 6]
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+
+        address _builder3 = makeAddr("_builder3");
+        Gauge _gauge3 = _whitelistBuilder(_builder3, _builder3, 0.5 ether);
+        gaugesArray.push(_gauge3);
+        allocationsArray.push(10 ether);
+
+        // AND alice allocates again to [gauge, gauge2, gauge3] = [2, 6, 10]
+        vm.startPrank(alice);
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // THEN previous allocation didn't change
+        //  alice gauge allocation is 2 ether
+        assertEq(gauge.allocationOf(alice), 2 ether);
+        // THEN alice gauge2 allocation is 6 ether
+        assertEq(gauge2.allocationOf(alice), 6 ether);
+        // THEN alice gauge3 allocation is 6 ether
+        assertEq(_gauge3.allocationOf(alice), 10 ether);
+        // THEN total potential rewards is 10886400 ether = 18 * 1 WEEK
+        assertEq(sponsorsManager.totalPotentialReward(), 10_886_400 ether);
+        // THEN alice total allocation is 18 ether
+        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 18 ether);
+    }
+
+    /**
      * SCENARIO: alice modifies allocation for 2 builders and variables are updated
      */
     function test_ModifyAllocation() public {
