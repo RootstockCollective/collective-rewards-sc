@@ -16,6 +16,7 @@ import { Gauge } from "src/gauge/Gauge.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { EpochLib } from "src/libraries/EpochLib.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 contract BaseTest is Test {
     ChangeExecutorMock public changeExecutorMockImpl;
@@ -25,6 +26,7 @@ contract BaseTest is Test {
 
     GaugeBeacon public gaugeBeacon;
     GaugeFactory public gaugeFactory;
+    address[] public builders;
     Gauge public gauge;
     Gauge public gauge2;
     Gauge[] public gaugesArray;
@@ -61,6 +63,8 @@ contract BaseTest is Test {
         // allow to execute all the functions protected by governance
         changeExecutorMock.setIsAuthorized(true);
 
+        builders.push(builder);
+        builders.push(builder2);
         gauge = _whitelistBuilder(builder, builder, 0.5 ether);
         gauge2 = _whitelistBuilder(builder2, builder2Receiver, 0.5 ether);
         gaugesArray = [gauge, gauge2];
@@ -101,11 +105,67 @@ contract BaseTest is Test {
         uint256 kickbackPct_
     )
         internal
-        returns (Gauge)
+        returns (Gauge newGauge_)
     {
-        vm.prank(kycApprover);
+        vm.startPrank(kycApprover);
         sponsorsManager.activateBuilder(builder_, rewardReceiver_, kickbackPct_);
-        vm.prank(governor);
-        return sponsorsManager.whitelistBuilder(builder_);
+        (governor);
+        newGauge_ = sponsorsManager.whitelistBuilder(builder_);
+        vm.stopPrank();
     }
+
+    function _createGauges(uint256 amount_, uint256 kickback_) internal {
+        for (uint256 i = 0; i < amount_; i++) {
+            address _newBuilder = makeAddr(string(abi.encode(gaugesArray.length)));
+            builders.push(_newBuilder);
+            Gauge _newGauge = _whitelistBuilder(_newBuilder, _newBuilder, kickback_);
+            gaugesArray.push(_newGauge);
+        }
+        vm.stopPrank();
+    }
+
+    function _distribute(uint256 amountERC20_, uint256 amountCoinbase_) internal {
+        _skipToStartDistributionWindow();
+        rewardToken.mint(address(rewardDistributor), amountERC20_);
+        vm.deal(address(rewardDistributor), amountCoinbase_);
+        vm.startPrank(foundation);
+        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountCoinbase_);
+        while (sponsorsManager.onDistributionPeriod()) {
+            sponsorsManager.distribute();
+        }
+        vm.stopPrank();
+    }
+
+    function _buildersClaim() internal {
+        for (uint256 i = 0; i < gaugesArray.length; i++) {
+            address _builder = sponsorsManager.gaugeToBuilder(gaugesArray[i]);
+            vm.startPrank(_builder);
+            gaugesArray[i].claimBuilderReward();
+        }
+        vm.stopPrank();
+    }
+
+    /**
+     * @notice returns reward token balance and clear it.
+     *  Used to simplify maths and asserts considering only tokens received
+     */
+    function _clearERC20Balance(address address_) internal returns (uint256 balance_) {
+        balance_ = rewardToken.balanceOf(address_);
+        vm.startPrank(address_);
+        rewardToken.transfer(address(this), balance_);
+        vm.stopPrank();
+    }
+
+    /**
+     * @notice returns reward token balance and clear it.
+     *  Used to simplify maths and asserts considering only tokens received
+     */
+    function _clearCoinbaseBalance(address address_) internal returns (uint256 balance_) {
+        balance_ = address_.balance;
+        vm.startPrank(address_);
+        Address.sendValue(payable(address(this)), balance_);
+        vm.stopPrank();
+    }
+
+    receive() external payable { }
 }
