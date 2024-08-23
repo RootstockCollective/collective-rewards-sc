@@ -589,7 +589,7 @@ contract SponsorsManagerTest is BaseTest {
      * SCENARIO: alice claims all the rewards in a single tx
      */
     function test_ClaimSponsorRewards() public {
-        // GIVEN builder and builder2 which kickback percentage is 100%
+        // GIVEN builder and builder2 which kickback percentage is 50%
         //  AND a sponsor alice
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
@@ -613,7 +613,7 @@ contract SponsorsManagerTest is BaseTest {
         vm.prank(alice);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
-        // THEN alice rewardToken balance is all of the distributed amount
-        assertEq(rewardToken.balanceOf(alice), 99_999_999_999_999_999_992);
+        // THEN alice rewardToken balance is 50% of the distributed amount
+        assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_992);
     }
 }

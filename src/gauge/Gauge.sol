@@ -138,9 +138,10 @@ contract Gauge {
      * @dev reverts if is not called by the builder or reward receiver
      * @dev rewards are transferred to the builder reward receiver
      */
-    function claimBuilderReward(address builder_) external {
-        address _rewardReceiver = BuilderRegistry(sponsorsManager).builderRewardReceiver(builder_);
-        if (msg.sender != builder_ && msg.sender != _rewardReceiver) revert NotAuthorized();
+    function claimBuilderReward() external {
+        address _builder = BuilderRegistry(sponsorsManager).gaugeToBuilder(Gauge(address(this)));
+        address _rewardReceiver = BuilderRegistry(sponsorsManager).builderRewardReceiver(_builder);
+        if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();
 
         uint256 _reward = builderRewards;
         if (_reward > 0) {
