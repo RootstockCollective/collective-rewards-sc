@@ -2,8 +2,8 @@
 name: Deploy Contracts for QA
 
 on:
-  pull_request_review:
-    types: [submitted]
+  # pull_request_review:
+  #   types: [submitted]
   push:
     branches:
       - TOK-114/implement-cd
@@ -15,7 +15,7 @@ env:
 jobs:
   deploy:
     runs-on: "ubuntu-latest"
-    if: github.event.review.state == 'approved'
+    # if: github.event.review.state == 'approved'
     environment:
       name: QA
     steps:
