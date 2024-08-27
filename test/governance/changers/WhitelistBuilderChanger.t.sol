@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 import { BaseTest, Gauge } from "../../BaseTest.sol";
 import { Governed } from "../../../src/governance/Governed.sol";
-import { BuilderRegistry } from "../../../src/BuilderRegistry.sol";
 import { WhitelistBuilderChangerTemplate } from
     "../../../src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol";
 
@@ -53,6 +52,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         //  THEN gauge is added on SponsorsManager
         assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
         //  THEN the new builder is whitelisted
-        assertEq(uint256(sponsorsManager.builderState(_newBuilder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
+        (, bool _whitelisted,,) = sponsorsManager.builderState(_newBuilder);
+        assertEq(_whitelisted, true);
     }
 }
