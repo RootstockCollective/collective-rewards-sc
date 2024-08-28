@@ -52,6 +52,7 @@
     "clean": "rm -rf cache out cache_hardhat artifacts typechain-types",
     "compile": "forge compile --force && hardhat compile --force",
     "deploy": "./script/deploy.sh",
+    "deploy:mvp": "./script/mvp/mvp-deploy.sh",
     "lint": "bun run lint:sol:src && bun run lint:sol:test && bun run lint:md && bun run lint:ts && bun run lint:js",
     "lint:sol:src": "solhint '{src,script,mock}/**/*.sol' test/BaseTest.sol",
     "lint:sol:test": "solhint --config .solhint.test.json 'test/**/*.t.sol'",

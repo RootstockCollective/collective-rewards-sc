@@ -12,7 +12,7 @@ fi
 echo "CREATE2 deployed"
 
 # Deploy contracts
-forge script script/Deploy.s.sol --rpc-url $RPC_URL --legacy --private-key $PRIVATE_KEY --broadcast --chain-id $CHAIN_ID --with-gas-price $GAS_PRICE
+forge script script/mvp/MVPDeploy.s.sol --rpc-url $RPC_URL --legacy --private-key $PRIVATE_KEY --broadcast --chain-id $CHAIN_ID --with-gas-price $GAS_PRICE
 if [ $? -ne 0 ]; then
   exit $?
 fi
@@ -22,5 +22,5 @@ direnv allow
 # Create hardhat artifacts
 if [[ ! -n "${OMIT_HARDHAT_ARTIFACTS:-}" || "${OMIT_HARDHAT_ARTIFACTS}" == "false" ]]; then
   echo "> Generating hardhat artifacts"
-  forge script script/Deploy.s.sol --sig "createHardhatArtifacts()" --rpc-url $RPC_URL --legacy --private-key $PRIVATE_KEY --broadcast --chain-id $CHAIN_ID --with-gas-price $GAS_PRICE
+  forge script script/mvp/MVPDeploy.s.sol --sig "createHardhatArtifacts()" --rpc-url $RPC_URL --legacy --private-key $PRIVATE_KEY --broadcast --chain-id $CHAIN_ID --with-gas-price $GAS_PRICE
 fi
