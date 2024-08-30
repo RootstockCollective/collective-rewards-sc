@@ -13,9 +13,9 @@ contract ProtectedTest is BaseTest {
         changeExecutorMock.setIsAuthorized(false);
         //  WHEN Governor calls a function protected by the modifier onlyGovernorOrAuthorizedChanger
         vm.prank(governor);
-        sponsorsManager.setBuilderKickback(builder, 1);
+        sponsorsManager.setBuilderKickback(builder, 1, 12 weeks);
         //   THEN the function is successfully executed
-        assertEq(sponsorsManager.builderKickback(builder), 1);
+        assertEq(sponsorsManager.newBuilderKickback(builder), 1);
     }
 
     /**
@@ -27,7 +27,7 @@ contract ProtectedTest is BaseTest {
         //  WHEN tries to execute a protected function
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        sponsorsManager.setBuilderKickback(builder, 1);
+        sponsorsManager.setBuilderKickback(builder, 1, 12 weeks);
     }
 
     /**

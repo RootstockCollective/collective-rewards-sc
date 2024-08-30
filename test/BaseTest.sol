@@ -109,7 +109,7 @@ contract BaseTest is Test {
     {
         vm.startPrank(kycApprover);
         sponsorsManager.activateBuilder(builder_, rewardReceiver_, kickbackPct_);
-        (governor);
+        vm.startPrank(governor);
         newGauge_ = sponsorsManager.whitelistBuilder(builder_);
         vm.stopPrank();
     }
