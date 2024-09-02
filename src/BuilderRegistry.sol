@@ -6,7 +6,6 @@ import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { GaugeFactory } from "./gauge/GaugeFactory.sol";
-import { EpochLib } from "./libraries/EpochLib.sol";
 
 /**
  * @title BuilderRegistry
@@ -26,8 +25,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     // ----------- Events ----------
     // -----------------------------
     event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
-    event BuilderKickbackRequested(address indexed builder_, uint256 kickback_, uint256 timeExpiration_);
-    event BuilderKickbackUpdated(address indexed builder_, uint256 kickback_, uint256 timeExpiration_);
+    event BuilderKickbackRequested(address indexed builder_, uint256 kickback_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
     // -----------------------------
@@ -56,12 +54,12 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     mapping(address builder => BuilderState state) public builderState;
     /// @notice map of builders reward receiver
     mapping(address builder => address rewardReceiver) public builderRewardReceiver;
+    /// @notice map of builders previous kickback
+    mapping(address builder => uint256 percentage) public previousBuilderKickback;
     /// @notice map of builders kickback
     mapping(address builder => uint256 percentage) public builderKickback;
-    /// @notice map of builders kickback that will be applied in the new epoch
-    mapping(address builder => uint256 percentage) public newBuilderKickback;
-    /// @notice map of builders kickback expiration. After this time, builder can update the kicback without a changer
-    mapping(address builder => uint256 timestamp) public builderKickbackExpiration;
+    /// @notice map of builders kickback cooldown time. After this time, new kickback will be applied
+    mapping(address builder => uint256 timestamp) public builderKickbackCooldownEnd;
     /// @notice array of all the gauges created
     Gauge[] public gauges;
     /// @notice gauge factory contract address
@@ -70,6 +68,8 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     mapping(address builder => Gauge gauge) public builderToGauge;
     /// @notice builder address for a gauge contract
     mapping(Gauge gauge => address builder) public gaugeToBuilder;
+    /// @notice time that must elapse for a new kickback from a builder to be applied
+    uint256 public kickbackCooldown;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -80,11 +80,13 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
      * @param changeExecutor_ See Governed doc
      * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
      * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function __BuilderRegistry_init(
         address changeExecutor_,
         address kycApprover_,
-        address gaugeFactory_
+        address gaugeFactory_,
+        uint256 kickbackCooldown_
     )
         internal
         onlyInitializing
@@ -93,6 +95,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         __Ownable2Step_init();
         __Ownable_init(kycApprover_);
         gaugeFactory = GaugeFactory(gaugeFactory_);
+        kickbackCooldown = kickbackCooldown_;
     }
 
     // -----------------------------
@@ -106,13 +109,11 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
      * @param builder_ address of the builder
      * @param rewardReceiver_ address of the builder reward receiver
      * @param kickback_ kickback(100% == 1 ether)
-     * @param kickbackTimeLock_ time where kicback cannot be changed without a changer
      */
     function activateBuilder(
         address builder_,
         address rewardReceiver_,
-        uint256 kickback_,
-        uint256 kickbackTimeLock_
+        uint256 kickback_
     )
         external
         onlyOwner
@@ -125,9 +126,9 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
             revert InvalidBuilderKickback();
         }
 
+        previousBuilderKickback[builder_] = kickback_;
         builderKickback[builder_] = kickback_;
-        newBuilderKickback[builder_] = kickback_;
-        builderKickbackExpiration[builder_] = block.timestamp + kickbackTimeLock_;
+        builderKickbackCooldownEnd[builder_] = block.timestamp;
 
         _updateState(builder_, BuilderState.KYCApproved);
     }
@@ -191,35 +192,30 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
 
     /**
      * @notice set a builder kickback
-     * @dev reverts if is not called by the governor address or authorized changer
+     * @dev reverts if is not called by the builder
      * reverts if builder state is not Whitelisted
      * @param builder_ address of the builder
      * @param kickback_ kickback(100% == 1 ether)
-     * @param kickbackTimeLock_ time where kicback cannot be changed without a changer
      */
     function setBuilderKickback(
         address builder_,
-        uint256 kickback_,
-        uint256 kickbackTimeLock_
+        uint256 kickback_
     )
         external
         atState(builder_, BuilderState.Whitelisted)
     {
-        // builder can change the kickback when the time lock expires
-        if (msg.sender != builder_ || block.timestamp < builderKickbackExpiration[builder_]) {
-            _checkIfGovernorOrAuthorizedChanger();
-        }
+        if (msg.sender != builder_) revert NotAuthorized();
 
         // TODO: should we have a minimal amount?
         if (kickback_ > _MAX_KICKBACK) {
             revert InvalidBuilderKickback();
         }
 
-        // new kickback will be applied in the next epoch
-        newBuilderKickback[builder_] = kickback_;
-        builderKickbackExpiration[builder_] = EpochLib._epochNext(block.timestamp) + kickbackTimeLock_;
+        previousBuilderKickback[builder_] = _getKickbackToApply(builder_);
+        builderKickback[builder_] = kickback_;
+        builderKickbackCooldownEnd[builder_] = block.timestamp + kickbackCooldown;
 
-        emit BuilderKickbackRequested(builder_, kickback_, builderKickbackExpiration[builder_]);
+        emit BuilderKickbackRequested(builder_, kickback_, builderKickbackCooldownEnd[builder_]);
     }
 
     // -----------------------------
@@ -240,14 +236,15 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     }
 
     /**
-     * @notice applies new builder kickback if it is different
+     * @notice returns kickback to apply.
+     *  If there is a new one and cooldown time has expired, apply that one; otherwise, apply the previous one
      * @param builder_ address of the builder
      */
-    function _applyNewBuilderKickback(address builder_) internal {
-        if (newBuilderKickback[builder_] != builderKickback[builder_]) {
-            builderKickback[builder_] = newBuilderKickback[builder_];
-            emit BuilderKickbackUpdated(builder_, builderKickback[builder_], builderKickbackExpiration[builder_]);
+    function _getKickbackToApply(address builder_) internal view returns (uint256) {
+        if (block.timestamp >= builderKickbackCooldownEnd[builder_]) {
+            return builderKickback[builder_];
         }
+        return previousBuilderKickback[builder_];
     }
 
     function _updateState(address builder_, BuilderState newState_) internal {

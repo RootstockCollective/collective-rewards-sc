@@ -55,7 +55,12 @@ contract BaseTest is Test {
         gaugeBeacon = new GaugeBeaconDeployer().run(address(changeExecutorMock));
         gaugeFactory = new GaugeFactoryDeployer().run(address(gaugeBeacon), address(rewardToken));
         (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerDeployer().run(
-            address(changeExecutorMock), kycApprover, address(rewardToken), address(stakingToken), address(gaugeFactory)
+            address(changeExecutorMock),
+            kycApprover,
+            address(rewardToken),
+            address(stakingToken),
+            address(gaugeFactory),
+            2 weeks
         );
         (rewardDistributor, rewardDistributorImpl) =
             new RewardDistributorDeployer().run(address(changeExecutorMock), foundation, address(sponsorsManager));

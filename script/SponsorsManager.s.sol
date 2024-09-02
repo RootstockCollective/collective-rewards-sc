@@ -18,9 +18,15 @@ contract Deploy is Broadcaster {
         if (_gaugeFactoryAddress == address(0)) {
             _gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
-
-        (proxy_, implementation_) =
-            run(_changeExecutorAddress, _kycApprover, _rewardTokenAddress, _stakingTokenAddress, _gaugeFactoryAddress);
+        uint256 _kickbackCooldown = vm.envUint("KICKBACK_COOLDOWN");
+        (proxy_, implementation_) = run(
+            _changeExecutorAddress,
+            _kycApprover,
+            _rewardTokenAddress,
+            _stakingTokenAddress,
+            _gaugeFactoryAddress,
+            _kickbackCooldown
+        );
     }
 
     function run(
@@ -28,7 +34,8 @@ contract Deploy is Broadcaster {
         address kycApprover_,
         address rewardToken_,
         address stakingToken_,
-        address gaugeFactory_
+        address gaugeFactory_,
+        uint256 kickbackCooldown_
     )
         public
         broadcast
@@ -41,7 +48,8 @@ contract Deploy is Broadcaster {
         require(gaugeFactory_ != address(0), "Gauge factory address cannot be empty");
 
         bytes memory _initializerData = abi.encodeCall(
-            SponsorsManager.initialize, (changeExecutor_, kycApprover_, rewardToken_, stakingToken_, gaugeFactory_)
+            SponsorsManager.initialize,
+            (changeExecutor_, kycApprover_, rewardToken_, stakingToken_, gaugeFactory_, kickbackCooldown_)
         );
         address _implementation;
         address _proxy;

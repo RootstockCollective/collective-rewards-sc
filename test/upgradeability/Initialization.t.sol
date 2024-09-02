@@ -14,7 +14,12 @@ contract InitializationTest is BaseTest {
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         sponsorsManager.initialize(
-            address(changeExecutorMock), kycApprover, address(rewardToken), address(stakingToken), address(gaugeFactory)
+            address(changeExecutorMock),
+            kycApprover,
+            address(rewardToken),
+            address(stakingToken),
+            address(gaugeFactory),
+            2 weeks
         );
     }
 

@@ -4,7 +4,6 @@ pragma solidity 0.8.20;
 import { BaseTest, Gauge } from "./BaseTest.sol";
 import { BuilderRegistry } from "../src/BuilderRegistry.sol";
 import { Governed } from "../src/governance/Governed.sol";
-import { EpochLib } from "src/libraries/EpochLib.sol";
 
 contract BuilderRegistryTest is BaseTest {
     // -----------------------------
@@ -13,8 +12,6 @@ contract BuilderRegistryTest is BaseTest {
     event StateUpdate(
         address indexed builder_, BuilderRegistry.BuilderState previousState_, BuilderRegistry.BuilderState newState_
     );
-    event BuilderKickbackRequested(address indexed builder_, uint256 kickback_, uint256 expiration_);
-    event BuilderKickbackUpdated(address indexed builder_, uint256 kickback_, uint256 expiration_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
     /**
@@ -42,11 +39,6 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         sponsorsManager.permitBuilder(builder);
-
-        // WHEN alice calls setBuilderKickback
-        //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        sponsorsManager.setBuilderKickback(builder, 10, 12 weeks);
     }
 
     /**
@@ -75,7 +67,7 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
         emit StateUpdate(_newBuilder, BuilderRegistry.BuilderState.Pending, BuilderRegistry.BuilderState.KYCApproved);
-        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0, 12 weeks);
+        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
 
         // THEN builder.state is KYCApproved
         assertEq(uint256(sponsorsManager.builderState(_newBuilder)), uint256(BuilderRegistry.BuilderState.KYCApproved));
@@ -97,7 +89,7 @@ contract BuilderRegistryTest is BaseTest {
         vm.expectRevert(
             abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Pending)
         );
-        sponsorsManager.activateBuilder(builder, builder, 0, 12 weeks);
+        sponsorsManager.activateBuilder(builder, builder, 0);
     }
 
     /**
@@ -112,7 +104,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN tries to activateBuilder
         //  THEN tx reverts because is not a valid kickback
         vm.expectRevert(BuilderRegistry.InvalidBuilderKickback.selector);
-        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 2 ether, 12 weeks);
+        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 2 ether);
     }
 
     /**
@@ -123,7 +115,7 @@ contract BuilderRegistryTest is BaseTest {
         address _newBuilder = makeAddr("newBuilder");
         // AND a KYCApproved builder
         vm.prank(kycApprover);
-        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0, 12 weeks);
+        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
 
         // WHEN calls whitelistBuilder
         //  THEN a GaugeCreated event is emitted
@@ -248,48 +240,5 @@ contract BuilderRegistryTest is BaseTest {
             abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
         );
         sponsorsManager.revokeBuilder(_newBuilder);
-    }
-
-    /**
-     * SCENARIO: Governor set new builder kickback
-     */
-    function test_SetBuilderKickback() public {
-        // GIVEN a Whitelisted builder
-        //  WHEN calls setBuilderKickback
-        //   THEN BuilderKickbackRequested event is emitted
-        vm.expectEmit();
-        emit BuilderKickbackRequested(builder, 5, EpochLib._epochNext(block.timestamp) + 12 weeks);
-        sponsorsManager.setBuilderKickback(builder, 5, 12 weeks);
-
-        // THEN newBuilderKickback is 5
-        assertEq(sponsorsManager.newBuilderKickback(builder), 5);
-        // THEN builderKickbackExpiration is 12 weeks after the next epoch starts
-        assertEq(sponsorsManager.builderKickbackExpiration(builder), EpochLib._epochNext(block.timestamp) + 12 weeks);
-    }
-
-    /**
-     * SCENARIO: setBuilderKickback should reverts if the state is not Whitelisted
-     */
-    function test_SetBuilderKickbackWrongStatus() public {
-        // GIVEN a Revoked builder
-        vm.startPrank(builder);
-        sponsorsManager.revokeBuilder(builder);
-        // WHEN tries to setBuilderKickback
-        //  THEN tx reverts because is not the required state
-        vm.expectRevert(
-            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
-        );
-        sponsorsManager.setBuilderKickback(builder, 5, 12 weeks);
-    }
-
-    /**
-     * SCENARIO: setBuilderKickback should reverts if kickback is higher than 100
-     */
-    function test_SetBuilderKickbackInvalidBuilderKickback() public {
-        // GIVEN a Whitelisted builder
-        //  WHEN tries to setBuilderKickback
-        //   THEN tx reverts because is not a valid kickback
-        vm.expectRevert(BuilderRegistry.InvalidBuilderKickback.selector);
-        sponsorsManager.setBuilderKickback(builder, 2 ether, 12 weeks);
     }
 }

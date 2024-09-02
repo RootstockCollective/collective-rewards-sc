@@ -90,18 +90,20 @@ contract SponsorsManager is BuilderRegistry {
      * @param rewardToken_ address of the token rewarded to builder and voters
      * @param stakingToken_ address of the staking token for builder and voters
      * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function initialize(
         address changeExecutor_,
         address kycApprover_,
         address rewardToken_,
         address stakingToken_,
-        address gaugeFactory_
+        address gaugeFactory_,
+        uint256 kickbackCooldown_
     )
         external
         initializer
     {
-        __BuilderRegistry_init(changeExecutor_, kycApprover_, gaugeFactory_);
+        __BuilderRegistry_init(changeExecutor_, kycApprover_, gaugeFactory_, kickbackCooldown_);
         rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
     }
@@ -307,7 +309,7 @@ contract SponsorsManager is BuilderRegistry {
         uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
         // [N] = [N] * [N] / [N]
         uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
-        uint256 _builderKickback = builderKickback[gaugeToBuilder[gauge_]];
+        uint256 _builderKickback = _getKickbackToApply(gaugeToBuilder[gauge_]);
         IERC20(rewardToken).approve(address(gauge_), _amountERC20);
         return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(_amountERC20, _builderKickback);
     }
