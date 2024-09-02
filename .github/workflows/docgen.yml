@@ -1,7 +1,6 @@
 name: Docgen
 
 on:
-  workflow_dispatch:
   pull_request_review:
     types: [submitted]
 
@@ -11,14 +10,13 @@ jobs:
 
     permissions:
       contents: write
-      pull-requests: write
 
     if: github.event.review.state == 'approved'
     steps:
       - name: "Check out the repo"
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Install Foundry"
@@ -38,13 +36,13 @@ jobs:
       - name: "prettier"
         run: "bun run prettier:write"
 
-      - name: Configure Git
+      - name: "Configure Git"
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Commit changes
+      - name: "Commit changes"
         run: |
           git add .
           git commit -m "docs: automated docgen by GitHub Action" || echo "No changes to commit"
-          git push origin HEAD:${{ github.head_ref }}
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
