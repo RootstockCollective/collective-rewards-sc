@@ -1,6 +1,6 @@
 # SimplifiedRewardDistributor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/f9f3df1fb45c6f4c86dcdcae3c3c76656d84ace2/src/mvp/SimplifiedRewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/18fb4163e2334fa840a31f7eb0b1dcc3445e44ef/src/mvp/SimplifiedRewardDistributor.sol)
 
 **Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md), ReentrancyGuardUpgradeable
 
@@ -25,10 +25,10 @@ map of builders reward receiver
 mapping(address builder => address payable rewardReceiver) public builderRewardReceiver;
 ```
 
-### whitelistedBuilders
+### \_whitelistedBuilders
 
 ```solidity
-EnumerableSet.AddressSet internal whitelistedBuilders;
+EnumerableSet.AddressSet internal _whitelistedBuilders;
 ```
 
 ### \_\_gap

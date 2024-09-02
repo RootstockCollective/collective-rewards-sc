@@ -1,19 +1,11 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/f9f3df1fb45c6f4c86dcdcae3c3c76656d84ace2/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/18fb4163e2334fa840a31f7eb0b1dcc3445e44ef/src/gauge/Gauge.sol)
 
 For each project proposal a Gauge contract will be deployed. It receives all the rewards obtained for that project and
 allows the builder and voters to claim them.
 
 ## State Variables
-
-### builder
-
-builder address
-
-```solidity
-address public immutable builder;
-```
 
 ### rewardToken
 
@@ -28,7 +20,7 @@ IERC20 public immutable rewardToken;
 SponsorsManager contract address
 
 ```solidity
-SponsorsManager public immutable sponsorsManager;
+address public immutable sponsorsManager;
 ```
 
 ### totalAllocation
@@ -87,6 +79,14 @@ amount of unclaimed token reward earned for the builder
 uint256 public builderRewards;
 ```
 
+### rewardShares
+
+epoch rewards shares, optimistically tracking the time weighted votes allocations for this gauge
+
+```solidity
+uint256 public rewardShares;
+```
+
 ### allocationOf
 
 amount of stakingToken allocated by a sponsor
@@ -124,14 +124,13 @@ modifier onlySponsorsManager();
 constructor
 
 ```solidity
-constructor(address builder_, address rewardToken_, address sponsorsManager_);
+constructor(address rewardToken_, address sponsorsManager_);
 ```
 
 **Parameters**
 
 | Name               | Type      | Description                                         |
 | ------------------ | --------- | --------------------------------------------------- |
-| `builder_`         | `address` | address of the builder                              |
 | `rewardToken_`     | `address` | address of the token rewarded to builder and voters |
 | `sponsorsManager_` | `address` | address of the SponsorsManager contract             |
 
@@ -196,7 +195,7 @@ _reverts if is not called by the builder or reward receiver_
 _rewards are transferred to the builder reward receiver_
 
 ```solidity
-function claimBuilderReward(address builder_) external;
+function claimBuilderReward() external;
 ```
 
 ### earned
@@ -226,7 +225,7 @@ function allocate(
 )
     external
     onlySponsorsManager
-    returns (uint256 allocationDeviation, bool isNegative);
+    returns (uint256 allocationDeviation_, bool isNegative_);
 ```
 
 **Parameters**
@@ -238,10 +237,10 @@ function allocate(
 
 **Returns**
 
-| Name                  | Type      | Description                                           |
-| --------------------- | --------- | ----------------------------------------------------- |
-| `allocationDeviation` | `uint256` | deviation between current allocation and the new one  |
-| `isNegative`          | `bool`    | true if new allocation is lesser than the current one |
+| Name                   | Type      | Description                                           |
+| ---------------------- | --------- | ----------------------------------------------------- |
+| `allocationDeviation_` | `uint256` | deviation between current allocation and the new one  |
+| `isNegative_`          | `bool`    | true if new allocation is lesser than the current one |
 
 ### notifyRewardAmount
 
@@ -250,7 +249,13 @@ called on the reward distribution. Transfers reward tokens from sponsorManger to
 _reverts if caller si not the sponsorsManager contract_
 
 ```solidity
-function notifyRewardAmount(uint256 builderAmount_, uint256 sponsorsAmount_) external onlySponsorsManager;
+function notifyRewardAmount(
+    uint256 builderAmount_,
+    uint256 sponsorsAmount_
+)
+    external
+    onlySponsorsManager
+    returns (uint256 newGaugeRewardShares_);
 ```
 
 **Parameters**
@@ -259,6 +264,12 @@ function notifyRewardAmount(uint256 builderAmount_, uint256 sponsorsAmount_) ext
 | ----------------- | --------- | ---------------------------------- |
 | `builderAmount_`  | `uint256` | amount of rewards for the builder  |
 | `sponsorsAmount_` | `uint256` | amount of rewards for the sponsors |
+
+**Returns**
+
+| Name                    | Type      | Description                                            |
+| ----------------------- | --------- | ------------------------------------------------------ |
+| `newGaugeRewardShares_` | `uint256` | new gauge rewardShares, updated after the distribution |
 
 ### \_updateRewards
 
