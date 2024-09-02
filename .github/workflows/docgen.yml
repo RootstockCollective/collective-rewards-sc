@@ -8,6 +8,11 @@ on:
 jobs:
   docgen:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
     if: github.event.review.state == 'approved'
     steps:
       - name: "Check out the repo"
