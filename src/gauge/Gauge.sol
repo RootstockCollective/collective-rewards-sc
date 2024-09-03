@@ -94,7 +94,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @param sponsorsManager_ address of the SponsorsManager contract
      */
     function initialize(address rewardToken_, address sponsorsManager_) external initializer {
-        __ReentrancyGuard_init(); 
+        __ReentrancyGuard_init();
         rewardToken = rewardToken_;
         sponsorsManager = sponsorsManager_;
     }

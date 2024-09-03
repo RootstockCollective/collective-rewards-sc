@@ -1,8 +1,6 @@
 # Governed
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b66d083f8b28b436755b9a1020cbe3fd028cd794/src/governance/Governed.sol)
-
-**Inherits:** UUPSUpgradeable
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b406be6ca4833e84c42a4ad2c8a2981fb1efc2d5/src/governance/Governed.sol)
 
 Base contract to be inherited by governed contracts
 
@@ -11,20 +9,12 @@ contract is to define some useful modifiers and functions to be used on the gove
 
 ## State Variables
 
-### governor
-
-governor contract address
-
-```solidity
-address public governor;
-```
-
 ### changeExecutor
 
 contract that can articulate more complex changes executed from the governor
 
 ```solidity
-ChangeExecutor public changeExecutor;
+IChangeExecutor public changeExecutor;
 ```
 
 ### \_\_gap
@@ -48,19 +38,21 @@ _You should use this modifier in any function that should be called through the 
 modifier onlyGovernorOrAuthorizedChanger();
 ```
 
-### \_\_Governed_init
+### onlyGovernor
 
-contract initializer
+Reverts if caller is not the governor
 
 ```solidity
-function __Governed_init(address changeExecutor_) internal onlyInitializing;
+modifier onlyGovernor();
 ```
 
-**Parameters**
+### governor
 
-| Name              | Type      | Description                     |
-| ----------------- | --------- | ------------------------------- |
-| `changeExecutor_` | `address` | ChangeExecutor contract address |
+maintains Governed interface. Returns governed address
+
+```solidity
+function governor() public view virtual returns (address);
+```
 
 ### \_checkIfGovernorOrAuthorizedChanger
 
@@ -70,25 +62,16 @@ Checks if the msg sender is the governor or an authorized changer, reverts other
 function _checkIfGovernorOrAuthorizedChanger() internal view;
 ```
 
-### \_authorizeUpgrade
-
-_checks that the changer that will do the upgrade is currently authorized by governance to makes changes within the
-system_
-
-```solidity
-function _authorizeUpgrade(address newImplementation_) internal override onlyGovernorOrAuthorizedChanger;
-```
-
-**Parameters**
-
-| Name                 | Type      | Description                         |
-| -------------------- | --------- | ----------------------------------- |
-| `newImplementation_` | `address` | new implementation contract address |
-
 ## Errors
 
 ### NotGovernorOrAuthorizedChanger
 
 ```solidity
 error NotGovernorOrAuthorizedChanger();
+```
+
+### NotGovernor
+
+```solidity
+error NotGovernor();
 ```

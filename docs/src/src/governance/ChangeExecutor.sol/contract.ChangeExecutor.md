@@ -1,8 +1,8 @@
 # ChangeExecutor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b66d083f8b28b436755b9a1020cbe3fd028cd794/src/governance/ChangeExecutor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b406be6ca4833e84c42a4ad2c8a2981fb1efc2d5/src/governance/ChangeExecutor.sol)
 
-**Inherits:** UUPSUpgradeable, ReentrancyGuardUpgradeable
+**Inherits:** ReentrancyGuardUpgradeable, UUPSUpgradeable, [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
 This contract is used to handle changes on the project when multiple function calls or validation are required. All the
 governed protected function can be executed when are called through this contract but only can be performed by the
@@ -10,12 +10,12 @@ Governor.
 
 ## State Variables
 
-### governor
+### \_governor
 
 governor address
 
 ```solidity
-address public governor;
+address internal _governor;
 ```
 
 ### \_currentChangeContract
@@ -37,12 +37,6 @@ uint256[50] private __gap;
 
 ## Functions
 
-### onlyGovernor
-
-```solidity
-modifier onlyGovernor();
-```
-
 ### constructor
 
 ```solidity
@@ -62,6 +56,14 @@ function initialize(address governor_) external initializer;
 | Name        | Type      | Description               |
 | ----------- | --------- | ------------------------- |
 | `governor_` | `address` | governor contract address |
+
+### governor
+
+maintains Governed interface. Returns governed address
+
+```solidity
+function governor() public view override returns (address);
+```
 
 ### executeChange
 
@@ -158,11 +160,3 @@ function _authorizeUpgrade(address newImplementation_) internal override onlyGov
 | Name                 | Type      | Description                         |
 | -------------------- | --------- | ----------------------------------- |
 | `newImplementation_` | `address` | new implementation contract address |
-
-## Errors
-
-### NotGovernor
-
-```solidity
-error NotGovernor();
-```

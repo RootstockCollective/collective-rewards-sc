@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b66d083f8b28b436755b9a1020cbe3fd028cd794/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b406be6ca4833e84c42a4ad2c8a2981fb1efc2d5/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -46,12 +46,20 @@ on a paginated distribution we need to temporarily store the totalPotentialRewar
 uint256 public tempTotalPotentialReward;
 ```
 
-### rewards
+### rewardsERC20
 
-rewards to distribute [PREC]
+ERC20 rewards to distribute [N]
 
 ```solidity
-uint256 public rewards;
+uint256 public rewardsERC20;
+```
+
+### rewardsCoinbase
+
+Coinbase rewards to distribute [N]
+
+```solidity
+uint256 public rewardsCoinbase;
 ```
 
 ### indexLastGaugeDistributed
@@ -273,11 +281,12 @@ internal function used to distribute reward tokens to a gauge
 ```solidity
 function _distribute(
     Gauge gauge_,
-    uint256 rewards_,
+    uint256 rewardsERC20_,
+    uint256 rewardsCoinbase_,
     uint256 totalPotentialReward_
 )
     internal
-    returns (uint256 newGaugeRewardShares_);
+    returns (uint256);
 ```
 
 **Parameters**
@@ -285,14 +294,15 @@ function _distribute(
 | Name                    | Type      | Description                        |
 | ----------------------- | --------- | ---------------------------------- |
 | `gauge_`                | `Gauge`   | address of the gauge to distribute |
-| `rewards_`              | `uint256` | cached rewards                     |
+| `rewardsERC20_`         | `uint256` | ERC20 rewards to distribute        |
+| `rewardsCoinbase_`      | `uint256` | Coinbase rewards to distribute     |
 | `totalPotentialReward_` | `uint256` | cached total potential reward      |
 
 **Returns**
 
-| Name                    | Type      | Description                                            |
-| ----------------------- | --------- | ------------------------------------------------------ |
-| `newGaugeRewardShares_` | `uint256` | new gauge rewardShares, updated after the distribution |
+| Name     | Type      | Description                                                                   |
+| -------- | --------- | ----------------------------------------------------------------------------- |
+| `<none>` | `uint256` | newGaugeRewardShares\_ new gauge rewardShares, updated after the distribution |
 
 ## Events
 

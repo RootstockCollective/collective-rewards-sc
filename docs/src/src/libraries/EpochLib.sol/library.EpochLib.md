@@ -1,6 +1,6 @@
 # EpochLib
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b66d083f8b28b436755b9a1020cbe3fd028cd794/src/libraries/EpochLib.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b406be6ca4833e84c42a4ad2c8a2981fb1efc2d5/src/libraries/EpochLib.sol)
 
 ## State Variables
 

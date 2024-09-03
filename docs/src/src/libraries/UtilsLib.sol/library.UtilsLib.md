@@ -1,6 +1,6 @@
 # UtilsLib
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b66d083f8b28b436755b9a1020cbe3fd028cd794/src/libraries/UtilsLib.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b406be6ca4833e84c42a4ad2c8a2981fb1efc2d5/src/libraries/UtilsLib.sol)
 
 ## State Variables
 
@@ -8,6 +8,12 @@
 
 ```solidity
 uint256 internal constant _PRECISION = 10 ** 18;
+```
+
+### \_COINBASE_ADDRESS
+
+```solidity
+address internal constant _COINBASE_ADDRESS = address(uint160(uint256(keccak256("COINBASE_ADDRESS"))));
 ```
 
 ## Functions

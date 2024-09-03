@@ -1,15 +1,24 @@
 # GaugeFactory
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b66d083f8b28b436755b9a1020cbe3fd028cd794/src/gauge/GaugeFactory.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b406be6ca4833e84c42a4ad2c8a2981fb1efc2d5/src/gauge/GaugeFactory.sol)
 
 ## State Variables
+
+### beacon
+
+address of beacon contract who stores gauge implementation address which is where gauge proxies will delegate all
+function calls
+
+```solidity
+address public immutable beacon;
+```
 
 ### rewardToken
 
 address of the token rewarded to builder and voters
 
 ```solidity
-address public rewardToken;
+address public immutable rewardToken;
 ```
 
 ## Functions
@@ -19,13 +28,14 @@ address public rewardToken;
 constructor
 
 ```solidity
-constructor(address rewardToken_);
+constructor(address beacon_, address rewardToken_);
 ```
 
 **Parameters**
 
 | Name           | Type      | Description                                         |
 | -------------- | --------- | --------------------------------------------------- |
+| `beacon_`      | `address` | address of the beacon                               |
 | `rewardToken_` | `address` | address of the token rewarded to builder and voters |
 
 ### createGauge

@@ -1,6 +1,8 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b66d083f8b28b436755b9a1020cbe3fd028cd794/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b406be6ca4833e84c42a4ad2c8a2981fb1efc2d5/src/gauge/Gauge.sol)
+
+**Inherits:** ReentrancyGuardUpgradeable
 
 For each project proposal a Gauge contract will be deployed. It receives all the rewards obtained for that project and
 allows the builder and voters to claim them.
@@ -12,7 +14,7 @@ allows the builder and voters to claim them.
 address of the token rewarded to builder and voters
 
 ```solidity
-address public immutable rewardToken;
+address public rewardToken;
 ```
 
 ### sponsorsManager
@@ -20,7 +22,7 @@ address public immutable rewardToken;
 SponsorsManager contract address
 
 ```solidity
-address public immutable sponsorsManager;
+address public sponsorsManager;
 ```
 
 ### totalAllocation
@@ -37,14 +39,6 @@ timestamp end of current rewards period
 
 ```solidity
 uint256 public periodFinish;
-```
-
-### rewardShares
-
-epoch rewards shares, optimistically tracking the time weighted votes allocations for this gauge
-
-```solidity
-uint256 public rewardShares;
 ```
 
 ### rewardShares
@@ -73,6 +67,15 @@ _address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase a
 mapping(address rewardToken => RewardData rewardData) public rewardData;
 ```
 
+### \_\_gap
+
+_This empty reserved space is put in place to allow future versions to add new variables without shifting down storage
+in the inheritance chain. See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps_
+
+```solidity
+uint256[50] private __gap;
+```
+
 ## Functions
 
 ### onlySponsorsManager
@@ -83,10 +86,16 @@ modifier onlySponsorsManager();
 
 ### constructor
 
-constructor
+```solidity
+constructor();
+```
+
+### initialize
+
+contract initializer
 
 ```solidity
-constructor(address rewardToken_, address sponsorsManager_);
+function initialize(address rewardToken_, address sponsorsManager_) external initializer;
 ```
 
 **Parameters**
@@ -301,7 +310,7 @@ _reverts if is not called by the builder or reward receiver_
 _rewards are transferred to the builder reward receiver_
 
 ```solidity
-function claimBuilderReward() external;
+function claimBuilderReward() public;
 ```
 
 ### claimBuilderReward
@@ -357,13 +366,7 @@ function allocate(
 transfers reward tokens to this contract
 
 ```solidity
-function notifyRewardAmount(
-    uint256 builderAmount_,
-    uint256 sponsorsAmount_
-)
-    external
-    onlySponsorsManager
-    returns (uint256 newGaugeRewardShares_);
+function notifyRewardAmount(address rewardToken_, uint256 builderAmount_, uint256 sponsorsAmount_) external payable;
 ```
 
 **Parameters**
@@ -419,12 +422,6 @@ function _notifyRewardAmount(address rewardToken_, uint256 builderAmount_, uint2
 | `rewardToken_`    | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
 | `builderAmount_`  | `uint256` | amount of rewards for the builder                                                                                   |
 | `sponsorsAmount_` | `uint256` | amount of rewards for the sponsors                                                                                  |
-
-**Returns**
-
-| Name                    | Type      | Description                                            |
-| ----------------------- | --------- | ------------------------------------------------------ |
-| `newGaugeRewardShares_` | `uint256` | new gauge rewardShares, updated after the distribution |
 
 ### \_updateRewards
 
