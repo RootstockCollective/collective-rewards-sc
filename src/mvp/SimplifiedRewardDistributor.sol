@@ -6,7 +6,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import { Governed } from "../governance/Governed.sol";
+import { Upgradeable } from "../governance/Upgradeable.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 
 /**
@@ -14,7 +14,7 @@ import { UtilsLib } from "../libraries/UtilsLib.sol";
  * @notice Simplified version for the MVP.
  *  Accumulates all the rewards and distribute them equally to all the builders for each epoch
  */
-contract SimplifiedRewardDistributor is Governed, ReentrancyGuardUpgradeable {
+contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
     // -----------------------------
     // ---------- Storage ----------
@@ -43,7 +43,7 @@ contract SimplifiedRewardDistributor is Governed, ReentrancyGuardUpgradeable {
      */
     function initialize(address changeExecutor_, address rewardToken_) external initializer {
         __ReentrancyGuard_init();
-        __Governed_init(changeExecutor_);
+        __Upgradeable_init(changeExecutor_);
         rewardToken = IERC20(rewardToken_);
     }
 

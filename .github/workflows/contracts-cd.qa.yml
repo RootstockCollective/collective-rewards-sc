@@ -36,6 +36,7 @@ jobs:
       - name: "Load and export environment variables"
         id: load-env
         run: |
+          cp .env.private.example .env
           echo "$CHAIN_ID" > .chain_id
           source .envrc
           echo "RPC_URL=$RPC_URL" >> $GITHUB_ENV
