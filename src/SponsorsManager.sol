@@ -30,7 +30,7 @@ contract SponsorsManager is BuilderRegistry {
     // ----------- Events ----------
     // -----------------------------
     event NewAllocation(address indexed sponsor_, address indexed gauge_, uint256 allocation_);
-    event NotifyReward(address indexed sender_, uint256 amount_);
+    event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
     event RewardDistributionStarted(address indexed sender_);
     event RewardDistributed(address indexed sender_);
     event RewardDistributionFinished(address indexed sender_);
@@ -55,13 +55,15 @@ contract SponsorsManager is BuilderRegistry {
     /// @notice address of the token used to stake
     IERC20 public stakingToken;
     /// @notice address of the token rewarded to builder and voters
-    IERC20 public rewardToken;
+    address public rewardToken;
     /// @notice total potential reward
     uint256 public totalPotentialReward;
     /// @notice on a paginated distribution we need to temporarily store the totalPotentialReward
     uint256 public tempTotalPotentialReward;
-    /// @notice rewards to distribute [PREC]
-    uint256 public rewards;
+    /// @notice ERC20 rewards to distribute [N]
+    uint256 public rewardsERC20;
+    /// @notice Coinbase rewards to distribute [N]
+    uint256 public rewardsCoinbase;
     /// @notice index of tha last gauge distributed during a distribution period
     uint256 public indexLastGaugeDistributed;
     /// @notice true if distribution period started. Allocations remain blocked until it finishes
@@ -98,7 +100,7 @@ contract SponsorsManager is BuilderRegistry {
         initializer
     {
         __BuilderRegistry_init(changeExecutor_, kycApprover_, gaugeFactory_);
-        rewardToken = IERC20(rewardToken_);
+        rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
     }
 
@@ -149,13 +151,17 @@ contract SponsorsManager is BuilderRegistry {
     /**
      * @notice transfers reward tokens from the sender to be distributed to the gauges
      * @dev reverts if it is called during the distribution period
-     * @param amount_ amount of reward tokens to distribute
      */
-    function notifyRewardAmount(uint256 amount_) external notInDistributionPeriod {
-        rewards += amount_;
-
-        emit NotifyReward(msg.sender, amount_);
-        SafeERC20.safeTransferFrom(rewardToken, msg.sender, address(this), amount_);
+    function notifyRewardAmount(uint256 amount_) external payable notInDistributionPeriod {
+        if (msg.value > 0) {
+            rewardsCoinbase += msg.value;
+            emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
+        }
+        if (amount_ > 0) {
+            rewardsERC20 += amount_;
+            emit NotifyReward(rewardToken, msg.sender, amount_);
+            SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
+        }
     }
 
     /**
@@ -184,11 +190,13 @@ contract SponsorsManager is BuilderRegistry {
         uint256 _lastDistribution = Math.min(_gauges.length, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
 
         // cache variables read in the loop
-        uint256 _rewards = rewards;
+        uint256 _rewardsERC20 = rewardsERC20;
+        uint256 _rewardsCoinbase = rewardsCoinbase;
         uint256 _totalPotentialReward = totalPotentialReward;
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
-            _newTotalPotentialReward += _distribute(_gauges[_gaugeIndex], _rewards, _totalPotentialReward);
+            _newTotalPotentialReward +=
+                _distribute(_gauges[_gaugeIndex], _rewardsERC20, _rewardsCoinbase, _totalPotentialReward);
             _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
         }
         emit RewardDistributed(msg.sender);
@@ -196,8 +204,8 @@ contract SponsorsManager is BuilderRegistry {
         if (_lastDistribution == _gauges.length) {
             emit RewardDistributionFinished(msg.sender);
             indexLastGaugeDistributed = 0;
+            rewardsERC20 = rewardsCoinbase = 0;
             onDistributionPeriod = false;
-            rewards = 0;
             tempTotalPotentialReward = 0;
             totalPotentialReward = _newTotalPotentialReward;
         } else {
@@ -277,25 +285,28 @@ contract SponsorsManager is BuilderRegistry {
     /**
      * @notice internal function used to distribute reward tokens to a gauge
      * @param gauge_ address of the gauge to distribute
-     * @param rewards_ cached rewards
+     * @param rewardsERC20_ ERC20 rewards to distribute
+     * @param rewardsCoinbase_ Coinbase rewards to distribute
      * @param totalPotentialReward_ cached total potential reward
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
     function _distribute(
         Gauge gauge_,
-        uint256 rewards_,
+        uint256 rewardsERC20_,
+        uint256 rewardsCoinbase_,
         uint256 totalPotentialReward_
     )
         internal
-        returns (uint256 newGaugeRewardShares_)
+        returns (uint256)
     {
+        uint256 _rewardShares = gauge_.rewardShares();
         // [N] = [N] * [N] / [N]
-        uint256 _gaugeReward = (gauge_.rewardShares() * rewards_) / totalPotentialReward_;
-        uint256 _sponsorsAmount = UtilsLib._mulPrec(builderKickback[gaugeToBuilder[gauge_]], _gaugeReward);
-        // [N] = [N] - [N]
-        uint256 _builderAmount = _gaugeReward - _sponsorsAmount;
-        rewardToken.approve(address(gauge_), _gaugeReward);
-        return gauge_.notifyRewardAmount(_builderAmount, _sponsorsAmount);
+        uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
+        // [N] = [N] * [N] / [N]
+        uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
+        uint256 _builderKickback = builderKickback[gaugeToBuilder[gauge_]];
+        IERC20(rewardToken).approve(address(gauge_), _amountERC20);
+        return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(_amountERC20, _builderKickback);
     }
 
     /**

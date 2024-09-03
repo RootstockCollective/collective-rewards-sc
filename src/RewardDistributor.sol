@@ -36,6 +36,8 @@ contract RewardDistributor is Upgradeable {
     SponsorsManager public sponsorsManager;
     /// @notice tracks amount of reward tokens distributed per epoch
     mapping(uint256 epochTimestampStart => uint256 amount) public rewardTokenAmountPerEpoch;
+    /// @notice tracks amount of coinbase distributed per epoch
+    mapping(uint256 epochTimestampStart => uint256 amount) public rewardCoinbaseAmountPerEpoch;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -71,22 +73,33 @@ contract RewardDistributor is Upgradeable {
     // -----------------------------
 
     /**
-     * @notice sends reward tokens to sponsorsManager contract to be distributed to the gauges
+     * @notice sends rewards to sponsorsManager contract to be distributed to the gauges
      * @dev reverts if is not called by foundation treasury address
-     *  reverts if reward token balance is insufficient
+     *  reverts if rewards balance is insufficient
+     * @param amountERC20_ amount of ERC20 reward token to send
+     * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function sendRewardToken(uint256 amount_) external onlyFoundationTreasury {
-        _sendRewardToken(amount_);
+    function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) external payable onlyFoundationTreasury {
+        _sendRewards(amountERC20_, amountCoinbase_);
     }
 
     /**
-     * @notice sends reward tokens to sponsorsManager contract and starts the distribution to the gauges
+     * @notice sends rewards to sponsorsManager contract and starts the distribution to the gauges
      * @dev reverts if is not called by foundation treasury address
-     *  reverts if reward token balance is insufficient
+     *  reverts if rewards balance is insufficient
      *  reverts if is not in the distribution window
+     * @param amountERC20_ amount of ERC20 reward token to send
+     * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function sendRewardTokenAndStartDistribution(uint256 amount_) external onlyFoundationTreasury {
-        _sendRewardToken(amount_);
+    function sendRewardsAndStartDistribution(
+        uint256 amountERC20_,
+        uint256 amountCoinbase_
+    )
+        external
+        payable
+        onlyFoundationTreasury
+    {
+        _sendRewards(amountERC20_, amountCoinbase_);
         sponsorsManager.startDistribution();
     }
 
@@ -95,14 +108,22 @@ contract RewardDistributor is Upgradeable {
     // -----------------------------
 
     /**
-     * @notice internal function to send reward tokens to sponsorsManager contract
+     * @notice internal function to send rewards to sponsorsManager contract
+     * @param amountERC20_ amount of ERC20 reward token to send
+     * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function _sendRewardToken(uint256 amount_) internal {
+    function _sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) internal {
         // TODO: review if we need this
-        rewardTokenAmountPerEpoch[EpochLib._epochStart(block.timestamp)] += amount_;
-        rewardToken.approve(address(sponsorsManager), amount_);
-        sponsorsManager.notifyRewardAmount(amount_);
+        rewardTokenAmountPerEpoch[EpochLib._epochStart(block.timestamp)] += amountERC20_;
+        rewardCoinbaseAmountPerEpoch[EpochLib._epochStart(block.timestamp)] += amountCoinbase_;
+        rewardToken.approve(address(sponsorsManager), amountERC20_);
+        sponsorsManager.notifyRewardAmount{ value: amountCoinbase_ }(amountERC20_);
     }
+
+    /**
+     * @notice receives coinbase to distribute for rewards
+     */
+    receive() external payable { }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
