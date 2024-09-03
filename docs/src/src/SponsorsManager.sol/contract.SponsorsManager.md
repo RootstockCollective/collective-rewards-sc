@@ -1,17 +1,17 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/f9f3df1fb45c6f4c86dcdcae3c3c76656d84ace2/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b66d083f8b28b436755b9a1020cbe3fd028cd794/src/SponsorsManager.sol)
 
-**Inherits:** [Governed](/src/governance/Governed.sol/abstract.Governed.md)
+**Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
 Creates gauges, manages sponsors votes and distribute rewards
 
 ## State Variables
 
-### MAX_DISTRIBUTIONS_PER_BATCH
+### \_MAX_DISTRIBUTIONS_PER_BATCH
 
 ```solidity
-uint256 internal constant MAX_DISTRIBUTIONS_PER_BATCH = 20;
+uint256 internal constant _MAX_DISTRIBUTIONS_PER_BATCH = 20;
 ```
 
 ### stakingToken
@@ -30,36 +30,28 @@ address of the token rewarded to builder and voters
 IERC20 public rewardToken;
 ```
 
-### gaugeFactory
+### totalPotentialReward
 
-gauge factory contract address
+total potential reward
 
 ```solidity
-GaugeFactory public gaugeFactory;
+uint256 public totalPotentialReward;
 ```
 
-### builderRegistry
+### tempTotalPotentialReward
 
-builder registry contract address
+on a paginated distribution we need to temporarily store the totalPotentialReward
 
 ```solidity
-BuilderRegistry public builderRegistry;
+uint256 public tempTotalPotentialReward;
 ```
 
-### totalAllocation
+### rewards
 
-total allocation on all the gauges
-
-```solidity
-uint256 public totalAllocation;
-```
-
-### rewardsPerShare
-
-rewards to distribute per sponsor emission [PREC]
+rewards to distribute [PREC]
 
 ```solidity
-uint256 public rewardsPerShare;
+uint256 public rewards;
 ```
 
 ### indexLastGaugeDistributed
@@ -76,22 +68,6 @@ true if distribution period started. Allocations remain blocked until it finishe
 
 ```solidity
 bool public onDistributionPeriod;
-```
-
-### builderToGauge
-
-gauge contract for a builder
-
-```solidity
-mapping(address builder => Gauge gauge) public builderToGauge;
-```
-
-### gauges
-
-array of all the gauges created
-
-```solidity
-Gauge[] public gauges;
 ```
 
 ### sponsorTotalAllocation
@@ -138,10 +114,10 @@ contract initializer
 ```solidity
 function initialize(
     address changeExecutor_,
+    address kycApprover_,
     address rewardToken_,
     address stakingToken_,
-    address gaugeFactory_,
-    address builderRegistry_
+    address gaugeFactory_
 )
     external
     initializer;
@@ -149,33 +125,13 @@ function initialize(
 
 **Parameters**
 
-| Name               | Type      | Description                                         |
-| ------------------ | --------- | --------------------------------------------------- |
-| `changeExecutor_`  | `address` | See Governed doc                                    |
-| `rewardToken_`     | `address` | address of the token rewarded to builder and voters |
-| `stakingToken_`    | `address` | address of the staking token for builder and voters |
-| `gaugeFactory_`    | `address` | address of the GaugeFactory contract                |
-| `builderRegistry_` | `address` | address of the BuilderRegistry contract             |
-
-### createGauge
-
-creates a new gauge for a builder
-
-```solidity
-function createGauge(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge);
-```
-
-**Parameters**
-
-| Name       | Type      | Description                               |
-| ---------- | --------- | ----------------------------------------- |
-| `builder_` | `address` | builder address who can claim the rewards |
-
-**Returns**
-
-| Name    | Type    | Description    |
-| ------- | ------- | -------------- |
-| `gauge` | `Gauge` | gauge contract |
+| Name              | Type      | Description                                         |
+| ----------------- | --------- | --------------------------------------------------- |
+| `changeExecutor_` | `address` | See Governed doc                                    |
+| `kycApprover_`    | `address` | See BuilderRegistry doc                             |
+| `rewardToken_`    | `address` | address of the token rewarded to builder and voters |
+| `stakingToken_`   | `address` | address of the staking token for builder and voters |
+| `gaugeFactory_`   | `address` | address of the GaugeFactory contract                |
 
 ### allocate
 
@@ -271,10 +227,10 @@ function _allocate(
     Gauge gauge_,
     uint256 allocation_,
     uint256 sponsorTotalAllocation_,
-    uint256 totalAllocation_
+    uint256 totalPotentialReward_
 )
     internal
-    returns (uint256 newSponsorTotalAllocation, uint256 newTotalAllocation);
+    returns (uint256 newSponsorTotalAllocation_, uint256 newTotalPotentialReward_);
 ```
 
 **Parameters**
@@ -284,14 +240,14 @@ function _allocate(
 | `gauge_`                  | `Gauge`   | address of the gauge where the votes will be allocated |
 | `allocation_`             | `uint256` | amount of votes to allocate                            |
 | `sponsorTotalAllocation_` | `uint256` | current sponsor total allocation                       |
-| `totalAllocation_`        | `uint256` | current total allocation                               |
+| `totalPotentialReward_`   | `uint256` | current total potential reward                         |
 
 **Returns**
 
-| Name                        | Type      | Description                                       |
-| --------------------------- | --------- | ------------------------------------------------- |
-| `newSponsorTotalAllocation` | `uint256` | sponsor total allocation after new the allocation |
-| `newTotalAllocation`        | `uint256` | total allocation after the new allocation         |
+| Name                         | Type      | Description                                       |
+| ---------------------------- | --------- | ------------------------------------------------- |
+| `newSponsorTotalAllocation_` | `uint256` | sponsor total allocation after new the allocation |
+| `newTotalPotentialReward_`   | `uint256` | total potential reward after the new allocation   |
 
 ### \_updateAllocation
 
@@ -303,7 +259,7 @@ _reverts if sponsor doesn't have enough staking token balance_
 function _updateAllocation(
     address sponsor_,
     uint256 newSponsorTotalAllocation_,
-    uint256 newTotalAllocation_
+    uint256 newTotalPotentialReward_
 )
     internal;
 ```
@@ -314,31 +270,37 @@ function _updateAllocation(
 | ---------------------------- | --------- | ------------------------------------------------- |
 | `sponsor_`                   | `address` | address of the sponsor who allocates              |
 | `newSponsorTotalAllocation_` | `uint256` | sponsor total allocation after new the allocation |
-| `newTotalAllocation_`        | `uint256` | total allocation after the new allocation         |
+| `newTotalPotentialReward_`   | `uint256` | total potential reward after the new allocation   |
 
 ### \_distribute
 
 internal function used to distribute reward tokens to a gauge
 
 ```solidity
-function _distribute(Gauge gauge_, uint256 rewardsPerShare_, BuilderRegistry builderRegistry_) internal;
+function _distribute(
+    Gauge gauge_,
+    uint256 rewards_,
+    uint256 totalPotentialReward_
+)
+    internal
+    returns (uint256 newGaugeRewardShares_);
 ```
 
 **Parameters**
 
-| Name               | Type              | Description                        |
-| ------------------ | ----------------- | ---------------------------------- |
-| `gauge_`           | `Gauge`           | address of the gauge to distribute |
-| `rewardsPerShare_` | `uint256`         | cached reward per share            |
-| `builderRegistry_` | `BuilderRegistry` | cached builder registry            |
+| Name                    | Type      | Description                        |
+| ----------------------- | --------- | ---------------------------------- |
+| `gauge_`                | `Gauge`   | address of the gauge to distribute |
+| `rewards_`              | `uint256` | cached rewards                     |
+| `totalPotentialReward_` | `uint256` | cached total potential reward      |
+
+**Returns**
+
+| Name                    | Type      | Description                                            |
+| ----------------------- | --------- | ------------------------------------------------------ |
+| `newGaugeRewardShares_` | `uint256` | new gauge rewardShares, updated after the distribution |
 
 ## Events
-
-### GaugeCreated
-
-```solidity
-event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
-```
 
 ### NewAllocation
 
@@ -352,10 +314,22 @@ event NewAllocation(address indexed sponsor_, address indexed gauge_, uint256 al
 event NotifyReward(address indexed sender_, uint256 amount_);
 ```
 
-### DistributeReward
+### RewardDistributionStarted
 
 ```solidity
-event DistributeReward(address indexed sender_, address indexed gauge_, uint256 amount_);
+event RewardDistributionStarted(address indexed sender_);
+```
+
+### RewardDistributed
+
+```solidity
+event RewardDistributed(address indexed sender_);
+```
+
+### RewardDistributionFinished
+
+```solidity
+event RewardDistributionFinished(address indexed sender_);
 ```
 
 ## Errors
@@ -364,18 +338,6 @@ event DistributeReward(address indexed sender_, address indexed gauge_, uint256 
 
 ```solidity
 error UnequalLengths();
-```
-
-### GaugeExists
-
-```solidity
-error GaugeExists();
-```
-
-### GaugeDoesNotExist
-
-```solidity
-error GaugeDoesNotExist(address builder_);
 ```
 
 ### NotEnoughStaking

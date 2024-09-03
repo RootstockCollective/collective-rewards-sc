@@ -1,23 +1,23 @@
 # EpochLib
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/f9f3df1fb45c6f4c86dcdcae3c3c76656d84ace2/src/libraries/EpochLib.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b66d083f8b28b436755b9a1020cbe3fd028cd794/src/libraries/EpochLib.sol)
 
 ## State Variables
 
-### WEEK
+### \_WEEK
 
 ```solidity
-uint256 internal constant WEEK = 7 days;
+uint256 internal constant _WEEK = 7 days;
 ```
 
 ## Functions
 
-### epochStart
+### \_epochStart
 
 gets when an epoch starts based on given `timestamp_`
 
 ```solidity
-function epochStart(uint256 timestamp_) internal pure returns (uint256);
+function _epochStart(uint256 timestamp_) internal pure returns (uint256);
 ```
 
 **Parameters**
@@ -32,12 +32,12 @@ function epochStart(uint256 timestamp_) internal pure returns (uint256);
 | -------- | --------- | ------------------------------------------ |
 | `<none>` | `uint256` | epochStart timestamp when the epoch starts |
 
-### epochNext
+### \_epochNext
 
 gets when an epoch ends or the next one starts based on given `timestamp_`
 
 ```solidity
-function epochNext(uint256 timestamp_) internal pure returns (uint256);
+function _epochNext(uint256 timestamp_) internal pure returns (uint256);
 ```
 
 **Parameters**
@@ -52,12 +52,12 @@ function epochNext(uint256 timestamp_) internal pure returns (uint256);
 | -------- | --------- | ---------------------------------------------------------- |
 | `<none>` | `uint256` | epochNext timestamp when the epoch ends or the next starts |
 
-### endDistributionWindow
+### \_endDistributionWindow
 
 gets when an epoch distribution ends based on given `timestamp_`
 
 ```solidity
-function endDistributionWindow(uint256 timestamp_) internal pure returns (uint256);
+function _endDistributionWindow(uint256 timestamp_) internal pure returns (uint256);
 ```
 
 **Parameters**

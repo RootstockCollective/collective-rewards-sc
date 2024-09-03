@@ -67,6 +67,6 @@
     "test:coverage": "forge coverage",
     "test:coverage:report": "sh ./coverage.sh",
     "prepare": "husky",
-    "docgen": "forge doc"
+    "docgen": "forge doc && bun run prettier:write"
   }
 }

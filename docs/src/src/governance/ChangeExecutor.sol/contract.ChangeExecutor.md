@@ -1,6 +1,6 @@
 # ChangeExecutor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/f9f3df1fb45c6f4c86dcdcae3c3c76656d84ace2/src/governance/ChangeExecutor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b66d083f8b28b436755b9a1020cbe3fd028cd794/src/governance/ChangeExecutor.sol)
 
 **Inherits:** UUPSUpgradeable, ReentrancyGuardUpgradeable
 
@@ -18,12 +18,12 @@ governor address
 address public governor;
 ```
 
-### currentChangeContract
+### \_currentChangeContract
 
 changer contract address to be executed
 
 ```solidity
-address private currentChangeContract;
+address private _currentChangeContract;
 ```
 
 ### \_\_gap

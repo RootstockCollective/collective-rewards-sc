@@ -1,21 +1,21 @@
 # UtilsLib
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/f9f3df1fb45c6f4c86dcdcae3c3c76656d84ace2/src/libraries/UtilsLib.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b66d083f8b28b436755b9a1020cbe3fd028cd794/src/libraries/UtilsLib.sol)
 
 ## State Variables
 
-### PRECISION
+### \_PRECISION
 
 ```solidity
-uint256 internal constant PRECISION = 10 ** 18;
+uint256 internal constant _PRECISION = 10 ** 18;
 ```
 
 ## Functions
 
-### unchecked_inc
+### \_uncheckedInc
 
 ```solidity
-function unchecked_inc(uint256 i_) internal pure returns (uint256);
+function _uncheckedInc(uint256 i_) internal pure returns (uint256);
 ```
 
 ### \_divPrec

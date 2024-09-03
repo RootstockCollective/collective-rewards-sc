@@ -1,0 +1,48 @@
+name: Docgen
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  docgen:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    if: github.event.review.state == 'approved'
+    steps:
+      - name: "Check out the repo"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Install Foundry"
+        uses: "foundry-rs/foundry-toolchain@v1"
+        with:
+          version: "nightly-f625d0fa7c51e65b4bf1e8f7931cd1c6e2e285e9"
+
+      - name: "Install Bun"
+        uses: "oven-sh/setup-bun@v1"
+
+      - name: "Install the Node.js dependencies"
+        run: "bun install"
+
+      - name: "Docgen"
+        run: "bun run docgen"
+
+      - name: "prettier"
+        run: "bun run prettier:write"
+
+      - name: "Configure Git"
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: "Commit changes"
+        run: |
+          git add .
+          git commit -m "docs: automated docgen by GitHub Action" || echo "No changes to commit"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
