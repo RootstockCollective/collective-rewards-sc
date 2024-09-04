@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b406be6ca4833e84c42a4ad2c8a2981fb1efc2d5/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/ec30259df8f8351920ffc4dcdd060e5148bf247b/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -68,6 +68,14 @@ index of tha last gauge distributed during a distribution period
 
 ```solidity
 uint256 public indexLastGaugeDistributed;
+```
+
+### periodFinish
+
+timestamp end of current rewards period
+
+```solidity
+uint256 public periodFinish;
 ```
 
 ### onDistributionPeriod

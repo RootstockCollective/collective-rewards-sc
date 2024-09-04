@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/b406be6ca4833e84c42a4ad2c8a2981fb1efc2d5/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/ec30259df8f8351920ffc4dcdd060e5148bf247b/src/gauge/Gauge.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable
 
@@ -22,7 +22,7 @@ address public rewardToken;
 SponsorsManager contract address
 
 ```solidity
-address public sponsorsManager;
+ISponsorsManager public sponsorsManager;
 ```
 
 ### totalAllocation
@@ -31,14 +31,6 @@ total amount of stakingToken allocated for rewards
 
 ```solidity
 uint256 public totalAllocation;
-```
-
-### periodFinish
-
-timestamp end of current rewards period
-
-```solidity
-uint256 public periodFinish;
 ```
 
 ### rewardShares
