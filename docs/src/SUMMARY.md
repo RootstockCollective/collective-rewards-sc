@@ -17,6 +17,7 @@
 - [❱ interfaces](src/interfaces/README.md)
   - [IChangeContract](src/interfaces/IChangeContract.sol/interface.IChangeContract.md)
   - [IChangeExecutor](src/interfaces/IChangeExecutor.sol/interface.IChangeExecutor.md)
+  - [ISponsorsManager](src/interfaces/ISponsorsManager.sol/interface.ISponsorsManager.md)
 - [❱ libraries](src/libraries/README.md)
   - [EpochLib](src/libraries/EpochLib.sol/library.EpochLib.md)
   - [UtilsLib](src/libraries/UtilsLib.sol/library.UtilsLib.md)
