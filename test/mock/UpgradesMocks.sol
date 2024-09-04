@@ -47,7 +47,7 @@ contract RewardDistributorUpgradeMock is RewardDistributor, UpgradeableMock {
  */
 contract GaugeUpgradeMock is Gauge, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
-        return newVariable + uint256(uint160(sponsorsManager));
+        return newVariable + uint256(uint160(address(sponsorsManager)));
     }
 }
 
