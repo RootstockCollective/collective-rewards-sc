@@ -66,6 +66,8 @@ contract SponsorsManager is BuilderRegistry {
     uint256 public rewardsCoinbase;
     /// @notice index of tha last gauge distributed during a distribution period
     uint256 public indexLastGaugeDistributed;
+    /// @notice timestamp end of current rewards period
+    uint256 public periodFinish;
     /// @notice true if distribution period started. Allocations remain blocked until it finishes
     bool public onDistributionPeriod;
 
@@ -208,6 +210,7 @@ contract SponsorsManager is BuilderRegistry {
             onDistributionPeriod = false;
             tempTotalPotentialReward = 0;
             totalPotentialReward = _newTotalPotentialReward;
+            periodFinish = EpochLib._epochNext(block.timestamp);
         } else {
             // Define new reference to batch beginning
             indexLastGaugeDistributed = _gaugeIndex;

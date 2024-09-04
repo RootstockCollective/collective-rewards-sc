@@ -8,7 +8,7 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EpochLib } from "../libraries/EpochLib.sol";
-import { BuilderRegistry } from "../BuilderRegistry.sol";
+import { ISponsorsManager } from "../interfaces/ISponsorsManager.sol";
 
 /**
  * @title Gauge
@@ -35,7 +35,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlySponsorsManager() {
-        if (msg.sender != sponsorsManager) revert NotSponsorsManager();
+        if (msg.sender != address(sponsorsManager)) revert NotSponsorsManager();
         _;
     }
 
@@ -66,11 +66,9 @@ contract Gauge is ReentrancyGuardUpgradeable {
     /// @notice address of the token rewarded to builder and voters
     address public rewardToken;
     /// @notice SponsorsManager contract address
-    address public sponsorsManager;
+    ISponsorsManager public sponsorsManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
-    /// @notice timestamp end of current rewards period
-    uint256 public periodFinish;
     /// @notice epoch rewards shares, optimistically tracking the time weighted votes allocations for this gauge
     uint256 public rewardShares;
     /// @notice amount of stakingToken allocated by a sponsor
@@ -96,7 +94,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     function initialize(address rewardToken_, address sponsorsManager_) external initializer {
         __ReentrancyGuard_init();
         rewardToken = rewardToken_;
-        sponsorsManager = sponsorsManager_;
+        sponsorsManager = ISponsorsManager(sponsorsManager_);
     }
 
     // -----------------------------
@@ -172,7 +170,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @return lastTimeRewardApplicable minimum between current timestamp or periodFinish
      */
     function lastTimeRewardApplicable() public view returns (uint256) {
-        return Math.min(block.timestamp, periodFinish);
+        return Math.min(block.timestamp, sponsorsManager.periodFinish());
     }
 
     /**
@@ -203,10 +201,10 @@ contract Gauge is ReentrancyGuardUpgradeable {
      */
     function left(address rewardToken_) external view returns (uint256) {
         RewardData storage _rewardData = rewardData[rewardToken_];
-
-        if (block.timestamp >= periodFinish) return 0;
+        uint256 _periodFinish = sponsorsManager.periodFinish();
+        if (block.timestamp >= _periodFinish) return 0;
         // [N] = ([N] - [N]) * [PREC] / [PREC]
-        return UtilsLib._mulPrec(periodFinish - block.timestamp, _rewardData.rewardRate);
+        return UtilsLib._mulPrec(_periodFinish - block.timestamp, _rewardData.rewardRate);
     }
 
     /**
@@ -276,8 +274,8 @@ contract Gauge is ReentrancyGuardUpgradeable {
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
     function claimBuilderReward(address rewardToken_) public {
-        address _builder = BuilderRegistry(sponsorsManager).gaugeToBuilder(Gauge(address(this)));
-        address _rewardReceiver = BuilderRegistry(sponsorsManager).builderRewardReceiver(_builder);
+        address _builder = sponsorsManager.gaugeToBuilder(address(this));
+        address _rewardReceiver = sponsorsManager.builderRewardReceiver(_builder);
         if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();
 
         RewardData storage _rewardData = rewardData[rewardToken_];
@@ -400,32 +398,24 @@ contract Gauge is ReentrancyGuardUpgradeable {
      */
     function _notifyRewardAmount(address rewardToken_, uint256 builderAmount_, uint256 sponsorsAmount_) internal {
         RewardData storage _rewardData = rewardData[rewardToken_];
-        // update rewardPerToken storage
-        _rewardData.rewardPerTokenStored = rewardPerToken(rewardToken_);
+        // cache storage variables used multiple times
+        uint256 _rewardRate = _rewardData.rewardRate;
         uint256 _timeUntilNext = EpochLib._epochNext(block.timestamp) - block.timestamp;
         uint256 _leftover = 0;
-        // cache storage variables used multiple times
-        uint256 _periodFinish = periodFinish;
-        uint256 _rewardRate = _rewardData.rewardRate;
 
         // if period finished there is not remaining reward
-        if (block.timestamp < _periodFinish) {
+        if (block.timestamp < sponsorsManager.periodFinish()) {
             // [PREC] = [N] * [PREC]
-            _leftover = (_periodFinish - block.timestamp) * _rewardRate;
+            _leftover = (_timeUntilNext) * _rewardRate;
         }
 
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
         _rewardRate = (sponsorsAmount_ * UtilsLib._PRECISION + _rewardData.rewardMissing + _leftover) / _timeUntilNext;
 
         _rewardData.builderRewards += builderAmount_;
-
+        _rewardData.rewardPerTokenStored = rewardPerToken(rewardToken_);
         _rewardData.lastUpdateTime = block.timestamp;
-        _periodFinish = block.timestamp + _timeUntilNext;
-
         _rewardData.rewardMissing = 0;
-
-        // update cached variables on storage
-        periodFinish = _periodFinish;
         _rewardData.rewardRate = _rewardRate;
 
         emit NotifyReward(rewardToken_, builderAmount_, sponsorsAmount_);
