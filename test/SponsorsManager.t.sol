@@ -369,7 +369,7 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: alice and bob allocates to 2 gauges and recieve coinbase rewards
+     * SCENARIO: alice and bob allocates to 2 gauges and receive coinbase rewards
      */
     function test_DistributeCoinbase() public {
         // GIVEN a SponsorManager contract
@@ -386,7 +386,7 @@ contract SponsorsManagerTest is BaseTest {
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         vm.stopPrank();
 
-        //  AND 100 ether rewarToken and 50 ether coinbase are added
+        //  AND 100 ether rewardToken and 50 ether coinbase are added
         sponsorsManager.notifyRewardAmount{ value: 50 ether }(100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
