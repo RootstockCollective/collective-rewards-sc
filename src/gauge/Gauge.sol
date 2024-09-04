@@ -307,8 +307,8 @@ contract Gauge is ReentrancyGuardUpgradeable {
         // if sponsors quit before epoch finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
-            _upadateRewardMissing(rewardToken);
-            _upadateRewardMissing(UtilsLib._COINBASE_ADDRESS);
+            _updateRewardMissing(rewardToken);
+            _updateRewardMissing(UtilsLib._COINBASE_ADDRESS);
         }
 
         _updateRewards(rewardToken, sponsor_);
@@ -441,7 +441,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function _upadateRewardMissing(address rewardToken_) internal {
+    function _updateRewardMissing(address rewardToken_) internal {
         RewardData storage _rewardData = rewardData[rewardToken_];
         // [PREC] = [PREC] + ([N] - [N]) * [PREC]
         _rewardData.rewardMissing +=
