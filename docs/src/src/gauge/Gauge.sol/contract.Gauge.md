@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/ec30259df8f8351920ffc4dcdd060e5148bf247b/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/65787984373194e94a67c67ddefd555e11be2eaa/src/gauge/Gauge.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable
 
@@ -430,12 +430,12 @@ function _updateRewards(address rewardToken_, address sponsor_) internal;
 | `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
 | `sponsor_`     | `address` | address of the sponsors                                                                                             |
 
-### \_upadateRewardMissing
+### \_updateRewardMissing
 
 update reward missing variable
 
 ```solidity
-function _upadateRewardMissing(address rewardToken_) internal;
+function _updateRewardMissing(address rewardToken_) internal;
 ```
 
 **Parameters**

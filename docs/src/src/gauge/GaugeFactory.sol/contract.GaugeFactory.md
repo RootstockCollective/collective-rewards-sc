@@ -1,6 +1,6 @@
 # GaugeFactory
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/ec30259df8f8351920ffc4dcdd060e5148bf247b/src/gauge/GaugeFactory.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/65787984373194e94a67c67ddefd555e11be2eaa/src/gauge/GaugeFactory.sol)
 
 ## State Variables
 

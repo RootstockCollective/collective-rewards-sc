@@ -201,10 +201,8 @@ contract Gauge is ReentrancyGuardUpgradeable {
      */
     function left(address rewardToken_) external view returns (uint256) {
         RewardData storage _rewardData = rewardData[rewardToken_];
-        uint256 _periodFinish = sponsorsManager.periodFinish();
-        if (block.timestamp >= _periodFinish) return 0;
         // [N] = ([N] - [N]) * [PREC] / [PREC]
-        return UtilsLib._mulPrec(_periodFinish - block.timestamp, _rewardData.rewardRate);
+        return UtilsLib._mulPrec(sponsorsManager.periodFinish() - block.timestamp, _rewardData.rewardRate);
     }
 
     /**

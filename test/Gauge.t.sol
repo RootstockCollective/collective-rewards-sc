@@ -459,7 +459,6 @@ contract GaugeTest is BaseTest {
 
     /**
      * SCENARIO: alice and bob claim his rewards at the end of the epoch receiving the total amount of rewards.
-     *  If they claim again without a new reward distribution they don't receive rewardTokens again.
      */
     function test_ClaimSponsorRewards() public {
         // GIVEN a SponsorsManager contract
@@ -492,15 +491,6 @@ contract GaugeTest is BaseTest {
         gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
-
-        // AND another epoch finish without a new distribution
-        _skipAndStartNewEpoch();
-
-        // WHEN alice claims rewards again
-        vm.startPrank(alice);
-        gauge.claimSponsorReward(alice);
-        // THEN alice rewardToken balance didn't change
-        assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
     }
 
     /**
@@ -902,6 +892,73 @@ contract GaugeTest is BaseTest {
         gauge.claimSponsorReward(UtilsLib._COINBASE_ADDRESS, bob);
         // THEN bob coinbase balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(bob.balance, 83_333_333_333_333_333_330);
+    }
+
+    /**
+     * SCENARIO: alice and bob claim his rewards at the end of the epoch receiving the total amount of rewards.
+     *  alice and bob quit at the end of the epoch, the gauge does not receive any rewards.
+     *  alice allocates in the middle of the epoch with no rewards.
+     *  If they claim again without a new reward distribution they don't receive rewardTokens again and rewardRate
+     * should be 0.
+     */
+    function test_ClaimSponsorRewardsAfterNoRewards() public {
+        // GIVEN a SponsorsManager contract
+        vm.startPrank(address(sponsorsManager));
+        // AND 1 ether allocated to alice and 5 ether to bob
+        gauge.allocate(alice, 1 ether);
+        gauge.allocate(bob, 5 ether);
+
+        // AND 100 ether distributed for sponsors
+        gauge.notifyRewardAmountAndUpdateShares(100 ether, 1 ether);
+        // simulates a distribution setting the periodFinish
+        _setPeriodFinish();
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // time until next epoch is 518400
+        // rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
+        // THEN rewardPerToken is 16.666666666666666666 = 518400 * 0.000192901234567901 / 6 ether
+        assertEq(gauge.rewardPerToken(address(rewardToken)), 16_666_666_666_666_666_666);
+
+        // WHEN alice claims rewards
+        vm.startPrank(alice);
+        gauge.claimSponsorReward(alice);
+        // THEN alice rewardToken balance is 16.666666666666666666 = 1 * 16.666666666666666666
+        assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
+
+        // WHEN bob claims rewards
+        vm.startPrank(bob);
+        gauge.claimSponsorReward(bob);
+        // THEN bob rewardToken balance is 83.333333333333333330 = 5 * 16.666666666666666666
+        assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
+
+        // AND alice and bob deallocates all
+        vm.startPrank(address(sponsorsManager));
+        gauge.allocate(alice, 0 ether);
+        gauge.allocate(bob, 0 ether);
+
+        // AND 0 ether distributed for sponsors
+        gauge.notifyRewardAmountAndUpdateShares(0, 1 ether);
+        // simulates a distribution setting the periodFinish
+        _setPeriodFinish();
+        // AND half epoch pass
+        _skipRemainingEpochFraction(2);
+
+        // AND 1 ether allocated to alice
+        vm.startPrank(address(sponsorsManager));
+        gauge.allocate(alice, 1 ether);
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // WHEN alice claims rewards
+        vm.startPrank(alice);
+        gauge.claimSponsorReward(alice);
+        // THEN alice rewardToken balance did not change
+        assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
+        // THEN rewardRate is 0
+        assertEq(gauge.rewardRate(address(rewardToken)), 0);
     }
 
     /**
