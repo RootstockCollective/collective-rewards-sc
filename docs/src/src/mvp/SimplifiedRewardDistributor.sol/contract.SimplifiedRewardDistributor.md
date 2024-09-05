@@ -1,6 +1,6 @@
 # SimplifiedRewardDistributor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/ec30259df8f8351920ffc4dcdd060e5148bf247b/src/mvp/SimplifiedRewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/3e514139c84a54a595e7a364c0a91d5be2874fd7/src/mvp/SimplifiedRewardDistributor.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md), ReentrancyGuardUpgradeable
 
