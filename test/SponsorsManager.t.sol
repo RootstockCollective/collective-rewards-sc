@@ -34,6 +34,22 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
+     * SCENARIO: allocate should revert if gauge does not exist
+     */
+    function test_RevertGaugeDoesNotExist() public {
+        // GIVEN a SponsorManager contract
+        // AND a new gauge created by the factor
+        Gauge _wrongGauge = gaugeFactory.createGauge();
+        //  WHEN alice calls allocateBatch using the wrong gauge
+        //   THEN tx reverts because GaugeDoesNotExist
+        gaugesArray.push(_wrongGauge);
+        allocationsArray.push(100 ether);
+        vm.startPrank(alice);
+        vm.expectRevert(SponsorsManager.GaugeDoesNotExist.selector);
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+    }
+
+    /**
      * SCENARIO: alice and bob allocate for 2 builders and variables are updated
      */
     function test_AllocateBatch() public {

@@ -276,6 +276,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     function claimBuilderReward(address rewardToken_) public {
         address _builder = sponsorsManager.gaugeToBuilder(address(this));
         address _rewardReceiver = sponsorsManager.builderRewardReceiver(_builder);
+        // TODO: if kyc is revoked the locked rewards must be sent back to the foundation
         if (sponsorsManager.isBuilderOperational(_builder) == false) revert BuilderRewardsLocked();
         if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();
 

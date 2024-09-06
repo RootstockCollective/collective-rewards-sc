@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import { BaseTest, Gauge } from "./BaseTest.sol";
 import { BuilderRegistry } from "../src/BuilderRegistry.sol";
 import { Governed } from "../src/governance/Governed.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract BuilderRegistryTest is BaseTest {
     // -----------------------------
@@ -12,14 +13,35 @@ contract BuilderRegistryTest is BaseTest {
     event KYCApproved(address indexed builder_);
     event Whitelisted(address indexed builder_);
     event Paused(address indexed builder_, bytes29 reason_);
+    event Unpaused(address indexed builder_);
     event Revoked(address indexed builder_);
     event Permitted(address indexed builder_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
+    function test_OnlyOnwer() public {
+        // GIVEN a sponsor alice
+        vm.startPrank(alice);
+
+        // WHEN alice calls activateBuilder
+        //  THEN tx reverts because caller is not the owner
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        sponsorsManager.activateBuilder(builder, builder, 0);
+
+        // WHEN alice calls pauseBuilder
+        //  THEN tx reverts because caller is not the owner
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        sponsorsManager.pauseBuilder(builder, "paused");
+
+        // WHEN alice calls unpauseBuilder
+        //  THEN tx reverts because caller is not the owner
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        sponsorsManager.unpauseBuilder(builder);
+    }
     /**
      * SCENARIO: functions protected by OnlyGovernor should revert when are not
      *  called by Governor
      */
+
     function test_OnlyGovernor() public {
         // GIVEN a sponsor alice
         vm.startPrank(alice);
@@ -31,11 +53,6 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         sponsorsManager.whitelistBuilder(builder);
-
-        // WHEN alice calls pauseBuilder
-        //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        sponsorsManager.pauseBuilder(builder, "paused");
     }
 
     /**
@@ -150,11 +167,12 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: Governor pause a builder
+     * SCENARIO: kycApprover pause a builder
      */
     function test_PauseBuilder() public {
         // GIVEN a Whitelisted builder
-        //  WHEN calls pauseBuilder
+        //  WHEN kycApprover calls pauseBuilder
+        vm.prank(kycApprover);
         //   THEN Paused event is emitted
         vm.expectEmit();
         emit Paused(builder, "paused");
@@ -173,6 +191,7 @@ contract BuilderRegistryTest is BaseTest {
     function test_PauseReason29bytes() public {
         // GIVEN a Whitelisted builder
         //  WHEN calls pauseBuilder
+        vm.prank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "This is a 29byte string exact");
 
         // THEN builder is paused
@@ -187,6 +206,8 @@ contract BuilderRegistryTest is BaseTest {
      */
     function test_PauseWithAnotherReason() public {
         // GIVEN a paused builder
+        //  AND kycApprover calls pauseBuilder
+        vm.prank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "paused");
         (,, bool _paused, bytes29 _reason) = sponsorsManager.builderState(builder);
         assertEq(_paused, true);
@@ -194,12 +215,48 @@ contract BuilderRegistryTest is BaseTest {
         assertEq(_reason, "paused");
 
         // WHEN is paused again with a different reason
+        vm.prank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "pausedAgain");
         // THEN builder is still paused
         (,, _paused, _reason) = sponsorsManager.builderState(builder);
         assertEq(_paused, true);
         // THEN builder paused reason is "pausedAgain"
         assertEq(_reason, "pausedAgain");
+    }
+
+    /**
+     * SCENARIO: kycApprover unpauseBuilder a builder
+     */
+    function test_UnpauseBuilder() public {
+        // GIVEN a paused builder
+        vm.startPrank(kycApprover);
+        sponsorsManager.pauseBuilder(builder, "paused");
+        // WHEN kycApprover calls unpauseBuilder
+        //  THEN Unpaused event is emitted
+        vm.expectEmit();
+        emit Unpaused(builder);
+        sponsorsManager.unpauseBuilder(builder);
+
+        // THEN builder is not paused
+        (,, bool _paused, bytes29 _reason) = sponsorsManager.builderState(builder);
+        assertEq(_paused, false);
+        // THEN builder paused reason is clean
+        assertEq(_reason, "");
+    }
+
+    /**
+     * SCENARIO: unpauseBuilder reverts if the builder is revoked
+     */
+    function test_RevertIsRevoked() public {
+        // GIVEN a Revoked builder
+        vm.startPrank(builder);
+        sponsorsManager.revokeBuilder(builder);
+
+        // WHEN kycApprover tries to unpauseBuilder
+        //  THEN tx reverts because is revoked
+        vm.startPrank(kycApprover);
+        vm.expectRevert(BuilderRegistry.IsRevoked.selector);
+        sponsorsManager.unpauseBuilder(builder);
     }
 
     /**
@@ -224,7 +281,7 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: permitBuilder should reverts if is not paused or not revoked
+     * SCENARIO: permitBuilder should reverts if is not revoked
      */
     function test_PermitBuilderRevert() public {
         // GIVEN a builder not paused
@@ -233,10 +290,13 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN tx reverts because is not revoked
         vm.expectRevert(BuilderRegistry.NotRevoked.selector);
         sponsorsManager.permitBuilder(builder);
+
         // AND the builder is paused but not revoked
+        vm.startPrank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "paused");
         // WHEN tries to permitBuilder
         //  THEN tx reverts because is not revoked
+        vm.startPrank(builder);
         vm.expectRevert(BuilderRegistry.NotRevoked.selector);
         sponsorsManager.permitBuilder(builder);
     }
@@ -248,6 +308,7 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN a Whitelisted builder
         //  WHEN calls pauseBuilder using "Revoked" as reason
         //   THEN tx reverts because cannot revoke on pause method
+        vm.startPrank(kycApprover);
         vm.expectRevert(BuilderRegistry.CannotRevoke.selector);
         sponsorsManager.pauseBuilder(builder, "Revoked");
     }
@@ -277,6 +338,7 @@ contract BuilderRegistryTest is BaseTest {
      */
     function test_RevertAlreadyPaused() public {
         // GIVEN a paused builder
+        vm.prank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "paused");
 
         vm.startPrank(builder);
