@@ -81,12 +81,6 @@ uint256[50] private __gap;
 
 ## Functions
 
-### atState
-
-```solidity
-modifier atState(address builder_, BuilderState previousState_);
-```
-
 ### \_\_BuilderRegistry_init
 
 contract initializer
@@ -116,14 +110,7 @@ activates builder and set reward receiver
 _reverts if is not called by the owner address reverts if builder state is not pending_
 
 ```solidity
-function activateBuilder(
-    address builder_,
-    address rewardReceiver_,
-    uint256 builderKickback_
-)
-    external
-    onlyOwner
-    atState(builder_, BuilderState.Pending);
+function activateBuilder(address builder_, address rewardReceiver_, uint256 builderKickback_) external onlyOwner;
 ```
 
 **Parameters**
@@ -141,11 +128,7 @@ whitelist builder and create its gauge
 _reverts if is not called by the governor address or authorized changer reverts if builder state is not KYCApproved_
 
 ```solidity
-function whitelistBuilder(address builder_)
-    external
-    onlyGovernorOrAuthorizedChanger
-    atState(builder_, BuilderState.KYCApproved)
-    returns (Gauge gauge_);
+function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge_);
 ```
 
 **Parameters**
@@ -164,13 +147,11 @@ function whitelistBuilder(address builder_)
 
 pause builder
 
-_reverts if is not called by the governor address or authorized changer reverts if builder state is not Whitelisted_
+_reverts if is not called by the governor address or authorized changer reverts if builder state is not Whitelisted
+reverts trying to revoke_
 
 ```solidity
-function pauseBuilder(address builder_)
-    external
-    onlyGovernorOrAuthorizedChanger
-    atState(builder_, BuilderState.Whitelisted);
+function pauseBuilder(address builder_, bytes29 reason_) external onlyGovernorOrAuthorizedChanger;
 ```
 
 **Parameters**
@@ -178,6 +159,7 @@ function pauseBuilder(address builder_)
 | Name       | Type      | Description            |
 | ---------- | --------- | ---------------------- |
 | `builder_` | `address` | address of the builder |
+| `reason_`  | `bytes29` | reason for the pause   |
 
 ### permitBuilder
 
@@ -186,10 +168,7 @@ permit builder
 _reverts if is not called by the governor address or authorized changer reverts if builder state is not Revoked_
 
 ```solidity
-function permitBuilder(address builder_)
-    external
-    onlyGovernorOrAuthorizedChanger
-    atState(builder_, BuilderState.Revoked);
+function permitBuilder(address builder_) external;
 ```
 
 **Parameters**
@@ -205,7 +184,7 @@ revoke builder
 _reverts if is not called by the builder address reverts if builder state is not Whitelisted_
 
 ```solidity
-function revokeBuilder(address builder_) external atState(builder_, BuilderState.Whitelisted);
+function revokeBuilder(address builder_) external;
 ```
 
 **Parameters**
@@ -218,16 +197,10 @@ function revokeBuilder(address builder_) external atState(builder_, BuilderState
 
 set builder kickback
 
-_reverts if is not called by the governor address or authorized changer reverts if builder state is not Whitelisted_
+_reverts if is not called by the governor address or authorized changer reverts if builder is not operational_
 
 ```solidity
-function setBuilderKickback(
-    address builder_,
-    uint256 builderKickback_
-)
-    external
-    onlyGovernorOrAuthorizedChanger
-    atState(builder_, BuilderState.Whitelisted);
+function setBuilderKickback(address builder_, uint256 builderKickback_) external onlyGovernorOrAuthorizedChanger;
 ```
 
 **Parameters**
@@ -236,6 +209,22 @@ function setBuilderKickback(
 | ------------------ | --------- | ------------------------- |
 | `builder_`         | `address` | address of the builder    |
 | `builderKickback_` | `uint256` | kickback(100% == 1 ether) |
+
+### isBuilderOperational
+
+return true if builder is operational kycApproved == true && whitelisted == true && paused == false
+
+```solidity
+function isBuilderOperational(address builder_) public view returns (bool);
+```
+
+### isGaugeOperational
+
+return true if gauge is operational kycApproved == true && whitelisted == true && paused == false
+
+```solidity
+function isGaugeOperational(Gauge gauge_) public view returns (bool);
+```
 
 ### \_createGauge
 
@@ -263,18 +252,36 @@ function _createGauge(address builder_) internal returns (Gauge gauge_);
 function _setBuilderKickback(address builder_, uint256 builderKickback_) internal;
 ```
 
-### \_updateState
-
-```solidity
-function _updateState(address builder_, BuilderState newState_) internal;
-```
-
 ## Events
 
-### StateUpdate
+### KYCApproved
 
 ```solidity
-event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
+event KYCApproved(address indexed builder_);
+```
+
+### Whitelisted
+
+```solidity
+event Whitelisted(address indexed builder_);
+```
+
+### Paused
+
+```solidity
+event Paused(address indexed builder_, bytes29 reason_);
+```
+
+### Revoked
+
+```solidity
+event Revoked(address indexed builder_);
+```
+
+### Permitted
+
+```solidity
+event Permitted(address indexed builder_);
 ```
 
 ### BuilderKickbackUpdate
@@ -291,10 +298,52 @@ event GaugeCreated(address indexed builder_, address indexed gauge_, address cre
 
 ## Errors
 
+### AlreadyKYCApproved
+
+```solidity
+error AlreadyKYCApproved();
+```
+
+### AlreadyWhitelisted
+
+```solidity
+error AlreadyWhitelisted();
+```
+
+### AlreadyPaused
+
+```solidity
+error AlreadyPaused();
+```
+
+### NotPaused
+
+```solidity
+error NotPaused();
+```
+
+### NotRevoked
+
+```solidity
+error NotRevoked();
+```
+
+### CannotRevoke
+
+```solidity
+error CannotRevoke();
+```
+
 ### NotAuthorized
 
 ```solidity
 error NotAuthorized();
+```
+
+### NotOperational
+
+```solidity
+error NotOperational();
 ```
 
 ### InvalidBuilderKickback
@@ -303,22 +352,15 @@ error NotAuthorized();
 error InvalidBuilderKickback();
 ```
 
-### RequiredState
-
-```solidity
-error RequiredState(BuilderState state_);
-```
-
-## Enums
+## Structs
 
 ### BuilderState
 
 ```solidity
-enum BuilderState {
-    Pending,
-    KYCApproved,
-    Whitelisted,
-    Paused,
-    Revoked
+struct BuilderState {
+    bool kycApproved;
+    bool whitelisted;
+    bool paused;
+    bytes29 pausedReason;
 }
 ```
