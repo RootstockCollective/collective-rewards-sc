@@ -22,6 +22,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     error AlreadyPaused();
     error NotPaused();
     error NotRevoked();
+    error IsRevoked();
     error CannotRevoke();
     error NotAuthorized();
     error NotOperational();
@@ -33,6 +34,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     event KYCApproved(address indexed builder_);
     event Whitelisted(address indexed builder_);
     event Paused(address indexed builder_, bytes29 reason_);
+    event Unpaused(address indexed builder_);
     event Revoked(address indexed builder_);
     event Permitted(address indexed builder_);
     event BuilderKickbackUpdateScheduled(address indexed builder_, uint256 kickback_, uint256 cooldown_);
@@ -152,18 +154,33 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
 
     /**
      * @notice pause builder
-     * @dev reverts if is not called by the governor address or authorized changer
-     * reverts if builder state is not Whitelisted
+     * @dev reverts if is not called by the owner address
      * reverts trying to revoke
      * @param builder_ address of the builder
      * @param reason_ reason for the pause
      */
-    function pauseBuilder(address builder_, bytes29 reason_) external onlyGovernorOrAuthorizedChanger {
+    function pauseBuilder(address builder_, bytes29 reason_) external onlyOwner {
         if (reason_ == "Revoked") revert CannotRevoke();
         // pause can be overwritten to change the reason
         builderState[builder_].paused = true;
         builderState[builder_].pausedReason = reason_;
         emit Paused(builder_, reason_);
+    }
+
+    /**
+     * @notice unpause builder
+     * @dev reverts if is not called by the owner address
+     * reverts if builder state is not paused
+     * @param builder_ address of the builder
+     */
+    function unpauseBuilder(address builder_) external onlyOwner {
+        if (builderState[builder_].paused == false) revert NotPaused();
+        if (builderState[builder_].pausedReason == "Revoked") revert IsRevoked();
+
+        builderState[builder_].paused = false;
+        builderState[builder_].pausedReason = "";
+
+        emit Unpaused(builder_);
     }
 
     /**

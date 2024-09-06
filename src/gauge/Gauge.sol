@@ -22,6 +22,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     error NotAuthorized();
     error NotSponsorsManager();
     error InvalidRewardAmount();
+    error BuilderRewardsLocked();
 
     // -----------------------------
     // ----------- Events ----------
@@ -257,6 +258,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     /**
      * @notice claim rewards for a builder
      * @dev reverts if is not called by the builder or reward receiver
+     *  reverts if builder is not operational
      * @dev rewards are transferred to the builder reward receiver
      */
     function claimBuilderReward() public {
@@ -274,6 +276,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     function claimBuilderReward(address rewardToken_) public {
         address _builder = sponsorsManager.gaugeToBuilder(address(this));
         address _rewardReceiver = sponsorsManager.builderRewardReceiver(_builder);
+        if (sponsorsManager.isBuilderOperational(_builder) == false) revert BuilderRewardsLocked();
         if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();
 
         RewardData storage _rewardData = rewardData[rewardToken_];
