@@ -309,7 +309,7 @@ contract SponsorsManager is BuilderRegistry {
         uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
         // [N] = [N] * [N] / [N]
         uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
-        uint256 _builderKickback = _getKickbackToApply(gaugeToBuilder[gauge_]);
+        uint256 _builderKickback = getKickbackToApply(gaugeToBuilder[gauge_]);
         IERC20(rewardToken).approve(address(gauge_), _amountERC20);
         return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(_amountERC20, _builderKickback);
     }

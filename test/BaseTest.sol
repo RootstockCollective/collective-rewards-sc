@@ -36,6 +36,8 @@ contract BaseTest is Test {
     RewardDistributor public rewardDistributorImpl;
     RewardDistributor public rewardDistributor;
 
+    uint256 public kickbackCooldown = 2 weeks;
+
     /* solhint-disable private-vars-leading-underscore */
     address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract
     address internal alice = makeAddr("alice");
@@ -60,7 +62,7 @@ contract BaseTest is Test {
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),
-            2 weeks
+            kickbackCooldown
         );
         (rewardDistributor, rewardDistributorImpl) =
             new RewardDistributorDeployer().run(address(changeExecutorMock), foundation, address(sponsorsManager));
@@ -107,7 +109,7 @@ contract BaseTest is Test {
     function _whitelistBuilder(
         address builder_,
         address rewardReceiver_,
-        uint256 kickbackPct_
+        uint64 kickbackPct_
     )
         internal
         returns (Gauge newGauge_)
@@ -119,7 +121,7 @@ contract BaseTest is Test {
         vm.stopPrank();
     }
 
-    function _createGauges(uint256 amount_, uint256 kickback_) internal {
+    function _createGauges(uint256 amount_, uint64 kickback_) internal {
         for (uint256 i = 0; i < amount_; i++) {
             address _newBuilder = makeAddr(string(abi.encode(gaugesArray.length)));
             builders.push(_newBuilder);
