@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/65787984373194e94a67c67ddefd555e11be2eaa/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/41c5c643e00ea37977046df1020b30b6d7bc2d18/src/BuilderRegistry.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md), Ownable2StepUpgradeable
 
@@ -32,10 +32,10 @@ mapping(address builder => address rewardReceiver) public builderRewardReceiver;
 
 ### builderKickback
 
-map of builders kickback
+map of builders kickback data
 
 ```solidity
-mapping(address builder => uint256 percentage) public builderKickback;
+mapping(address builder => KickbackData kickbackData) public builderKickback;
 ```
 
 ### gauges
@@ -70,6 +70,14 @@ builder address for a gauge contract
 mapping(Gauge gauge => address builder) public gaugeToBuilder;
 ```
 
+### kickbackCooldown
+
+time that must elapse for a new kickback from a builder to be applied
+
+```solidity
+uint256 public kickbackCooldown;
+```
+
 ### \_\_gap
 
 _This empty reserved space is put in place to allow future versions to add new variables without shifting down storage
@@ -95,7 +103,8 @@ contract initializer
 function __BuilderRegistry_init(
     address changeExecutor_,
     address kycApprover_,
-    address gaugeFactory_
+    address gaugeFactory_,
+    uint256 kickbackCooldown_
 )
     internal
     onlyInitializing;
@@ -103,11 +112,12 @@ function __BuilderRegistry_init(
 
 **Parameters**
 
-| Name              | Type      | Description                                                                                  |
-| ----------------- | --------- | -------------------------------------------------------------------------------------------- |
-| `changeExecutor_` | `address` | See Governed doc                                                                             |
-| `kycApprover_`    | `address` | account responsible of approving Builder's Know you Costumer policies and Legal requirements |
-| `gaugeFactory_`   | `address` | address of the GaugeFactory contract                                                         |
+| Name                | Type      | Description                                                                                  |
+| ------------------- | --------- | -------------------------------------------------------------------------------------------- |
+| `changeExecutor_`   | `address` | See Governed doc                                                                             |
+| `kycApprover_`      | `address` | account responsible of approving Builder's Know you Costumer policies and Legal requirements |
+| `gaugeFactory_`     | `address` | address of the GaugeFactory contract                                                         |
+| `kickbackCooldown_` | `uint256` | time that must elapse for a new kickback from a builder to be applied                        |
 
 ### activateBuilder
 
@@ -119,7 +129,7 @@ _reverts if is not called by the owner address reverts if builder state is not p
 function activateBuilder(
     address builder_,
     address rewardReceiver_,
-    uint256 builderKickback_
+    uint64 kickback_
 )
     external
     onlyOwner
@@ -128,11 +138,11 @@ function activateBuilder(
 
 **Parameters**
 
-| Name               | Type      | Description                            |
-| ------------------ | --------- | -------------------------------------- |
-| `builder_`         | `address` | address of the builder                 |
-| `rewardReceiver_`  | `address` | address of the builder reward receiver |
-| `builderKickback_` | `uint256` | kickback(100% == 1 ether)              |
+| Name              | Type      | Description                            |
+| ----------------- | --------- | -------------------------------------- |
+| `builder_`        | `address` | address of the builder                 |
+| `rewardReceiver_` | `address` | address of the builder reward receiver |
+| `kickback_`       | `uint64`  | kickback(100% == 1 ether)              |
 
 ### whitelistBuilder
 
@@ -216,26 +226,35 @@ function revokeBuilder(address builder_) external atState(builder_, BuilderState
 
 ### setBuilderKickback
 
-set builder kickback
+set a builder kickback
 
-_reverts if is not called by the governor address or authorized changer reverts if builder state is not Whitelisted_
+_reverts if is not called by the builder reverts if builder state is not Whitelisted_
 
 ```solidity
-function setBuilderKickback(
-    address builder_,
-    uint256 builderKickback_
-)
-    external
-    onlyGovernorOrAuthorizedChanger
-    atState(builder_, BuilderState.Whitelisted);
+function setBuilderKickback(address builder_, uint64 kickback_) external atState(builder_, BuilderState.Whitelisted);
 ```
 
 **Parameters**
 
-| Name               | Type      | Description               |
-| ------------------ | --------- | ------------------------- |
-| `builder_`         | `address` | address of the builder    |
-| `builderKickback_` | `uint256` | kickback(100% == 1 ether) |
+| Name        | Type      | Description               |
+| ----------- | --------- | ------------------------- |
+| `builder_`  | `address` | address of the builder    |
+| `kickback_` | `uint64`  | kickback(100% == 1 ether) |
+
+### getKickbackToApply
+
+returns kickback to apply. If there is a new one and cooldown time has expired, apply that one; otherwise, apply the
+previous one
+
+```solidity
+function getKickbackToApply(address builder_) public view returns (uint64);
+```
+
+**Parameters**
+
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
 ### \_createGauge
 
@@ -257,12 +276,6 @@ function _createGauge(address builder_) internal returns (Gauge gauge_);
 | -------- | ------- | -------------- |
 | `gauge_` | `Gauge` | gauge contract |
 
-### \_setBuilderKickback
-
-```solidity
-function _setBuilderKickback(address builder_, uint256 builderKickback_) internal;
-```
-
 ### \_updateState
 
 ```solidity
@@ -277,10 +290,10 @@ function _updateState(address builder_, BuilderState newState_) internal;
 event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
 ```
 
-### BuilderKickbackUpdate
+### BuilderKickbackUpdateScheduled
 
 ```solidity
-event BuilderKickbackUpdate(address indexed builder_, uint256 builderKickback_);
+event BuilderKickbackUpdateScheduled(address indexed builder_, uint256 kickback_, uint256 cooldown_);
 ```
 
 ### GaugeCreated
@@ -307,6 +320,18 @@ error InvalidBuilderKickback();
 
 ```solidity
 error RequiredState(BuilderState state_);
+```
+
+## Structs
+
+### KickbackData
+
+```solidity
+struct KickbackData {
+    uint64 previous;
+    uint64 latest;
+    uint128 cooldownEndTime;
+}
 ```
 
 ## Enums

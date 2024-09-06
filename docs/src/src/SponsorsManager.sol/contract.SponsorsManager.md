@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/65787984373194e94a67c67ddefd555e11be2eaa/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/41c5c643e00ea37977046df1020b30b6d7bc2d18/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -133,7 +133,8 @@ function initialize(
     address kycApprover_,
     address rewardToken_,
     address stakingToken_,
-    address gaugeFactory_
+    address gaugeFactory_,
+    uint256 kickbackCooldown_
 )
     external
     initializer;
@@ -141,13 +142,14 @@ function initialize(
 
 **Parameters**
 
-| Name              | Type      | Description                                         |
-| ----------------- | --------- | --------------------------------------------------- |
-| `changeExecutor_` | `address` | See Governed doc                                    |
-| `kycApprover_`    | `address` | See BuilderRegistry doc                             |
-| `rewardToken_`    | `address` | address of the token rewarded to builder and voters |
-| `stakingToken_`   | `address` | address of the staking token for builder and voters |
-| `gaugeFactory_`   | `address` | address of the GaugeFactory contract                |
+| Name                | Type      | Description                                                           |
+| ------------------- | --------- | --------------------------------------------------------------------- |
+| `changeExecutor_`   | `address` | See Governed doc                                                      |
+| `kycApprover_`      | `address` | See BuilderRegistry doc                                               |
+| `rewardToken_`      | `address` | address of the token rewarded to builder and voters                   |
+| `stakingToken_`     | `address` | address of the staking token for builder and voters                   |
+| `gaugeFactory_`     | `address` | address of the GaugeFactory contract                                  |
+| `kickbackCooldown_` | `uint256` | time that must elapse for a new kickback from a builder to be applied |
 
 ### allocate
 
