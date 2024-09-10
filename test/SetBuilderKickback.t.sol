@@ -69,17 +69,15 @@ contract SetBuilderKickbackTest is BaseTest {
     }
 
     /**
-     * SCENARIO: setBuilderKickback reverts if the state is not Whitelisted
+     * SCENARIO: setBuilderKickback reverts if it is not operational
      */
     function test_RevertSetBuilderKickbackWrongStatus() public {
         // GIVEN a Revoked builder
         vm.startPrank(builder);
         sponsorsManager.revokeBuilder(builder);
         // WHEN tries to setBuilderKickback
-        //  THEN tx reverts because is not the required state
-        vm.expectRevert(
-            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
-        );
+        //  THEN tx reverts because is not operational
+        vm.expectRevert(BuilderRegistry.NotOperational.selector);
         sponsorsManager.setBuilderKickback(builder, 0.1 ether);
     }
 

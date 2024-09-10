@@ -17,34 +17,35 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     // ------- Custom Errors -------
     // -----------------------------
 
+    error AlreadyKYCApproved();
+    error AlreadyWhitelisted();
+    error AlreadyPaused();
+    error NotPaused();
+    error NotRevoked();
+    error CannotRevoke();
     error NotAuthorized();
+    error NotOperational();
     error InvalidBuilderKickback();
-    error RequiredState(BuilderState state_);
 
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event StateUpdate(address indexed builder_, BuilderState previousState_, BuilderState newState_);
+    event KYCApproved(address indexed builder_);
+    event Whitelisted(address indexed builder_);
+    event Paused(address indexed builder_, bytes29 reason_);
+    event Revoked(address indexed builder_);
+    event Permitted(address indexed builder_);
     event BuilderKickbackUpdateScheduled(address indexed builder_, uint256 kickback_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
     // -----------------------------
-    // --------- Modifiers ---------
+    // ---------- Structs ----------
     // -----------------------------
-    modifier atState(address builder_, BuilderState previousState_) {
-        if (builderState[builder_] != previousState_) revert RequiredState(previousState_);
-        _;
-    }
-
-    // -----------------------------
-    // ---------- Enums ----------
-    // -----------------------------
-    enum BuilderState {
-        Pending,
-        KYCApproved,
-        Whitelisted,
-        Paused,
-        Revoked
+    struct BuilderState {
+        bool kycApproved;
+        bool whitelisted;
+        bool paused;
+        bytes29 pausedReason;
     }
 
     // -----------------------------
@@ -118,17 +119,11 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
      * @param rewardReceiver_ address of the builder reward receiver
      * @param kickback_ kickback(100% == 1 ether)
      */
-    function activateBuilder(
-        address builder_,
-        address rewardReceiver_,
-        uint64 kickback_
-    )
-        external
-        onlyOwner
-        atState(builder_, BuilderState.Pending)
-    {
-        builderRewardReceiver[builder_] = rewardReceiver_;
+    function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyOwner {
+        if (builderState[builder_].kycApproved == true) revert AlreadyKYCApproved();
 
+        builderState[builder_].kycApproved = true;
+        builderRewardReceiver[builder_] = rewardReceiver_;
         // TODO: should we have a minimal amount?
         if (kickback_ > _MAX_KICKBACK) {
             revert InvalidBuilderKickback();
@@ -137,8 +132,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         _kickbackData.previous = kickback_;
         _kickbackData.latest = kickback_;
         _kickbackData.cooldownEndTime = uint128(block.timestamp);
-
-        _updateState(builder_, BuilderState.KYCApproved);
+        emit KYCApproved(builder_);
     }
 
     /**
@@ -148,28 +142,28 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
      * @param builder_ address of the builder
      * @return gauge_ gauge contract
      */
-    function whitelistBuilder(address builder_)
-        external
-        onlyGovernorOrAuthorizedChanger
-        atState(builder_, BuilderState.KYCApproved)
-        returns (Gauge gauge_)
-    {
+    function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge_) {
+        if (builderState[builder_].whitelisted == true) revert AlreadyWhitelisted();
+
+        builderState[builder_].whitelisted = true;
         gauge_ = _createGauge(builder_);
-        _updateState(builder_, BuilderState.Whitelisted);
+        emit Whitelisted(builder_);
     }
 
     /**
      * @notice pause builder
      * @dev reverts if is not called by the governor address or authorized changer
      * reverts if builder state is not Whitelisted
+     * reverts trying to revoke
      * @param builder_ address of the builder
+     * @param reason_ reason for the pause
      */
-    function pauseBuilder(address builder_)
-        external
-        onlyGovernorOrAuthorizedChanger
-        atState(builder_, BuilderState.Whitelisted)
-    {
-        _updateState(builder_, BuilderState.Paused);
+    function pauseBuilder(address builder_, bytes29 reason_) external onlyGovernorOrAuthorizedChanger {
+        if (reason_ == "Revoked") revert CannotRevoke();
+        // pause can be overwritten to change the reason
+        builderState[builder_].paused = true;
+        builderState[builder_].pausedReason = reason_;
+        emit Paused(builder_, reason_);
     }
 
     /**
@@ -178,12 +172,13 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
      * reverts if builder state is not Revoked
      * @param builder_ address of the builder
      */
-    function permitBuilder(address builder_)
-        external
-        onlyGovernorOrAuthorizedChanger
-        atState(builder_, BuilderState.Revoked)
-    {
-        _updateState(builder_, BuilderState.Whitelisted);
+    function permitBuilder(address builder_) external {
+        if (msg.sender != builder_) revert NotAuthorized();
+        if (builderState[builder_].pausedReason != "Revoked") revert NotRevoked();
+
+        builderState[builder_].paused = false;
+        builderState[builder_].pausedReason = "";
+        emit Permitted(builder_);
     }
 
     /**
@@ -192,27 +187,25 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
      * reverts if builder state is not Whitelisted
      * @param builder_ address of the builder
      */
-    function revokeBuilder(address builder_) external atState(builder_, BuilderState.Whitelisted) {
+    function revokeBuilder(address builder_) external {
         if (msg.sender != builder_) revert NotAuthorized();
+        if (builderState[builder_].paused == true) revert AlreadyPaused();
 
-        _updateState(builder_, BuilderState.Revoked);
+        builderState[builder_].paused = true;
+        builderState[builder_].pausedReason = "Revoked";
+        emit Revoked(builder_);
     }
 
     /**
      * @notice set a builder kickback
      * @dev reverts if is not called by the builder
-     * reverts if builder state is not Whitelisted
+     * reverts if builder is not operational
      * @param builder_ address of the builder
      * @param kickback_ kickback(100% == 1 ether)
      */
-    function setBuilderKickback(
-        address builder_,
-        uint64 kickback_
-    )
-        external
-        atState(builder_, BuilderState.Whitelisted)
-    {
+    function setBuilderKickback(address builder_, uint64 kickback_) external {
         if (msg.sender != builder_) revert NotAuthorized();
+        if (isBuilderOperational(builder_) == false) revert NotOperational();
 
         // TODO: should we have a minimal amount?
         if (kickback_ > _MAX_KICKBACK) {
@@ -240,6 +233,27 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         return _kickbackData.previous;
     }
 
+    /**
+     * @notice return true if builder is operational
+     *  kycApproved == true &&
+     *  whitelisted == true &&
+     *  paused == false
+     */
+    function isBuilderOperational(address builder_) public view returns (bool) {
+        BuilderState memory _builderState = builderState[builder_];
+        return _builderState.kycApproved && _builderState.whitelisted && !_builderState.paused;
+    }
+
+    /**
+     * @notice return true if gauge is operational
+     *  kycApproved == true &&
+     *  whitelisted == true &&
+     *  paused == false
+     */
+    function isGaugeOperational(Gauge gauge_) public view returns (bool) {
+        return isBuilderOperational(gaugeToBuilder[gauge_]);
+    }
+
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
@@ -255,12 +269,6 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         gaugeToBuilder[gauge_] = builder_;
         gauges.push(gauge_);
         emit GaugeCreated(builder_, address(gauge_), msg.sender);
-    }
-
-    function _updateState(address builder_, BuilderState newState_) internal {
-        BuilderState _previousState = builderState[builder_];
-        builderState[builder_] = newState_;
-        emit StateUpdate(builder_, _previousState, newState_);
     }
 
     /**

@@ -9,9 +9,11 @@ contract BuilderRegistryTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event StateUpdate(
-        address indexed builder_, BuilderRegistry.BuilderState previousState_, BuilderRegistry.BuilderState newState_
-    );
+    event KYCApproved(address indexed builder_);
+    event Whitelisted(address indexed builder_);
+    event Paused(address indexed builder_, bytes29 reason_);
+    event Revoked(address indexed builder_);
+    event Permitted(address indexed builder_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
     /**
@@ -33,16 +35,11 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN alice calls pauseBuilder
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        sponsorsManager.pauseBuilder(builder);
-
-        // WHEN alice calls permitBuilder
-        //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        sponsorsManager.permitBuilder(builder);
+        sponsorsManager.pauseBuilder(builder, "paused");
     }
 
     /**
-     * SCENARIO: revokeBuilder should revert if is not called by the builder
+     * SCENARIO: should revert if is not called by the builder
      */
     function test_NotAuthorized() public {
         // GIVEN  a whitelisted builder
@@ -53,6 +50,11 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN tx reverts because caller is not the builder
         vm.expectRevert(BuilderRegistry.NotAuthorized.selector);
         sponsorsManager.revokeBuilder(builder);
+
+        // WHEN alice calls permitBuilder
+        //  THEN tx reverts because caller is not the builder
+        vm.expectRevert(BuilderRegistry.NotAuthorized.selector);
+        sponsorsManager.permitBuilder(builder);
     }
 
     /**
@@ -64,31 +66,30 @@ contract BuilderRegistryTest is BaseTest {
         // AND a kycApprover
         vm.prank(kycApprover);
         // WHEN calls activateBuilder
-        //  THEN StateUpdate event is emitted
+        //  THEN KYCApproved event is emitted
         vm.expectEmit();
-        emit StateUpdate(_newBuilder, BuilderRegistry.BuilderState.Pending, BuilderRegistry.BuilderState.KYCApproved);
+        emit KYCApproved(_newBuilder);
         sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
 
-        // THEN builder.state is KYCApproved
-        assertEq(uint256(sponsorsManager.builderState(_newBuilder)), uint256(BuilderRegistry.BuilderState.KYCApproved));
+        // THEN builder is kycApproved
+        (bool _kycApproved,,,) = sponsorsManager.builderState(_newBuilder);
+        assertEq(_kycApproved, true);
 
         // THEN builder rewards receiver is the same as the builder
         assertEq(sponsorsManager.builderRewardReceiver(_newBuilder), _newBuilder);
     }
 
     /**
-     * SCENARIO: activateBuilder should reverts if the state is not Pending
+     * SCENARIO: activateBuilder should reverts if it is already approved
      */
-    function test_ActivateBuilderWrongStatus() public {
-        // GIVEN a builder not in Pending state
+    function test_RevertAlreadyKYCApproved() public {
+        // GIVEN a builder KYC approved
         //  AND a kycApprover
         vm.prank(kycApprover);
 
         // WHEN tries to activateBuilder
-        //  THEN tx reverts because is not in the required state
-        vm.expectRevert(
-            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Pending)
-        );
+        //  THEN tx reverts because is already kycApproved
+        vm.expectRevert(BuilderRegistry.AlreadyKYCApproved.selector);
         sponsorsManager.activateBuilder(builder, builder, 0);
     }
 
@@ -122,11 +123,9 @@ contract BuilderRegistryTest is BaseTest {
         vm.expectEmit(true, false, true, true); // ignore new gauge address
         emit GaugeCreated(_newBuilder, /*ignored*/ address(0), address(this));
 
-        //  THEN StateUpdate event is emitted
+        //  THEN Whitelisted event is emitted
         vm.expectEmit();
-        emit StateUpdate(
-            _newBuilder, BuilderRegistry.BuilderState.KYCApproved, BuilderRegistry.BuilderState.Whitelisted
-        );
+        emit Whitelisted(_newBuilder);
 
         Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
 
@@ -134,20 +133,19 @@ contract BuilderRegistryTest is BaseTest {
         assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
         // THEN new builder is assigned to the new gauge
         assertEq(sponsorsManager.gaugeToBuilder(_newGauge), _newBuilder);
-        // THEN builder.state is Whitelisted
-        assertEq(uint256(sponsorsManager.builderState(_newBuilder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
+        // THEN builder is whitelisted
+        (, bool _whitelisted,,) = sponsorsManager.builderState(_newBuilder);
+        assertEq(_whitelisted, true);
     }
 
     /**
-     * SCENARIO: whitelistBuilder should reverts if the state is not KYCApproved
+     * SCENARIO: whitelistBuilder should reverts if it is already whitelisted
      */
-    function test_WhitelistBuilderWrongStatus() public {
-        // GIVEN a builder not in KYCApproved state
+    function test_RevertAlreadyWhitelisted() public {
+        // GIVEN a builder whitelisted
         //  WHEN tries to whitelistBuilder
-        //   THEN tx reverts because is not the required state
-        vm.expectRevert(
-            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.KYCApproved)
-        );
+        //   THEN tx reverts because is already whitelisted
+        vm.expectRevert(BuilderRegistry.AlreadyWhitelisted.selector);
         sponsorsManager.whitelistBuilder(builder);
     }
 
@@ -157,27 +155,51 @@ contract BuilderRegistryTest is BaseTest {
     function test_PauseBuilder() public {
         // GIVEN a Whitelisted builder
         //  WHEN calls pauseBuilder
-        //   THEN StateUpdate event is emitted
+        //   THEN Paused event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Whitelisted, BuilderRegistry.BuilderState.Paused);
-        sponsorsManager.pauseBuilder(builder);
+        emit Paused(builder, "paused");
+        sponsorsManager.pauseBuilder(builder, "paused");
 
-        // THEN builder.state is Paused
-        assertEq(uint256(sponsorsManager.builderState(builder)), uint256(BuilderRegistry.BuilderState.Paused));
+        // THEN builder is paused
+        (,, bool _paused, bytes29 _reason) = sponsorsManager.builderState(builder);
+        assertEq(_paused, true);
+        // THEN builder paused reason is "paused"
+        assertEq(_reason, "paused");
     }
 
     /**
-     * SCENARIO: pauseBuilder should reverts if the state is not Whitelisted
+     * SCENARIO: pause reason is 29 bytes long
      */
-    function test_PauseBuilderWrongStatus() public {
-        // GIVEN a new builder
-        address _newBuilder = makeAddr("newBuilder");
-        // WHEN tries to pauseBuilder
-        //  THEN tx reverts because is not the required state
-        vm.expectRevert(
-            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
-        );
-        sponsorsManager.pauseBuilder(_newBuilder);
+    function test_PauseReason29bytes() public {
+        // GIVEN a Whitelisted builder
+        //  WHEN calls pauseBuilder
+        sponsorsManager.pauseBuilder(builder, "This is a 29byte string exact");
+
+        // THEN builder is paused
+        (,, bool _paused, bytes29 _reason) = sponsorsManager.builderState(builder);
+        assertEq(_paused, true);
+        // THEN builder paused reason is "This is a 29byte string exact"
+        assertEq(_reason, "This is a 29byte string exact");
+    }
+
+    /**
+     * SCENARIO: pauseBuilder again and overwritten the reason
+     */
+    function test_PauseWithAnotherReason() public {
+        // GIVEN a paused builder
+        sponsorsManager.pauseBuilder(builder, "paused");
+        (,, bool _paused, bytes29 _reason) = sponsorsManager.builderState(builder);
+        assertEq(_paused, true);
+        // THEN builder paused reason is "paused"
+        assertEq(_reason, "paused");
+
+        // WHEN is paused again with a different reason
+        sponsorsManager.pauseBuilder(builder, "pausedAgain");
+        // THEN builder is still paused
+        (,, _paused, _reason) = sponsorsManager.builderState(builder);
+        assertEq(_paused, true);
+        // THEN builder paused reason is "pausedAgain"
+        assertEq(_reason, "pausedAgain");
     }
 
     /**
@@ -189,25 +211,45 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.revokeBuilder(builder);
 
         // WHEN calls permitBuilder
-        //  THEN StateUpdate event is emitted
+        //  THEN Permitted event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Revoked, BuilderRegistry.BuilderState.Whitelisted);
+        emit Permitted(builder);
         sponsorsManager.permitBuilder(builder);
 
-        // THEN builder.state is Whitelisted
-        assertEq(uint256(sponsorsManager.builderState(builder)), uint256(BuilderRegistry.BuilderState.Whitelisted));
+        // THEN builder is not paused
+        (,, bool _paused, bytes29 _reason) = sponsorsManager.builderState(builder);
+        assertEq(_paused, false);
+        // THEN builder paused reason is clean
+        assertEq(_reason, "");
     }
 
     /**
-     * SCENARIO: permitBuilder should reverts if the state is not Revoked
+     * SCENARIO: permitBuilder should reverts if is not paused or not revoked
      */
-    function test_PermitBuilderWrongStatus() public {
+    function test_PermitBuilderRevert() public {
+        // GIVEN a builder not paused
+        vm.startPrank(builder);
         // WHEN tries to permitBuilder
-        //  THEN tx reverts because is not the required state
-        vm.expectRevert(
-            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Revoked)
-        );
+        //  THEN tx reverts because is not revoked
+        vm.expectRevert(BuilderRegistry.NotRevoked.selector);
         sponsorsManager.permitBuilder(builder);
+        // AND the builder is paused but not revoked
+        sponsorsManager.pauseBuilder(builder, "paused");
+        // WHEN tries to permitBuilder
+        //  THEN tx reverts because is not revoked
+        vm.expectRevert(BuilderRegistry.NotRevoked.selector);
+        sponsorsManager.permitBuilder(builder);
+    }
+
+    /**
+     * SCENARIO: pauseBuilder should revert if "Revoked" is used as reason
+     */
+    function test_RevertsRevokeReason() public {
+        // GIVEN a Whitelisted builder
+        //  WHEN calls pauseBuilder using "Revoked" as reason
+        //   THEN tx reverts because cannot revoke on pause method
+        vm.expectRevert(BuilderRegistry.CannotRevoke.selector);
+        sponsorsManager.pauseBuilder(builder, "Revoked");
     }
 
     /**
@@ -220,25 +262,27 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN calls revokeBuilder
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
-        emit StateUpdate(builder, BuilderRegistry.BuilderState.Whitelisted, BuilderRegistry.BuilderState.Revoked);
+        emit Revoked(builder);
         sponsorsManager.revokeBuilder(builder);
 
-        // THEN builder.state is Revoked
-        assertEq(uint256(sponsorsManager.builderState(builder)), uint256(BuilderRegistry.BuilderState.Revoked));
+        // THEN builder is paused
+        (,, bool _paused, bytes29 _reason) = sponsorsManager.builderState(builder);
+        assertEq(_paused, true);
+        // THEN builder paused reason is "Revoked"
+        assertEq(_reason, "Revoked");
     }
 
     /**
-     * SCENARIO: revokeBuilder should reverts if the state is not Whitelisted
+     * SCENARIO: revokeBuilder should reverts if is already paused
      */
-    function test_RevokeBuilderWrongStatus() public {
-        // GIVEN a new builder
-        address _newBuilder = makeAddr("newBuilder");
+    function test_RevertAlreadyPaused() public {
+        // GIVEN a paused builder
+        sponsorsManager.pauseBuilder(builder, "paused");
 
+        vm.startPrank(builder);
         // WHEN tries to revokeBuilder
         //  THEN tx reverts because is not the required state
-        vm.expectRevert(
-            abi.encodeWithSelector(BuilderRegistry.RequiredState.selector, BuilderRegistry.BuilderState.Whitelisted)
-        );
-        sponsorsManager.revokeBuilder(_newBuilder);
+        vm.expectRevert(BuilderRegistry.AlreadyPaused.selector);
+        sponsorsManager.revokeBuilder(builder);
     }
 }
