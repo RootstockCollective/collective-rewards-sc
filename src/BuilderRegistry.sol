@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { Upgradeable } from "./governance/Upgradeable.sol";
+import { EpochTimeKeeper } from "./EpochTimeKeeper.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -12,7 +12,7 @@ import { GaugeFactory } from "./gauge/GaugeFactory.sol";
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
  */
-abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
+abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_KICKBACK = UtilsLib._PRECISION;
@@ -100,18 +100,20 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
      * @param changeExecutor_ See Governed doc
      * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
      * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param epochDuration_ epoch time duration
      * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function __BuilderRegistry_init(
         address changeExecutor_,
         address kycApprover_,
         address gaugeFactory_,
+        uint64 epochDuration_,
         uint128 kickbackCooldown_
     )
         internal
         onlyInitializing
     {
-        __Upgradeable_init(changeExecutor_);
+        __EpochTimeKeeper_init(changeExecutor_, epochDuration_);
         __Ownable2Step_init();
         __Ownable_init(kycApprover_);
         gaugeFactory = GaugeFactory(gaugeFactory_);

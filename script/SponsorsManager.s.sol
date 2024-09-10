@@ -18,6 +18,7 @@ contract Deploy is Broadcaster {
         if (_gaugeFactoryAddress == address(0)) {
             _gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
+        uint64 _epochDuration = uint64(vm.envUint("EPOCH_DURATION"));
         uint128 _kickbackCooldown = uint128(vm.envUint("KICKBACK_COOLDOWN"));
         (proxy_, implementation_) = run(
             _changeExecutorAddress,
@@ -25,6 +26,7 @@ contract Deploy is Broadcaster {
             _rewardTokenAddress,
             _stakingTokenAddress,
             _gaugeFactoryAddress,
+            _epochDuration,
             _kickbackCooldown
         );
     }
@@ -35,6 +37,7 @@ contract Deploy is Broadcaster {
         address rewardToken_,
         address stakingToken_,
         address gaugeFactory_,
+        uint64 epochDuration_,
         uint128 kickbackCooldown_
     )
         public
@@ -49,7 +52,15 @@ contract Deploy is Broadcaster {
 
         bytes memory _initializerData = abi.encodeCall(
             SponsorsManager.initialize,
-            (changeExecutor_, kycApprover_, rewardToken_, stakingToken_, gaugeFactory_, kickbackCooldown_)
+            (
+                changeExecutor_,
+                kycApprover_,
+                rewardToken_,
+                stakingToken_,
+                gaugeFactory_,
+                epochDuration_,
+                kickbackCooldown_
+            )
         );
         address _implementation;
         address _proxy;

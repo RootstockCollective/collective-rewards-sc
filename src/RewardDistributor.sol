@@ -4,7 +4,6 @@ pragma solidity 0.8.20;
 import { Upgradeable } from "./governance/Upgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SponsorsManager } from "./SponsorsManager.sol";
-import { EpochLib } from "./libraries/EpochLib.sol";
 
 /**
  * @title RewardDistributor
@@ -113,9 +112,6 @@ contract RewardDistributor is Upgradeable {
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
     function _sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) internal {
-        // TODO: review if we need this
-        rewardTokenAmountPerEpoch[EpochLib._epochStart(block.timestamp)] += amountERC20_;
-        rewardCoinbaseAmountPerEpoch[EpochLib._epochStart(block.timestamp)] += amountCoinbase_;
         rewardToken.approve(address(sponsorsManager), amountERC20_);
         sponsorsManager.notifyRewardAmount{ value: amountCoinbase_ }(amountERC20_);
     }
