@@ -2,7 +2,6 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, RewardDistributor } from "./BaseTest.sol";
-import { EpochLib } from "../src/libraries/EpochLib.sol";
 import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
@@ -83,7 +82,6 @@ contract RewardDistributorTest is BaseTest {
         // GIVEN a RewardDistributor contract with 10 ether of reward token and 5 of coinbase
         rewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
-        uint256 _epoch1Timestamp = EpochLib._epochStart(block.timestamp);
         // WHEN foundation treasury calls sendRewards transferring 2 ethers of reward token and 1 of coinbase
         vm.startPrank(foundation);
         rewardDistributor.sendRewards(2 ether, 1 ether);
@@ -93,7 +91,6 @@ contract RewardDistributorTest is BaseTest {
         rewardDistributor.sendRewards(1 ether, 0.5 ether);
         // AND epoch finish
         _skipAndStartNewEpoch();
-        uint256 _epoch2Timestamp = EpochLib._epochStart(block.timestamp);
         // AND foundation treasury calls sendRewards transferring 4 ethers of reward token and 2 of coinbase
         rewardDistributor.sendRewards(4 ether, 2 ether);
 
@@ -105,15 +102,6 @@ contract RewardDistributorTest is BaseTest {
         assertEq(address(rewardDistributor).balance, 1.5 ether);
         // THEN coinbase balance of sponsorsManager is 3.5 ether
         assertEq(address(sponsorsManager).balance, 3.5 ether);
-
-        // THEN reward token sent on epoch 1 is 3 ether
-        assertEq(rewardDistributor.rewardTokenAmountPerEpoch(_epoch1Timestamp), 3 ether);
-        // THEN reward token sent on epoch 2 is 4 ether
-        assertEq(rewardDistributor.rewardTokenAmountPerEpoch(_epoch2Timestamp), 4 ether);
-        // THEN coinbase sent on epoch 1 is 1.5 ether
-        assertEq(rewardDistributor.rewardCoinbaseAmountPerEpoch(_epoch1Timestamp), 1.5 ether);
-        // THEN coinbase sent on epoch 2 is 2 ether
-        assertEq(rewardDistributor.rewardCoinbaseAmountPerEpoch(_epoch2Timestamp), 2 ether);
     }
 
     /**
