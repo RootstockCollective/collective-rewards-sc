@@ -71,13 +71,13 @@ abstract contract EpochTimeKeeper is Upgradeable {
     function setEpochDuration(uint64 newEpochDuration_) external onlyGovernorOrAuthorizedChanger {
         if (newEpochDuration_ < 2 * _DISTRIBUTION_WINDOW) revert EpochDurationTooShort();
 
-        EpochDurationData storage _epochDuration = epochDuration;
-
-        if (_epochDuration.previous % newEpochDuration_ != 0 && newEpochDuration_ % _epochDuration.previous != 0) {
+        uint64 _currentEpochDuration = uint64(getEpochDuration());
+        if (_currentEpochDuration % newEpochDuration_ != 0 && newEpochDuration_ % _currentEpochDuration != 0) {
             revert EpochDurationsAreNotMultiples();
         }
 
-        _epochDuration.previous = uint64(getEpochDuration());
+        EpochDurationData storage _epochDuration = epochDuration;
+        _epochDuration.previous = _currentEpochDuration;
         _epochDuration.next = newEpochDuration_;
         _epochDuration.cooldownEndTime =
             uint128(UtilsLib._calcEpochNext(Math.max(_epochDuration.previous, newEpochDuration_), block.timestamp));
