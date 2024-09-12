@@ -18,7 +18,7 @@ contract Deploy is Broadcaster {
         if (_gaugeFactoryAddress == address(0)) {
             _gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
-        uint256 _kickbackCooldown = vm.envUint("KICKBACK_COOLDOWN");
+        uint128 _kickbackCooldown = uint128(vm.envUint("KICKBACK_COOLDOWN"));
         (proxy_, implementation_) = run(
             _changeExecutorAddress,
             _kycApprover,
@@ -35,7 +35,7 @@ contract Deploy is Broadcaster {
         address rewardToken_,
         address stakingToken_,
         address gaugeFactory_,
-        uint256 kickbackCooldown_
+        uint128 kickbackCooldown_
     )
         public
         broadcast

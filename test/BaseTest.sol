@@ -36,7 +36,7 @@ contract BaseTest is Test {
     RewardDistributor public rewardDistributorImpl;
     RewardDistributor public rewardDistributor;
 
-    uint256 public kickbackCooldown = 2 weeks;
+    uint128 public kickbackCooldown = 2 weeks;
 
     /* solhint-disable private-vars-leading-underscore */
     address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract

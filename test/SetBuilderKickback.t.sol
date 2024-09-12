@@ -59,13 +59,27 @@ contract SetBuilderKickbackTest is BaseTest {
         emit BuilderKickbackUpdateScheduled(builder, 0.1 ether, block.timestamp + 2 weeks);
         sponsorsManager.setBuilderKickback(builder, 0.1 ether);
 
-        (uint64 _previous, uint64 _latests, uint128 _cooldownEndTime) = sponsorsManager.builderKickback(builder);
+        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = sponsorsManager.builderKickback(builder);
         // THEN previous builder kickback is 50%
         assertEq(_previous, 0.5 ether);
-        // THEN latest builder kickback is 10%
-        assertEq(_latests, 0.1 ether);
+        // THEN next builder kickback is 10%
+        assertEq(_next, 0.1 ether);
         // THEN builder kickback cooldown end time is 2 weeks from now
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
+    }
+
+    /**
+     * SCENARIO: Builder sets a new kickback with the same value
+     */
+    function test_SetBuilderKickbackSameValue() public {
+        // GIVEN a Whitelisted builder with 50% of kickback
+        //  WHEN builder calls setBuilderKickback again with 50%
+        vm.prank(builder);
+        sponsorsManager.setBuilderKickback(builder, 0.5 ether);
+
+        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = sponsorsManager.builderKickback(builder);
+        // THEN previous and next kickbacks are the same
+        assertEq(_previous, _next);
     }
 
     /**
@@ -101,18 +115,18 @@ contract SetBuilderKickbackTest is BaseTest {
         //  AND builder sets a new kickback of 10%
         _initialState();
 
-        (uint64 _previous, uint64 _latests, uint128 _cooldownEndTime) = sponsorsManager.builderKickback(builder);
+        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = sponsorsManager.builderKickback(builder);
         // AND cooldown time didn't end
         vm.warp(_cooldownEndTime - 1);
 
         // AND builder sets the kickback to 80%
         vm.prank(builder);
         sponsorsManager.setBuilderKickback(builder, 0.8 ether);
-        (_previous, _latests, _cooldownEndTime) = sponsorsManager.builderKickback(builder);
+        (_previous, _next, _cooldownEndTime) = sponsorsManager.builderKickback(builder);
         // THEN previous builder kickback is 50%
         assertEq(_previous, 0.5 ether);
-        // THEN latest builder kickback is 80%
-        assertEq(_latests, 0.8 ether);
+        // THEN next builder kickback is 80%
+        assertEq(_next, 0.8 ether);
         // THEN builder kickback cooldown end time is 2 weeks from now
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
 
@@ -136,7 +150,7 @@ contract SetBuilderKickbackTest is BaseTest {
         assertApproxEqAbs(_clearCoinbaseBalance(alice), 0.625 ether, 100);
 
         // AND cooldown time ends
-        (_previous, _latests, _cooldownEndTime) = sponsorsManager.builderKickback(builder);
+        (_previous, _next, _cooldownEndTime) = sponsorsManager.builderKickback(builder);
         vm.warp(_cooldownEndTime);
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -167,23 +181,23 @@ contract SetBuilderKickbackTest is BaseTest {
         _initialState();
 
         // AND cooldown time ends
-        (uint64 _previous, uint64 _latests, uint128 _cooldownEndTime) = sponsorsManager.builderKickback(builder);
+        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = sponsorsManager.builderKickback(builder);
         vm.warp(_cooldownEndTime);
         // AND builder sets the kickback to 80%
         vm.prank(builder);
         sponsorsManager.setBuilderKickback(builder, 0.8 ether);
         // THEN builderKickbackExpiration is 2 weeks from now
-        (_previous, _latests, _cooldownEndTime) = sponsorsManager.builderKickback(builder);
+        (_previous, _next, _cooldownEndTime) = sponsorsManager.builderKickback(builder);
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
 
-        (_previous, _latests, _cooldownEndTime) = sponsorsManager.builderKickback(builder);
+        (_previous, _next, _cooldownEndTime) = sponsorsManager.builderKickback(builder);
         // THEN previous builder kickback is 10%
         assertEq(_previous, 0.1 ether);
-        // THEN latest builder kickback is 80%
-        assertEq(_latests, 0.8 ether);
+        // THEN next builder kickback is 80%
+        assertEq(_next, 0.8 ether);
 
         // WHEN builder claim rewards
         _buildersClaim();

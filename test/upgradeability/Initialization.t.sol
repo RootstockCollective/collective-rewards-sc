@@ -12,7 +12,7 @@ contract InitializationTest is BaseTest {
         // GIVEN a SponsorsManager initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
-        uint256 _kickbackCooldown = 2 weeks;
+        uint128 _kickbackCooldown = 2 weeks;
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         sponsorsManager.initialize(
             address(changeExecutorMock),

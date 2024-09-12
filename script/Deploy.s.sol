@@ -20,7 +20,7 @@ contract Deploy is Broadcaster, OutputWriter {
     address private _stakingTokenAddress;
     address private _kycApproverAddress;
     address private _foundationTreasuryAddress;
-    uint256 private _kickbackCooldown;
+    uint128 private _kickbackCooldown;
 
     function setUp() public {
         _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
@@ -28,7 +28,7 @@ contract Deploy is Broadcaster, OutputWriter {
         _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         _kycApproverAddress = vm.envAddress("KYC_APPROVER_ADDRESS");
         _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
-        _kickbackCooldown = vm.envUint("KICKBACK_COOLDOWN");
+        _kickbackCooldown = uint128(vm.envUint("KICKBACK_COOLDOWN"));
 
         outputWriterSetup();
     }

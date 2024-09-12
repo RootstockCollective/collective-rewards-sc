@@ -98,7 +98,7 @@ contract SponsorsManager is BuilderRegistry {
         address rewardToken_,
         address stakingToken_,
         address gaugeFactory_,
-        uint256 kickbackCooldown_
+        uint128 kickbackCooldown_
     )
         external
         initializer

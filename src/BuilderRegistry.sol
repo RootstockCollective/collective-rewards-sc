@@ -54,8 +54,8 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     struct KickbackData {
         // previous kickback
         uint64 previous;
-        // latest kickback
-        uint64 latest;
+        // next kickback
+        uint64 next;
         // kickback cooldown end time. After this time, new kickback will be applied
         uint128 cooldownEndTime;
     }
@@ -78,7 +78,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     /// @notice builder address for a gauge contract
     mapping(Gauge gauge => address builder) public gaugeToBuilder;
     /// @notice time that must elapse for a new kickback from a builder to be applied
-    uint256 public kickbackCooldown;
+    uint128 public kickbackCooldown;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -95,7 +95,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         address changeExecutor_,
         address kycApprover_,
         address gaugeFactory_,
-        uint256 kickbackCooldown_
+        uint128 kickbackCooldown_
     )
         internal
         onlyInitializing
@@ -130,7 +130,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         }
         KickbackData storage _kickbackData = builderKickback[builder_];
         _kickbackData.previous = kickback_;
-        _kickbackData.latest = kickback_;
+        _kickbackData.next = kickback_;
         _kickbackData.cooldownEndTime = uint128(block.timestamp);
         emit KYCApproved(builder_);
     }
@@ -214,7 +214,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
 
         KickbackData storage _kickbackData = builderKickback[builder_];
         _kickbackData.previous = getKickbackToApply(builder_);
-        _kickbackData.latest = kickback_;
+        _kickbackData.next = kickback_;
         _kickbackData.cooldownEndTime = uint128(block.timestamp + kickbackCooldown);
 
         emit BuilderKickbackUpdateScheduled(builder_, kickback_, _kickbackData.cooldownEndTime);
@@ -228,7 +228,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     function getKickbackToApply(address builder_) public view returns (uint64) {
         KickbackData memory _kickbackData = builderKickback[builder_];
         if (block.timestamp >= _kickbackData.cooldownEndTime) {
-            return _kickbackData.latest;
+            return _kickbackData.next;
         }
         return _kickbackData.previous;
     }
