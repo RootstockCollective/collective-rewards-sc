@@ -35,7 +35,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     event Paused(address indexed builder_, bytes29 reason_);
     event Revoked(address indexed builder_);
     event Permitted(address indexed builder_);
-    event BuilderKickbackUpdate(address indexed builder_, uint256 builderKickback_);
+    event BuilderKickbackUpdateScheduled(address indexed builder_, uint256 kickback_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
     // -----------------------------
@@ -49,14 +49,26 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     }
 
     // -----------------------------
+    // ---------- Structs ----------
+    // -----------------------------
+    struct KickbackData {
+        // previous kickback
+        uint64 previous;
+        // next kickback
+        uint64 next;
+        // kickback cooldown end time. After this time, new kickback will be applied
+        uint128 cooldownEndTime;
+    }
+
+    // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
     /// @notice map of builders state
     mapping(address builder => BuilderState state) public builderState;
     /// @notice map of builders reward receiver
     mapping(address builder => address rewardReceiver) public builderRewardReceiver;
-    /// @notice map of builders kickback
-    mapping(address builder => uint256 percentage) public builderKickback;
+    /// @notice map of builders kickback data
+    mapping(address builder => KickbackData kickbackData) public builderKickback;
     /// @notice array of all the gauges created
     Gauge[] public gauges;
     /// @notice gauge factory contract address
@@ -65,6 +77,8 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     mapping(address builder => Gauge gauge) public builderToGauge;
     /// @notice builder address for a gauge contract
     mapping(Gauge gauge => address builder) public gaugeToBuilder;
+    /// @notice time that must elapse for a new kickback from a builder to be applied
+    uint128 public kickbackCooldown;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -75,11 +89,13 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
      * @param changeExecutor_ See Governed doc
      * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
      * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function __BuilderRegistry_init(
         address changeExecutor_,
         address kycApprover_,
-        address gaugeFactory_
+        address gaugeFactory_,
+        uint128 kickbackCooldown_
     )
         internal
         onlyInitializing
@@ -88,6 +104,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         __Ownable2Step_init();
         __Ownable_init(kycApprover_);
         gaugeFactory = GaugeFactory(gaugeFactory_);
+        kickbackCooldown = kickbackCooldown_;
     }
 
     // -----------------------------
@@ -100,14 +117,21 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
      * reverts if builder state is not pending
      * @param builder_ address of the builder
      * @param rewardReceiver_ address of the builder reward receiver
-     * @param builderKickback_ kickback(100% == 1 ether)
+     * @param kickback_ kickback(100% == 1 ether)
      */
-    function activateBuilder(address builder_, address rewardReceiver_, uint256 builderKickback_) external onlyOwner {
+    function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyOwner {
         if (builderState[builder_].kycApproved == true) revert AlreadyKYCApproved();
 
         builderState[builder_].kycApproved = true;
         builderRewardReceiver[builder_] = rewardReceiver_;
-        _setBuilderKickback(builder_, builderKickback_);
+        // TODO: should we have a minimal amount?
+        if (kickback_ > _MAX_KICKBACK) {
+            revert InvalidBuilderKickback();
+        }
+        KickbackData storage _kickbackData = builderKickback[builder_];
+        _kickbackData.previous = kickback_;
+        _kickbackData.next = kickback_;
+        _kickbackData.cooldownEndTime = uint128(block.timestamp);
         emit KYCApproved(builder_);
     }
 
@@ -173,15 +197,40 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     }
 
     /**
-     * @notice set builder kickback
-     * @dev reverts if is not called by the governor address or authorized changer
+     * @notice set a builder kickback
+     * @dev reverts if is not called by the builder
      * reverts if builder is not operational
      * @param builder_ address of the builder
-     * @param builderKickback_ kickback(100% == 1 ether)
+     * @param kickback_ kickback(100% == 1 ether)
      */
-    function setBuilderKickback(address builder_, uint256 builderKickback_) external onlyGovernorOrAuthorizedChanger {
+    function setBuilderKickback(address builder_, uint64 kickback_) external {
+        if (msg.sender != builder_) revert NotAuthorized();
         if (isBuilderOperational(builder_) == false) revert NotOperational();
-        _setBuilderKickback(builder_, builderKickback_);
+
+        // TODO: should we have a minimal amount?
+        if (kickback_ > _MAX_KICKBACK) {
+            revert InvalidBuilderKickback();
+        }
+
+        KickbackData storage _kickbackData = builderKickback[builder_];
+        _kickbackData.previous = getKickbackToApply(builder_);
+        _kickbackData.next = kickback_;
+        _kickbackData.cooldownEndTime = uint128(block.timestamp + kickbackCooldown);
+
+        emit BuilderKickbackUpdateScheduled(builder_, kickback_, _kickbackData.cooldownEndTime);
+    }
+
+    /**
+     * @notice returns kickback to apply.
+     *  If there is a new one and cooldown time has expired, apply that one; otherwise, apply the previous one
+     * @param builder_ address of the builder
+     */
+    function getKickbackToApply(address builder_) public view returns (uint64) {
+        KickbackData memory _kickbackData = builderKickback[builder_];
+        if (block.timestamp >= _kickbackData.cooldownEndTime) {
+            return _kickbackData.next;
+        }
+        return _kickbackData.previous;
     }
 
     /**
@@ -220,16 +269,6 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         gaugeToBuilder[gauge_] = builder_;
         gauges.push(gauge_);
         emit GaugeCreated(builder_, address(gauge_), msg.sender);
-    }
-
-    function _setBuilderKickback(address builder_, uint256 builderKickback_) internal {
-        // TODO: should we have a minimal amount?
-        if (builderKickback_ > _MAX_KICKBACK) {
-            revert InvalidBuilderKickback();
-        }
-        builderKickback[builder_] = builderKickback_;
-
-        emit BuilderKickbackUpdate(builder_, builderKickback_);
     }
 
     /**

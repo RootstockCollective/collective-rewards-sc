@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { BaseTest } from "../BaseTest.sol";
+import { BaseTest, SponsorsManager } from "../BaseTest.sol";
 import { Governed } from "../../src/governance/Governed.sol";
 
 contract ProtectedTest is BaseTest {
@@ -12,22 +12,8 @@ contract ProtectedTest is BaseTest {
         // GIVEN there is not a changer authorized
         changeExecutorMock.setIsAuthorized(false);
         //  WHEN Governor calls a function protected by the modifier onlyGovernorOrAuthorizedChanger
-        vm.prank(governor);
-        sponsorsManager.setBuilderKickback(builder, 1);
-        //   THEN the function is successfully executed
-        assertEq(sponsorsManager.builderKickback(builder), 1);
-    }
-
-    /**
-     * SCENARIO: protected function should revert if is not called by the governor or an authorized changer
-     */
-    function test_RevertNotAuthorized() public {
-        // GIVEN the Governor has not authorized the change
-        changeExecutorMock.setIsAuthorized(false);
-        //  WHEN tries to execute a protected function
-        //   THEN tx reverts because NotGovernorOrAuthorizedChanger
-        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        sponsorsManager.setBuilderKickback(builder, 1);
+        vm.startPrank(governor);
+        sponsorsManager.upgradeToAndCall(address(new SponsorsManager()), "");
     }
 
     /**

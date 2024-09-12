@@ -14,7 +14,6 @@ contract BuilderRegistryTest is BaseTest {
     event Paused(address indexed builder_, bytes29 reason_);
     event Revoked(address indexed builder_);
     event Permitted(address indexed builder_);
-    event BuilderKickbackUpdate(address indexed builder_, uint256 builderKickback_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
     /**
@@ -37,11 +36,6 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         sponsorsManager.pauseBuilder(builder, "paused");
-
-        // WHEN alice calls setBuilderKickback
-        //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
-        sponsorsManager.setBuilderKickback(builder, 10);
     }
 
     /**
@@ -290,43 +284,5 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN tx reverts because is not the required state
         vm.expectRevert(BuilderRegistry.AlreadyPaused.selector);
         sponsorsManager.revokeBuilder(builder);
-    }
-
-    /**
-     * SCENARIO: Governor set new builder kickback
-     */
-    function test_SetBuilderKickback() public {
-        // GIVEN a Whitelisted builder
-        //  WHEN calls setBuilderKickback
-        //   THEN BuilderKickbackUpdate event is emitted
-        vm.expectEmit();
-        emit BuilderKickbackUpdate(builder, 5);
-        sponsorsManager.setBuilderKickback(builder, 5);
-
-        // THEN builder.builderKickback is 5
-        assertEq(sponsorsManager.builderKickback(builder), 5);
-    }
-
-    /**
-     * SCENARIO: setBuilderKickback should reverts if builder is not operational
-     */
-    function test_SetBuilderKickbackWrongStatus() public {
-        // GIVEN a paused builder
-        sponsorsManager.pauseBuilder(builder, "paused");
-        // WHEN tries to setBuilderKickback
-        //  THEN tx reverts because is not the required state
-        vm.expectRevert(BuilderRegistry.NotOperational.selector);
-        sponsorsManager.setBuilderKickback(builder, 5);
-    }
-
-    /**
-     * SCENARIO: setBuilderKickback should reverts if kickback is higher than 100
-     */
-    function test_SetBuilderKickbackInvalidBuilderKickback() public {
-        // GIVEN a Whitelisted builder
-        //  WHEN tries to setBuilderKickback
-        //   THEN tx reverts because is not a valid kickback
-        vm.expectRevert(BuilderRegistry.InvalidBuilderKickback.selector);
-        sponsorsManager.setBuilderKickback(builder, 2 ether);
     }
 }

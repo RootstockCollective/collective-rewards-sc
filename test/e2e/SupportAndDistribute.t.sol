@@ -12,7 +12,7 @@ contract SupportAndDistributeTest is BaseTest {
 
     function _setUp() internal override {
         // creates 10 gauges with 40% of kickback
-        uint256 _kickback = 0.4 ether; // 40%
+        uint64 _kickback = 0.4 ether; // 40%
         _createGauges(10, _kickback);
 
         // start from a new epoch
@@ -139,7 +139,7 @@ contract SupportAndDistributeTest is BaseTest {
         assertApproxEqAbs(_clearCoinbaseBalance(builders[10]), 3_603_603_603_603_603_606, 100);
 
         // AND creates 40 gauges with 20% of kickback
-        uint256 _kickback = 0.2 ether; // 20%
+        uint64 _kickback = 0.2 ether; // 20%
         _createGauges(40, _kickback);
 
         // TODO: add incentives to new gauges before the distribution
