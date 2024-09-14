@@ -141,11 +141,17 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
         if (kickback_ > _MAX_KICKBACK) {
             revert InvalidBuilderKickback();
         }
-        KickbackData storage _kickbackData = builderKickback[builder_];
+        // read from storage
+        KickbackData memory _kickbackData = builderKickback[builder_];
+
         _kickbackData.previous = kickback_;
         _kickbackData.next = kickback_;
         _kickbackData.cooldownEndTime = uint128(block.timestamp);
+
         emit KYCApproved(builder_);
+
+        // write to storage
+        builderKickback[builder_] = _kickbackData;
     }
 
     /**
@@ -208,9 +214,13 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
 
         builderState[msg.sender].revoked = false;
 
+        // read from storage
         KickbackData memory _kickbackData = builderKickback[msg.sender];
+
         _kickbackData.previous = getKickbackToApply(msg.sender);
         _kickbackData.next = kickback_;
+        
+        // write to storage
         builderKickback[msg.sender] = _kickbackData;
 
         _resumeGauge(_gauge);
@@ -248,12 +258,17 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
             revert InvalidBuilderKickback();
         }
 
-        KickbackData storage _kickbackData = builderKickback[msg.sender];
+        // read from storage
+        KickbackData memory _kickbackData = builderKickback[msg.sender];
+
         _kickbackData.previous = getKickbackToApply(msg.sender);
         _kickbackData.next = kickback_;
         _kickbackData.cooldownEndTime = uint128(block.timestamp) + kickbackCooldown;
 
         emit BuilderKickbackUpdateScheduled(msg.sender, kickback_, _kickbackData.cooldownEndTime);
+
+        // write to storage
+        builderKickback[msg.sender] = _kickbackData;
     }
 
     /**
