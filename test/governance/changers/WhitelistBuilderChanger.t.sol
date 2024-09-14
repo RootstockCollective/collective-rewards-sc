@@ -52,7 +52,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         //  THEN gauge is added on SponsorsManager
         assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
         //  THEN the new builder is whitelisted
-        (, bool _whitelisted,,) = sponsorsManager.builderState(_newBuilder);
+        (, bool _whitelisted,,,,) = sponsorsManager.builderState(_newBuilder);
         assertEq(_whitelisted, true);
     }
 }

@@ -68,7 +68,7 @@ contract SponsorsManager is BuilderRegistry {
     /// @notice index of tha last gauge distributed during a distribution period
     uint256 public indexLastGaugeDistributed;
     /// @notice timestamp end of current rewards period
-    uint256 public periodFinish;
+    uint256 internal _periodFinish;
     /// @notice true if distribution period started. Allocations remain blocked until it finishes
     bool public onDistributionPeriod;
 
@@ -191,32 +191,33 @@ contract SponsorsManager is BuilderRegistry {
      */
     function distribute() public {
         if (onDistributionPeriod == false) revert DistributionPeriodDidNotStart();
-        Gauge[] memory _gauges = gauges;
         uint256 _newTotalPotentialReward = tempTotalPotentialReward;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
-        uint256 _lastDistribution = Math.min(_gauges.length, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
+        uint256 _gaugesLength = getGaugesLength();
+        uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
 
         // cache variables read in the loop
         uint256 _rewardsERC20 = rewardsERC20;
         uint256 _rewardsCoinbase = rewardsCoinbase;
         uint256 _totalPotentialReward = totalPotentialReward;
-        uint256 _periodFinish = periodFinish;
+        uint256 __periodFinish = _periodFinish;
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
-            _newTotalPotentialReward +=
-                _distribute(_gauges[_gaugeIndex], _rewardsERC20, _rewardsCoinbase, _totalPotentialReward, _periodFinish);
+            _newTotalPotentialReward += _distribute(
+                Gauge(getGaugeAt(_gaugeIndex)), _rewardsERC20, _rewardsCoinbase, _totalPotentialReward, __periodFinish
+            );
             _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
         }
         emit RewardDistributed(msg.sender);
         // all the gauges were distributed, so distribution period is finished
-        if (_lastDistribution == _gauges.length) {
+        if (_lastDistribution == _gaugesLength) {
             emit RewardDistributionFinished(msg.sender);
             indexLastGaugeDistributed = 0;
             rewardsERC20 = rewardsCoinbase = 0;
             onDistributionPeriod = false;
             tempTotalPotentialReward = 0;
             totalPotentialReward = _newTotalPotentialReward;
-            periodFinish = EpochLib._epochNext(block.timestamp);
+            _periodFinish = EpochLib._epochNext(block.timestamp);
         } else {
             // Define new reference to batch beginning
             indexLastGaugeDistributed = _gaugeIndex;
@@ -233,6 +234,17 @@ contract SponsorsManager is BuilderRegistry {
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             gauges_[i].claimSponsorReward(msg.sender);
         }
+    }
+
+    /**
+     * @notice returns timestamp end of current rewards period
+     *  If it is called by a halted gauge returns the timestamp of the last period distributed
+     *  This is important because unclaimed rewards must stop accumulating rewards and halted gauges
+     *  are not updated on the distribution anymore
+     */
+    function periodFinish() external view returns (uint256) {
+        if (isGaugeHalted(msg.sender)) return haltedGaugeLastPeriodFinish[Gauge(msg.sender)];
+        return _periodFinish;
     }
 
     // -----------------------------
@@ -268,6 +280,8 @@ contract SponsorsManager is BuilderRegistry {
             newTotalPotentialReward_ = totalPotentialReward_ + (_allocationDeviation * _timeUntilNext);
         }
         emit NewAllocation(msg.sender, address(gauge_), allocation_);
+        // halted gauges are not taken on account for the rewards
+        if (isGaugeHalted(address(gauge_))) newTotalPotentialReward_ = totalPotentialReward_;
         return (newSponsorTotalAllocation_, newTotalPotentialReward_);
     }
 
@@ -320,6 +334,31 @@ contract SponsorsManager is BuilderRegistry {
         return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
             _amountERC20, _builderKickback, periodFinish_
         );
+    }
+
+    /**
+     * @notice halts a gauge moving it from the active array to the halted one
+     *  Removes its shares to not be accounted on the distribution anymore
+     * @param gauge_ gauge contract to be halted
+     */
+    function _haltGauge(Gauge gauge_) internal override {
+        super._haltGauge(gauge_);
+        // allocations are not considered for the reward's distribution
+        totalPotentialReward -= gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(0, 0, _periodFinish);
+        haltedGaugeLastPeriodFinish[gauge_] = _periodFinish;
+    }
+
+    /**
+     * @notice resumes a gauge moving it from the halted array to the active one
+     *  Adds its shares to be accounted on the distribution again
+     * @param gauge_ gauge contract to be resumed
+     */
+    function _resumeGauge(Gauge gauge_) internal override {
+        super._resumeGauge(gauge_);
+        // allocations are considered again for the reward's distribution
+        totalPotentialReward +=
+            gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(0, 0, haltedGaugeLastPeriodFinish[gauge_]);
+        haltedGaugeLastPeriodFinish[gauge_] = 0;
     }
 
     /**

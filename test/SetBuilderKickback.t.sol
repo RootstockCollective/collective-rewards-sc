@@ -77,7 +77,7 @@ contract SetBuilderKickbackTest is BaseTest {
         vm.prank(builder);
         sponsorsManager.setBuilderKickback(builder, 0.5 ether);
 
-        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = sponsorsManager.builderKickback(builder);
+        (uint64 _previous, uint64 _next,) = sponsorsManager.builderKickback(builder);
         // THEN previous and next kickbacks are the same
         assertEq(_previous, _next);
     }

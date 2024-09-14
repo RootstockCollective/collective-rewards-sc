@@ -24,4 +24,9 @@ interface ISponsorsManager {
      * @notice return true if builder is operational
      */
     function isBuilderOperational(address builder_) external view returns (bool isOperational_);
+
+    /**
+     * @notice return true if gauge is halted
+     */
+    function isGaugeHalted(address gauge_) external view returns (bool isHalted_);
 }

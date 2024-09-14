@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import { Upgradeable } from "./governance/Upgradeable.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { GaugeFactory } from "./gauge/GaugeFactory.sol";
 
@@ -12,6 +13,8 @@ import { GaugeFactory } from "./gauge/GaugeFactory.sol";
  * @notice Keeps registers of the builders
  */
 abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     uint256 internal constant _MAX_KICKBACK = UtilsLib._PRECISION;
     // -----------------------------
     // ------- Custom Errors -------
@@ -19,24 +22,24 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
 
     error AlreadyKYCApproved();
     error AlreadyWhitelisted();
-    error AlreadyPaused();
+    error AlreadyRevoked();
     error NotPaused();
     error NotRevoked();
     error IsRevoked();
     error CannotRevoke();
-    error NotAuthorized();
     error NotOperational();
     error InvalidBuilderKickback();
+    error BuilderDoesNotExist();
 
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
     event KYCApproved(address indexed builder_);
     event Whitelisted(address indexed builder_);
-    event Paused(address indexed builder_, bytes29 reason_);
+    event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
     event Revoked(address indexed builder_);
-    event Permitted(address indexed builder_);
+    event Permitted(address indexed builder_, uint256 kickback_, uint256 cooldown_);
     event BuilderKickbackUpdateScheduled(address indexed builder_, uint256 kickback_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
@@ -47,7 +50,9 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         bool kycApproved;
         bool whitelisted;
         bool paused;
-        bytes29 pausedReason;
+        bool revoked;
+        bytes8 reserved;
+        bytes20 pausedReason;
     }
 
     // -----------------------------
@@ -71,14 +76,18 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     mapping(address builder => address rewardReceiver) public builderRewardReceiver;
     /// @notice map of builders kickback data
     mapping(address builder => KickbackData kickbackData) public builderKickback;
-    /// @notice array of all the gauges created
-    Gauge[] public gauges;
+    /// @notice array of all the operational gauges
+    EnumerableSet.AddressSet internal _gauges;
+    /// @notice array of all the halted gauges
+    EnumerableSet.AddressSet internal _haltedGauges;
     /// @notice gauge factory contract address
     GaugeFactory public gaugeFactory;
     /// @notice gauge contract for a builder
     mapping(address builder => Gauge gauge) public builderToGauge;
     /// @notice builder address for a gauge contract
     mapping(Gauge gauge => address builder) public gaugeToBuilder;
+    /// @notice map of last period finish for halted gauges
+    mapping(Gauge gauge => uint256 lastPeriodFinish) public haltedGaugeLastPeriodFinish;
     /// @notice time that must elapse for a new kickback from a builder to be applied
     uint128 public kickbackCooldown;
 
@@ -155,12 +164,10 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
     /**
      * @notice pause builder
      * @dev reverts if is not called by the owner address
-     * reverts trying to revoke
      * @param builder_ address of the builder
      * @param reason_ reason for the pause
      */
-    function pauseBuilder(address builder_, bytes29 reason_) external onlyOwner {
-        if (reason_ == "Revoked") revert CannotRevoke();
+    function pauseBuilder(address builder_, bytes20 reason_) external onlyOwner {
         // pause can be overwritten to change the reason
         builderState[builder_].paused = true;
         builderState[builder_].pausedReason = reason_;
@@ -175,7 +182,6 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
      */
     function unpauseBuilder(address builder_) external onlyOwner {
         if (builderState[builder_].paused == false) revert NotPaused();
-        if (builderState[builder_].pausedReason == "Revoked") revert IsRevoked();
 
         builderState[builder_].paused = false;
         builderState[builder_].pausedReason = "";
@@ -185,56 +191,67 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
 
     /**
      * @notice permit builder
-     * @dev reverts if is not called by the governor address or authorized changer
-     * reverts if builder state is not Revoked
-     * @param builder_ address of the builder
-     */
-    function permitBuilder(address builder_) external {
-        if (msg.sender != builder_) revert NotAuthorized();
-        if (builderState[builder_].pausedReason != "Revoked") revert NotRevoked();
-
-        builderState[builder_].paused = false;
-        builderState[builder_].pausedReason = "";
-        emit Permitted(builder_);
-    }
-
-    /**
-     * @notice revoke builder
-     * @dev reverts if is not called by the builder address
-     * reverts if builder state is not Whitelisted
-     * @param builder_ address of the builder
-     */
-    function revokeBuilder(address builder_) external {
-        if (msg.sender != builder_) revert NotAuthorized();
-        if (builderState[builder_].paused == true) revert AlreadyPaused();
-
-        builderState[builder_].paused = true;
-        builderState[builder_].pausedReason = "Revoked";
-        emit Revoked(builder_);
-    }
-
-    /**
-     * @notice set a builder kickback
-     * @dev reverts if is not called by the builder
-     * reverts if builder is not operational
-     * @param builder_ address of the builder
+     * @dev reverts if builder state is not Revoked
      * @param kickback_ kickback(100% == 1 ether)
      */
-    function setBuilderKickback(address builder_, uint64 kickback_) external {
-        if (msg.sender != builder_) revert NotAuthorized();
-        if (isBuilderOperational(builder_) == false) revert NotOperational();
+    function permitBuilder(uint64 kickback_) external {
+        Gauge _gauge = builderToGauge[msg.sender];
+        if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
+        if (builderState[msg.sender].revoked == false) revert NotRevoked();
 
         // TODO: should we have a minimal amount?
         if (kickback_ > _MAX_KICKBACK) {
             revert InvalidBuilderKickback();
         }
 
-        KickbackData storage _kickbackData = builderKickback[builder_];
-        _kickbackData.previous = getKickbackToApply(builder_);
-        _kickbackData.next = kickback_;
-        _kickbackData.cooldownEndTime = uint128(block.timestamp + kickbackCooldown);
+        builderState[msg.sender].revoked = false;
 
-        emit BuilderKickbackUpdateScheduled(builder_, kickback_, _kickbackData.cooldownEndTime);
+        KickbackData memory _kickbackData = builderKickback[msg.sender];
+        _kickbackData.previous = getKickbackToApply(msg.sender);
+        _kickbackData.next = kickback_;
+        builderKickback[msg.sender] = _kickbackData;
+
+        _resumeGauge(_gauge);
+
+        emit Permitted(msg.sender, kickback_, _kickbackData.cooldownEndTime);
+    }
+
+    /**
+     * @notice revoke builder
+     * @dev reverts if builder is already revoked
+     */
+    function revokeBuilder() external {
+        Gauge _gauge = builderToGauge[msg.sender];
+        if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
+        if (builderState[msg.sender].revoked == true) revert AlreadyRevoked();
+
+        builderState[msg.sender].revoked = true;
+        // when revoked builder wants to come back, it can set a new kickback. So, the cooldown time starts here
+        builderKickback[msg.sender].cooldownEndTime = uint128(block.timestamp + kickbackCooldown);
+        _haltGauge(_gauge);
+
+        emit Revoked(msg.sender);
+    }
+
+    /**
+     * @notice set a builder kickback
+     * @dev reverts if builder is not operational
+     * @param kickback_ kickback(100% == 1 ether)
+     */
+    function setBuilderKickback(uint64 kickback_) external {
+        if (isBuilderOperational(msg.sender) == false) revert NotOperational();
+
+        // TODO: should we have a minimal amount?
+        if (kickback_ > _MAX_KICKBACK) {
+            revert InvalidBuilderKickback();
+        }
+
+        KickbackData storage _kickbackData = builderKickback[msg.sender];
+        _kickbackData.previous = getKickbackToApply(msg.sender);
+        _kickbackData.next = kickback_;
+        _kickbackData.cooldownEndTime = uint128(block.timestamp) + kickbackCooldown;
+
+        emit BuilderKickbackUpdateScheduled(msg.sender, kickback_, _kickbackData.cooldownEndTime);
     }
 
     /**
@@ -271,6 +288,48 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         return isBuilderOperational(gaugeToBuilder[gauge_]);
     }
 
+    /**
+     * @notice get length of gauges array
+     */
+    function getGaugesLength() public view returns (uint256) {
+        return _gauges.length();
+    }
+
+    /**
+     * @notice get gauge from array at a given index
+     */
+    function getGaugeAt(uint256 index_) public view returns (address) {
+        return _gauges.at(index_);
+    }
+
+    /**
+     * @notice return true is gauge is rewarded
+     */
+    function isGaugeRewarded(address gauge_) public view returns (bool) {
+        return _gauges.contains(gauge_);
+    }
+
+    /**
+     * @notice get length of halted gauges array
+     */
+    function getHaltedGaugesLength() public view returns (uint256) {
+        return _haltedGauges.length();
+    }
+
+    /**
+     * @notice get halted gauge from array at a given index
+     */
+    function getHaltedGaugeAt(uint256 index_) public view returns (address) {
+        return _haltedGauges.at(index_);
+    }
+
+    /**
+     * @notice return true is gauge is halted
+     */
+    function isGaugeHalted(address gauge_) public view returns (bool) {
+        return _haltedGauges.contains(gauge_);
+    }
+
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
@@ -284,8 +343,28 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         gauge_ = gaugeFactory.createGauge();
         builderToGauge[builder_] = gauge_;
         gaugeToBuilder[gauge_] = builder_;
-        gauges.push(gauge_);
+        _gauges.add(address(gauge_));
         emit GaugeCreated(builder_, address(gauge_), msg.sender);
+    }
+
+    /**
+     * @notice halts a gauge moving it from the active array to the halted one
+     * @dev SponsorsManager override this function to remove its shares
+     * @param gauge_ gauge contract to be halted
+     */
+    function _haltGauge(Gauge gauge_) internal virtual {
+        _haltedGauges.add(address(gauge_));
+        _gauges.remove(address(gauge_));
+    }
+
+    /**
+     * @notice resumes a gauge moving it from the halted array to the active one
+     * @dev SponsorsManager override this function to restore its shares
+     * @param gauge_ gauge contract to be resumed
+     */
+    function _resumeGauge(Gauge gauge_) internal virtual {
+        _gauges.add(address(gauge_));
+        _haltedGauges.remove(address(gauge_));
     }
 
     /**
