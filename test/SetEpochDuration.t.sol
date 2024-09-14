@@ -62,6 +62,17 @@ contract SetEpochDurationTest is BaseTest {
     }
 
     /**
+     * SCENARIO: setEpochDuration reverts if the new duration is not divisible by 1 hour
+     */
+    function test_RevertEpochDurationNotHourBasis() public {
+        // GIVEN an epoch duration of 1 week
+        //  WHEN tries to setEpochDuration with 2 weeks + 1 of duration
+        //   THEN tx reverts because durations are not multiple
+        vm.expectRevert(EpochTimeKeeper.EpochDurationNotHourBasis.selector);
+        sponsorsManager.setEpochDuration(2 weeks + 1);
+    }
+
+    /**
      * SCENARIO: setEpochDuration reverts if the new duration is not multiple of the previous one
      */
     function test_RevertEpochDurationAreNotMultiples() public {
@@ -70,10 +81,10 @@ contract SetEpochDurationTest is BaseTest {
         //   THEN tx reverts because durations are not multiple
         vm.expectRevert(EpochTimeKeeper.EpochDurationsAreNotMultiples.selector);
         sponsorsManager.setEpochDuration(1.5 weeks);
-        //  WHEN tries to setEpochDuration with 0.51 weeks of duration
+        //  WHEN tries to setEpochDuration with 5 days of duration
         //   THEN tx reverts because durations are not multiple
         vm.expectRevert(EpochTimeKeeper.EpochDurationsAreNotMultiples.selector);
-        sponsorsManager.setEpochDuration(0.51 weeks);
+        sponsorsManager.setEpochDuration(5 days);
 
         // GIVEN an epoch duration of 4 week
         sponsorsManager.setEpochDuration(4 weeks);
@@ -93,14 +104,14 @@ contract SetEpochDurationTest is BaseTest {
         sponsorsManager.setEpochDuration(0.5 weeks);
         _skipAndStartNewEpoch();
         assertEq(sponsorsManager.getEpochDuration(), 0.5 weeks);
-        //  WHEN tries to setEpochDuration with 2.25 weeks of duration
+        //  WHEN tries to setEpochDuration with 4 days of duration
         //   THEN tx reverts because durations are not multiple
         vm.expectRevert(EpochTimeKeeper.EpochDurationsAreNotMultiples.selector);
-        sponsorsManager.setEpochDuration(2.25 weeks);
-        //  WHEN tries to setEpochDuration with 0.15 weeks of duration
+        sponsorsManager.setEpochDuration(4 days);
+        //  WHEN tries to setEpochDuration with 2 days of duration
         //   THEN tx reverts because durations are not multiple
         vm.expectRevert(EpochTimeKeeper.EpochDurationsAreNotMultiples.selector);
-        sponsorsManager.setEpochDuration(0.15 weeks);
+        sponsorsManager.setEpochDuration(2 days);
     }
 
     /**

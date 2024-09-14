@@ -13,6 +13,7 @@ abstract contract EpochTimeKeeper is Upgradeable {
     // -----------------------------
     error EpochDurationTooShort();
     error EpochDurationsAreNotMultiples();
+    error EpochDurationNotHourBasis();
 
     // -----------------------------
     // ----------- Events ----------
@@ -53,10 +54,15 @@ abstract contract EpochTimeKeeper is Upgradeable {
     function __EpochTimeKeeper_init(address changeExecutor_, uint64 epochDuration_) internal onlyInitializing {
         __Upgradeable_init(changeExecutor_);
 
-        EpochDurationData storage _epochDuration = epochDuration;
+        // read from store
+        EpochDurationData memory _epochDuration = epochDuration;
+
         _epochDuration.previous = epochDuration_;
         _epochDuration.next = epochDuration_;
         _epochDuration.cooldownEndTime = uint128(block.timestamp);
+
+        // write to storage
+        epochDuration = _epochDuration;
     }
 
     // -----------------------------
@@ -65,24 +71,36 @@ abstract contract EpochTimeKeeper is Upgradeable {
 
     /**
      * @notice schedule a new epoch duration. It will be applied for the next epoch
+     *   The start and end of an epoch are determined absolutely by timestamps.
+     *   As a result, both the new epoch duration and the current epoch duration must be multiples of each other
+     *   to ensure synchronization. The transition to the new duration occurs when both periods align
+     *   If the new duration is longer: The system waits for the current epoch to end before switching
+     *   If the new duration is shorter: The system waits until the current epoch finishes
+     *   This approach avoids extra storage or calculations, keeping epoch management efficient.
      * @dev reverts if is too short. It must be greater than 2 time the distribution window
      * @param newEpochDuration_ new epoch duration
      */
     function setEpochDuration(uint64 newEpochDuration_) external onlyGovernorOrAuthorizedChanger {
         if (newEpochDuration_ < 2 * _DISTRIBUTION_WINDOW) revert EpochDurationTooShort();
+        if (newEpochDuration_ % 1 hours != 0) revert EpochDurationNotHourBasis();
 
         uint64 _currentEpochDuration = uint64(getEpochDuration());
         if (_currentEpochDuration % newEpochDuration_ != 0 && newEpochDuration_ % _currentEpochDuration != 0) {
             revert EpochDurationsAreNotMultiples();
         }
 
-        EpochDurationData storage _epochDuration = epochDuration;
+        // read from store
+        EpochDurationData memory _epochDuration = epochDuration;
+
         _epochDuration.previous = _currentEpochDuration;
         _epochDuration.next = newEpochDuration_;
         _epochDuration.cooldownEndTime =
             uint128(UtilsLib._calcEpochNext(Math.max(_epochDuration.previous, newEpochDuration_), block.timestamp));
 
         emit NewEpochDurationScheduled(newEpochDuration_, _epochDuration.cooldownEndTime);
+
+        // write to storage
+        epochDuration = _epochDuration;
     }
 
     /**
