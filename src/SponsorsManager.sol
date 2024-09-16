@@ -25,6 +25,7 @@ contract SponsorsManager is BuilderRegistry {
     error OnlyInDistributionWindow();
     error NotInDistributionPeriod();
     error DistributionPeriodDidNotStart();
+    error GaugeDoesNotExist();
 
     // -----------------------------
     // ----------- Events ----------
@@ -115,6 +116,7 @@ contract SponsorsManager is BuilderRegistry {
     /**
      * @notice allocates votes for a gauge
      * @dev reverts if it is called during the distribution period
+     *  reverts if gauge does not have a builder associated
      * @param gauge_ address of the gauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
      */
@@ -128,6 +130,7 @@ contract SponsorsManager is BuilderRegistry {
     /**
      * @notice allocates votes for a batch of gauges
      * @dev reverts if it is called during the distribution period
+     *  reverts if gauge does not have a builder associated
      * @param gauges_ array of gauges where the votes will be allocated
      * @param allocations_ array of amount of votes to allocate
      */
@@ -253,7 +256,7 @@ contract SponsorsManager is BuilderRegistry {
         internal
         returns (uint256 newSponsorTotalAllocation_, uint256 newTotalPotentialReward_)
     {
-        // TODO: validate gauge exists, is whitelisted, is not paused
+        if (gaugeToBuilder[gauge_] == address(0)) revert GaugeDoesNotExist();
         uint256 _timeUntilNext = EpochLib._epochNext(block.timestamp) - block.timestamp;
         (uint256 _allocationDeviation, bool _isNegative) = gauge_.allocate(msg.sender, allocation_);
         if (_isNegative) {

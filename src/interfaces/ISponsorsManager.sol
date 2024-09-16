@@ -19,4 +19,9 @@ interface ISponsorsManager {
      * @notice returns rewards receiver for a given builder
      */
     function builderRewardReceiver(address builder_) external view returns (address rewardReceiver_);
+
+    /**
+     * @notice return true if builder is operational
+     */
+    function isBuilderOperational(address builder_) external view returns (bool isOperational_);
 }
