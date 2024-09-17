@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/41c5c643e00ea37977046df1020b30b6d7bc2d18/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8ec40d87be9e0ccefea4a86603917ab71f394728/src/BuilderRegistry.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md), Ownable2StepUpgradeable
 
@@ -75,7 +75,7 @@ mapping(Gauge gauge => address builder) public gaugeToBuilder;
 time that must elapse for a new kickback from a builder to be applied
 
 ```solidity
-uint256 public kickbackCooldown;
+uint128 public kickbackCooldown;
 ```
 
 ### \_\_gap
@@ -98,7 +98,7 @@ function __BuilderRegistry_init(
     address changeExecutor_,
     address kycApprover_,
     address gaugeFactory_,
-    uint256 kickbackCooldown_
+    uint128 kickbackCooldown_
 )
     internal
     onlyInitializing;
@@ -111,7 +111,7 @@ function __BuilderRegistry_init(
 | `changeExecutor_`   | `address` | See Governed doc                                                                             |
 | `kycApprover_`      | `address` | account responsible of approving Builder's Know you Costumer policies and Legal requirements |
 | `gaugeFactory_`     | `address` | address of the GaugeFactory contract                                                         |
-| `kickbackCooldown_` | `uint256` | time that must elapse for a new kickback from a builder to be applied                        |
+| `kickbackCooldown_` | `uint128` | time that must elapse for a new kickback from a builder to be applied                        |
 
 ### activateBuilder
 
@@ -120,14 +120,7 @@ activates builder and set reward receiver
 _reverts if is not called by the owner address reverts if builder state is not pending_
 
 ```solidity
-function activateBuilder(
-    address builder_,
-    address rewardReceiver_,
-    uint64 kickback_
-)
-    external
-    onlyOwner
-    atState(builder_, BuilderState.Pending);
+function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyOwner;
 ```
 
 **Parameters**
@@ -164,11 +157,10 @@ function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedCha
 
 pause builder
 
-_reverts if is not called by the governor address or authorized changer reverts if builder state is not Whitelisted
-reverts trying to revoke_
+_reverts if is not called by the owner address reverts trying to revoke_
 
 ```solidity
-function pauseBuilder(address builder_, bytes29 reason_) external onlyGovernorOrAuthorizedChanger;
+function pauseBuilder(address builder_, bytes29 reason_) external onlyOwner;
 ```
 
 **Parameters**
@@ -177,6 +169,22 @@ function pauseBuilder(address builder_, bytes29 reason_) external onlyGovernorOr
 | ---------- | --------- | ---------------------- |
 | `builder_` | `address` | address of the builder |
 | `reason_`  | `bytes29` | reason for the pause   |
+
+### unpauseBuilder
+
+unpause builder
+
+_reverts if is not called by the owner address reverts if builder state is not paused_
+
+```solidity
+function unpauseBuilder(address builder_) external onlyOwner;
+```
+
+**Parameters**
+
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
 ### permitBuilder
 
@@ -214,10 +222,10 @@ function revokeBuilder(address builder_) external;
 
 set a builder kickback
 
-_reverts if is not called by the builder reverts if builder state is not Whitelisted_
+_reverts if is not called by the builder reverts if builder is not operational_
 
 ```solidity
-function setBuilderKickback(address builder_, uint64 kickback_) external atState(builder_, BuilderState.Whitelisted);
+function setBuilderKickback(address builder_, uint64 kickback_) external;
 ```
 
 **Parameters**
@@ -278,12 +286,6 @@ function _createGauge(address builder_) internal returns (Gauge gauge_);
 | -------- | ------- | -------------- |
 | `gauge_` | `Gauge` | gauge contract |
 
-### \_updateState
-
-```solidity
-function _updateState(address builder_, BuilderState newState_) internal;
-```
-
 ## Events
 
 ### KYCApproved
@@ -302,6 +304,12 @@ event Whitelisted(address indexed builder_);
 
 ```solidity
 event Paused(address indexed builder_, bytes29 reason_);
+```
+
+### Unpaused
+
+```solidity
+event Unpaused(address indexed builder_);
 ```
 
 ### Revoked
@@ -360,6 +368,12 @@ error NotPaused();
 error NotRevoked();
 ```
 
+### IsRevoked
+
+```solidity
+error IsRevoked();
+```
+
 ### CannotRevoke
 
 ```solidity
@@ -384,25 +398,7 @@ error NotOperational();
 error InvalidBuilderKickback();
 ```
 
-### RequiredState
-
-```solidity
-error RequiredState(BuilderState state_);
-```
-
 ## Structs
-
-### KickbackData
-
-```solidity
-struct KickbackData {
-    uint64 previous;
-    uint64 latest;
-    uint128 cooldownEndTime;
-}
-```
-
-## Enums
 
 ### BuilderState
 
@@ -412,5 +408,15 @@ struct BuilderState {
     bool whitelisted;
     bool paused;
     bytes29 pausedReason;
+}
+```
+
+### KickbackData
+
+```solidity
+struct KickbackData {
+    uint64 previous;
+    uint64 next;
+    uint128 cooldownEndTime;
 }
 ```

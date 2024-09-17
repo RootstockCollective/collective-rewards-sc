@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/41c5c643e00ea37977046df1020b30b6d7bc2d18/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8ec40d87be9e0ccefea4a86603917ab71f394728/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -134,7 +134,7 @@ function initialize(
     address rewardToken_,
     address stakingToken_,
     address gaugeFactory_,
-    uint256 kickbackCooldown_
+    uint128 kickbackCooldown_
 )
     external
     initializer;
@@ -149,13 +149,13 @@ function initialize(
 | `rewardToken_`      | `address` | address of the token rewarded to builder and voters                   |
 | `stakingToken_`     | `address` | address of the staking token for builder and voters                   |
 | `gaugeFactory_`     | `address` | address of the GaugeFactory contract                                  |
-| `kickbackCooldown_` | `uint256` | time that must elapse for a new kickback from a builder to be applied |
+| `kickbackCooldown_` | `uint128` | time that must elapse for a new kickback from a builder to be applied |
 
 ### allocate
 
 allocates votes for a gauge
 
-_reverts if it is called during the distribution period_
+_reverts if it is called during the distribution period reverts if gauge does not have a builder associated_
 
 ```solidity
 function allocate(Gauge gauge_, uint256 allocation_) external notInDistributionPeriod;
@@ -172,7 +172,7 @@ function allocate(Gauge gauge_, uint256 allocation_) external notInDistributionP
 
 allocates votes for a batch of gauges
 
-_reverts if it is called during the distribution period_
+_reverts if it is called during the distribution period reverts if gauge does not have a builder associated_
 
 ```solidity
 function allocateBatch(Gauge[] calldata gauges_, uint256[] calldata allocations_) external notInDistributionPeriod;
@@ -376,4 +376,10 @@ error NotInDistributionPeriod();
 
 ```solidity
 error DistributionPeriodDidNotStart();
+```
+
+### GaugeDoesNotExist
+
+```solidity
+error GaugeDoesNotExist();
 ```
