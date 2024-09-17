@@ -40,7 +40,7 @@ contract GaugeTest is BaseTest {
         // WHEN alice calls notifyRewardAmountAndUpdateShares
         //  THEN tx reverts because caller is not the SponsorsManager contract
         vm.expectRevert(Gauge.NotSponsorsManager.selector);
-        gauge.notifyRewardAmountAndUpdateShares(1 ether, 1 ether);
+        gauge.notifyRewardAmountAndUpdateShares(1 ether, 1 ether, block.timestamp);
     }
 
     /**
@@ -909,7 +909,7 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether);
 
         // AND 100 ether distributed for sponsors
-        gauge.notifyRewardAmountAndUpdateShares(100 ether, 1 ether);
+        gauge.notifyRewardAmountAndUpdateShares(100 ether, 1 ether, sponsorsManager.periodFinish());
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -939,7 +939,7 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 0 ether);
 
         // AND 0 ether distributed for sponsors
-        gauge.notifyRewardAmountAndUpdateShares(0, 1 ether);
+        gauge.notifyRewardAmountAndUpdateShares(0, 1 ether, sponsorsManager.periodFinish());
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND half epoch pass
