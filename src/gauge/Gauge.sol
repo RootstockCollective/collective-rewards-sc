@@ -171,7 +171,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @return lastTimeRewardApplicable minimum between current timestamp or periodFinish
      */
     function lastTimeRewardApplicable() public view returns (uint256) {
-        return Math.min(block.timestamp, sponsorsManager.periodFinish());
+        return _lastTimeRewardApplicable(sponsorsManager.periodFinish());
     }
 
     /**
@@ -181,18 +181,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
      */
     function rewardPerToken(address rewardToken_) public view returns (uint256) {
-        RewardData storage _rewardData = rewardData[rewardToken_];
-
-        if (totalAllocation == 0) {
-            // [PREC]
-            return _rewardData.rewardPerTokenStored;
-        }
-        // [PREC] = (([N] - [N]) * [PREC]) / [N]
-        // TODO: could be lastUpdateTime > lastTimeRewardApplicable()??
-        uint256 _rewardPerTokenCurrent =
-            ((lastTimeRewardApplicable() - _rewardData.lastUpdateTime) * _rewardData.rewardRate) / totalAllocation;
-        // [PREC] = [PREC] + [PREC]
-        return _rewardData.rewardPerTokenStored + _rewardPerTokenCurrent;
+        return _rewardPerToken(rewardToken_, sponsorsManager.periodFinish());
     }
 
     /**
@@ -213,14 +202,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @param sponsor_ address who earned the rewards
      */
     function earned(address rewardToken_, address sponsor_) public view returns (uint256) {
-        RewardData storage _rewardData = rewardData[rewardToken_];
-
-        // [N] = ([N] * ([PREC] - [PREC]) / [PREC])
-        uint256 _currentReward = UtilsLib._mulPrec(
-            allocationOf[sponsor_], rewardPerToken(rewardToken_) - _rewardData.sponsorRewardPerTokenPaid[sponsor_]
-        );
-        // [N] = [N] + [N]
-        return _rewardData.rewards[sponsor_] + _currentReward;
+        return _earned(rewardToken_, sponsor_, sponsorsManager.periodFinish());
     }
 
     /**
@@ -245,7 +227,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
 
         RewardData storage _rewardData = rewardData[rewardToken_];
 
-        _updateRewards(rewardToken_, sponsor_);
+        _updateRewards(rewardToken_, sponsor_, sponsorsManager.periodFinish());
 
         uint256 _reward = _rewardData.rewards[sponsor_];
         if (_reward > 0) {
@@ -306,15 +288,16 @@ contract Gauge is ReentrancyGuardUpgradeable {
         onlySponsorsManager
         returns (uint256 allocationDeviation_, bool isNegative_)
     {
+        uint256 _periodFinish = sponsorsManager.periodFinish();
         // if sponsors quit before epoch finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
-            _updateRewardMissing(rewardToken);
-            _updateRewardMissing(UtilsLib._COINBASE_ADDRESS);
+            _updateRewardMissing(rewardToken, _periodFinish);
+            _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
 
-        _updateRewards(rewardToken, sponsor_);
-        _updateRewards(UtilsLib._COINBASE_ADDRESS, sponsor_);
+        _updateRewards(rewardToken, sponsor_, _periodFinish);
+        _updateRewards(UtilsLib._COINBASE_ADDRESS, sponsor_, _periodFinish);
 
         // to do not deal with signed integers we add allocation if the new one is bigger than the previous one
         uint256 _previousAllocation = allocationOf[sponsor_];
@@ -350,7 +333,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
         external
         payable
     {
-        _notifyRewardAmount(rewardToken_, builderAmount_, sponsorsAmount_);
+        _notifyRewardAmount(rewardToken_, builderAmount_, sponsorsAmount_, sponsorsManager.periodFinish());
         if (rewardToken_ == UtilsLib._COINBASE_ADDRESS) {
             if (builderAmount_ + sponsorsAmount_ != msg.value) revert InvalidRewardAmount();
         } else {
@@ -364,12 +347,14 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @notice called on the reward distribution. Transfers reward tokens from sponsorManger to this contract
      * @dev reverts if caller is not the sponsorsManager contract
      * @param amountERC20_ amount of ERC20 rewards
-     * @param builderKickback_  builder kickback percetange
+     * @param builderKickback_  builder kickback percentage
+     * @param periodFinish_ timestamp end of current rewards period
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
     function notifyRewardAmountAndUpdateShares(
         uint256 amountERC20_,
-        uint256 builderKickback_
+        uint256 builderKickback_,
+        uint256 periodFinish_
     )
         external
         payable
@@ -378,8 +363,10 @@ contract Gauge is ReentrancyGuardUpgradeable {
     {
         uint256 _sponsorAmountERC20 = UtilsLib._mulPrec(builderKickback_, amountERC20_);
         uint256 _sponsorAmountCoinbase = UtilsLib._mulPrec(builderKickback_, msg.value);
-        _notifyRewardAmount(rewardToken, amountERC20_ - _sponsorAmountERC20, _sponsorAmountERC20);
-        _notifyRewardAmount(UtilsLib._COINBASE_ADDRESS, msg.value - _sponsorAmountCoinbase, _sponsorAmountCoinbase);
+        _notifyRewardAmount(rewardToken, amountERC20_ - _sponsorAmountERC20, _sponsorAmountERC20, periodFinish_);
+        _notifyRewardAmount(
+            UtilsLib._COINBASE_ADDRESS, msg.value - _sponsorAmountCoinbase, _sponsorAmountCoinbase, periodFinish_
+        );
 
         newGaugeRewardShares_ = totalAllocation * EpochLib._WEEK;
         rewardShares = newGaugeRewardShares_;
@@ -392,13 +379,72 @@ contract Gauge is ReentrancyGuardUpgradeable {
     // -----------------------------
 
     /**
+     * @notice gets the last time the reward is applicable, now or when the epoch finished
+     * @param periodFinish_ timestamp end of current rewards period
+     * @return lastTimeRewardApplicable minimum between current timestamp or periodFinish
+     */
+    function _lastTimeRewardApplicable(uint256 periodFinish_) internal view returns (uint256) {
+        return Math.min(block.timestamp, periodFinish_);
+    }
+
+    /**
+     * @notice gets the current reward rate per unit of stakingToken allocated
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param periodFinish_ timestamp end of current rewards period
+     * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
+     */
+    function _rewardPerToken(address rewardToken_, uint256 periodFinish_) internal view returns (uint256) {
+        RewardData storage _rewardData = rewardData[rewardToken_];
+
+        if (totalAllocation == 0) {
+            // [PREC]
+            return _rewardData.rewardPerTokenStored;
+        }
+        // [PREC] = (([N] - [N]) * [PREC]) / [N]
+        // TODO: could be lastUpdateTime > lastTimeRewardApplicable()??
+        uint256 _rewardPerTokenCurrent = (
+            (_lastTimeRewardApplicable(periodFinish_) - _rewardData.lastUpdateTime) * _rewardData.rewardRate
+        ) / totalAllocation;
+        // [PREC] = [PREC] + [PREC]
+        return _rewardData.rewardPerTokenStored + _rewardPerTokenCurrent;
+    }
+
+    /**
+     * @notice gets `sponsor_` rewards missing to claim
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param sponsor_ address who earned the rewards
+     * @param periodFinish_ timestamp end of current rewards period
+     */
+    function _earned(address rewardToken_, address sponsor_, uint256 periodFinish_) internal view returns (uint256) {
+        RewardData storage _rewardData = rewardData[rewardToken_];
+
+        // [N] = ([N] * ([PREC] - [PREC]) / [PREC])
+        uint256 _currentReward = UtilsLib._mulPrec(
+            allocationOf[sponsor_],
+            _rewardPerToken(rewardToken_, periodFinish_) - _rewardData.sponsorRewardPerTokenPaid[sponsor_]
+        );
+        // [N] = [N] + [N]
+        return _rewardData.rewards[sponsor_] + _currentReward;
+    }
+
+    /**
      * @notice transfers reward tokens to this contract
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      * @param builderAmount_ amount of rewards for the builder
      * @param sponsorsAmount_ amount of rewards for the sponsors
+     * @param periodFinish_ timestamp end of current rewards period
      */
-    function _notifyRewardAmount(address rewardToken_, uint256 builderAmount_, uint256 sponsorsAmount_) internal {
+    function _notifyRewardAmount(
+        address rewardToken_,
+        uint256 builderAmount_,
+        uint256 sponsorsAmount_,
+        uint256 periodFinish_
+    )
+        internal
+    {
         RewardData storage _rewardData = rewardData[rewardToken_];
         // cache storage variables used multiple times
         uint256 _rewardRate = _rewardData.rewardRate;
@@ -406,7 +452,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
         uint256 _leftover = 0;
 
         // if period finished there is not remaining reward
-        if (block.timestamp < sponsorsManager.periodFinish()) {
+        if (block.timestamp < periodFinish_) {
             // [PREC] = [N] * [PREC]
             _leftover = (_timeUntilNext) * _rewardRate;
         }
@@ -420,7 +466,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
         _rewardRate = (sponsorsAmount_ * UtilsLib._PRECISION + _rewardData.rewardMissing + _leftover) / _timeUntilNext;
 
         _rewardData.builderRewards += builderAmount_;
-        _rewardData.rewardPerTokenStored = rewardPerToken(rewardToken_);
+        _rewardData.rewardPerTokenStored = _rewardPerToken(rewardToken_, periodFinish_);
         _rewardData.lastUpdateTime = block.timestamp;
         _rewardData.rewardMissing = 0;
         _rewardData.rewardRate = _rewardRate;
@@ -433,13 +479,14 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      * @param sponsor_ address of the sponsors
+     * @param periodFinish_ timestamp end of current rewards period
      */
-    function _updateRewards(address rewardToken_, address sponsor_) internal {
+    function _updateRewards(address rewardToken_, address sponsor_, uint256 periodFinish_) internal {
         RewardData storage _rewardData = rewardData[rewardToken_];
 
-        _rewardData.rewardPerTokenStored = rewardPerToken(rewardToken_);
-        _rewardData.lastUpdateTime = lastTimeRewardApplicable();
-        _rewardData.rewards[sponsor_] = earned(rewardToken_, sponsor_);
+        _rewardData.rewardPerTokenStored = _rewardPerToken(rewardToken_, periodFinish_);
+        _rewardData.lastUpdateTime = _lastTimeRewardApplicable(periodFinish_);
+        _rewardData.rewards[sponsor_] = _earned(rewardToken_, sponsor_, periodFinish_);
         _rewardData.sponsorRewardPerTokenPaid[sponsor_] = _rewardData.rewardPerTokenStored;
     }
 
@@ -447,12 +494,13 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @notice update reward missing variable
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param periodFinish_ timestamp end of current rewards period
      */
-    function _updateRewardMissing(address rewardToken_) internal {
+    function _updateRewardMissing(address rewardToken_, uint256 periodFinish_) internal {
         RewardData storage _rewardData = rewardData[rewardToken_];
         // [PREC] = [PREC] + ([N] - [N]) * [PREC]
         _rewardData.rewardMissing +=
-            ((lastTimeRewardApplicable() - _rewardData.lastUpdateTime) * _rewardData.rewardRate);
+            ((_lastTimeRewardApplicable(periodFinish_) - _rewardData.lastUpdateTime) * _rewardData.rewardRate);
     }
 
     /**
