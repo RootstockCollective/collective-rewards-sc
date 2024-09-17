@@ -3,17 +3,25 @@ name: Deploy Contracts for QA
 
 on:
   workflow_dispatch:
+    inputs:
+      chainId:
+        description: "Chain ID"
+        required: true
+        default: "31"
+        type: choice
+        options:
+          - 31
   pull_request_review:
     types: [submitted]
 
 env:
-  CHAIN_ID: 31
+  CHAIN_ID: ${{ inputs.chainId || '31' }}
   DEPLOYMENTS_DIR: "deployments/"
 
 jobs:
   deploy:
     runs-on: "ubuntu-latest"
-    if: github.event.review.state == 'approved'
+    if: github.event_name == 'workflow_dispatch' || github.event.review.state == 'approved'
     environment:
       name: QA
     steps:
