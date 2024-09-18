@@ -56,22 +56,22 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: should revert if is not called by the builder
+     * SCENARIO: should revert if is not called by a builder
      */
-    function test_NotAuthorized() public {
+    function test_RevertBuilderDoesNotExist() public {
         // GIVEN  a whitelisted builder
         //  AND a sponsor alice
         vm.startPrank(alice);
 
         // WHEN alice calls revokeBuilder
-        //  THEN tx reverts because caller is not the builder
-        vm.expectRevert(BuilderRegistry.NotAuthorized.selector);
-        sponsorsManager.revokeBuilder(builder);
+        //  THEN tx reverts because caller is not a builder
+        vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
+        sponsorsManager.revokeBuilder();
 
         // WHEN alice calls permitBuilder
-        //  THEN tx reverts because caller is not the builder
-        vm.expectRevert(BuilderRegistry.NotAuthorized.selector);
-        sponsorsManager.permitBuilder(builder, 1 ether);
+        //  THEN tx reverts because caller is not a builder
+        vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
+        sponsorsManager.permitBuilder(1 ether);
     }
 
     /**
@@ -249,19 +249,25 @@ contract BuilderRegistryTest is BaseTest {
     function test_PermitBuilder() public {
         // GIVEN a Revoked builder
         vm.startPrank(builder);
-        sponsorsManager.revokeBuilder(builder);
+        sponsorsManager.revokeBuilder();
 
         // WHEN calls permitBuilder
         //  THEN Permitted event is emitted
         vm.expectEmit();
         emit Permitted(builder, 1 ether, block.timestamp + 2 weeks);
-        sponsorsManager.permitBuilder(builder, 1 ether);
+        sponsorsManager.permitBuilder(1 ether);
 
-        // THEN builder is not paused
-        (,, bool _paused,,, bytes20 _reason) = sponsorsManager.builderState(builder);
-        assertEq(_paused, false);
-        // THEN builder paused reason is clean
-        assertEq(_reason, "");
+        // THEN builder is not revoked
+        (,,, bool _revoked,,) = sponsorsManager.builderState(builder);
+        assertEq(_revoked, false);
+        // THEN gauge is not halted
+        assertEq(sponsorsManager.isGaugeHalted(address(gauge)), false);
+        // THEN halted gauges array length is 0
+        assertEq(sponsorsManager.getHaltedGaugesLength(), 0);
+        // THEN gauge is rewarded
+        assertEq(sponsorsManager.isGaugeRewarded(address(gauge)), true);
+        // THEN rewarded gauges array length is 2
+        assertEq(sponsorsManager.getGaugesLength(), 2);
     }
 
     /**
@@ -273,7 +279,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN tries to permitBuilder
         //  THEN tx reverts because is not revoked
         vm.expectRevert(BuilderRegistry.NotRevoked.selector);
-        sponsorsManager.permitBuilder(builder, 1 ether);
+        sponsorsManager.permitBuilder(1 ether);
         // AND the builder is paused but not revoked
         vm.startPrank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "paused");
@@ -281,7 +287,20 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN tx reverts because is not revoked
         vm.startPrank(builder);
         vm.expectRevert(BuilderRegistry.NotRevoked.selector);
-        sponsorsManager.permitBuilder(builder, 1 ether);
+        sponsorsManager.permitBuilder(1 ether);
+    }
+
+    /**
+     * SCENARIO: permitBuilder should reverts if kickback is higher than 100
+     */
+    function test_PermitBuilderInvalidBuilderKickback() public {
+        // GIVEN a revoked builder
+        vm.startPrank(builder);
+        sponsorsManager.revokeBuilder();
+        //  WHEN tries to permitBuilder with 200% of kickback
+        //   THEN tx reverts because is not a valid kickback
+        vm.expectRevert(BuilderRegistry.InvalidBuilderKickback.selector);
+        sponsorsManager.permitBuilder(2 ether);
     }
 
     /**
@@ -295,11 +314,19 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN StateUpdate event is emitted
         vm.expectEmit();
         emit Revoked(builder);
-        sponsorsManager.revokeBuilder(builder);
+        sponsorsManager.revokeBuilder();
 
         // THEN builder is revoked
         (,,, bool _revoked,,) = sponsorsManager.builderState(builder);
         assertEq(_revoked, true);
+        // THEN gauge is halted
+        assertEq(sponsorsManager.isGaugeHalted(address(gauge)), true);
+        // THEN halted gauges array length is 1
+        assertEq(sponsorsManager.getHaltedGaugesLength(), 1);
+        // THEN gauge is not rewarded
+        assertEq(sponsorsManager.isGaugeRewarded(address(gauge)), false);
+        // THEN rewarded gauges array length is 1
+        assertEq(sponsorsManager.getGaugesLength(), 1);
     }
 
     /**
@@ -308,10 +335,10 @@ contract BuilderRegistryTest is BaseTest {
     function test_RevertAlreadyRevoked() public {
         // GIVEN a revoked builder
         vm.startPrank(builder);
-        sponsorsManager.revokeBuilder(builder);
+        sponsorsManager.revokeBuilder();
         // WHEN tries to revokeBuilder again
         //  THEN tx reverts because is already revoked
         vm.expectRevert(BuilderRegistry.AlreadyRevoked.selector);
-        sponsorsManager.revokeBuilder(builder);
+        sponsorsManager.revokeBuilder();
     }
 }
