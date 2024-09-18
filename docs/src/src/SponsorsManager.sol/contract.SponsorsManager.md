@@ -293,7 +293,8 @@ function _distribute(
     Gauge gauge_,
     uint256 rewardsERC20_,
     uint256 rewardsCoinbase_,
-    uint256 totalPotentialReward_
+    uint256 totalPotentialReward_,
+    uint256 periodFinish_
 )
     internal
     returns (uint256);
@@ -307,6 +308,7 @@ function _distribute(
 | `rewardsERC20_`         | `uint256` | ERC20 rewards to distribute        |
 | `rewardsCoinbase_`      | `uint256` | Coinbase rewards to distribute     |
 | `totalPotentialReward_` | `uint256` | cached total potential reward      |
+| `periodFinish_`         | `uint256` | cached period finish               |
 
 **Returns**
 

@@ -378,7 +378,8 @@ _reverts if caller is not the sponsorsManager contract_
 ```solidity
 function notifyRewardAmountAndUpdateShares(
     uint256 amountERC20_,
-    uint256 builderKickback_
+    uint256 builderKickback_,
+    uint256 periodFinish_
 )
     external
     payable
@@ -388,10 +389,11 @@ function notifyRewardAmountAndUpdateShares(
 
 **Parameters**
 
-| Name               | Type      | Description                 |
-| ------------------ | --------- | --------------------------- |
-| `amountERC20_`     | `uint256` | amount of ERC20 rewards     |
-| `builderKickback_` | `uint256` | builder kickback percetange |
+| Name               | Type      | Description                             |
+| ------------------ | --------- | --------------------------------------- |
+| `amountERC20_`     | `uint256` | amount of ERC20 rewards                 |
+| `builderKickback_` | `uint256` | builder kickback percentage             |
+| `periodFinish_`    | `uint256` | timestamp end of current rewards period |
 
 **Returns**
 
@@ -399,12 +401,75 @@ function notifyRewardAmountAndUpdateShares(
 | ----------------------- | --------- | ------------------------------------------------------ |
 | `newGaugeRewardShares_` | `uint256` | new gauge rewardShares, updated after the distribution |
 
+### \_lastTimeRewardApplicable
+
+gets the last time the reward is applicable, now or when the epoch finished
+
+```solidity
+function _lastTimeRewardApplicable(uint256 periodFinish_) internal view returns (uint256);
+```
+
+**Parameters**
+
+| Name            | Type      | Description                             |
+| --------------- | --------- | --------------------------------------- |
+| `periodFinish_` | `uint256` | timestamp end of current rewards period |
+
+**Returns**
+
+| Name     | Type      | Description                                                                |
+| -------- | --------- | -------------------------------------------------------------------------- |
+| `<none>` | `uint256` | lastTimeRewardApplicable minimum between current timestamp or periodFinish |
+
+### \_rewardPerToken
+
+gets the current reward rate per unit of stakingToken allocated
+
+```solidity
+function _rewardPerToken(address rewardToken_, uint256 periodFinish_) internal view returns (uint256);
+```
+
+**Parameters**
+
+| Name            | Type      | Description                                                                                                         |
+| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_`  | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `periodFinish_` | `uint256` | timestamp end of current rewards period                                                                             |
+
+**Returns**
+
+| Name     | Type      | Description                                          |
+| -------- | --------- | ---------------------------------------------------- |
+| `<none>` | `uint256` | rewardPerToken rewardToken:stakingToken ratio [PREC] |
+
+### \_earned
+
+gets `sponsor_` rewards missing to claim
+
+```solidity
+function _earned(address rewardToken_, address sponsor_, uint256 periodFinish_) internal view returns (uint256);
+```
+
+**Parameters**
+
+| Name            | Type      | Description                                                                                                         |
+| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_`  | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `sponsor_`      | `address` | address who earned the rewards                                                                                      |
+| `periodFinish_` | `uint256` | timestamp end of current rewards period                                                                             |
+
 ### \_notifyRewardAmount
 
 transfers reward tokens to this contract
 
 ```solidity
-function _notifyRewardAmount(address rewardToken_, uint256 builderAmount_, uint256 sponsorsAmount_) internal;
+function _notifyRewardAmount(
+    address rewardToken_,
+    uint256 builderAmount_,
+    uint256 sponsorsAmount_,
+    uint256 periodFinish_
+)
+    internal;
 ```
 
 **Parameters**
@@ -414,35 +479,38 @@ function _notifyRewardAmount(address rewardToken_, uint256 builderAmount_, uint2
 | `rewardToken_`    | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
 | `builderAmount_`  | `uint256` | amount of rewards for the builder                                                                                   |
 | `sponsorsAmount_` | `uint256` | amount of rewards for the sponsors                                                                                  |
+| `periodFinish_`   | `uint256` | timestamp end of current rewards period                                                                             |
 
 ### \_updateRewards
 
 update rewards variables when a sponsor interacts
 
 ```solidity
-function _updateRewards(address rewardToken_, address sponsor_) internal;
+function _updateRewards(address rewardToken_, address sponsor_, uint256 periodFinish_) internal;
 ```
 
 **Parameters**
 
-| Name           | Type      | Description                                                                                                         |
-| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
-| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
-| `sponsor_`     | `address` | address of the sponsors                                                                                             |
+| Name            | Type      | Description                                                                                                         |
+| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_`  | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `sponsor_`      | `address` | address of the sponsors                                                                                             |
+| `periodFinish_` | `uint256` | timestamp end of current rewards period                                                                             |
 
 ### \_updateRewardMissing
 
 update reward missing variable
 
 ```solidity
-function _updateRewardMissing(address rewardToken_) internal;
+function _updateRewardMissing(address rewardToken_, uint256 periodFinish_) internal;
 ```
 
 **Parameters**
 
-| Name           | Type      | Description                                                                                                         |
-| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
-| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| Name            | Type      | Description                                                                                                         |
+| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_`  | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `periodFinish_` | `uint256` | timestamp end of current rewards period                                                                             |
 
 ### \_transferRewardToken
 
