@@ -786,4 +786,105 @@ contract SponsorsManagerTest is BaseTest {
         // THEN alice rewardToken balance is 50% of the distributed amount
         assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_992);
     }
+
+    /**
+     * SCENARIO: after a distribution, in the middle of the epoch, gauge loses all allocations.
+     *  One distribution later, alice allocates there again and old rewards remain unclaimable
+     */
+    function test_GaugeLosesAllocationLockingRewards() public {
+        // GIVEN alice allocates to gauge and gauge2
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+        // AND bob allocates to gauge2
+        vm.startPrank(bob);
+        allocationsArray[0] = 0 ether;
+        allocationsArray[1] = 8 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 rewardToken and 10 coinbase are distributed
+        _distribute(100 ether, 10 ether);
+        // AND half epoch pass
+        _skipRemainingEpochFraction(2);
+
+        // WHEN alice removes allocations from gauge
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 0);
+
+        // AND 100 rewardToken and 10 coinbase are distributed
+        _distribute(100 ether, 10 ether);
+
+        // AND alice adds allocations again
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 2 ether);
+
+        // AND 100 rewardToken and 10 coinbase are distributed
+        _distribute(100 ether, 10 ether);
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // WHEN alice claim rewards
+        vm.startPrank(alice);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is:
+        //  epoch 1 = 21.875 = 3.125 + 18.75 = (100 * 2 / 16) * 0.5 * 0.5 WEEKS + (100 * 6 / 16) * 0.5
+        //  epoch 2 = 23.33 = 3.333 + 20 = (100 * 1 / 15) * 0.5 + (100 * 6 / 15) * 0.5
+        //  epoch 3 = 25 = (100 * 8 / 16) * 0.5
+        assertEq(rewardToken.balanceOf(alice), 70_208_333_333_333_333_314);
+        // THEN alice coinbase balance is:
+        //  epoch 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
+        //  epoch 2 = 2.333 = 0.3333 + 2 = (10 * 1 / 15) * 0.5 + (10 * 6 / 15) * 0.5
+        //  epoch 3 = 2.5 = (10 * 8 / 16) * 0.5
+        assertEq(alice.balance, 7_020_833_333_333_333_314);
+
+        // WHEN bob claim rewards
+        vm.startPrank(bob);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN bob rewardToken balance is:
+        //  epoch 1 = 25 = (100 * 8 / 16) * 0.5
+        //  epoch 2 = 26.66 = (100 * 8 / 15) * 0.5
+        //  epoch 3 = 25 = (100 * 8 / 16) * 0.5
+        assertEq(rewardToken.balanceOf(bob), 76_666_666_666_666_666_648);
+        // THEN bob coinbase balance is:
+        //  epoch 1 = 2.5 = (10 * 8 / 16) * 0.5
+        //  epoch 2 = 2.66 = (10 * 8 / 15) * 0.5
+        //  epoch 3 = 2.5 = (10 * 8 / 16) * 0.5
+        assertEq(bob.balance, 7_666_666_666_666_666_648);
+
+        // WHEN builders claim rewards
+        _buildersClaim();
+
+        // THEN builder rewardToken balance is:
+        //  epoch 1 = 6.25 = (100 * 2 / 16) * 0.5
+        //  epoch 2 = 3.333 = (100 * 1 / 15) * 0.5
+        //  epoch 3 = 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(rewardToken.balanceOf(builder), 15_833_333_333_333_333_333);
+        // THEN builder coinbase balance is:
+        //  epoch 1 = 0.625 = (10 * 2 / 16) * 0.5
+        //  epoch 2 = 0.3333 = (10 * 1 / 15) * 0.5
+        //  epoch 3 = 0.625 = (10 * 2 / 16) * 0.5
+        assertEq(builder.balance, 1_583_333_333_333_333_333);
+
+        // THEN builder2Receiver rewardToken balance is:
+        //  epoch 1 = 43.75 = (100 * 14 / 16) * 0.5
+        //  epoch 2 = 46.66 = (100 * 14 / 15) * 0.5
+        //  epoch 3 = 43.75 = (100 * 14 / 16) * 0.5
+        assertEq(rewardToken.balanceOf(builder2Receiver), 134_166_666_666_666_666_667);
+        // THEN builder2Receiver coinbase balance is:
+        //  epoch 1 = 4.375 = (10 * 14 / 16) * 0.5
+        //  epoch 2 = 4.66 = (10 * 14 / 15) * 0.5
+        //  epoch 3 = 4.375 = (10 * 14 / 16) * 0.5
+        assertEq(builder2Receiver.balance, 13_416_666_666_666_666_667);
+
+        // THEN gauge rewardToken locked balance is 3.125
+        assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 3.125 ether, 100);
+        // THEN gauge coinbase locked balance is 0.3125
+        assertApproxEqAbs(address(gauge).balance, 0.3125 ether, 100);
+    }
 }
