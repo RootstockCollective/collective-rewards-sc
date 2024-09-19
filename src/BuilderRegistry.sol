@@ -101,19 +101,21 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
      * @param gaugeFactory_ address of the GaugeFactory contract
      * @param epochDuration_ epoch time duration
+     * @param epochStartOffset_ offset to add to the first epoch, used to set an specific day to start the epochs
      * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function __BuilderRegistry_init(
         address changeExecutor_,
         address kycApprover_,
         address gaugeFactory_,
-        uint64 epochDuration_,
+        uint32 epochDuration_,
+        uint24 epochStartOffset_,
         uint128 kickbackCooldown_
     )
         internal
         onlyInitializing
     {
-        __EpochTimeKeeper_init(changeExecutor_, epochDuration_);
+        __EpochTimeKeeper_init(changeExecutor_, epochDuration_, epochStartOffset_);
         __Ownable2Step_init();
         __Ownable_init(kycApprover_);
         gaugeFactory = GaugeFactory(gaugeFactory_);
@@ -219,7 +221,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
 
         _kickbackData.previous = getKickbackToApply(msg.sender);
         _kickbackData.next = kickback_;
-        
+
         // write to storage
         builderKickback[msg.sender] = _kickbackData;
 

@@ -360,6 +360,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @param amountERC20_ amount of ERC20 rewards
      * @param builderKickback_  builder kickback percentage
      * @param periodFinish_ timestamp end of current rewards period
+     * @param epochStart_ epoch start timestamp
      * @param epochDuration_ epoch time duration
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
@@ -367,6 +368,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
         uint256 amountERC20_,
         uint256 builderKickback_,
         uint256 periodFinish_,
+        uint256 epochStart_,
         uint256 epochDuration_
     )
         external
@@ -376,7 +378,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     {
         uint256 _sponsorAmountERC20 = UtilsLib._mulPrec(builderKickback_, amountERC20_);
         uint256 _sponsorAmountCoinbase = UtilsLib._mulPrec(builderKickback_, msg.value);
-        uint256 _timeUntilNextEpoch = UtilsLib._calcTimeUntilNextEpoch(epochDuration_, block.timestamp);
+        uint256 _timeUntilNextEpoch = UtilsLib._calcTimeUntilNextEpoch(epochStart_, epochDuration_, block.timestamp);
         _notifyRewardAmount(
             rewardToken, amountERC20_ - _sponsorAmountERC20, _sponsorAmountERC20, periodFinish_, _timeUntilNextEpoch
         );

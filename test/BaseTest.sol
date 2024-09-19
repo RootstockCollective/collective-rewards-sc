@@ -35,7 +35,8 @@ contract BaseTest is Test {
     RewardDistributor public rewardDistributorImpl;
     RewardDistributor public rewardDistributor;
 
-    uint64 public epochDuration = 1 weeks;
+    uint32 public epochDuration = 1 weeks;
+    uint24 public epochStartOffset = 0 days;
     uint128 public kickbackCooldown = 2 weeks;
 
     /* solhint-disable private-vars-leading-underscore */
@@ -63,6 +64,7 @@ contract BaseTest is Test {
             address(stakingToken),
             address(gaugeFactory),
             epochDuration,
+            epochStartOffset,
             kickbackCooldown
         );
         (rewardDistributor, rewardDistributorImpl) =

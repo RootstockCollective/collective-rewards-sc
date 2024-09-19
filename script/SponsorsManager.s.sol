@@ -18,7 +18,8 @@ contract Deploy is Broadcaster {
         if (_gaugeFactoryAddress == address(0)) {
             _gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
-        uint64 _epochDuration = uint64(vm.envUint("EPOCH_DURATION"));
+        uint32 _epochDuration = uint32(vm.envUint("EPOCH_DURATION"));
+        uint24 _epochStartOffset = uint24(vm.envUint("EPOCH_START_OFFSET"));
         uint128 _kickbackCooldown = uint128(vm.envUint("KICKBACK_COOLDOWN"));
         (proxy_, implementation_) = run(
             _changeExecutorAddress,
@@ -27,6 +28,7 @@ contract Deploy is Broadcaster {
             _stakingTokenAddress,
             _gaugeFactoryAddress,
             _epochDuration,
+            _epochStartOffset,
             _kickbackCooldown
         );
     }
@@ -37,7 +39,8 @@ contract Deploy is Broadcaster {
         address rewardToken_,
         address stakingToken_,
         address gaugeFactory_,
-        uint64 epochDuration_,
+        uint32 epochDuration_,
+        uint24 epochStartOffset_,
         uint128 kickbackCooldown_
     )
         public
@@ -59,6 +62,7 @@ contract Deploy is Broadcaster {
                 stakingToken_,
                 gaugeFactory_,
                 epochDuration_,
+                epochStartOffset_,
                 kickbackCooldown_
             )
         );

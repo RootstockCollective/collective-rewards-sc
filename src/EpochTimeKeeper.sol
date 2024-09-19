@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 import { Upgradeable } from "./governance/Upgradeable.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract EpochTimeKeeper is Upgradeable {
     uint256 internal constant _DISTRIBUTION_WINDOW = 1 hours;
@@ -23,20 +22,24 @@ abstract contract EpochTimeKeeper is Upgradeable {
     // -----------------------------
     // ---------- Structs ----------
     // -----------------------------
-    struct EpochDurationData {
+    struct EpochData {
         // previous epoch duration
-        uint64 previous;
+        uint32 previousDuration;
         // next epoch duration
-        uint64 next;
-        // epoch duration cooldown end time. After this time, new epoch duration will be applied
-        uint128 cooldownEndTime;
+        uint32 nextDuration;
+        // after this time, new epoch duration will be applied
+        uint64 previousStart;
+        // after this time, next epoch duration will be applied
+        uint64 nextStart;
+        // offset to add to the first epoch, used to set an specific day to start the epochs
+        uint24 offset;
     }
 
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
-    /// @notice epoch duration data
-    EpochDurationData public epochDuration;
+    /// @notice epoch data
+    EpochData public epochData;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -49,20 +52,33 @@ abstract contract EpochTimeKeeper is Upgradeable {
 
     /**
      * @notice contract initializer
+     * @dev the first epoch will end in epochDuration_ + epochStartOffset_ seconds to to ensure that
+     *  it lasts at least as long as the desired period
+     * @param changeExecutor_ See Governed doc
      * @param epochDuration_ epoch time duration
+     * @param epochStartOffset_ offset to add to the first epoch, used to set an specific day to start the epochs
      */
-    function __EpochTimeKeeper_init(address changeExecutor_, uint64 epochDuration_) internal onlyInitializing {
+    function __EpochTimeKeeper_init(
+        address changeExecutor_,
+        uint32 epochDuration_,
+        uint24 epochStartOffset_
+    )
+        internal
+        onlyInitializing
+    {
         __Upgradeable_init(changeExecutor_);
 
         // read from store
-        EpochDurationData memory _epochDuration = epochDuration;
+        EpochData memory _epochData = epochData;
 
-        _epochDuration.previous = epochDuration_;
-        _epochDuration.next = epochDuration_;
-        _epochDuration.cooldownEndTime = uint128(block.timestamp);
+        _epochData.previousDuration = epochDuration_;
+        _epochData.nextDuration = epochDuration_;
+        _epochData.previousStart = uint64(block.timestamp);
+        _epochData.nextStart = uint64(block.timestamp);
+        _epochData.offset = epochStartOffset_;
 
         // write to storage
-        epochDuration = _epochDuration;
+        epochData = _epochData;
     }
 
     // -----------------------------
@@ -71,36 +87,34 @@ abstract contract EpochTimeKeeper is Upgradeable {
 
     /**
      * @notice schedule a new epoch duration. It will be applied for the next epoch
-     *   The start and end of an epoch are determined absolutely by timestamps.
-     *   As a result, both the new epoch duration and the current epoch duration must be multiples of each other
-     *   to ensure synchronization. The transition to the new duration occurs when both periods align
-     *   If the new duration is longer: The system waits for the current epoch to end before switching
-     *   If the new duration is shorter: The system waits until the current epoch finishes
-     *   This approach avoids extra storage or calculations, keeping epoch management efficient.
      * @dev reverts if is too short. It must be greater than 2 time the distribution window
      * @param newEpochDuration_ new epoch duration
+     * @param epochStartOffset_ offset to add to the first epoch, used to set an specific day to start the epochs
      */
-    function setEpochDuration(uint64 newEpochDuration_) external onlyGovernorOrAuthorizedChanger {
+    function setEpochDuration(
+        uint32 newEpochDuration_,
+        uint24 epochStartOffset_
+    )
+        external
+        onlyGovernorOrAuthorizedChanger
+    {
         if (newEpochDuration_ < 2 * _DISTRIBUTION_WINDOW) revert EpochDurationTooShort();
-        if (newEpochDuration_ % 1 hours != 0) revert EpochDurationNotHourBasis();
 
-        uint64 _currentEpochDuration = uint64(getEpochDuration());
-        if (_currentEpochDuration % newEpochDuration_ != 0 && newEpochDuration_ % _currentEpochDuration != 0) {
-            revert EpochDurationsAreNotMultiples();
-        }
-
+        (uint256 _start, uint256 _duration) = getEpochStartAndDuration();
         // read from store
-        EpochDurationData memory _epochDuration = epochDuration;
+        EpochData memory _epochData = epochData;
 
-        _epochDuration.previous = _currentEpochDuration;
-        _epochDuration.next = newEpochDuration_;
-        _epochDuration.cooldownEndTime =
-            uint128(UtilsLib._calcEpochNext(Math.max(_epochDuration.previous, newEpochDuration_), block.timestamp));
+        _epochData.previousDuration = uint32(_duration);
+        _epochData.nextDuration = newEpochDuration_;
+        _epochData.previousStart = uint64(_start);
+        _epochData.nextStart =
+            uint64(UtilsLib._calcEpochNext(_epochData.previousStart, _epochData.previousDuration, block.timestamp));
+        _epochData.offset = epochStartOffset_;
 
-        emit NewEpochDurationScheduled(newEpochDuration_, _epochDuration.cooldownEndTime);
+        emit NewEpochDurationScheduled(newEpochDuration_, _epochData.nextStart);
 
         // write to storage
-        epochDuration = _epochDuration;
+        epochData = _epochData;
     }
 
     /**
@@ -109,8 +123,10 @@ abstract contract EpochTimeKeeper is Upgradeable {
      * @return epochStart timestamp when the epoch starts
      */
     function epochStart(uint256 timestamp_) public view returns (uint256) {
+        (uint256 _start, uint256 _duration) = getEpochStartAndDuration();
+        uint256 _timeSinceStart = timestamp_ - _start;
         unchecked {
-            return timestamp_ - (timestamp_ % getEpochDuration());
+            return timestamp_ - (_timeSinceStart % _duration);
         }
     }
 
@@ -120,7 +136,8 @@ abstract contract EpochTimeKeeper is Upgradeable {
      * @return epochNext timestamp when the epoch ends or the next starts
      */
     function epochNext(uint256 timestamp_) public view returns (uint256) {
-        return UtilsLib._calcEpochNext(getEpochDuration(), timestamp_);
+        (uint256 _start, uint256 _duration) = getEpochStartAndDuration();
+        return UtilsLib._calcEpochNext(_start, _duration, timestamp_);
     }
 
     /**
@@ -138,7 +155,8 @@ abstract contract EpochTimeKeeper is Upgradeable {
      * @return timeUntilNextEpoch amount of time until next epoch
      */
     function timeUntilNextEpoch(uint256 timestamp_) public view returns (uint256) {
-        return UtilsLib._calcTimeUntilNextEpoch(getEpochDuration(), timestamp_);
+        (uint256 _start, uint256 _duration) = getEpochStartAndDuration();
+        return UtilsLib._calcTimeUntilNextEpoch(_start, _duration, timestamp_);
     }
 
     // -----------------------------
@@ -146,15 +164,19 @@ abstract contract EpochTimeKeeper is Upgradeable {
     // -----------------------------
 
     /**
-     * @notice returns epoch duration
+     * @notice returns epoch start and duration
      *  If there is a new one and cooldown time has expired, apply that one; otherwise, apply the previous one
      */
-    function getEpochDuration() public view returns (uint256) {
-        EpochDurationData memory _epochDuration = epochDuration;
-        if (block.timestamp >= _epochDuration.cooldownEndTime) {
-            return uint256(_epochDuration.next);
+    function getEpochStartAndDuration() public view returns (uint256, uint256) {
+        EpochData memory _epochData = epochData;
+        if (block.timestamp >= _epochData.nextStart) {
+            // the first epoch will account for an offset to allow adjusting the start day
+            if (block.timestamp < _epochData.nextStart + _epochData.nextDuration + _epochData.offset) {
+                return (uint256(_epochData.nextStart), uint256(_epochData.nextDuration + _epochData.offset));
+            }
+            return (uint256(_epochData.nextStart + _epochData.offset), uint256(_epochData.nextDuration));
         }
-        return uint256(_epochDuration.previous);
+        return (uint256(_epochData.previousStart), uint256(_epochData.previousDuration));
     }
 
     /**
