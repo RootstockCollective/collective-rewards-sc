@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
+import { stdStorage, StdStorage, stdError } from "forge-std/src/Test.sol";
 import { BaseTest, SponsorsManager, Gauge } from "./BaseTest.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 
 contract SponsorsManagerTest is BaseTest {
+    using stdStorage for StdStorage;
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
+
     event NewAllocation(address indexed sponsor_, address indexed gauge_, uint256 allocation_);
     event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
     event RewardDistributionStarted(address indexed sender_);
@@ -1056,5 +1059,194 @@ contract SponsorsManagerTest is BaseTest {
         assertEq(gauge.rewardMissing(address(rewardToken)) / 10 ** 18, 1_785_714_285_714_285_714);
         // THEN coinbase's rewardMissing is 0.178 = 0.00000103 * 2 days
         assertEq(gauge.rewardMissing(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 178_571_428_571_428_571);
+    }
+
+    /**
+     * SCENARIO: SponsorsManager is initialized with an offset of 7 weeks. First distribution starts
+     *  8 weeks after the deploy
+     */
+    function test_InitializedWithAnEpochStartOffset() public {
+        // GIVEN a SponsorsManager contract initialized with 7 weeks of offset
+
+        // all the tests are running with the SponsorsManager already initialized with epochStartOffset = 0
+        // to simplify the calcs. since, we cannot change that value after the initialization we need this function
+        // to test the scenario where the contract is initialized with a different value
+        uint24 _newOffset = 7 weeks;
+
+        stdstore.target(address(sponsorsManager)).sig("epochData()").depth(4).enable_packed_slots().checked_write(
+            _newOffset
+        );
+
+        (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart, uint24 _offset) =
+            sponsorsManager.epochData();
+
+        // THEN previous epoch duration is 1 week
+        assertEq(_previousDuration, 1 weeks);
+        // THEN next epoch duration is 1 week
+        assertEq(_nextDuration, 1 weeks);
+        // THEN previous epoch start is now
+        assertEq(_previousStart, block.timestamp);
+        // THEN previous epoch start is now
+        assertEq(_nextStart, block.timestamp);
+        // THEN epoch start offset is 7 weeks
+        assertEq(_offset, 7 weeks);
+
+        // THEN epoch starts now
+        assertEq(sponsorsManager.epochStart(block.timestamp), block.timestamp);
+        // THEN epoch ends in 8 weeks from now (1 weeks duration + 7 weeks offset)
+        assertEq(sponsorsManager.epochNext(block.timestamp), block.timestamp + 8 weeks);
+
+        // AND alice allocates 2 ether to builder and 6 ether to builder2
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        uint256 _timestampBefore = block.timestamp;
+        // AND 100 rewardToken and 10 coinbase are distributed
+        _distribute(100 ether, 10 ether);
+        // THEN epoch was of 8 weeks
+        assertEq(block.timestamp - _timestampBefore, 8 weeks);
+        _timestampBefore = block.timestamp;
+        // AND epoch finishes
+        _skipAndStartNewEpoch();
+        // THEN epoch was of 1 weeks
+        assertEq(block.timestamp - _timestampBefore, 1 weeks);
+
+        // THEN epoch starts now
+        assertEq(sponsorsManager.epochStart(block.timestamp), block.timestamp);
+        // THEN epoch ends in 1 weeks
+        assertEq(sponsorsManager.epochNext(block.timestamp), block.timestamp + 1 weeks);
+
+        // WHEN alice claim rewards
+        vm.prank(alice);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is 50% of the distributed amount
+        assertApproxEqAbs(rewardToken.balanceOf(alice), 50 ether, 100);
+        // THEN alice coinbase balance is 50% of the distributed amount
+        assertApproxEqAbs(alice.balance, 5 ether, 100);
+    }
+
+    /**
+     * SCENARIO: SponsorsManager is initialized with an offset of 7 weeks.
+     *  There is a notifyReward amount to incentive the gauge before the distribution
+     */
+    function test_IncentivizeWithEpochStartOffset() public {
+        // GIVEN a SponsorsManager contract initialized with 7 weeks of offset
+
+        // all the tests are running with the SponsorsManager already initialized with epochStartOffset = 0
+        // to simplify the calcs. since, we cannot change that value after the initialization we need this function
+        // to test the scenario where the contract is initialized with a different value
+        uint24 _newOffset = 7 weeks;
+
+        stdstore.target(address(sponsorsManager)).sig("epochData()").depth(4).enable_packed_slots().checked_write(
+            _newOffset
+        );
+
+        // periodFinish is initialized using the epochStartOffset = 0 on initialization, we need to calculate it again
+        // with the newEpochStartOffset = 7 weeks
+        stdstore.target(address(sponsorsManager)).sig("periodFinish()").checked_write(
+            sponsorsManager.epochNext(block.timestamp)
+        );
+
+        // AND gauge is incentive with 100 ether of rewardToken
+        rewardToken.approve(address(gauge), 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 0 ether, 100 ether);
+
+        // AND alice allocates 2 ether to builder
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 2 ether);
+        vm.stopPrank();
+
+        uint256 _timestampBefore = block.timestamp;
+        // AND epoch finishes
+        _distribute(0, 0);
+        // THEN epoch was of 8 weeks
+        assertEq(block.timestamp - _timestampBefore, 8 weeks);
+
+        // THEN epoch starts now
+        assertEq(sponsorsManager.epochStart(block.timestamp), block.timestamp);
+        // THEN epoch ends in 1 weeks
+        assertEq(sponsorsManager.epochNext(block.timestamp), block.timestamp + 1 weeks);
+
+        // WHEN alice claim rewards
+        vm.prank(alice);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is 100% of the distributed amount
+        assertApproxEqAbs(rewardToken.balanceOf(alice), 100 ether, 100);
+    }
+
+    /**
+     * SCENARIO: After deployment SponsorsManager starts in a distribution window
+     */
+    function test_DeployStartsInDistributionWindow() public {
+        // GIVEN a SponsorsManager contract initialized with 3 days of offset
+
+        // all the tests are running with the SponsorsManager already initialized with epochStartOffset = 0
+        // to simplify the calcs. since, we cannot change that value after the initialization we need this function
+        // to test the scenario where the contract is initialized with a different value
+        uint24 _newOffset = 3 days;
+
+        stdstore.target(address(sponsorsManager)).sig("epochData()").depth(4).enable_packed_slots().checked_write(
+            _newOffset
+        );
+
+        // AND alice allocates 2 ether to builder and 6 ether to builder2
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND distribution starts
+        sponsorsManager.startDistribution();
+        // THEN distribution finished
+        assertEq(sponsorsManager.onDistributionPeriod(), false);
+
+        uint256 _deployTimestamp = block.timestamp;
+        // AND distribution windows finishes
+        vm.warp(_deployTimestamp + 1 hours + 1);
+        // THEN reverts calling startDistribution
+        vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
+        sponsorsManager.startDistribution();
+
+        // AND offset finishes
+        vm.warp(_deployTimestamp + _newOffset + 1);
+        // THEN reverts calling startDistribution
+        vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
+        sponsorsManager.startDistribution();
+
+        // AND epoch duration finishes
+        vm.warp(_deployTimestamp + epochDuration + 1);
+        // THEN reverts calling startDistribution
+        vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
+        sponsorsManager.startDistribution();
+
+        // AND epoch duration + offset is close to finish
+        vm.warp(_deployTimestamp + epochDuration + _newOffset - 1);
+        // THEN reverts calling startDistribution
+        vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
+        sponsorsManager.startDistribution();
+
+        // AND epoch duration + offset finishes
+        vm.warp(_deployTimestamp + epochDuration + _newOffset);
+        // AND distribution starts
+        sponsorsManager.startDistribution();
+        // THEN distribution finished
+        assertEq(sponsorsManager.onDistributionPeriod(), false);
+    }
+
+    /**
+     * SCENARIO: startDistribution reverts if there are no allocations
+     */
+    function test_RevertsStartDistributionWithoutAllocations() public {
+        // GIVEN a SponsorsManager without allocations
+        //  WHEN startDistribution is called
+        // THEN reverts calling startDistribution because cannot calculate shares, totalAllocation is 0
+        vm.expectRevert(stdError.divisionError);
+        sponsorsManager.startDistribution();
     }
 }
