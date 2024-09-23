@@ -268,6 +268,8 @@ contract BuilderRegistryTest is BaseTest {
         assertEq(sponsorsManager.isGaugeRewarded(address(gauge)), true);
         // THEN rewarded gauges array length is 2
         assertEq(sponsorsManager.getGaugesLength(), 2);
+        // THEN haltedGaugeLastPeriodFinish is 0
+        assertEq(sponsorsManager.haltedGaugeLastPeriodFinish(gauge), 0);
     }
 
     /**
@@ -327,6 +329,8 @@ contract BuilderRegistryTest is BaseTest {
         assertEq(sponsorsManager.isGaugeRewarded(address(gauge)), false);
         // THEN rewarded gauges array length is 1
         assertEq(sponsorsManager.getGaugesLength(), 1);
+        // THEN haltedGaugeLastPeriodFinish is periodFinish
+        assertEq(sponsorsManager.haltedGaugeLastPeriodFinish(gauge), sponsorsManager.periodFinish());
     }
 
     /**

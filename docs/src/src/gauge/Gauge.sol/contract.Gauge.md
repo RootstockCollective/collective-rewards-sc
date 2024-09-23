@@ -264,7 +264,7 @@ function earned(address rewardToken_, address sponsor_) public view returns (uin
 
 claim rewards for a `sponsor_` address
 
-_reverts if is not called by the `sponsor_` or the sponsorsManager_
+_reverts if is not called by the `sponsor_` or the sponsorsManager\_
 
 ```solidity
 function claimSponsorReward(address sponsor_) public;
@@ -280,7 +280,7 @@ function claimSponsorReward(address sponsor_) public;
 
 claim rewards for a `sponsor_` address
 
-_reverts if is not called by the `sponsor_` or the sponsorsManager_
+_reverts if is not called by the `sponsor_` or the sponsorsManager\_
 
 ```solidity
 function claimSponsorReward(address rewardToken_, address sponsor_) public;

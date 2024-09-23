@@ -51,7 +51,7 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         bool whitelisted;
         bool paused;
         bool revoked;
-        bytes8 reserved;
+        bytes8 reserved; // for future upgrades
         bytes20 pausedReason;
     }
 

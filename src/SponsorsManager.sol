@@ -107,6 +107,7 @@ contract SponsorsManager is BuilderRegistry {
         __BuilderRegistry_init(changeExecutor_, kycApprover_, gaugeFactory_, kickbackCooldown_);
         rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
+        _periodFinish = EpochLib._epochNext(block.timestamp);
     }
 
     // -----------------------------
@@ -279,9 +280,10 @@ contract SponsorsManager is BuilderRegistry {
             newSponsorTotalAllocation_ = sponsorTotalAllocation_ + _allocationDeviation;
             newTotalPotentialReward_ = totalPotentialReward_ + (_allocationDeviation * _timeUntilNext);
         }
+        // halted gauges are not taken on account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
+        if (isGaugeHalted(address(gauge_))) return (newSponsorTotalAllocation_, totalPotentialReward_);
+
         emit NewAllocation(msg.sender, address(gauge_), allocation_);
-        // halted gauges are not taken on account for the rewards
-        if (isGaugeHalted(address(gauge_))) newTotalPotentialReward_ = totalPotentialReward_;
         return (newSponsorTotalAllocation_, newTotalPotentialReward_);
     }
 

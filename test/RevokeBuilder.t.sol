@@ -293,6 +293,7 @@ contract RevokeBuilderTest is BaseTest {
     /**
      * SCENARIO: builder is revoked in the middle of an epoch having allocation.
      *  Alice modifies its allocation but the total reward shares don't change
+     *  and the sponsorTotalAllocation is updated
      */
     function test_HaltedGaugeModifyAllocation() public {
         // GIVEN alice and bob allocate to builder and builder2
@@ -306,6 +307,8 @@ contract RevokeBuilderTest is BaseTest {
         sponsorsManager.allocate(gauge, 0);
         // THEN gauge rewardShares is 604800 ether = 2 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 604_800 ether);
+        // THEN alice total allocation is 6
+        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 6 ether);
         // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
         assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
 
@@ -314,6 +317,8 @@ contract RevokeBuilderTest is BaseTest {
         sponsorsManager.allocate(gauge, 4 ether);
         // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 1_814_400 ether);
+        // THEN alice total allocation is 10
+        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 10 ether);
         // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
         assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
     }
@@ -357,13 +362,13 @@ contract RevokeBuilderTest is BaseTest {
         // THEN alice rewardToken balance is:
         //  epoch 1 = 21.875 = 3.125 + 18.75 = (100 * 2 / 16) * 0.5 * 0.5 WEEKS + (100 * 6 / 16) * 0.5
         //  epoch 2 = 21.42 = (100 * 6 / 14) * 0.5
-        //  epoch 3 = 25 = (100 * 8 / 16) * 0.5
-        assertEq(rewardToken.balanceOf(alice), 68_303_571_428_571_428_552);
+        //  epoch 3 = 28.125 = 3.125(missingRewards) + (100 * 8 / 16) * 0.5
+        assertEq(rewardToken.balanceOf(alice), 71_428_571_428_571_428_550);
         // THEN alice coinbase balance is:
         //  epoch 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
         //  epoch 2 = 2.142 = (10 * 6 / 14) * 0.5
-        //  epoch 3 = 2.5 = (10 * 8 / 16) * 0.5
-        assertEq(alice.balance, 6_830_357_142_857_142_836);
+        //  epoch 3 = 2.8125 = 0.3125(missingRewards) + (10 * 8 / 16) * 0.5
+        assertEq(alice.balance, 7_142_857_142_857_142_834);
 
         // WHEN bob claim rewards
         vm.startPrank(bob);
@@ -405,10 +410,10 @@ contract RevokeBuilderTest is BaseTest {
         //  epoch 3 = 4.375 = (10 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 13.75 ether);
 
-        // THEN gauge rewardToken locked balance is 3.125
-        assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 3.125 ether, 100);
-        // THEN gauge coinbase locked balance is 0.3125
-        assertApproxEqAbs(address(gauge).balance, 0.3125 ether, 100);
+        // THEN gauge rewardToken balance is 0, there is no remaining rewards
+        assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 0, 100);
+        // THEN gauge coinbase balance is 0, there is no remaining rewards
+        assertApproxEqAbs(address(gauge).balance, 0, 100);
     }
 
     /**
