@@ -25,11 +25,20 @@ class PrivateVarsLeadingUnderscoreLib extends Base {
     this._validateName(node);
   }
 
+  VariableDeclarationStatement() {
+    this.inVariableDeclarationStatement = true;
+  }
+
+  "VariableDeclarationStatement:exit"() {
+    this.inVariableDeclarationStatement = false;
+  }
+
   _validateName(node) {
     if (this.inLibrary) {
+      const inVariableDeclarationStatement = this.inVariableDeclarationStatement ? true : false;
       const isPrivate = node.visibility === constants.PRIVATE;
       const isInternal = node.visibility === constants.INTERNAL || node.visibility === constants.DEFAULT;
-      const shouldHaveLeadingUnderscore = isPrivate || isInternal;
+      const shouldHaveLeadingUnderscore = isPrivate || isInternal || inVariableDeclarationStatement;
 
       const { name } = node;
       if (!name) {

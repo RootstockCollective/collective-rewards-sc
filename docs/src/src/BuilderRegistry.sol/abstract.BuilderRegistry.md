@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/6aef6a8f9d7ab7f0c9567c171bff92d4308d9ae5/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/0ce2975766147f599c65ca5e836b9dddbc6d059c/src/BuilderRegistry.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md), Ownable2StepUpgradeable
 
