@@ -304,8 +304,6 @@ contract SponsorsManager is BuilderRegistry {
         if (isGaugeHalted(address(gauge_))) return (newSponsorTotalAllocation_, totalPotentialReward_);
 
         emit NewAllocation(msg.sender, address(gauge_), allocation_);
-        // halted gauges are not taken on account for the rewards
-        if (isGaugeHalted(address(gauge_))) newTotalPotentialReward_ = totalPotentialReward_;
         return (newSponsorTotalAllocation_, newTotalPotentialReward_);
     }
 
