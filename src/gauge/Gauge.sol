@@ -411,6 +411,11 @@ contract Gauge is ReentrancyGuardUpgradeable {
             _leftover = (_timeUntilNext) * _rewardRate;
         }
 
+        // if there are no allocations we need to update rewardMissing to don't lose the previous rewards
+        if (totalAllocation == 0) {
+            _updateRewardMissing(rewardToken_);
+        }
+
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
         _rewardRate = (sponsorsAmount_ * UtilsLib._PRECISION + _rewardData.rewardMissing + _leftover) / _timeUntilNext;
 

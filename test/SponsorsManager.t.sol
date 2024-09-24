@@ -789,9 +789,9 @@ contract SponsorsManagerTest is BaseTest {
 
     /**
      * SCENARIO: after a distribution, in the middle of the epoch, gauge loses all allocations.
-     *  One distribution later, alice allocates there again and old rewards remain unclaimable
+     *  One distribution later, alice allocates there again in the next epoch and earn the old remaining rewards
      */
-    function test_GaugeLosesAllocationLockingRewards() public {
+    function test_GaugeLosesAllocationForOneEpoch() public {
         // GIVEN alice allocates to gauge and gauge2
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
@@ -834,13 +834,13 @@ contract SponsorsManagerTest is BaseTest {
         // THEN alice rewardToken balance is:
         //  epoch 1 = 21.875 = 3.125 + 18.75 = (100 * 2 / 16) * 0.5 * 0.5 WEEKS + (100 * 6 / 16) * 0.5
         //  epoch 2 = 23.33 = 3.333 + 20 = (100 * 1 / 15) * 0.5 + (100 * 6 / 15) * 0.5
-        //  epoch 3 = 25 = (100 * 8 / 16) * 0.5
-        assertEq(rewardToken.balanceOf(alice), 70_208_333_333_333_333_314);
+        //  epoch 3 = 3.125 + 25 = 3.125(missingRewards) + (100 * 8 / 16) * 0.5
+        assertEq(rewardToken.balanceOf(alice), 73_333_333_333_333_333_314);
         // THEN alice coinbase balance is:
         //  epoch 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
         //  epoch 2 = 2.333 = 0.3333 + 2 = (10 * 1 / 15) * 0.5 + (10 * 6 / 15) * 0.5
-        //  epoch 3 = 2.5 = (10 * 8 / 16) * 0.5
-        assertEq(alice.balance, 7_020_833_333_333_333_314);
+        //  epoch 3 = 0.3125 + 2.5 = 0.3125(missingRewards) + (10 * 8 / 16) * 0.5
+        assertEq(alice.balance, 7_333_333_333_333_333_314);
 
         // WHEN bob claim rewards
         vm.startPrank(bob);
@@ -882,9 +882,179 @@ contract SponsorsManagerTest is BaseTest {
         //  epoch 3 = 4.375 = (10 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 13_416_666_666_666_666_667);
 
-        // THEN gauge rewardToken locked balance is 3.125
-        assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 3.125 ether, 100);
-        // THEN gauge coinbase locked balance is 0.3125
-        assertApproxEqAbs(address(gauge).balance, 0.3125 ether, 100);
+        // THEN gauge rewardToken balance is 0, there is no remaining rewards
+        assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 0, 100);
+        // THEN gauge coinbase balance is 0, there is no remaining rewards
+        assertApproxEqAbs(address(gauge).balance, 0, 100);
+    }
+
+    /**
+     * SCENARIO: after a distribution, in the middle of the epoch, gauge loses all allocations.
+     *  One distribution later, alice allocates there again in 2 epochs later and earn the old remaining rewards
+     */
+    function test_GaugeLosesAllocationForTwoEpochs() public {
+        // GIVEN alice allocates to gauge and gauge2
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+        // AND bob allocates to gauge2
+        vm.startPrank(bob);
+        allocationsArray[0] = 0 ether;
+        allocationsArray[1] = 8 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 rewardToken and 10 coinbase are distributed
+        _distribute(100 ether, 10 ether);
+        // AND half epoch pass
+        _skipRemainingEpochFraction(2);
+
+        // WHEN alice removes allocations from gauge
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 0);
+
+        // AND 100 rewardToken and 10 coinbase are distributed
+        _distribute(100 ether, 10 ether);
+        // AND 100 rewardToken and 10 coinbase are distributed
+        _distribute(100 ether, 10 ether);
+
+        // AND alice adds allocations again
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 2 ether);
+
+        // AND 100 rewardToken and 10 coinbase are distributed
+        _distribute(100 ether, 10 ether);
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // WHEN alice claim rewards
+        vm.startPrank(alice);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is:
+        //  epoch 1 = 21.875 = 3.125 + 18.75 = (100 * 2 / 16) * 0.5 * 0.5 WEEKS + (100 * 6 / 16) * 0.5
+        //  epoch 2 = 20 = (100 * 6 / 15) * 0.5
+        //  epoch 3 = 6.455 + 21.42  = (3.33 + 3.125)(missingRewards) + (100 * 6 / 14) * 0.5
+        //  epoch 4 = 6.25 + 18.75 = (100 * 2 / 16) * 0.5 + (100 * 6 / 16) * 0.5
+        assertEq(rewardToken.balanceOf(alice), 94_761_904_761_904_761_882);
+        // THEN alice coinbase balance is:
+        //  epoch 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
+        //  epoch 2 = 2 = (10 * 6 / 15) * 0.5
+        //  epoch 3 = 0.645 + 2.142  = (0.33 + 0.3125)(missingRewards) + (10 * 6 / 14) * 0.5
+        //  epoch 4 = 0.625 + 1.875 = (10 * 2 / 16) * 0.5 + (10 * 6 / 16) * 0.5
+        assertEq(alice.balance, 9_476_190_476_190_476_166);
+
+        // WHEN bob claim rewards
+        vm.startPrank(bob);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN bob rewardToken balance is:
+        //  epoch 1 = 25 = (100 * 8 / 16) * 0.5
+        //  epoch 2 = 26.66 = (100 * 8 / 15) * 0.5
+        //  epoch 3 = 28.57 = (100 * 8 / 14) * 0.5
+        //  epoch 4 = 25 = (100 * 8 / 16) * 0.5
+        assertEq(rewardToken.balanceOf(bob), 105_238_095_238_095_238_072);
+        // THEN bob coinbase balance is:
+        //  epoch 1 = 2.5 = (10 * 8 / 16) * 0.5
+        //  epoch 2 = 2.66 = (10 * 8 / 15) * 0.5
+        //  epoch 3 = 2.857 = (10 * 8 / 14) * 0.5
+        //  epoch 4 = 2.5 = (10 * 8 / 16) * 0.5
+        assertEq(bob.balance, 10_523_809_523_809_523_784);
+
+        // WHEN builders claim rewards
+        _buildersClaim();
+
+        // THEN builder rewardToken balance is:
+        //  epoch 1 = 6.25 = (100 * 2 / 16) * 0.5
+        //  epoch 2 = 3.333 = (100 * 1 / 15) * 0.5
+        //  epoch 3 = 0
+        //  epoch 4 = 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(rewardToken.balanceOf(builder), 15_833_333_333_333_333_333);
+        // THEN builder coinbase balance is:
+        //  epoch 1 = 0.625 = (10 * 2 / 16) * 0.5
+        //  epoch 2 = 0.3333 = (10 * 1 / 15) * 0.5
+        //  epoch 3 = 0
+        //  epoch 4 = 0.625 = (10 * 2 / 16) * 0.5
+        assertEq(builder.balance, 1_583_333_333_333_333_333);
+
+        // THEN builder2Receiver rewardToken balance is:
+        //  epoch 1 = 43.75 = (100 * 14 / 16) * 0.5
+        //  epoch 2 = 46.66 = (100 * 14 / 15) * 0.5
+        //  epoch 3 = 50 = (100 * 14 / 14) * 0.5
+        //  epoch 4 = 43.75 = (100 * 14 / 16) * 0.5
+        assertEq(rewardToken.balanceOf(builder2Receiver), 184_166_666_666_666_666_667);
+        // THEN builder2Receiver coinbase balance is:
+        //  epoch 1 = 4.375 = (10 * 14 / 16) * 0.5
+        //  epoch 2 = 4.66 = (10 * 14 / 15) * 0.5
+        //  epoch 3 = 5 = (10 * 14 / 14) * 0.5
+        //  epoch 4 = 4.375 = (10 * 14 / 16) * 0.5
+        assertEq(builder2Receiver.balance, 18_416_666_666_666_666_667);
+
+        // THEN gauge rewardToken balance is 0, there is no remaining rewards
+        assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 0, 100);
+        // THEN gauge coinbase balance is 0, there is no remaining rewards
+        assertApproxEqAbs(address(gauge).balance, 0, 100);
+    }
+
+    /**
+     * SCENARIO: after a distribution, alice deallocates and allocates twice on the same epoch
+     *  Missing rewards are accumulated
+     */
+    function test_MissingRewardsAccumulation() public {
+        // GIVEN alice allocates to gauge and gauge2
+        _skipAndStartNewEpoch();
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+        // AND bob allocates to gauge2
+        vm.startPrank(bob);
+        allocationsArray[0] = 0 ether;
+        allocationsArray[1] = 8 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 rewardToken and 10 coinbase are distributed
+        _distribute(100 ether, 10 ether);
+        // THEN rewardToken's rewardRate is 0.0000103 = (50 * 2 / 16) / 604800
+        assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 10_333_994_708_994);
+        // THEN coinbase's rewardRate is 0.00000103 = (5 * 2 / 16) / 604800
+        assertEq(gauge.rewardRate(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 1_033_399_470_899);
+
+        // AND 1 day pass
+        skip(1 days);
+        // AND alice removes allocations from gauge
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 0);
+        // AND 1 day pass
+        skip(1 days);
+        // AND alice adds allocations from gauge
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 2 ether);
+
+        // THEN rewardToken's rewardMissing is 0.89 = 0.0000103 * 1 day
+        assertEq(gauge.rewardMissing(address(rewardToken)) / 10 ** 18, 892_857_142_857_142_857);
+        // THEN coinbase's rewardMissing is 0.089 = 0.00000103 * 1 day
+        assertEq(gauge.rewardMissing(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 89_285_714_285_714_285);
+
+        // AND 1 day pass
+        skip(1 days);
+        // AND alice removes allocations from gauge
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 0);
+        // AND 1 day pass
+        skip(1 days);
+        // AND alice adds allocations from gauge
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 2 ether);
+
+        // THEN rewardToken's rewardMissing is 1.78 = 0.0000103 * 2 days
+        assertEq(gauge.rewardMissing(address(rewardToken)) / 10 ** 18, 1_785_714_285_714_285_714);
+        // THEN coinbase's rewardMissing is 0.178 = 0.00000103 * 2 days
+        assertEq(gauge.rewardMissing(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 178_571_428_571_428_571);
     }
 }

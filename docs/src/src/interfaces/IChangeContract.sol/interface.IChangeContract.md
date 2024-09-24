@@ -1,6 +1,6 @@
 # IChangeContract
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/0ce2975766147f599c65ca5e836b9dddbc6d059c/src/interfaces/IChangeContract.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/48bd92846a42b52de925470633ddc8a3d18cf2b6/src/interfaces/IChangeContract.sol)
 
 This interface is the one used by the governance system.
 
