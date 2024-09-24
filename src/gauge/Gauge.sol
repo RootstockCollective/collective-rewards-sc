@@ -459,7 +459,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
 
         // if there are no allocations we need to update rewardMissing to don't lose the previous rewards
         if (totalAllocation == 0) {
-            _updateRewardMissing(rewardToken_);
+            _updateRewardMissing(rewardToken_, periodFinish_);
         }
 
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
