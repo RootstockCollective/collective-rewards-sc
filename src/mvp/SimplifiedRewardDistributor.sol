@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { Upgradeable } from "../governance/Upgradeable.sol";
@@ -28,7 +27,7 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
     event Whitelisted(address indexed builder_);
     event Unwhitelisted(address indexed builder_);
     event RewardDistributed(
-        address indexed builder_, address indexed rewardReceiver_, uint256 rewardTokenAmount_, uint256 coinbaseAmount_
+        address indexed rewardToken_, address indexed builder_, address indexed rewardReceiver_, uint256 amount_
     );
 
     // -----------------------------
@@ -160,11 +159,14 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
             address payable _rewardReceiver = builderRewardReceiver[_builder];
             if (_rewardTokenPayment > 0) {
                 SafeERC20.safeTransfer(rewardToken, _rewardReceiver, _rewardTokenPayment);
+                emit RewardDistributed(address(rewardToken), _builder, _rewardReceiver, _rewardTokenPayment);
             }
             if (_coinbasePayment > 0) {
-                Address.sendValue(_rewardReceiver, _coinbasePayment);
+                (bool _success,) = _rewardReceiver.call{ value: _coinbasePayment, gas: 21_000 }("");
+                if (_success) {
+                    emit RewardDistributed(UtilsLib._COINBASE_ADDRESS, _builder, _rewardReceiver, _coinbasePayment);
+                }
             }
-            emit RewardDistributed(_builder, _rewardReceiver, _rewardTokenPayment, _coinbasePayment);
         }
     }
 
