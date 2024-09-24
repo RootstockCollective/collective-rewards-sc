@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/48bd92846a42b52de925470633ddc8a3d18cf2b6/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/48fa8b5cf52dd18d51cdbc26d813ed080aa9e876/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -293,7 +293,8 @@ function _distribute(
     Gauge gauge_,
     uint256 rewardsERC20_,
     uint256 rewardsCoinbase_,
-    uint256 totalPotentialReward_
+    uint256 totalPotentialReward_,
+    uint256 periodFinish_
 )
     internal
     returns (uint256);
@@ -307,6 +308,7 @@ function _distribute(
 | `rewardsERC20_`         | `uint256` | ERC20 rewards to distribute        |
 | `rewardsCoinbase_`      | `uint256` | Coinbase rewards to distribute     |
 | `totalPotentialReward_` | `uint256` | cached total potential reward      |
+| `periodFinish_`         | `uint256` | cached period finish               |
 
 **Returns**
 

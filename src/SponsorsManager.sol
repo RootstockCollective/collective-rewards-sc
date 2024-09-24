@@ -200,10 +200,11 @@ contract SponsorsManager is BuilderRegistry {
         uint256 _rewardsERC20 = rewardsERC20;
         uint256 _rewardsCoinbase = rewardsCoinbase;
         uint256 _totalPotentialReward = totalPotentialReward;
+        uint256 _periodFinish = periodFinish;
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
             _newTotalPotentialReward +=
-                _distribute(_gauges[_gaugeIndex], _rewardsERC20, _rewardsCoinbase, _totalPotentialReward);
+                _distribute(_gauges[_gaugeIndex], _rewardsERC20, _rewardsCoinbase, _totalPotentialReward, _periodFinish);
             _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
         }
         emit RewardDistributed(msg.sender);
@@ -296,13 +297,15 @@ contract SponsorsManager is BuilderRegistry {
      * @param rewardsERC20_ ERC20 rewards to distribute
      * @param rewardsCoinbase_ Coinbase rewards to distribute
      * @param totalPotentialReward_ cached total potential reward
+     * @param periodFinish_ cached period finish
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
     function _distribute(
         Gauge gauge_,
         uint256 rewardsERC20_,
         uint256 rewardsCoinbase_,
-        uint256 totalPotentialReward_
+        uint256 totalPotentialReward_,
+        uint256 periodFinish_
     )
         internal
         returns (uint256)
@@ -314,7 +317,9 @@ contract SponsorsManager is BuilderRegistry {
         uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
         uint256 _builderKickback = getKickbackToApply(gaugeToBuilder[gauge_]);
         IERC20(rewardToken).approve(address(gauge_), _amountERC20);
-        return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(_amountERC20, _builderKickback);
+        return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
+            _amountERC20, _builderKickback, periodFinish_
+        );
     }
 
     /**
