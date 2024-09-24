@@ -10,7 +10,7 @@ import { Upgradeable } from "../governance/Upgradeable.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 
 /**
- * @title SimplfiedRewardDistributor
+ * @title SimplifiedRewardDistributor
  * @notice Simplified version for the MVP.
  *  Accumulates all the rewards and distribute them equally to all the builders for each epoch
  */
@@ -21,6 +21,15 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
     // ------- Custom Errors -------
     // -----------------------------
     error WhitelistStatusWithoutUpdate();
+
+    // -----------------------------
+    // ----------- Events ----------
+    // -----------------------------
+    event Whitelisted(address indexed builder_);
+    event Unwhitelisted(address indexed builder_);
+    event RewardDistributed(
+        address indexed builder_, address indexed rewardReceiver_, uint256 rewardTokenAmount_, uint256 coinbaseAmount_
+    );
 
     // -----------------------------
     // ---------- Storage ----------
@@ -74,6 +83,7 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
         if (!_whitelistedBuilders.add(builder_)) {
             revert WhitelistStatusWithoutUpdate();
         }
+        emit Whitelisted(builder_);
     }
 
     /**
@@ -86,6 +96,7 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
         if (!_whitelistedBuilders.remove(builder_)) {
             revert WhitelistStatusWithoutUpdate();
         }
+        emit Unwhitelisted(builder_);
     }
 
     /**
@@ -145,13 +156,15 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
         uint256 _rewardTokenPayment = rewardTokenAmount_ / _buildersLength;
         uint256 _coinbasePayment = coinbaseAmount_ / _buildersLength;
         for (uint256 i = 0; i < _buildersLength; i = UtilsLib._uncheckedInc(i)) {
-            address payable _rewardReceiver = builderRewardReceiver[_whitelistedBuilders.at(i)];
+            address _builder = _whitelistedBuilders.at(i);
+            address payable _rewardReceiver = builderRewardReceiver[_builder];
             if (_rewardTokenPayment > 0) {
                 SafeERC20.safeTransfer(rewardToken, _rewardReceiver, _rewardTokenPayment);
             }
             if (_coinbasePayment > 0) {
                 Address.sendValue(_rewardReceiver, _coinbasePayment);
             }
+            emit RewardDistributed(_builder, _rewardReceiver, _rewardTokenPayment, _coinbasePayment);
         }
     }
 

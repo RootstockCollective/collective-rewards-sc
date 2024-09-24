@@ -10,6 +10,11 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
+    event Whitelisted(address indexed builder_);
+    event Unwhitelisted(address indexed builder_);
+    event RewardDistributed(
+        address indexed builder_, address indexed rewardReceiver_, uint256 rewardTokenAmount_, uint256 coinbaseAmount_
+    );
 
     /**
      * SCENARIO: functions protected by OnlyGovernor should revert when are not
@@ -40,6 +45,9 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
         // GIVEN a new builder
         address payable _newBuilder = payable(makeAddr("newBuilder"));
         // WHEN calls whitelistBuilder
+        //  THEN Whitelisted event is emitted
+        vm.expectEmit();
+        emit Whitelisted(_newBuilder);
         simplifiedRewardDistributor.whitelistBuilder(_newBuilder, _newBuilder);
         // THEN newBuilder is whitelisted
         assertTrue(simplifiedRewardDistributor.isWhitelisted(_newBuilder));
@@ -52,12 +60,12 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
     }
 
     /**
-     * SCENARIO: whitelist a whistelited builder fails
+     * SCENARIO: whitelist a whitelisted builder fails
      */
-    function test_WhistelitBuilderTwice() public {
+    function test_WhitelistBuilderTwice() public {
         // GIVEN a whitelisted builder
-        //  WHEN tries to whistelist it again
-        // THEN reverts
+        //  WHEN tries to whitelist it again
+        //   THEN reverts
         vm.expectRevert(SimplifiedRewardDistributor.WhitelistStatusWithoutUpdate.selector);
         simplifiedRewardDistributor.whitelistBuilder(builder, rewardReceiver);
     }
@@ -68,6 +76,9 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
     function test_RemoveWhitelistedBuilder() public {
         // GIVEN a whitelisted builder
         //  WHEN calls removeWhitelistedBuilder
+        //   THEN Unwhitelisted event is emitted
+        vm.expectEmit();
+        emit Unwhitelisted(builder);
         simplifiedRewardDistributor.removeWhitelistedBuilder(builder);
         // THEN builder is not whitelisted
         assertFalse(simplifiedRewardDistributor.isWhitelisted(builder));
@@ -97,6 +108,12 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
         rewardToken.transfer(address(simplifiedRewardDistributor), 4 ether);
         Address.sendValue(payable(address(simplifiedRewardDistributor)), 3 ether);
         // WHEN distribute is executed
+        //   THEN RewardDistributed event is emitted for builder
+        vm.expectEmit();
+        emit RewardDistributed(builder, rewardReceiver, 2 ether, 1.5 ether);
+        //   THEN RewardDistributed event is emitted for builder2
+        vm.expectEmit();
+        emit RewardDistributed(builder2, rewardReceiver2, 2 ether, 1.5 ether);
         simplifiedRewardDistributor.distribute();
 
         // THEN simplifiedRewardDistributor reward token balance is 0 ether
