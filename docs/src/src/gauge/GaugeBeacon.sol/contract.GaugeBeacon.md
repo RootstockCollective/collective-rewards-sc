@@ -1,6 +1,6 @@
 # GaugeBeacon
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/48fa8b5cf52dd18d51cdbc26d813ed080aa9e876/src/gauge/GaugeBeacon.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/gauge/GaugeBeacon.sol)
 
 **Inherits:** UpgradeableBeacon, [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 

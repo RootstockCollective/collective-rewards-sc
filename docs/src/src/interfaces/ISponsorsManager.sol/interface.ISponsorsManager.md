@@ -1,6 +1,6 @@
 # ISponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/48fa8b5cf52dd18d51cdbc26d813ed080aa9e876/src/interfaces/ISponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/interfaces/ISponsorsManager.sol)
 
 ## Functions
 
@@ -34,4 +34,12 @@ return true if builder is operational
 
 ```solidity
 function isBuilderOperational(address builder_) external view returns (bool isOperational_);
+```
+
+### isGaugeHalted
+
+return true if gauge is halted
+
+```solidity
+function isGaugeHalted(address gauge_) external view returns (bool isHalted_);
 ```

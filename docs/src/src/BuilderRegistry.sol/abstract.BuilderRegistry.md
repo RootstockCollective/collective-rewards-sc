@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/48fa8b5cf52dd18d51cdbc26d813ed080aa9e876/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/BuilderRegistry.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md), Ownable2StepUpgradeable
 
@@ -38,12 +38,20 @@ map of builders kickback data
 mapping(address builder => KickbackData kickbackData) public builderKickback;
 ```
 
-### gauges
+### \_gauges
 
-array of all the gauges created
+array of all the operational gauges
 
 ```solidity
-Gauge[] public gauges;
+EnumerableSet.AddressSet internal _gauges;
+```
+
+### \_haltedGauges
+
+array of all the halted gauges
+
+```solidity
+EnumerableSet.AddressSet internal _haltedGauges;
 ```
 
 ### gaugeFactory
@@ -68,6 +76,14 @@ builder address for a gauge contract
 
 ```solidity
 mapping(Gauge gauge => address builder) public gaugeToBuilder;
+```
+
+### haltedGaugeLastPeriodFinish
+
+map of last period finish for halted gauges
+
+```solidity
+mapping(Gauge gauge => uint256 lastPeriodFinish) public haltedGaugeLastPeriodFinish;
 ```
 
 ### kickbackCooldown
@@ -157,10 +173,10 @@ function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedCha
 
 pause builder
 
-_reverts if is not called by the owner address reverts trying to revoke_
+_reverts if is not called by the owner address_
 
 ```solidity
-function pauseBuilder(address builder_, bytes29 reason_) external onlyOwner;
+function pauseBuilder(address builder_, bytes20 reason_) external onlyOwner;
 ```
 
 **Parameters**
@@ -168,7 +184,7 @@ function pauseBuilder(address builder_, bytes29 reason_) external onlyOwner;
 | Name       | Type      | Description            |
 | ---------- | --------- | ---------------------- |
 | `builder_` | `address` | address of the builder |
-| `reason_`  | `bytes29` | reason for the pause   |
+| `reason_`  | `bytes20` | reason for the pause   |
 
 ### unpauseBuilder
 
@@ -190,50 +206,43 @@ function unpauseBuilder(address builder_) external onlyOwner;
 
 permit builder
 
-_reverts if is not called by the governor address or authorized changer reverts if builder state is not Revoked_
+_reverts if builder state is not Revoked_
 
 ```solidity
-function permitBuilder(address builder_) external;
+function permitBuilder(uint64 kickback_) external;
 ```
 
 **Parameters**
 
-| Name       | Type      | Description            |
-| ---------- | --------- | ---------------------- |
-| `builder_` | `address` | address of the builder |
+| Name        | Type     | Description               |
+| ----------- | -------- | ------------------------- |
+| `kickback_` | `uint64` | kickback(100% == 1 ether) |
 
 ### revokeBuilder
 
 revoke builder
 
-_reverts if is not called by the builder address reverts if builder state is not Whitelisted_
+_reverts if builder is already revoked_
 
 ```solidity
-function revokeBuilder(address builder_) external;
+function revokeBuilder() external;
 ```
-
-**Parameters**
-
-| Name       | Type      | Description            |
-| ---------- | --------- | ---------------------- |
-| `builder_` | `address` | address of the builder |
 
 ### setBuilderKickback
 
 set a builder kickback
 
-_reverts if is not called by the builder reverts if builder is not operational_
+_reverts if builder is not operational_
 
 ```solidity
-function setBuilderKickback(address builder_, uint64 kickback_) external;
+function setBuilderKickback(uint64 kickback_) external;
 ```
 
 **Parameters**
 
-| Name        | Type      | Description               |
-| ----------- | --------- | ------------------------- |
-| `builder_`  | `address` | address of the builder    |
-| `kickback_` | `uint64`  | kickback(100% == 1 ether) |
+| Name        | Type     | Description               |
+| ----------- | -------- | ------------------------- |
+| `kickback_` | `uint64` | kickback(100% == 1 ether) |
 
 ### getKickbackToApply
 
@@ -266,6 +275,54 @@ return true if gauge is operational kycApproved == true && whitelisted == true &
 function isGaugeOperational(Gauge gauge_) public view returns (bool);
 ```
 
+### getGaugesLength
+
+get length of gauges array
+
+```solidity
+function getGaugesLength() public view returns (uint256);
+```
+
+### getGaugeAt
+
+get gauge from array at a given index
+
+```solidity
+function getGaugeAt(uint256 index_) public view returns (address);
+```
+
+### isGaugeRewarded
+
+return true is gauge is rewarded
+
+```solidity
+function isGaugeRewarded(address gauge_) public view returns (bool);
+```
+
+### getHaltedGaugesLength
+
+get length of halted gauges array
+
+```solidity
+function getHaltedGaugesLength() public view returns (uint256);
+```
+
+### getHaltedGaugeAt
+
+get halted gauge from array at a given index
+
+```solidity
+function getHaltedGaugeAt(uint256 index_) public view returns (address);
+```
+
+### isGaugeHalted
+
+return true is gauge is halted
+
+```solidity
+function isGaugeHalted(address gauge_) public view returns (bool);
+```
+
 ### \_createGauge
 
 creates a new gauge for a builder
@@ -286,6 +343,38 @@ function _createGauge(address builder_) internal returns (Gauge gauge_);
 | -------- | ------- | -------------- |
 | `gauge_` | `Gauge` | gauge contract |
 
+### \_haltGauge
+
+halts a gauge moving it from the active array to the halted one
+
+_SponsorsManager override this function to remove its shares_
+
+```solidity
+function _haltGauge(Gauge gauge_) internal virtual;
+```
+
+**Parameters**
+
+| Name     | Type    | Description                 |
+| -------- | ------- | --------------------------- |
+| `gauge_` | `Gauge` | gauge contract to be halted |
+
+### \_resumeGauge
+
+resumes a gauge moving it from the halted array to the active one
+
+_SponsorsManager override this function to restore its shares_
+
+```solidity
+function _resumeGauge(Gauge gauge_) internal virtual;
+```
+
+**Parameters**
+
+| Name     | Type    | Description                  |
+| -------- | ------- | ---------------------------- |
+| `gauge_` | `Gauge` | gauge contract to be resumed |
+
 ## Events
 
 ### KYCApproved
@@ -303,7 +392,7 @@ event Whitelisted(address indexed builder_);
 ### Paused
 
 ```solidity
-event Paused(address indexed builder_, bytes29 reason_);
+event Paused(address indexed builder_, bytes20 reason_);
 ```
 
 ### Unpaused
@@ -321,7 +410,7 @@ event Revoked(address indexed builder_);
 ### Permitted
 
 ```solidity
-event Permitted(address indexed builder_);
+event Permitted(address indexed builder_, uint256 kickback_, uint256 cooldown_);
 ```
 
 ### BuilderKickbackUpdateScheduled
@@ -350,10 +439,10 @@ error AlreadyKYCApproved();
 error AlreadyWhitelisted();
 ```
 
-### AlreadyPaused
+### AlreadyRevoked
 
 ```solidity
-error AlreadyPaused();
+error AlreadyRevoked();
 ```
 
 ### NotPaused
@@ -380,12 +469,6 @@ error IsRevoked();
 error CannotRevoke();
 ```
 
-### NotAuthorized
-
-```solidity
-error NotAuthorized();
-```
-
 ### NotOperational
 
 ```solidity
@@ -398,6 +481,12 @@ error NotOperational();
 error InvalidBuilderKickback();
 ```
 
+### BuilderDoesNotExist
+
+```solidity
+error BuilderDoesNotExist();
+```
+
 ## Structs
 
 ### BuilderState
@@ -407,7 +496,9 @@ struct BuilderState {
     bool kycApproved;
     bool whitelisted;
     bool paused;
-    bytes29 pausedReason;
+    bool revoked;
+    bytes8 reserved;
+    bytes20 pausedReason;
 }
 ```
 
