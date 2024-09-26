@@ -86,7 +86,7 @@ contract GaugeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: SponsorsManager allocates to alice without no rewards distributed
+     * SCENARIO: SponsorsManager allocates to alice with no rewards distributed
      */
     function test_Allocate() public {
         // GIVEN a SponsorsManager contract
@@ -106,24 +106,24 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.allocationOf(alice), 1 ether);
         // THEN totalAllocation is 1 ether
         assertEq(gauge.totalAllocation(), 1 ether);
-        // THEN rewardPerTokenStored is 0 because there are not rewards distributed
+        // THEN rewardPerTokenStored is 0 because there are no rewards distributed
         assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
         // THEN rewardShares is 302400 ether = 1 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 302_400 ether);
-        // THEN rewardPerToken is 0 because there are not rewards distributed
+        // THEN rewardPerToken is 0 because there are no rewards distributed
         assertEq(gauge.rewardPerToken(address(rewardToken)), 0);
-        // THEN rewardPerToken is 0 because there are not rewards distributed
+        // THEN rewardPerToken is 0 because there are no rewards distributed
         assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);
-        // THEN alice reward is 0 because there are not rewards distributed
+        // THEN alice reward is 0 because there are no rewards distributed
         assertEq(gauge.rewards(address(rewardToken), alice), 0);
-        // THEN alice sponsorRewardPerTokenPaid is 0 because there are not rewards distributed
+        // THEN alice sponsorRewardPerTokenPaid is 0 because there are no rewards distributed
         assertEq(gauge.sponsorRewardPerTokenPaid(address(rewardToken), alice), 0);
         // THEN lastUpdateTime is epoch start since there are no rewards distributed
         assertEq(gauge.lastUpdateTime(address(rewardToken)), EpochLib._epochStart(block.timestamp));
     }
 
     /**
-     * SCENARIO: SponsorsManager deallocates to alice without no rewards distributed
+     * SCENARIO: SponsorsManager deallocates to alice with no rewards distributed
      */
     function test_Deallocate() public {
         // GIVEN a SponsorsManager contract
@@ -147,22 +147,22 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.totalAllocation(), 0);
         // THEN rewardShares is 302400 ether = 1 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 302_400 ether);
-        // THEN rewardPerTokenStored is 0 because there are not rewards distributed
+        // THEN rewardPerTokenStored is 0 because there are no rewards distributed
         assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
-        // THEN rewardPerToken is 0 because there are not rewards distributed
+        // THEN rewardPerToken is 0 because there are no rewards distributed
         assertEq(gauge.rewardPerToken(address(rewardToken)), 0);
-        // THEN rewardPerToken is 0 because there are not rewards distributed
+        // THEN rewardPerToken is 0 because there are no rewards distributed
         assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);
-        // THEN alice reward is 0 because there are not rewards distributed
+        // THEN alice reward is 0 because there are no rewards distributed
         assertEq(gauge.rewards(address(rewardToken), alice), 0);
-        // THEN alice sponsorRewardPerTokenPaid is 0 because there are not rewards distributed
+        // THEN alice sponsorRewardPerTokenPaid is 0 because there are no rewards distributed
         assertEq(gauge.sponsorRewardPerTokenPaid(address(rewardToken), alice), 0);
-        // THEN lastUpdateTime is epoch start since there are no rewards distributed
-        assertEq(gauge.lastUpdateTime(address(rewardToken)), EpochLib._epochStart(block.timestamp));
+        // THEN alice lastUpdateTime is 0 because there are no rewards distributed
+        assertEq(gauge.lastUpdateTime(address(rewardToken)), 0);
     }
 
     /**
-     * SCENARIO: SponsorsManager makes a partial deallocation to alice without no rewards distributed
+     * SCENARIO: SponsorsManager makes a partial deallocation to alice with no rewards distributed
      */
     function test_DeallocatePartial() public {
         // GIVEN a SponsorsManager contract
@@ -247,6 +247,57 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether);
 
         // WHEN 100 ether distributed
+        //  THEN notifyRewardAmount event is emitted
+        vm.expectEmit();
+        emit NotifyReward(address(rewardToken), 0 ether, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        // simulates a distribution setting the periodFinish
+        _setPeriodFinish();
+
+        // THEN rewardPerTokenStored is 0
+        assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
+        // THEN rewardMissing is 0
+        assertEq(gauge.rewardMissing(address(rewardToken)), 0);
+        // THEN rewardPerToken is 0
+        assertEq(gauge.rewardPerToken(address(rewardToken)), 0);
+        // THEN lastUpdateTime is the current one
+        assertEq(gauge.lastUpdateTime(address(rewardToken)), block.timestamp);
+        // THEN periodFinish is updated with the timestamp when the epoch finish
+        assertEq(sponsorsManager.periodFinish(), EpochLib._epochNext(block.timestamp));
+        // THEN time until next epoch is 518400
+        assertEq(sponsorsManager.periodFinish() - block.timestamp, 518_400);
+        // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
+        assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
+
+        // AND half epoch pass
+        _skipRemainingEpochFraction(2);
+
+        // THEN rewardPerToken is 8.333333333333333333 = 518400 / 2 * 0.000192901234567901 / 6 ether
+        assertEq(gauge.rewardPerToken(address(rewardToken)), 8_333_333_333_333_333_333);
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // THEN rewardPerToken is 16.666666666666666666 = 518400 * 0.000192901234567901 / 6 ether
+        assertEq(gauge.rewardPerToken(address(rewardToken)), 16_666_666_666_666_666_666);
+    }
+
+    /**
+     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManager
+     */
+    function test_NotifyRewardAmountNotFromSponsorsManager() public {
+        // GIVEN a SponsorsManager contract
+        vm.startPrank(address(sponsorsManager));
+        // AND 1 ether allocated to alice and 5 ether to bob
+        gauge.allocate(alice, 1 ether);
+        gauge.allocate(bob, 5 ether);
+
+        // WHEN an Incentivizer has rewardToken
+        vm.startPrank(incentivizer);
+        rewardToken.mint(address(incentivizer), 100 ether);
+        rewardToken.approve(address(gauge), 100 ether);
+
+        // WHEN 100 ether distributed by Incentivizer
         //  THEN notifyRewardAmount event is emitted
         vm.expectEmit();
         emit NotifyReward(address(rewardToken), 0 ether, 100 ether);
@@ -963,7 +1014,7 @@ contract GaugeTest is BaseTest {
 
     /**
      * @notice set periodFinish on SponsorsManager
-     *  Due we are impersonating SponsorsManager instead of allocate and distribute from real use cases,
+     *  Since we are impersonating SponsorsManager instead of allocating and distributing from real use cases,
      *  we need to update the periodFinish var every time gauge.notifyRewardAmount is called to simulate a distribution
      */
     function _setPeriodFinish() internal {
