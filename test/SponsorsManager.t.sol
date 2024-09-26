@@ -788,6 +788,48 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
+     * SCENARIO: alice claims all the rewards from a sponsorManager distibution and
+     * incentivized gauge
+     */
+    function test_ClaimSponsorRewardsWithIncentivizer() public {
+        // GIVEN builder and builder2 which kickback percentage is 50%
+        //  AND a sponsor alice
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        // AND alice allocates 2 ether to builder and 6 ether to builder2
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 ether reward are added
+        sponsorsManager.notifyRewardAmount(100 ether);
+        // AND 100 ether were added directly to first gauge by incentivizer
+        vm.startPrank(incentivizer);
+        rewardToken.mint(address(incentivizer), 100 ether);
+        rewardToken.approve(address(gaugesArray[0]), 100 ether);
+        gaugesArray[0].notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        vm.stopPrank();
+
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        // AND distribute is executed
+        sponsorsManager.startDistribution();
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // WHEN alice claim rewards
+        vm.prank(alice);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is 50% of the distributed amount from the sponsorsManager
+        // and 100% of the rewards incentivized directly to the first gauge
+        // 149.999999999999999990 = 100 ether * 0.5 + 100 ether
+        assertEq(rewardToken.balanceOf(alice), 149_999_999_999_999_999_990);
+    }
+
+    /**
      * SCENARIO: after a distribution, in the middle of the epoch, gauge loses all allocations.
      *  One distribution later, alice allocates there again in the next epoch and earn the old remaining rewards
      */

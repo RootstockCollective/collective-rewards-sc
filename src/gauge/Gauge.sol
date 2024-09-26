@@ -300,7 +300,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
         _updateRewards(rewardToken, sponsor_, _periodFinish);
         _updateRewards(UtilsLib._COINBASE_ADDRESS, sponsor_, _periodFinish);
 
-        // to do not deal with signed integers we add allocation if the new one is bigger than the previous one
+        // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
         uint256 _previousAllocation = allocationOf[sponsor_];
         uint256 _timeUntilNext = EpochLib._epochNext(block.timestamp) - block.timestamp;
         if (allocation_ >= _previousAllocation) {
@@ -462,7 +462,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
             _leftover = (_timeUntilNext) * _rewardRate;
         }
 
-        // if there are no allocations we need to update rewardMissing to don't lose the previous rewards
+        // if there are no allocations we need to update rewardMissing to avoid losing the previous rewards
         if (totalAllocation == 0) {
             _updateRewardMissing(rewardToken_, periodFinish_);
         }
