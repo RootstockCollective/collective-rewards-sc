@@ -23,6 +23,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     error NotSponsorsManager();
     error InvalidRewardAmount();
     error BuilderRewardsLocked();
+    error GaugeHalted();
 
     // -----------------------------
     // ----------- Events ----------
@@ -333,6 +334,10 @@ contract Gauge is ReentrancyGuardUpgradeable {
         external
         payable
     {
+        // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
+        // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
+        // calculate rewardPerToken
+        if (sponsorsManager.isGaugeHalted(address(this))) revert GaugeHalted();
         _notifyRewardAmount(rewardToken_, builderAmount_, sponsorsAmount_, sponsorsManager.periodFinish());
         if (rewardToken_ == UtilsLib._COINBASE_ADDRESS) {
             if (builderAmount_ + sponsorsAmount_ != msg.value) revert InvalidRewardAmount();

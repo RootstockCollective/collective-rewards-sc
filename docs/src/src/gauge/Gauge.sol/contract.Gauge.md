@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/48fa8b5cf52dd18d51cdbc26d813ed080aa9e876/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/gauge/Gauge.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable
 
@@ -264,7 +264,7 @@ function earned(address rewardToken_, address sponsor_) public view returns (uin
 
 claim rewards for a `sponsor_` address
 
-_reverts if is not called by the `sponsor_` or the sponsorsManager_
+_reverts if is not called by the `sponsor_` or the sponsorsManager\_
 
 ```solidity
 function claimSponsorReward(address sponsor_) public;
@@ -280,7 +280,7 @@ function claimSponsorReward(address sponsor_) public;
 
 claim rewards for a `sponsor_` address
 
-_reverts if is not called by the `sponsor_` or the sponsorsManager_
+_reverts if is not called by the `sponsor_` or the sponsorsManager\_
 
 ```solidity
 function claimSponsorReward(address rewardToken_, address sponsor_) public;
@@ -578,6 +578,12 @@ error InvalidRewardAmount();
 
 ```solidity
 error BuilderRewardsLocked();
+```
+
+### GaugeHalted
+
+```solidity
+error GaugeHalted();
 ```
 
 ## Structs

@@ -118,8 +118,8 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewards(address(rewardToken), alice), 0);
         // THEN alice sponsorRewardPerTokenPaid is 0 because there are not rewards distributed
         assertEq(gauge.sponsorRewardPerTokenPaid(address(rewardToken), alice), 0);
-        // THEN alice lastUpdateTime is 0 because there are not rewards distributed
-        assertEq(gauge.lastUpdateTime(address(rewardToken)), 0);
+        // THEN lastUpdateTime is epoch start since there are no rewards distributed
+        assertEq(gauge.lastUpdateTime(address(rewardToken)), EpochLib._epochStart(block.timestamp));
     }
 
     /**
@@ -157,8 +157,8 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewards(address(rewardToken), alice), 0);
         // THEN alice sponsorRewardPerTokenPaid is 0 because there are not rewards distributed
         assertEq(gauge.sponsorRewardPerTokenPaid(address(rewardToken), alice), 0);
-        // THEN alice lastUpdateTime is 0 because there are not rewards distributed
-        assertEq(gauge.lastUpdateTime(address(rewardToken)), 0);
+        // THEN lastUpdateTime is epoch start since there are no rewards distributed
+        assertEq(gauge.lastUpdateTime(address(rewardToken)), EpochLib._epochStart(block.timestamp));
     }
 
     /**

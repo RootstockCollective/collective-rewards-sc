@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/48fa8b5cf52dd18d51cdbc26d813ed080aa9e876/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -70,12 +70,12 @@ index of tha last gauge distributed during a distribution period
 uint256 public indexLastGaugeDistributed;
 ```
 
-### periodFinish
+### \_periodFinish
 
 timestamp end of current rewards period
 
 ```solidity
-uint256 public periodFinish;
+uint256 internal _periodFinish;
 ```
 
 ### onDistributionPeriod
@@ -230,6 +230,16 @@ function claimSponsorRewards(Gauge[] memory gauges_) external;
 | --------- | --------- | ------------------------ |
 | `gauges_` | `Gauge[]` | array of gauges to claim |
 
+### periodFinish
+
+returns timestamp end of current rewards period If it is called by a halted gauge returns the timestamp of the last
+period distributed This is important because unclaimed rewards must stop accumulating rewards and halted gauges are not
+updated on the distribution anymore
+
+```solidity
+function periodFinish() external view returns (uint256);
+```
+
 ### \_allocate
 
 internal function used to allocate votes for a gauge or a batch of gauges
@@ -315,6 +325,36 @@ function _distribute(
 | Name     | Type      | Description                                                                   |
 | -------- | --------- | ----------------------------------------------------------------------------- |
 | `<none>` | `uint256` | newGaugeRewardShares\_ new gauge rewardShares, updated after the distribution |
+
+### \_haltGauge
+
+halts a gauge moving it from the active array to the halted one Removes its shares to not be accounted on the
+distribution anymore
+
+```solidity
+function _haltGauge(Gauge gauge_) internal override;
+```
+
+**Parameters**
+
+| Name     | Type    | Description                 |
+| -------- | ------- | --------------------------- |
+| `gauge_` | `Gauge` | gauge contract to be halted |
+
+### \_resumeGauge
+
+resumes a gauge moving it from the halted array to the active one Adds its shares to be accounted on the distribution
+again
+
+```solidity
+function _resumeGauge(Gauge gauge_) internal override;
+```
+
+**Parameters**
+
+| Name     | Type    | Description                  |
+| -------- | ------- | ---------------------------- |
+| `gauge_` | `Gauge` | gauge contract to be resumed |
 
 ## Events
 

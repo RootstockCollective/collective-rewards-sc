@@ -1,6 +1,6 @@
 # WhitelistBuilderChangerTemplate
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/48fa8b5cf52dd18d51cdbc26d813ed080aa9e876/src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol)
 
 **Inherits:** [IChangeContract](/src/interfaces/IChangeContract.sol/interface.IChangeContract.md)
 
