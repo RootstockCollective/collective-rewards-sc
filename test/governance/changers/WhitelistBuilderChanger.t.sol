@@ -17,7 +17,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         _changer = new WhitelistBuilderChangerTemplate(sponsorsManager, _newBuilder);
         // AND a newBuilder is activated
         vm.prank(kycApprover);
-        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
+        sponsorsManager.activateBuilderKYC(_newBuilder, _newBuilder, 0);
     }
 
     /**

@@ -127,7 +127,7 @@ contract BaseTest is Test {
         returns (Gauge newGauge_)
     {
         vm.startPrank(kycApprover);
-        sponsorsManager.activateBuilder(builder_, rewardReceiver_, kickbackPct_);
+        sponsorsManager.approveBuilderKYC(builder_, rewardReceiver_, kickbackPct_);
         vm.startPrank(governor);
         newGauge_ = sponsorsManager.whitelistBuilder(builder_);
         vm.stopPrank();

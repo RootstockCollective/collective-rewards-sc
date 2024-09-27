@@ -24,10 +24,15 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN a sponsor alice
         vm.startPrank(alice);
 
-        // WHEN alice calls activateBuilder
+        // WHEN alice calls approveBuilderKYC
         //  THEN tx reverts because caller is not the owner
         vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
-        sponsorsManager.activateBuilder(builder, builder, 0);
+        sponsorsManager.approveBuilderKYC(builder, builder, 0);
+
+        // WHEN alice calls revokeBuilderKYC
+        //  THEN tx reverts because caller is not the owner
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        sponsorsManager.revokeBuilderKYC(builder, address(rewardDistributor));
 
         // WHEN alice calls revokeBuilderKYC
         //  THEN tx reverts because caller is not the owner
@@ -88,9 +93,9 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: kycApprover activates a new builder
+     * SCENARIO: kycApprover approves a new builder
      */
-    function test_ActivateBuilder() public {
+    function test_ApproveBuilderKYC() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         address _newRewardReceiver = makeAddr("newRewardReceiver");
@@ -111,14 +116,14 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: activateBuilder should reverts if it is already approved
+     * SCENARIO: approveBuilderKYC should reverts if it is already approved
      */
     function test_RevertAlreadyKYCApproved() public {
         // GIVEN a builder KYC approved
         //  AND a kycApprover
         vm.startPrank(kycApprover);
 
-        // WHEN tries to activateBuilder
+        // WHEN tries to approveBuilderKYC
         //  THEN tx reverts because is already kycApproved
         vm.expectRevert(BuilderRegistry.AlreadyKYCApproved.selector);
         sponsorsManager.activateBuilder(builder, builder, 0);
@@ -130,18 +135,18 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: activateBuilder should reverts if kickback is higher than 100
+     * SCENARIO: approveBuilderKYC should reverts if kickback is higher than 100
      */
-    function test_ActivateBuilderInvalidBuilderKickback() public {
+    function test_ApproveBuilderKYCInvalidBuilderKickback() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         // AND a kycApprover
         vm.prank(kycApprover);
 
-        // WHEN tries to activateBuilder
+        // WHEN tries to approveBuilderKYC
         //  THEN tx reverts because is not a valid kickback
         vm.expectRevert(BuilderRegistry.InvalidBuilderKickback.selector);
-        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 2 ether);
+        sponsorsManager.approveBuilderKYC(_newBuilder, _newBuilder, 2 ether);
     }
 
     /**
@@ -152,7 +157,7 @@ contract BuilderRegistryTest is BaseTest {
         address _newBuilder = makeAddr("newBuilder");
         // AND a KYCApprover activates a builder
         vm.prank(kycApprover);
-        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
+        sponsorsManager.approveBuilderKYC(_newBuilder, _newBuilder, 0);
 
         // WHEN calls whitelistBuilder
         //  THEN a GaugeCreated event is emitted
