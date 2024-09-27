@@ -10,7 +10,8 @@ contract BuilderRegistryTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event KYCApproved(address indexed builder_);
+    event KYCApproved(address indexed builder_, address rewardReceiver_, uint64 kickback_);
+    event KYCRevoked(address indexed builder_, address indexed rewardSink_);
     event Whitelisted(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
@@ -18,14 +19,19 @@ contract BuilderRegistryTest is BaseTest {
     event Permitted(address indexed builder_, uint256 kickback_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
-    function test_OnlyOnwer() public {
+    function test_OnlyOwner() public {
         // GIVEN a sponsor alice
         vm.startPrank(alice);
 
-        // WHEN alice calls activateBuilder
+        // WHEN alice calls approveBuilderKYC
         //  THEN tx reverts because caller is not the owner
         vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
-        sponsorsManager.activateBuilder(builder, builder, 0);
+        sponsorsManager.approveBuilderKYC(builder, builder, 0);
+
+        // WHEN alice calls revokeBuilderKYC
+        //  THEN tx reverts because caller is not the owner
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        sponsorsManager.revokeBuilderKYC(builder, address(rewardDistributor));
 
         // WHEN alice calls pauseBuilder
         //  THEN tx reverts because caller is not the owner
@@ -75,54 +81,55 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: kycApprover activates a new builder
+     * SCENARIO: kycApprover approves a new builder
      */
-    function test_ActivateBuilder() public {
+    function test_ApproveBuilderKYC() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
+        address _newRewardReceiver = makeAddr("newRewardReceiver");
         // AND a kycApprover
         vm.prank(kycApprover);
-        // WHEN calls activateBuilder
+        // WHEN calls approveBuilderKYC
         //  THEN KYCApproved event is emitted
         vm.expectEmit();
-        emit KYCApproved(_newBuilder);
-        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
+        emit KYCApproved(_newBuilder, _newRewardReceiver, 0.1 ether);
+        sponsorsManager.approveBuilderKYC(_newBuilder, _newRewardReceiver, 0.1 ether);
 
         // THEN builder is kycApproved
         (bool _kycApproved,,,,,) = sponsorsManager.builderState(_newBuilder);
         assertEq(_kycApproved, true);
 
-        // THEN builder rewards receiver is the same as the builder
-        assertEq(sponsorsManager.builderRewardReceiver(_newBuilder), _newBuilder);
+        // THEN builder rewards receiver is set
+        assertEq(sponsorsManager.builderRewardReceiver(_newBuilder), _newRewardReceiver);
     }
 
     /**
-     * SCENARIO: activateBuilder should reverts if it is already approved
+     * SCENARIO: approveBuilderKYC should reverts if it is already approved
      */
     function test_RevertAlreadyKYCApproved() public {
         // GIVEN a builder KYC approved
         //  AND a kycApprover
         vm.prank(kycApprover);
 
-        // WHEN tries to activateBuilder
+        // WHEN tries to approveBuilderKYC
         //  THEN tx reverts because is already kycApproved
         vm.expectRevert(BuilderRegistry.AlreadyKYCApproved.selector);
-        sponsorsManager.activateBuilder(builder, builder, 0);
+        sponsorsManager.approveBuilderKYC(builder, builder, 0);
     }
 
     /**
-     * SCENARIO: activateBuilder should reverts if kickback is higher than 100
+     * SCENARIO: approveBuilderKYC should reverts if kickback is higher than 100
      */
-    function test_ActivateBuilderInvalidBuilderKickback() public {
+    function test_ApproveBuilderKYCInvalidBuilderKickback() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         // AND a kycApprover
         vm.prank(kycApprover);
 
-        // WHEN tries to activateBuilder
+        // WHEN tries to approveBuilderKYC
         //  THEN tx reverts because is not a valid kickback
         vm.expectRevert(BuilderRegistry.InvalidBuilderKickback.selector);
-        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 2 ether);
+        sponsorsManager.approveBuilderKYC(_newBuilder, _newBuilder, 2 ether);
     }
 
     /**
@@ -133,7 +140,7 @@ contract BuilderRegistryTest is BaseTest {
         address _newBuilder = makeAddr("newBuilder");
         // AND a KYCApproved builder
         vm.prank(kycApprover);
-        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
+        sponsorsManager.approveBuilderKYC(_newBuilder, _newBuilder, 0);
 
         // WHEN calls whitelistBuilder
         //  THEN a GaugeCreated event is emitted
@@ -344,5 +351,216 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN tx reverts because is already revoked
         vm.expectRevert(BuilderRegistry.AlreadyRevoked.selector);
         sponsorsManager.revokeBuilder();
+    }
+
+    /**
+     * SCENARIO: builder is whitelisted and KYC revoked. Cannot be KYC approved anymore
+     */
+    function test_RevertApprovingWhitelistedRevokedBuilder() public {
+        // GIVEN a KYC revoked builder
+        vm.startPrank(kycApprover);
+        sponsorsManager.revokeBuilderKYC(builder, address(rewardDistributor));
+
+        // WHEN kycApprover tries to approve it again
+        //  THEN tx reverts because builder already exists
+        vm.expectRevert(BuilderRegistry.BuilderAlreadyExists.selector);
+        sponsorsManager.approveBuilderKYC(builder, builder, 0);
+    }
+
+    /**
+     * SCENARIO: new builder is KYC revoked and KYC approved again
+     */
+    function test_ApproveKYCRevokedBuilderAgain() public {
+        // GIVEN a new builder
+        address _newBuilder = makeAddr("newBuilder");
+        // AND kycApprover approves it
+        vm.startPrank(kycApprover);
+        sponsorsManager.approveBuilderKYC(_newBuilder, _newBuilder, 0);
+        // AND kycApprover revokes it KYC
+        sponsorsManager.revokeBuilderKYC(_newBuilder, address(rewardDistributor));
+
+        // WHEN kycApprover approves it again
+        sponsorsManager.approveBuilderKYC(_newBuilder, _newBuilder, 0);
+        // THEN builder is kycApproved
+        (bool _kycApproved,,,,,) = sponsorsManager.builderState(_newBuilder);
+        assertEq(_kycApproved, true);
+    }
+
+    /**
+     * SCENARIO: whitelistBuilder should reverts if it is not KYC approved
+     */
+    function test_RevertWhitelistBuilderNotKYCApproved() public {
+        // GIVEN a new builder
+        address _newBuilder = makeAddr("newBuilder");
+        //  WHEN tries to whitelistBuilder
+        //   THEN tx reverts because is not KYC approved
+        vm.expectRevert(BuilderRegistry.NotKYCApproved.selector);
+        sponsorsManager.whitelistBuilder(_newBuilder);
+    }
+
+    /**
+     * SCENARIO: revokeBuilder reverts if KYC was revoked
+     */
+    function test_RevertRevokeBuilderNotKYCApproved() public {
+        // GIVEN a KYC revoked builder
+        vm.startPrank(kycApprover);
+        sponsorsManager.revokeBuilderKYC(builder, address(rewardDistributor));
+
+        //  WHEN builders tries to revoke it
+        //   THEN tx reverts because is not KYC approved
+        vm.startPrank(builder);
+        vm.expectRevert(BuilderRegistry.NotKYCApproved.selector);
+        sponsorsManager.revokeBuilder();
+    }
+
+    /**
+     * SCENARIO: permitBuilder reverts if KYC was revoked
+     */
+    function test_RevertPermitBuilderNotKYCApproved() public {
+        // GIVEN a revoked builder
+        vm.startPrank(builder);
+        sponsorsManager.revokeBuilder();
+        // AND kycApprover revokes it KYC
+        vm.startPrank(kycApprover);
+        sponsorsManager.revokeBuilderKYC(builder, address(rewardDistributor));
+
+        //  WHEN builders tries to permit it
+        //   THEN tx reverts because is not KYC approved
+        vm.startPrank(builder);
+        vm.expectRevert(BuilderRegistry.NotKYCApproved.selector);
+        sponsorsManager.permitBuilder(0.1 ether);
+    }
+
+    /**
+     * SCENARIO: revokeBuilderKYC reverts if KYC was already revoked
+     */
+    function test_RevertRevokeBuilderKYCNotKYCApproved() public {
+        // GIVEN a KYC revoked builder
+        vm.startPrank(kycApprover);
+        sponsorsManager.revokeBuilderKYC(builder, address(rewardDistributor));
+
+        //  WHEN kycApprover tries to revoke it again
+        //   THEN tx reverts because is not KYC approved
+        vm.expectRevert(BuilderRegistry.NotKYCApproved.selector);
+        sponsorsManager.revokeBuilderKYC(builder, address(rewardDistributor));
+    }
+
+    /**
+     * SCENARIO: kycApprover revokes builder KYC
+     */
+    function test_RevokeBuilderKYC() public {
+        // GIVEN a Whitelisted builder
+        vm.startPrank(kycApprover);
+
+        // WHEN kycApprover calls revokeBuilderKYC
+        //  THEN KYCRevoked event is emitted
+        vm.expectEmit();
+        emit KYCRevoked(builder, alice);
+        sponsorsManager.revokeBuilderKYC(builder, alice);
+
+        // THEN builder is not kycApproved
+        (bool _kycApproved,,,,,) = sponsorsManager.builderState(builder);
+        assertEq(_kycApproved, false);
+        // THEN gauge is halted
+        assertEq(sponsorsManager.isGaugeHalted(address(gauge)), true);
+        // THEN halted gauges array length is 1
+        assertEq(sponsorsManager.getHaltedGaugesLength(), 1);
+        // THEN gauge is not rewarded
+        assertEq(sponsorsManager.isGaugeRewarded(address(gauge)), false);
+        // THEN rewarded gauges array length is 1
+        assertEq(sponsorsManager.getGaugesLength(), 1);
+        // THEN haltedGaugeLastPeriodFinish is periodFinish
+        assertEq(sponsorsManager.haltedGaugeLastPeriodFinish(gauge), sponsorsManager.periodFinish());
+    }
+
+    /**
+     * SCENARIO: KYC revoked builder can be paused and unpaused
+     */
+    function test_PauseKYCRevokedBuilder() public {
+        // GIVEN a KYC revoked builder
+        vm.startPrank(kycApprover);
+        sponsorsManager.revokeBuilderKYC(builder, address(rewardDistributor));
+        // AND kycApprover calls pauseBuilder
+        sponsorsManager.pauseBuilder(builder, "paused");
+        (bool _kycApproved,, bool _paused,,,) = sponsorsManager.builderState(builder);
+        // THEN builder is not kycApproved
+        assertEq(_kycApproved, false);
+        // THEN builder is paused
+        assertEq(_paused, true);
+
+        // AND kycApprover calls unpauseBuilder
+        sponsorsManager.unpauseBuilder(builder);
+        (_kycApproved,, _paused,,,) = sponsorsManager.builderState(builder);
+        // THEN builder is still not kycApproved
+        assertEq(_kycApproved, false);
+        // THEN builder is not paused
+        assertEq(_paused, false);
+    }
+
+    /**
+     * SCENARIO: revoked builder can be paused and unpaused
+     */
+    function test_PauseRevokedBuilder() public {
+        // GIVEN a revoked builder
+        vm.startPrank(builder);
+        sponsorsManager.revokeBuilder();
+        // AND kycApprover calls pauseBuilder
+        vm.startPrank(kycApprover);
+        sponsorsManager.pauseBuilder(builder, "paused");
+        (,, bool _paused, bool _revoked,,) = sponsorsManager.builderState(builder);
+        // THEN builder is revoked
+        assertEq(_revoked, true);
+        // THEN builder is paused
+        assertEq(_paused, true);
+
+        // AND kycApprover calls unpauseBuilder
+        sponsorsManager.unpauseBuilder(builder);
+        (,, _paused, _revoked,,) = sponsorsManager.builderState(builder);
+        // THEN builder is still revoked
+        assertEq(_revoked, true);
+        // THEN builder is not paused
+        assertEq(_paused, false);
+    }
+
+    /**
+     * SCENARIO: paused builder can be revoked and permitted
+     */
+    function test_RevokePausedBuilder() public {
+        // GIVEN paused builder
+        vm.startPrank(kycApprover);
+        sponsorsManager.pauseBuilder(builder, "paused");
+        // AND builder calls revokeBuilder
+        vm.startPrank(builder);
+        sponsorsManager.revokeBuilder();
+        (,, bool _paused, bool _revoked,,) = sponsorsManager.builderState(builder);
+        // THEN builder is paused
+        assertEq(_paused, true);
+        // THEN builder is revoked
+        assertEq(_revoked, true);
+
+        // AND builder calls permitBuilder
+        sponsorsManager.permitBuilder(0.1 ether);
+        (,, _paused, _revoked,,) = sponsorsManager.builderState(builder);
+        // THEN builder is still paused
+        assertEq(_paused, true);
+        // THEN builder is not revoked
+        assertEq(_revoked, false);
+    }
+
+    /**
+     * SCENARIO: paused builder can be KYC revoked
+     */
+    function test_KYCRevokePausedBuilder() public {
+        // GIVEN paused builder
+        vm.startPrank(kycApprover);
+        sponsorsManager.pauseBuilder(builder, "paused");
+
+        // AND kycApprover calls revokeBuilderKYC
+        sponsorsManager.revokeBuilderKYC(builder, alice);
+        (bool _kycApproved,, bool _paused,,,) = sponsorsManager.builderState(builder);
+        // THEN builder is paused
+        assertEq(_paused, true);
+        // THEN builder is not kyc approved
+        assertEq(_kycApproved, false);
     }
 }

@@ -83,6 +83,10 @@ contract BaseTest is Test {
         stakingToken.mint(alice, 100_000 ether);
         stakingToken.mint(bob, 100_000 ether);
 
+        // mint some rewardTokens to this contract for reward distribution
+        rewardToken.mint(address(this), 100_000 ether);
+        rewardToken.approve(address(sponsorsManager), 100_000 ether);
+
         _setUp();
     }
 
@@ -118,7 +122,7 @@ contract BaseTest is Test {
         returns (Gauge newGauge_)
     {
         vm.startPrank(kycApprover);
-        sponsorsManager.activateBuilder(builder_, rewardReceiver_, kickbackPct_);
+        sponsorsManager.approveBuilderKYC(builder_, rewardReceiver_, kickbackPct_);
         vm.startPrank(governor);
         newGauge_ = sponsorsManager.whitelistBuilder(builder_);
         vm.stopPrank();
@@ -132,6 +136,26 @@ contract BaseTest is Test {
             gaugesArray.push(_newGauge);
         }
         vm.stopPrank();
+    }
+
+    function _initialDistribution() internal {
+        // GIVEN alice allocates to builder and builder2
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+        // AND bob allocates to builder2
+        vm.startPrank(bob);
+        allocationsArray[0] = 0 ether;
+        allocationsArray[1] = 8 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 rewardToken and 10 coinbase are distributed
+        _distribute(100 ether, 10 ether);
+        // AND half epoch pass
+        _skipRemainingEpochFraction(2);
     }
 
     function _distribute(uint256 amountERC20_, uint256 amountCoinbase_) internal {

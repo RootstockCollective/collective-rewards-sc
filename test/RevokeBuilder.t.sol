@@ -1,33 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { BaseTest } from "./BaseTest.sol";
+import { HaltedBuilderBehavior } from "./HaltedBuilderBehavior.t.sol";
 
-contract RevokeBuilderTest is BaseTest {
-    function _setUp() internal override {
-        // mint some rewardTokens to this contract for reward distribution
-        rewardToken.mint(address(this), 100_000 ether);
-        rewardToken.approve(address(sponsorsManager), 100_000 ether);
-    }
+contract RevokeBuilderTest is HaltedBuilderBehavior {
+    function _initialState() internal override {
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        //   AND half epoch pass
+        _initialDistribution();
 
-    function _initialState() internal {
-        // GIVEN alice allocates to builder and builder2
-        vm.startPrank(alice);
-        allocationsArray[0] = 2 ether;
-        allocationsArray[1] = 6 ether;
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
-        // AND bob allocates to builder2
-        vm.startPrank(bob);
-        allocationsArray[0] = 0 ether;
-        allocationsArray[1] = 8 ether;
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
-
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
         // AND builder is revoked
         vm.startPrank(builder);
         sponsorsManager.revokeBuilder();
@@ -35,38 +17,15 @@ contract RevokeBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is revoked in the middle of an epoch having allocation. Sponsor and builder
-     *  receive all the rewards for the current epoch
+     * SCENARIO: builder is revoked in the middle of an epoch having allocation.
+     *  builder receives all the rewards for the current epoch
      */
-    function test_HaltedGaugeReceiveCurrentRewards() public {
+    function test_BuildersReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half epoch pass
         //    AND builder is revoked
         _initialState();
-        // AND epoch finish
-        _skipAndStartNewEpoch();
-
-        // THEN total allocation is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
-
-        // WHEN alice claim rewards
-        vm.startPrank(alice);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
-
-        // THEN alice rewardToken balance is 25 = (100 * 8 / 16) * 0.5
-        assertApproxEqAbs(rewardToken.balanceOf(alice), 25 ether, 100);
-        // THEN alice coinbase balance is 2.5 = (10 * 8 / 16) * 0.5
-        assertApproxEqAbs(alice.balance, 2.5 ether, 100);
-
-        // WHEN bob claim rewards
-        vm.startPrank(bob);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
-
-        // THEN bob rewardToken balance is 25 = (100 * 8 / 16) * 0.5
-        assertApproxEqAbs(rewardToken.balanceOf(bob), 25 ether, 100);
-        // THEN bob coinbase balance is 2.5 = (10 * 8 / 16) * 0.5
-        assertApproxEqAbs(bob.balance, 2.5 ether, 100);
 
         // WHEN builders claim rewards
         _buildersClaim();
@@ -83,43 +42,17 @@ contract RevokeBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is revoked in the middle of an epoch having allocation. Sponsor and builder
-     *  don't receive those rewards on the next epoch
+     * SCENARIO: builder is revoked in the middle of an epoch having allocation.
+     *  Builder doesn't receive those rewards on the next epoch
      */
-    function test_HaltedGaugeDoNotReceiveNextRewards() public {
+    function test_BuilderDoesNotReceiveNextRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half epoch pass
         //    AND builder is revoked
         _initialState();
-
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        // THEN total allocation is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
-
-        // AND epoch finish
-        _skipAndStartNewEpoch();
-
-        // WHEN alice claim rewards
-        vm.startPrank(alice);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
-
-        // THEN alice rewardToken balance is 25 + increment of 21.42 = (100 * 6 / 14) * 0.5
-        // builder allocations are not considered anymore. Alice lose those rewards
-        assertEq(rewardToken.balanceOf(alice), 46_428_571_428_571_428_558);
-        // THEN alice coinbase balance is 2.5 + increment of 2.142 = (10 * 6 / 14) * 0.5
-        // builder allocations are not considered anymore. Alice lose those rewards
-        assertEq(alice.balance, 4_642_857_142_857_142_842);
-
-        // WHEN bob claim rewards
-        vm.startPrank(bob);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
-
-        // THEN bob rewardToken balance is 25 + increment of 28.57 = (100 * 8 / 14) * 0.5
-        assertEq(rewardToken.balanceOf(bob), 53_571_428_571_428_571_416);
-        // THEN bob coinbase balance is 2.5 + increment of 2.857 = (10 * 8 / 14) * 0.5
-        assertEq(bob.balance, 5_357_142_857_142_857_128);
 
         // WHEN builders claim rewards
         _buildersClaim();
@@ -288,39 +221,6 @@ contract RevokeBuilderTest is BaseTest {
         //  epoch 3 = 5 = (10 * 14 / 14) * 0.5
         //  epoch 4 = 4.375 = (10 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 18.75 ether);
-    }
-
-    /**
-     * SCENARIO: builder is revoked in the middle of an epoch having allocation.
-     *  Alice modifies its allocation but the total reward shares don't change
-     *  and the sponsorTotalAllocation is updated
-     */
-    function test_HaltedGaugeModifyAllocation() public {
-        // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
-        //    AND builder is revoked
-        _initialState();
-
-        // WHEN alice removes allocations from revoked builder
-        vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 0);
-        // THEN gauge rewardShares is 604800 ether = 2 * 1/2 WEEK
-        assertEq(gauge.rewardShares(), 604_800 ether);
-        // THEN alice total allocation is 6
-        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 6 ether);
-        // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
-
-        // WHEN alice adds allocations to revoked builder
-        vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 4 ether);
-        // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
-        assertEq(gauge.rewardShares(), 1_814_400 ether);
-        // THEN alice total allocation is 10
-        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 10 ether);
-        // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
     }
 
     /**

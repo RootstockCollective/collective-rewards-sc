@@ -23,18 +23,21 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     error AlreadyKYCApproved();
     error AlreadyWhitelisted();
     error AlreadyRevoked();
+    error NotKYCApproved();
     error NotPaused();
     error NotRevoked();
     error IsRevoked();
     error CannotRevoke();
     error NotOperational();
     error InvalidBuilderKickback();
+    error BuilderAlreadyExists();
     error BuilderDoesNotExist();
 
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event KYCApproved(address indexed builder_);
+    event KYCApproved(address indexed builder_, address rewardReceiver_, uint64 kickback_);
+    event KYCRevoked(address indexed builder_, address indexed rewardSink_);
     event Whitelisted(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
@@ -127,15 +130,17 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     // -----------------------------
 
     /**
-     * @notice activates builder and set reward receiver
+     * @notice approves builder's KYC and sets the reward receiver
      * @dev reverts if is not called by the owner address
      * reverts if builder state is not pending
      * @param builder_ address of the builder
      * @param rewardReceiver_ address of the builder reward receiver
      * @param kickback_ kickback(100% == 1 ether)
      */
-    function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyOwner {
+    function approveBuilderKYC(address builder_, address rewardReceiver_, uint64 kickback_) external onlyOwner {
         if (builderState[builder_].kycApproved == true) revert AlreadyKYCApproved();
+        // If the builder was part of the game and later got revoked, they cannot re-enter
+        if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
 
         builderState[builder_].kycApproved = true;
         builderRewardReceiver[builder_] = rewardReceiver_;
@@ -143,6 +148,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
         if (kickback_ > _MAX_KICKBACK) {
             revert InvalidBuilderKickback();
         }
+
         // read from storage
         KickbackData memory _kickbackData = builderKickback[builder_];
 
@@ -150,21 +156,44 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
         _kickbackData.next = kickback_;
         _kickbackData.cooldownEndTime = uint128(block.timestamp);
 
-        emit KYCApproved(builder_);
-
         // write to storage
         builderKickback[builder_] = _kickbackData;
+
+        emit KYCApproved(builder_, rewardReceiver_, kickback_);
+    }
+
+    /**
+     * @notice revokes builder's KYC
+     * @dev reverts if is not called by the owner address
+     * reverts if builder state is not KYC approved
+     * @param builder_ address of the builder
+     * @param rewardSink_ address who receives the builder unclaimed rewards
+     */
+    function revokeBuilderKYC(address builder_, address rewardSink_) external onlyOwner {
+        if (builderState[builder_].kycApproved == false) revert NotKYCApproved();
+
+        builderState[builder_].kycApproved = false;
+
+        Gauge _gauge = builderToGauge[builder_];
+        // if builder is whitelisted, it has a gauge associated
+        if (address(_gauge) != address(0)) {
+            if (!isGaugeHalted(address(_gauge))) _haltGauge(_gauge);
+            _gauge.moveBuilderUnclaimedRewards(rewardSink_);
+        }
+
+        emit KYCRevoked(builder_, rewardSink_);
     }
 
     /**
      * @notice whitelist builder and create its gauge
      * @dev reverts if is not called by the governor address or authorized changer
-     * reverts if builder state is not KYCApproved
+     * reverts if builder is not KYCApproved
      * @param builder_ address of the builder
      * @return gauge_ gauge contract
      */
     function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge_) {
         if (builderState[builder_].whitelisted == true) revert AlreadyWhitelisted();
+        if (builderState[builder_].kycApproved == false) revert NotKYCApproved();
 
         builderState[builder_].whitelisted = true;
         gauge_ = _createGauge(builder_);
@@ -207,6 +236,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     function permitBuilder(uint64 kickback_) external {
         Gauge _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
+        if (builderState[msg.sender].kycApproved == false) revert NotKYCApproved();
         if (builderState[msg.sender].revoked == false) revert NotRevoked();
 
         // TODO: should we have a minimal amount?
@@ -237,11 +267,13 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     function revokeBuilder() external {
         Gauge _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
+        if (builderState[msg.sender].kycApproved == false) revert NotKYCApproved();
         if (builderState[msg.sender].revoked == true) revert AlreadyRevoked();
 
         builderState[msg.sender].revoked = true;
         // when revoked builder wants to come back, it can set a new kickback. So, the cooldown time starts here
         builderKickback[msg.sender].cooldownEndTime = uint128(block.timestamp + kickbackCooldown);
+
         _haltGauge(_gauge);
 
         emit Revoked(msg.sender);
