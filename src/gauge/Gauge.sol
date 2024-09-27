@@ -323,34 +323,24 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @notice transfers reward tokens to this contract
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
-     * @param builderAmount_ amount of rewards for the builder
      * @param sponsorsAmount_ amount of rewards for the sponsors
      */
-    function notifyRewardAmount(
-        address rewardToken_,
-        uint256 builderAmount_,
-        uint256 sponsorsAmount_
-    )
-        external
-        payable
-    {
+    function notifyRewardAmount(address rewardToken_, uint256 sponsorsAmount_) external payable {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
         if (sponsorsManager.isGaugeHalted(address(this))) revert GaugeHalted();
         _notifyRewardAmount(
             rewardToken_,
-            builderAmount_,
+            0, /*builderAmount_*/
             sponsorsAmount_,
             sponsorsManager.periodFinish(),
             sponsorsManager.timeUntilNextEpoch(block.timestamp)
         );
         if (rewardToken_ == UtilsLib._COINBASE_ADDRESS) {
-            if (builderAmount_ + sponsorsAmount_ != msg.value) revert InvalidRewardAmount();
+            if (sponsorsAmount_ != msg.value) revert InvalidRewardAmount();
         } else {
-            SafeERC20.safeTransferFrom(
-                IERC20(rewardToken_), msg.sender, address(this), builderAmount_ + sponsorsAmount_
-            );
+            SafeERC20.safeTransferFrom(IERC20(rewardToken_), msg.sender, address(this), sponsorsAmount_);
         }
     }
 

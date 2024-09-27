@@ -1153,7 +1153,7 @@ contract SponsorsManagerTest is BaseTest {
 
         // AND gauge is incentive with 100 ether of rewardToken
         rewardToken.approve(address(gauge), 100 ether);
-        gauge.notifyRewardAmount(address(rewardToken), 0 ether, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
 
         // AND alice allocates 2 ether to builder
         vm.startPrank(alice);
