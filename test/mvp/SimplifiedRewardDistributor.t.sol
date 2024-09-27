@@ -58,6 +58,12 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
         assertEq(simplifiedRewardDistributor.getWhitelistedBuilder(2), _newBuilder);
         // THEN getWhitelistedBuildersLength is 3
         assertEq(simplifiedRewardDistributor.getWhitelistedBuildersLength(), 3);
+        // THEN getWhitelistedBuildersArray returns the entire array with all the whitelisted builders
+        address[] memory _whitelistedBuildersArray = simplifiedRewardDistributor.getWhitelistedBuildersArray();
+        assertEq(_whitelistedBuildersArray.length, 3);
+        assertEq(_whitelistedBuildersArray[0], builder);
+        assertEq(_whitelistedBuildersArray[1], builder2);
+        assertEq(_whitelistedBuildersArray[2], _newBuilder);
     }
 
     /**
@@ -87,6 +93,10 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
         assertEq(simplifiedRewardDistributor.builderRewardReceiver(builder), address(0));
         // THEN getWhitelistedBuildersLength is 1
         assertEq(simplifiedRewardDistributor.getWhitelistedBuildersLength(), 1);
+        // THEN getWhitelistedBuildersArray returns the entire array with all the whitelisted builders
+        address[] memory _whitelistedBuildersArray = simplifiedRewardDistributor.getWhitelistedBuildersArray();
+        assertEq(_whitelistedBuildersArray.length, 1);
+        assertEq(_whitelistedBuildersArray[0], builder2);
     }
 
     /**

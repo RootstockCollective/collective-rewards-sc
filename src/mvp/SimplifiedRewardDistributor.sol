@@ -134,6 +134,13 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
     }
 
     /**
+     * @notice get whitelisted builders array
+     */
+    function getWhitelistedBuildersArray() external view returns (address[] memory) {
+        return _whitelistedBuilders.values();
+    }
+
+    /**
      * @notice return true is builder is whitelisted
      */
     function isWhitelisted(address builder_) external view returns (bool) {
