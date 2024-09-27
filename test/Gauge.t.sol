@@ -81,9 +81,9 @@ contract GaugeTest is BaseTest {
         // WHEN tries to distribute coinbase sending invalid value
         //  THEN tx reverts because value sent is wrong
         vm.expectRevert(Gauge.InvalidRewardAmount.selector);
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 1 ether, 100 ether);
+        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 101 ether);
         vm.expectRevert(Gauge.InvalidRewardAmount.selector);
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 1 ether, 98 ether);
+        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 98 ether);
     }
 
     /**
@@ -191,21 +191,23 @@ contract GaugeTest is BaseTest {
      * rewards variables are updated in the middle and at the end of the epoch
      */
     function test_NotifyRewardAmountWithStrategy() public {
-        // GIVEN a SponsorsManager contract
-        vm.startPrank(address(sponsorsManager));
-        // AND 1 ether allocated to alice and 5 ether to bob
-        gauge.allocate(alice, 1 ether, sponsorsManager.timeUntilNextEpoch(block.timestamp));
-        gauge.allocate(bob, 5 ether, sponsorsManager.timeUntilNextEpoch(block.timestamp));
-        // AND 1 days pass
-        skip(1 days);
+        // GIVEN a builder with 70% of kickback
+        vm.startPrank(builder);
+        sponsorsManager.setBuilderKickback(0.7 ether);
+        skip(kickbackCooldown);
 
-        // WHEN 100 ether distributed
+        // AND 6 ether allocated to alice
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 6 ether);
+
+        // AND 100 rewardToken are distributed
         //  THEN notifyRewardAmount event is emitted
+        _skipToStartDistributionWindow();
+        rewardToken.mint(address(rewardDistributor), 100 ether);
         vm.expectEmit();
         emit NotifyReward(address(rewardToken), 30 ether, 70 ether);
-        gauge.notifyRewardAmount(address(rewardToken), 30 ether, 70 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        vm.startPrank(foundation);
+        rewardDistributor.sendRewardsAndStartDistribution(100 ether, 0);
 
         // THEN rewardPerTokenStored is 0
         assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
@@ -217,23 +219,23 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.lastUpdateTime(address(rewardToken)), block.timestamp);
         // THEN periodFinish is updated with the timestamp when the epoch finish
         assertEq(sponsorsManager.periodFinish(), sponsorsManager.epochNext(block.timestamp));
-        // THEN time until next epoch is 518400
-        assertEq(sponsorsManager.periodFinish() - block.timestamp, 518_400);
-        // THEN rewardRate is 0.000135030864197530 = 70 ether / 518400 sec
-        assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 135_030_864_197_530);
+        // THEN time until next epoch is 1 week
+        assertEq(sponsorsManager.periodFinish() - block.timestamp, 1 weeks);
+        // THEN rewardRate is 0.000115740740740740 = 70 ether / 604800 sec
+        assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 115_740_740_740_740);
         // THEN builderRewards is 30% of 100 ether
         assertEq(gauge.builderRewards(address(rewardToken)), 30 ether);
 
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
 
-        // THEN rewardPerToken is 5.833333333333333333 = 518400 / 2 * 0.000135030864197530 / 6 ether
+        // THEN rewardPerToken is 5.833333333333333333 = 604800 / 2 * 0.000115740740740740 / 6 ether
         assertEq(gauge.rewardPerToken(address(rewardToken)), 5_833_333_333_333_333_333);
 
         // AND epoch finish
         _skipAndStartNewEpoch();
 
-        // THEN rewardPerToken is 11.666666666666666666 = 518400 * 0.000135030864197530 / 6 ether
+        // THEN rewardPerToken is 11.666666666666666666 = 604800 * 0.000115740740740740 / 6 ether
         assertEq(gauge.rewardPerToken(address(rewardToken)), 11_666_666_666_666_666_666);
         // THEN builderRewards is 30% of 100 ether
         assertEq(gauge.builderRewards(address(rewardToken)), 30 ether);
@@ -254,8 +256,8 @@ contract GaugeTest is BaseTest {
         // WHEN 100 ether distributed
         //  THEN notifyRewardAmount event is emitted
         vm.expectEmit();
-        emit NotifyReward(address(rewardToken), 0 ether, 100 ether);
-        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        emit NotifyReward(address(rewardToken), 0, /*builderAmount_*/ 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -291,15 +293,21 @@ contract GaugeTest is BaseTest {
      * SCENARIO: builder claim his rewards in another gauge
      */
     function test_ClaimBuilderWrongGauge() public {
-        // GIVEN a SponsorsManager contract
-        vm.startPrank(address(sponsorsManager));
+        // GIVEN a builder with 30% of kickback
+        vm.startPrank(builder);
+        sponsorsManager.setBuilderKickback(0.3 ether);
+        // GIVEN a builder2 with 15% of kickback
+        vm.startPrank(builder2);
+        sponsorsManager.setBuilderKickback(0.15 ether);
+        skip(kickbackCooldown);
+        // AND alice allocates to gauge and gauge2
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 4 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
 
-        // WHEN 70 ether are sent for builder and 30 ether for sponsors on gauge
-        gauge.notifyRewardAmount(address(rewardToken), 70 ether, 30 ether);
-        // AND 170 ether are sent for builder and 30 ether for sponsors on gauge2
-        gauge2.notifyRewardAmount(address(rewardToken), 170 ether, 30 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        // AND 300 rewardToken are distributed
+        _distribute(300 ether, 0 ether);
 
         // WHEN builder claims rewards on gauge
         vm.startPrank(builder);
@@ -325,14 +333,16 @@ contract GaugeTest is BaseTest {
      * SCENARIO: builder claim his rewards at any time during the epoch receiving the total amount of rewards.
      */
     function test_ClaimBuilderRewardsBuilder() public {
-        // GIVEN a SponsorsManager contract
-        vm.startPrank(address(sponsorsManager));
+        // GIVEN a builder with 30% of kickback
+        vm.startPrank(builder);
+        sponsorsManager.setBuilderKickback(0.3 ether);
+        skip(kickbackCooldown);
+        // AND alice allocates to gauge
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 2 ether);
 
-        // WHEN 70 ether are sent for builder and 30 ether for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 70 ether, 30 ether);
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 70 ether, 30 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        // AND 100 rewardToken and 100 coinbase are distributed
+        _distribute(100 ether, 100 ether);
 
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
@@ -356,14 +366,16 @@ contract GaugeTest is BaseTest {
      * SCENARIO: reward receiver claim his rewards at any time during the epoch receiving the total amount of rewards.
      */
     function test_ClaimBuilderRewardsRewardReceiver() public {
-        // GIVEN a SponsorsManager contract
-        vm.startPrank(address(sponsorsManager));
+        // GIVEN a builder2 with 30% of kickback
+        vm.startPrank(builder2);
+        sponsorsManager.setBuilderKickback(0.3 ether);
+        skip(kickbackCooldown);
+        // AND alice allocates to gauge2
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge2, 2 ether);
 
-        // WHEN 70 ether are sent for builder and 30 ether for sponsors
-        gauge2.notifyRewardAmount(address(rewardToken), 70 ether, 30 ether);
-        gauge2.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 70 ether, 30 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        // AND 100 rewardToken and 100 coinbase are distributed
+        _distribute(100 ether, 100 ether);
 
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
@@ -382,12 +394,9 @@ contract GaugeTest is BaseTest {
         // THEN builder2Receiver coinbase balance is 70 ether
         assertEq(builder2Receiver.balance, 70 ether);
 
-        // AND 70 ether are set for builder and 30 ether for sponsors
-        vm.startPrank(address(sponsorsManager));
-        gauge2.notifyRewardAmount(address(rewardToken), 70 ether, 30 ether);
-        gauge2.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 70 ether, 30 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        // AND 100 rewardToken and 100 coinbase are distributed
+        _distribute(100 ether, 100 ether);
+
         // WHEN builder2 claims rewards
         vm.startPrank(builder2);
         gauge2.claimBuilderReward();
@@ -398,32 +407,39 @@ contract GaugeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: there are 2 distributions on the same epoch, builder claim the rewards
+     * SCENARIO: there are 2 distributions in the same distribution window, builder claim the rewards
      */
     function test_ClaimBuilderRewards2Distributions() public {
-        // GIVEN a SponsorsManager contract
-        vm.startPrank(address(sponsorsManager));
+        // GIVEN a builder with 30% of kickback
+        vm.startPrank(builder);
+        sponsorsManager.setBuilderKickback(0.3 ether);
+        skip(kickbackCooldown);
+        // AND alice allocates to gauge
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 2 ether);
 
-        // WHEN 70 ether are sent for builder and 30 ether for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 70 ether, 30 ether);
-        // AND 1 days pass
-        skip(1 days);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        // AND 100 rewardToken and 100 coinbase are distributed
+        _distribute(100 ether, 100 ether);
 
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND 100 rewardToken and 100 coinbase are distributed in the same distribution window
+        vm.warp(sponsorsManager.endDistributionWindow(block.timestamp) - 1);
+        rewardToken.mint(address(rewardDistributor), 100 ether);
+        vm.deal(address(rewardDistributor), 100 ether);
+        vm.startPrank(foundation);
+        rewardDistributor.sendRewardsAndStartDistribution(100 ether, 100 ether);
 
-        // AND 70 ether are sent for builder and 30 ether for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 70 ether, 30 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
-
-        // THEN builderRewards is 140 ether
+        // THEN builderRewards rewardToken is 140 ether
         assertEq(gauge.builderRewards(address(rewardToken)), 140 ether);
+        // THEN builderRewards coinbase is 140 ether
+        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 140 ether);
 
         // AND another epoch finish without a new distribution
         _skipAndStartNewEpoch();
+
+        // THEN rewardPerToken for rewardToken is 30 = 60 / 2 ether
+        assertApproxEqAbs(gauge.rewardPerToken(address(rewardToken)), 30 ether, 100);
+        // THEN rewardPerToken for coinbase is 30 = 60 / 2 ether
+        assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 30 ether, 100);
 
         // WHEN builder claims rewards
         vm.startPrank(builder);
@@ -431,30 +447,40 @@ contract GaugeTest is BaseTest {
 
         // THEN builder rewardToken balance is 140 ether
         assertEq(rewardToken.balanceOf(builder), 140 ether);
+        // THEN builder coinbase balance is 140 ether
+        assertEq(builder.balance, 140 ether);
     }
 
     /**
      * SCENARIO: there are 2 epochs, builder claim the rewards
      */
     function test_ClaimBuilderRewards2Epochs() public {
-        // GIVEN a SponsorsManager contract
-        vm.startPrank(address(sponsorsManager));
+        // GIVEN a builder with 30% of kickback
+        vm.startPrank(builder);
+        sponsorsManager.setBuilderKickback(0.3 ether);
+        skip(kickbackCooldown);
+        // AND alice allocates to gauge
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 2 ether);
 
-        // AND 70 ether are sent for builder and 30 ether for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 70 ether, 30 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        // AND 100 rewardToken and 100 coinbase are distributed
+        _distribute(100 ether, 100 ether);
+
+        // AND 100 rewardToken and 100 coinbase are distributed
+        _distribute(100 ether, 100 ether);
+
+        // THEN builderRewards rewardToken is 140 ether
+        assertEq(gauge.builderRewards(address(rewardToken)), 140 ether);
+        // THEN builderRewards coinbase is 140 ether
+        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 140 ether);
 
         // AND another epoch finish without a new distribution
         _skipAndStartNewEpoch();
 
-        // AND 70 ether are sent for builder and 30 ether for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 70 ether, 30 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
-
-        // THEN builderRewards is 140 ether
-        assertEq(gauge.builderRewards(address(rewardToken)), 140 ether);
+        // THEN rewardPerToken for rewardToken is 30 = 60 / 2 ether
+        assertApproxEqAbs(gauge.rewardPerToken(address(rewardToken)), 30 ether, 100);
+        // THEN rewardPerToken for coinbase is 30 = 60 / 2 ether
+        assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 30 ether, 100);
 
         // WHEN builder claims rewards
         vm.startPrank(builder);
@@ -462,6 +488,8 @@ contract GaugeTest is BaseTest {
 
         // THEN builder rewardToken balance is 140 ether
         assertEq(rewardToken.balanceOf(builder), 140 ether);
+        // THEN builder coinbase balance is 140 ether
+        assertEq(builder.balance, 140 ether);
     }
 
     /**
@@ -475,7 +503,7 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether, sponsorsManager.timeUntilNextEpoch(block.timestamp));
 
         // AND 100 ether distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -512,8 +540,8 @@ contract GaugeTest is BaseTest {
         gauge2.allocate(bob, 5 ether, sponsorsManager.timeUntilNextEpoch(block.timestamp));
 
         // AND 100 ether distributed for sponsors on both gauges
-        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
-        gauge2.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge2.notifyRewardAmount(address(rewardToken), 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -556,7 +584,7 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether, sponsorsManager.timeUntilNextEpoch(block.timestamp));
 
         // AND 100 ether distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -593,13 +621,13 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether, sponsorsManager.timeUntilNextEpoch(block.timestamp));
 
         // AND 100 ether distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND epoch finish
         _skipAndStartNewEpoch();
         // AND 200 ether more are distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 0, 200 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 200 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND epoch finish
@@ -640,13 +668,13 @@ contract GaugeTest is BaseTest {
         skip(1 days);
 
         // AND 100 ether distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
         // AND 200 ether more are distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 0, 200 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 200 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND epoch finish
@@ -686,7 +714,7 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether, sponsorsManager.timeUntilNextEpoch(block.timestamp));
 
         // AND 100 ether distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -731,7 +759,7 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether, sponsorsManager.timeUntilNextEpoch(block.timestamp));
 
         // AND 100 ether distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -781,7 +809,7 @@ contract GaugeTest is BaseTest {
         skip(1 days);
 
         // AND 100 ether distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND half epoch pass
@@ -806,7 +834,7 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewardMissing(address(rewardToken)) / 10 ** 18, 49_999_999_999_999_999_999);
 
         // AND 100 ether distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND epoch finish
@@ -844,7 +872,7 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether, sponsorsManager.timeUntilNextEpoch(block.timestamp));
 
         // AND 100 ether distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 0, 100 ether);
+        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -881,7 +909,7 @@ contract GaugeTest is BaseTest {
         gauge.allocate(bob, 5 ether, sponsorsManager.timeUntilNextEpoch(block.timestamp));
 
         // AND 100 ether distributed for sponsors
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 0, 100 ether);
+        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
