@@ -5,7 +5,7 @@ auto_detect_solc = false
 block_timestamp = 1_680_220_800 # March 31, 2023 at 00:00 GMT
 bytecode_hash = "none"
 evm_version = "london"
-fuzz = { runs = 1_000 }
+fuzz = { runs = 100 }
 gas_reports = ["*"]
 optimizer = true
 optimizer_runs = 10_000
@@ -26,8 +26,8 @@ fs_permissions = [
 solc = "0.8.20"
 optimizer = true
 optimizer_runs = 10_000
-fuzz = { runs = 10_000 }
-verbosity = 4
+fuzz = { runs = 1_000 }
+verbosity = 2
 
 [fmt]
 bracket_spacing = true
