@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/336f2f19e2ee0dc1ad64351e346590307b83d362/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -134,6 +134,8 @@ function initialize(
     address rewardToken_,
     address stakingToken_,
     address gaugeFactory_,
+    uint32 epochDuration_,
+    uint24 epochStartOffset_,
     uint128 kickbackCooldown_
 )
     external
@@ -142,14 +144,16 @@ function initialize(
 
 **Parameters**
 
-| Name                | Type      | Description                                                           |
-| ------------------- | --------- | --------------------------------------------------------------------- |
-| `changeExecutor_`   | `address` | See Governed doc                                                      |
-| `kycApprover_`      | `address` | See BuilderRegistry doc                                               |
-| `rewardToken_`      | `address` | address of the token rewarded to builder and voters                   |
-| `stakingToken_`     | `address` | address of the staking token for builder and voters                   |
-| `gaugeFactory_`     | `address` | address of the GaugeFactory contract                                  |
-| `kickbackCooldown_` | `uint128` | time that must elapse for a new kickback from a builder to be applied |
+| Name                | Type      | Description                                                                       |
+| ------------------- | --------- | --------------------------------------------------------------------------------- |
+| `changeExecutor_`   | `address` | See Governed doc                                                                  |
+| `kycApprover_`      | `address` | See BuilderRegistry doc                                                           |
+| `rewardToken_`      | `address` | address of the token rewarded to builder and voters                               |
+| `stakingToken_`     | `address` | address of the staking token for builder and voters                               |
+| `gaugeFactory_`     | `address` | address of the GaugeFactory contract                                              |
+| `epochDuration_`    | `uint32`  | epoch time duration                                                               |
+| `epochStartOffset_` | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs |
+| `kickbackCooldown_` | `uint128` | time that must elapse for a new kickback from a builder to be applied             |
 
 ### allocate
 
@@ -249,7 +253,8 @@ function _allocate(
     Gauge gauge_,
     uint256 allocation_,
     uint256 sponsorTotalAllocation_,
-    uint256 totalPotentialReward_
+    uint256 totalPotentialReward_,
+    uint256 timeUntilNextEpoch_
 )
     internal
     returns (uint256 newSponsorTotalAllocation_, uint256 newTotalPotentialReward_);
@@ -263,6 +268,7 @@ function _allocate(
 | `allocation_`             | `uint256` | amount of votes to allocate                            |
 | `sponsorTotalAllocation_` | `uint256` | current sponsor total allocation                       |
 | `totalPotentialReward_`   | `uint256` | current total potential reward                         |
+| `timeUntilNextEpoch_`     | `uint256` | time until next epoch                                  |
 
 **Returns**
 
@@ -304,7 +310,9 @@ function _distribute(
     uint256 rewardsERC20_,
     uint256 rewardsCoinbase_,
     uint256 totalPotentialReward_,
-    uint256 periodFinish_
+    uint256 periodFinish_,
+    uint256 epochStart_,
+    uint256 epochDuration_
 )
     internal
     returns (uint256);
@@ -319,6 +327,8 @@ function _distribute(
 | `rewardsCoinbase_`      | `uint256` | Coinbase rewards to distribute     |
 | `totalPotentialReward_` | `uint256` | cached total potential reward      |
 | `periodFinish_`         | `uint256` | cached period finish               |
+| `epochStart_`           | `uint256` | cached epoch start timestamp       |
+| `epochDuration_`        | `uint256` | cached epoch duration              |
 
 **Returns**
 

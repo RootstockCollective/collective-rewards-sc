@@ -1,6 +1,6 @@
 # RewardDistributor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/RewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/336f2f19e2ee0dc1ad64351e346590307b83d362/src/RewardDistributor.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md)
 
