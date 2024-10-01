@@ -143,7 +143,7 @@ function __BuilderRegistry_init(
 | `epochStartOffset_`  | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs            |
 | `kickbackCooldown_`  | `uint128` | time that must elapse for a new kickback from a builder to be applied                        |
 
-### activateBuilder
+### approveBuilderKYC
 
 activates builder setting the reward receiver and the kickback
 
@@ -151,7 +151,7 @@ _reverts if it is not called by the owner address reverts if it is already KYC a
 associated_
 
 ```solidity
-function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyOwner;
+function approveBuilderKYC(address builder_, address rewardReceiver_, uint64 kickback_) external onlyOwner;
 ```
 
 **Parameters**
@@ -437,7 +437,13 @@ event BuilderActivated(address indexed builder_, address rewardReceiver_, uint64
 ### KYCApproved
 
 ```solidity
-event KYCApproved(address indexed builder_);
+event KYCApproved(address indexed builder_, address rewardReceiver_, uint64 kickback_);
+```
+
+### KYCRevoked
+
+```solidity
+event KYCRevoked(address indexed builder_, address indexed rewardSink_);
 ```
 
 ### KYCRevoked
