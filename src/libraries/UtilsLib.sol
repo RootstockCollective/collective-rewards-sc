@@ -35,4 +35,47 @@ library UtilsLib {
     function _mulPrec(uint256 a_, uint256 b_) internal pure returns (uint256) {
         return (a_ * b_) / _PRECISION;
     }
+
+    /**
+     * @notice calculates when an epoch ends or the next one starts based on given `epochDuration_` and a `timestamp_`
+     * @param epochStart_ epoch start timestamp
+     * @param epochDuration_ epoch time duration
+     * @param timestamp_ timestamp to calculate
+     * @return epochNext timestamp when the epoch ends or the next starts
+     */
+    function _calcEpochNext(
+        uint256 epochStart_,
+        uint256 epochDuration_,
+        uint256 timestamp_
+    )
+        internal
+        pure
+        returns (uint256)
+    {
+        unchecked {
+            return timestamp_ + _calcTimeUntilNextEpoch(epochStart_, epochDuration_, timestamp_);
+        }
+    }
+
+    /**
+     * @notice calculates the time left until the next epoch based on given `epochDuration_` and a `timestamp_`
+     * @param epochStart_ epoch start timestamp
+     * @param epochDuration_ epoch time duration
+     * @param timestamp_ timestamp to calculate
+     * @return timeUntilNextEpoch amount of time until next epoch
+     */
+    function _calcTimeUntilNextEpoch(
+        uint256 epochStart_,
+        uint256 epochDuration_,
+        uint256 timestamp_
+    )
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 _timeSinceStart = timestamp_ - epochStart_;
+        unchecked {
+            return epochDuration_ - (_timeSinceStart % epochDuration_);
+        }
+    }
 }

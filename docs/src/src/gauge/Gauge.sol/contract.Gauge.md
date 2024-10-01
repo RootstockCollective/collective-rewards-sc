@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/336f2f19e2ee0dc1ad64351e346590307b83d362/src/gauge/Gauge.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable
 
@@ -332,7 +332,8 @@ _reverts if caller is not the sponsorsManager contract_
 ```solidity
 function allocate(
     address sponsor_,
-    uint256 allocation_
+    uint256 allocation_,
+    uint256 timeUntilNextEpoch_
 )
     external
     onlySponsorsManager
@@ -341,10 +342,11 @@ function allocate(
 
 **Parameters**
 
-| Name          | Type      | Description                          |
-| ------------- | --------- | ------------------------------------ |
-| `sponsor_`    | `address` | address of user who allocates tokens |
-| `allocation_` | `uint256` | amount of tokens to allocate         |
+| Name                  | Type      | Description                          |
+| --------------------- | --------- | ------------------------------------ |
+| `sponsor_`            | `address` | address of user who allocates tokens |
+| `allocation_`         | `uint256` | amount of tokens to allocate         |
+| `timeUntilNextEpoch_` | `uint256` | time until next epoch                |
 
 **Returns**
 
@@ -379,7 +381,9 @@ _reverts if caller is not the sponsorsManager contract_
 function notifyRewardAmountAndUpdateShares(
     uint256 amountERC20_,
     uint256 builderKickback_,
-    uint256 periodFinish_
+    uint256 periodFinish_,
+    uint256 epochStart_,
+    uint256 epochDuration_
 )
     external
     payable
@@ -394,6 +398,8 @@ function notifyRewardAmountAndUpdateShares(
 | `amountERC20_`     | `uint256` | amount of ERC20 rewards                 |
 | `builderKickback_` | `uint256` | builder kickback percentage             |
 | `periodFinish_`    | `uint256` | timestamp end of current rewards period |
+| `epochStart_`      | `uint256` | epoch start timestamp                   |
+| `epochDuration_`   | `uint256` | epoch time duration                     |
 
 **Returns**
 
@@ -467,19 +473,21 @@ function _notifyRewardAmount(
     address rewardToken_,
     uint256 builderAmount_,
     uint256 sponsorsAmount_,
-    uint256 periodFinish_
+    uint256 periodFinish_,
+    uint256 timeUntilNextEpoch_
 )
     internal;
 ```
 
 **Parameters**
 
-| Name              | Type      | Description                                                                                                         |
-| ----------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
-| `rewardToken_`    | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
-| `builderAmount_`  | `uint256` | amount of rewards for the builder                                                                                   |
-| `sponsorsAmount_` | `uint256` | amount of rewards for the sponsors                                                                                  |
-| `periodFinish_`   | `uint256` | timestamp end of current rewards period                                                                             |
+| Name                  | Type      | Description                                                                                                         |
+| --------------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_`        | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `builderAmount_`      | `uint256` | amount of rewards for the builder                                                                                   |
+| `sponsorsAmount_`     | `uint256` | amount of rewards for the sponsors                                                                                  |
+| `periodFinish_`       | `uint256` | timestamp end of current rewards period                                                                             |
+| `timeUntilNextEpoch_` | `uint256` | time until next epoch                                                                                               |
 
 ### \_updateRewards
 

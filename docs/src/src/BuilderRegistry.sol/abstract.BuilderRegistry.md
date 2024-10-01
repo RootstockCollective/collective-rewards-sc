@@ -1,8 +1,8 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/336f2f19e2ee0dc1ad64351e346590307b83d362/src/BuilderRegistry.sol)
 
-**Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md), Ownable2StepUpgradeable
+**Inherits:** [EpochTimeKeeper](/src/EpochTimeKeeper.sol/abstract.EpochTimeKeeper.md), Ownable2StepUpgradeable
 
 Keeps registers of the builders
 
@@ -114,6 +114,8 @@ function __BuilderRegistry_init(
     address changeExecutor_,
     address kycApprover_,
     address gaugeFactory_,
+    uint32 epochDuration_,
+    uint24 epochStartOffset_,
     uint128 kickbackCooldown_
 )
     internal
@@ -127,6 +129,8 @@ function __BuilderRegistry_init(
 | `changeExecutor_`   | `address` | See Governed doc                                                                             |
 | `kycApprover_`      | `address` | account responsible of approving Builder's Know you Costumer policies and Legal requirements |
 | `gaugeFactory_`     | `address` | address of the GaugeFactory contract                                                         |
+| `epochDuration_`    | `uint32`  | epoch time duration                                                                          |
+| `epochStartOffset_` | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs            |
 | `kickbackCooldown_` | `uint128` | time that must elapse for a new kickback from a builder to be applied                        |
 
 ### activateBuilder

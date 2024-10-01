@@ -1,6 +1,6 @@
 # ISponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/interfaces/ISponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/336f2f19e2ee0dc1ad64351e346590307b83d362/src/interfaces/ISponsorsManager.sol)
 
 ## Functions
 
@@ -42,4 +42,12 @@ return true if gauge is halted
 
 ```solidity
 function isGaugeHalted(address gauge_) external view returns (bool isHalted_);
+```
+
+### timeUntilNextEpoch
+
+gets time left until the next epoch based on given `timestamp_`
+
+```solidity
+function timeUntilNextEpoch(uint256 timestamp_) external view returns (uint256 timeUntilNextEpoch_);
 ```

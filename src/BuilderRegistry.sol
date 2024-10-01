@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { Upgradeable } from "./governance/Upgradeable.sol";
+import { EpochTimeKeeper } from "./EpochTimeKeeper.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -12,7 +12,7 @@ import { GaugeFactory } from "./gauge/GaugeFactory.sol";
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
  */
-abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
+abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_KICKBACK = UtilsLib._PRECISION;
@@ -100,18 +100,22 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
      * @param changeExecutor_ See Governed doc
      * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
      * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param epochDuration_ epoch time duration
+     * @param epochStartOffset_ offset to add to the first epoch, used to set an specific day to start the epochs
      * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function __BuilderRegistry_init(
         address changeExecutor_,
         address kycApprover_,
         address gaugeFactory_,
+        uint32 epochDuration_,
+        uint24 epochStartOffset_,
         uint128 kickbackCooldown_
     )
         internal
         onlyInitializing
     {
-        __Upgradeable_init(changeExecutor_);
+        __EpochTimeKeeper_init(changeExecutor_, epochDuration_, epochStartOffset_);
         __Ownable2Step_init();
         __Ownable_init(kycApprover_);
         gaugeFactory = GaugeFactory(gaugeFactory_);
@@ -139,11 +143,17 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
         if (kickback_ > _MAX_KICKBACK) {
             revert InvalidBuilderKickback();
         }
-        KickbackData storage _kickbackData = builderKickback[builder_];
+        // read from storage
+        KickbackData memory _kickbackData = builderKickback[builder_];
+
         _kickbackData.previous = kickback_;
         _kickbackData.next = kickback_;
         _kickbackData.cooldownEndTime = uint128(block.timestamp);
+
         emit KYCApproved(builder_);
+
+        // write to storage
+        builderKickback[builder_] = _kickbackData;
     }
 
     /**
@@ -206,9 +216,13 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
 
         builderState[msg.sender].revoked = false;
 
+        // read from storage
         KickbackData memory _kickbackData = builderKickback[msg.sender];
+
         _kickbackData.previous = getKickbackToApply(msg.sender);
         _kickbackData.next = kickback_;
+
+        // write to storage
         builderKickback[msg.sender] = _kickbackData;
 
         _resumeGauge(_gauge);
@@ -246,12 +260,17 @@ abstract contract BuilderRegistry is Upgradeable, Ownable2StepUpgradeable {
             revert InvalidBuilderKickback();
         }
 
-        KickbackData storage _kickbackData = builderKickback[msg.sender];
+        // read from storage
+        KickbackData memory _kickbackData = builderKickback[msg.sender];
+
         _kickbackData.previous = getKickbackToApply(msg.sender);
         _kickbackData.next = kickback_;
         _kickbackData.cooldownEndTime = uint128(block.timestamp) + kickbackCooldown;
 
         emit BuilderKickbackUpdateScheduled(msg.sender, kickback_, _kickbackData.cooldownEndTime);
+
+        // write to storage
+        builderKickback[msg.sender] = _kickbackData;
     }
 
     /**

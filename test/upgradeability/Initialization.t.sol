@@ -12,6 +12,8 @@ contract InitializationTest is BaseTest {
         // GIVEN a SponsorsManager initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
+        uint32 _epochDuration = 1 weeks;
+        uint24 _epochStartOffset = 1 days;
         uint128 _kickbackCooldown = 2 weeks;
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         sponsorsManager.initialize(
@@ -20,6 +22,8 @@ contract InitializationTest is BaseTest {
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),
+            _epochDuration,
+            _epochStartOffset,
             _kickbackCooldown
         );
     }

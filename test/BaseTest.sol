@@ -15,7 +15,6 @@ import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
 import { Gauge } from "src/gauge/Gauge.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
-import { EpochLib } from "src/libraries/EpochLib.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 contract BaseTest is Test {
@@ -36,6 +35,8 @@ contract BaseTest is Test {
     RewardDistributor public rewardDistributorImpl;
     RewardDistributor public rewardDistributor;
 
+    uint32 public epochDuration = 1 weeks;
+    uint24 public epochStartOffset = 0 days;
     uint128 public kickbackCooldown = 2 weeks;
 
     /* solhint-disable private-vars-leading-underscore */
@@ -63,6 +64,8 @@ contract BaseTest is Test {
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),
+            epochDuration,
+            epochStartOffset,
             kickbackCooldown
         );
         (rewardDistributor, rewardDistributorImpl) =
@@ -88,12 +91,12 @@ contract BaseTest is Test {
     function _setUp() internal virtual { }
 
     function _skipAndStartNewEpoch() internal {
-        uint256 _currentEpochRemaining = EpochLib._epochNext(block.timestamp) - block.timestamp;
+        uint256 _currentEpochRemaining = sponsorsManager.epochNext(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining);
     }
 
     function _skipRemainingEpochFraction(uint256 fraction_) internal {
-        uint256 _currentEpochRemaining = EpochLib._epochNext(block.timestamp) - block.timestamp;
+        uint256 _currentEpochRemaining = sponsorsManager.epochNext(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining / fraction_);
     }
 
@@ -103,7 +106,7 @@ contract BaseTest is Test {
 
     function _skipToEndDistributionWindow() internal {
         _skipAndStartNewEpoch();
-        uint256 _currentEpochRemaining = EpochLib._endDistributionWindow(block.timestamp) - block.timestamp;
+        uint256 _currentEpochRemaining = sponsorsManager.endDistributionWindow(block.timestamp) - block.timestamp;
         skip(_currentEpochRemaining);
     }
 

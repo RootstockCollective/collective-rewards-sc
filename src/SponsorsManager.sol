@@ -7,7 +7,6 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { BuilderRegistry } from "./BuilderRegistry.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
-import { EpochLib } from "./libraries/EpochLib.sol";
 
 /**
  * @title SponsorsManager
@@ -40,7 +39,7 @@ contract SponsorsManager is BuilderRegistry {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyInDistributionWindow() {
-        if (block.timestamp >= EpochLib._endDistributionWindow(block.timestamp)) revert OnlyInDistributionWindow();
+        if (block.timestamp >= endDistributionWindow(block.timestamp)) revert OnlyInDistributionWindow();
         _;
     }
 
@@ -91,6 +90,8 @@ contract SponsorsManager is BuilderRegistry {
      * @param rewardToken_ address of the token rewarded to builder and voters
      * @param stakingToken_ address of the staking token for builder and voters
      * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param epochDuration_ epoch time duration
+     * @param epochStartOffset_ offset to add to the first epoch, used to set an specific day to start the epochs
      * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function initialize(
@@ -99,15 +100,19 @@ contract SponsorsManager is BuilderRegistry {
         address rewardToken_,
         address stakingToken_,
         address gaugeFactory_,
+        uint32 epochDuration_,
+        uint24 epochStartOffset_,
         uint128 kickbackCooldown_
     )
         external
         initializer
     {
-        __BuilderRegistry_init(changeExecutor_, kycApprover_, gaugeFactory_, kickbackCooldown_);
+        __BuilderRegistry_init(
+            changeExecutor_, kycApprover_, gaugeFactory_, epochDuration_, epochStartOffset_, kickbackCooldown_
+        );
         rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
-        _periodFinish = EpochLib._epochNext(block.timestamp);
+        _periodFinish = epochNext(block.timestamp);
     }
 
     // -----------------------------
@@ -122,8 +127,13 @@ contract SponsorsManager is BuilderRegistry {
      * @param allocation_ amount of votes to allocate
      */
     function allocate(Gauge gauge_, uint256 allocation_) external notInDistributionPeriod {
-        (uint256 _newSponsorTotalAllocation, uint256 _newTotalPotentialReward) =
-            _allocate(gauge_, allocation_, sponsorTotalAllocation[msg.sender], totalPotentialReward);
+        (uint256 _newSponsorTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
+            gauge_,
+            allocation_,
+            sponsorTotalAllocation[msg.sender],
+            totalPotentialReward,
+            timeUntilNextEpoch(block.timestamp)
+        );
 
         _updateAllocation(msg.sender, _newSponsorTotalAllocation, _newTotalPotentialReward);
     }
@@ -147,9 +157,11 @@ contract SponsorsManager is BuilderRegistry {
         // TODO: check length < MAX or let revert by out of gas?
         uint256 _sponsorTotalAllocation = sponsorTotalAllocation[msg.sender];
         uint256 _totalPotentialReward = totalPotentialReward;
+        uint256 _timeUntilNextEpoch = timeUntilNextEpoch(block.timestamp);
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-            (uint256 _newSponsorTotalAllocation, uint256 _newTotalPotentialReward) =
-                _allocate(gauges_[i], allocations_[i], _sponsorTotalAllocation, _totalPotentialReward);
+            (uint256 _newSponsorTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
+                gauges_[i], allocations_[i], _sponsorTotalAllocation, _totalPotentialReward, _timeUntilNextEpoch
+            );
             _sponsorTotalAllocation = _newSponsorTotalAllocation;
             _totalPotentialReward = _newTotalPotentialReward;
         }
@@ -202,10 +214,17 @@ contract SponsorsManager is BuilderRegistry {
         uint256 _rewardsCoinbase = rewardsCoinbase;
         uint256 _totalPotentialReward = totalPotentialReward;
         uint256 __periodFinish = _periodFinish;
+        (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
             _newTotalPotentialReward += _distribute(
-                Gauge(getGaugeAt(_gaugeIndex)), _rewardsERC20, _rewardsCoinbase, _totalPotentialReward, __periodFinish
+                Gauge(getGaugeAt(_gaugeIndex)),
+                _rewardsERC20,
+                _rewardsCoinbase,
+                _totalPotentialReward,
+                __periodFinish,
+                _epochStart,
+                _epochDuration
             );
             _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
         }
@@ -218,7 +237,7 @@ contract SponsorsManager is BuilderRegistry {
             onDistributionPeriod = false;
             tempTotalPotentialReward = 0;
             totalPotentialReward = _newTotalPotentialReward;
-            _periodFinish = EpochLib._epochNext(block.timestamp);
+            _periodFinish = epochNext(block.timestamp);
         } else {
             // Define new reference to batch beginning
             indexLastGaugeDistributed = _gaugeIndex;
@@ -258,6 +277,7 @@ contract SponsorsManager is BuilderRegistry {
      * @param allocation_ amount of votes to allocate
      * @param sponsorTotalAllocation_ current sponsor total allocation
      * @param totalPotentialReward_ current total potential reward
+     * @param timeUntilNextEpoch_ time until next epoch
      * @return newSponsorTotalAllocation_ sponsor total allocation after new the allocation
      * @return newTotalPotentialReward_ total potential reward  after the new allocation
      */
@@ -265,20 +285,20 @@ contract SponsorsManager is BuilderRegistry {
         Gauge gauge_,
         uint256 allocation_,
         uint256 sponsorTotalAllocation_,
-        uint256 totalPotentialReward_
+        uint256 totalPotentialReward_,
+        uint256 timeUntilNextEpoch_
     )
         internal
         returns (uint256 newSponsorTotalAllocation_, uint256 newTotalPotentialReward_)
     {
         if (gaugeToBuilder[gauge_] == address(0)) revert GaugeDoesNotExist();
-        uint256 _timeUntilNext = EpochLib._epochNext(block.timestamp) - block.timestamp;
-        (uint256 _allocationDeviation, bool _isNegative) = gauge_.allocate(msg.sender, allocation_);
+        (uint256 _allocationDeviation, bool _isNegative) = gauge_.allocate(msg.sender, allocation_, timeUntilNextEpoch_);
         if (_isNegative) {
             newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
-            newTotalPotentialReward_ = totalPotentialReward_ - (_allocationDeviation * _timeUntilNext);
+            newTotalPotentialReward_ = totalPotentialReward_ - (_allocationDeviation * timeUntilNextEpoch_);
         } else {
             newSponsorTotalAllocation_ = sponsorTotalAllocation_ + _allocationDeviation;
-            newTotalPotentialReward_ = totalPotentialReward_ + (_allocationDeviation * _timeUntilNext);
+            newTotalPotentialReward_ = totalPotentialReward_ + (_allocationDeviation * timeUntilNextEpoch_);
         }
         // halted gauges are not taken on account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
         if (isGaugeHalted(address(gauge_))) return (newSponsorTotalAllocation_, totalPotentialReward_);
@@ -314,6 +334,8 @@ contract SponsorsManager is BuilderRegistry {
      * @param rewardsCoinbase_ Coinbase rewards to distribute
      * @param totalPotentialReward_ cached total potential reward
      * @param periodFinish_ cached period finish
+     * @param epochStart_ cached epoch start timestamp
+     * @param epochDuration_ cached epoch duration
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
     function _distribute(
@@ -321,7 +343,9 @@ contract SponsorsManager is BuilderRegistry {
         uint256 rewardsERC20_,
         uint256 rewardsCoinbase_,
         uint256 totalPotentialReward_,
-        uint256 periodFinish_
+        uint256 periodFinish_,
+        uint256 epochStart_,
+        uint256 epochDuration_
     )
         internal
         returns (uint256)
@@ -334,7 +358,7 @@ contract SponsorsManager is BuilderRegistry {
         uint256 _builderKickback = getKickbackToApply(gaugeToBuilder[gauge_]);
         IERC20(rewardToken).approve(address(gauge_), _amountERC20);
         return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
-            _amountERC20, _builderKickback, periodFinish_
+            _amountERC20, _builderKickback, periodFinish_, epochStart_, epochDuration_
         );
     }
 
@@ -346,7 +370,9 @@ contract SponsorsManager is BuilderRegistry {
     function _haltGauge(Gauge gauge_) internal override {
         super._haltGauge(gauge_);
         // allocations are not considered for the reward's distribution
-        totalPotentialReward -= gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(0, 0, _periodFinish);
+        (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
+        totalPotentialReward -=
+            gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(0, 0, _periodFinish, _epochStart, _epochDuration);
         haltedGaugeLastPeriodFinish[gauge_] = _periodFinish;
     }
 
@@ -358,8 +384,10 @@ contract SponsorsManager is BuilderRegistry {
     function _resumeGauge(Gauge gauge_) internal override {
         super._resumeGauge(gauge_);
         // allocations are considered again for the reward's distribution
-        totalPotentialReward +=
-            gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(0, 0, haltedGaugeLastPeriodFinish[gauge_]);
+        (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
+        totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
+            0, 0, haltedGaugeLastPeriodFinish[gauge_], _epochStart, _epochDuration
+        );
         haltedGaugeLastPeriodFinish[gauge_] = 0;
     }
 

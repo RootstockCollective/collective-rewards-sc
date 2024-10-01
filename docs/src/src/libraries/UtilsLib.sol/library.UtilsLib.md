@@ -1,6 +1,6 @@
 # UtilsLib
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/1055faa4ca92d30ddb8e7825f3f21882bdff7522/src/libraries/UtilsLib.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/336f2f19e2ee0dc1ad64351e346590307b83d362/src/libraries/UtilsLib.sol)
 
 ## State Variables
 
@@ -65,3 +65,61 @@ function _mulPrec(uint256 a_, uint256 b_) internal pure returns (uint256);
 | Name     | Type      | Description              |
 | -------- | --------- | ------------------------ |
 | `<none>` | `uint256` | `a_` \* `b_` / PRECISION |
+
+### \_calcEpochNext
+
+calculates when an epoch ends or the next one starts based on given `epochDuration_` and a `timestamp_`
+
+```solidity
+function _calcEpochNext(
+    uint256 epochStart_,
+    uint256 epochDuration_,
+    uint256 timestamp_
+)
+    internal
+    pure
+    returns (uint256);
+```
+
+**Parameters**
+
+| Name             | Type      | Description            |
+| ---------------- | --------- | ---------------------- |
+| `epochStart_`    | `uint256` | epoch start timestamp  |
+| `epochDuration_` | `uint256` | epoch time duration    |
+| `timestamp_`     | `uint256` | timestamp to calculate |
+
+**Returns**
+
+| Name     | Type      | Description                                                |
+| -------- | --------- | ---------------------------------------------------------- |
+| `<none>` | `uint256` | epochNext timestamp when the epoch ends or the next starts |
+
+### \_calcTimeUntilNextEpoch
+
+calculates the time left until the next epoch based on given `epochDuration_` and a `timestamp_`
+
+```solidity
+function _calcTimeUntilNextEpoch(
+    uint256 epochStart_,
+    uint256 epochDuration_,
+    uint256 timestamp_
+)
+    internal
+    pure
+    returns (uint256);
+```
+
+**Parameters**
+
+| Name             | Type      | Description            |
+| ---------------- | --------- | ---------------------- |
+| `epochStart_`    | `uint256` | epoch start timestamp  |
+| `epochDuration_` | `uint256` | epoch time duration    |
+| `timestamp_`     | `uint256` | timestamp to calculate |
+
+**Returns**
+
+| Name     | Type      | Description                                        |
+| -------- | --------- | -------------------------------------------------- |
+| `<none>` | `uint256` | timeUntilNextEpoch amount of time until next epoch |
