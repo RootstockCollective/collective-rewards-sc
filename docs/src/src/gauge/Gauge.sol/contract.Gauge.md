@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8b50b6318cc8362cde9fe692c46b17c03a0f97c2/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/fb8ef4f877539ce87af851afd7f3e24f0ceeca38/src/gauge/Gauge.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable
 
@@ -323,6 +323,22 @@ function claimBuilderReward(address rewardToken_) public;
 | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
 | `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
 
+### moveBuilderUnclaimedRewards
+
+moves builder rewards to another address It is triggered only when the builder is KYC revoked
+
+_reverts if caller is not the sponsorsManager contract_
+
+```solidity
+function moveBuilderUnclaimedRewards(address to_) external onlySponsorsManager;
+```
+
+**Parameters**
+
+| Name  | Type      | Description                      |
+| ----- | --------- | -------------------------------- |
+| `to_` | `address` | address who receives the rewards |
+
 ### allocate
 
 allocates stakingTokens
@@ -534,6 +550,21 @@ function _transferRewardToken(address rewardToken_, address to_, uint256 amount_
 | `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
 | `to_`          | `address` | address who receives the tokens                                                                                     |
 | `amount_`      | `uint256` | amount of tokens to send                                                                                            |
+
+### \_moveBuilderUnclaimedRewards
+
+moves builder rewards to another address
+
+```solidity
+function _moveBuilderUnclaimedRewards(address rewardToken_, address to_) internal;
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `to_`          | `address` | address who receives the rewards                                                                                    |
 
 ## Events
 
