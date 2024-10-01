@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/336f2f19e2ee0dc1ad64351e346590307b83d362/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/e30e31153f9f6ad9e5f8418bbe4287884b6475ef/src/gauge/Gauge.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable
 
@@ -360,7 +360,7 @@ function allocate(
 transfers reward tokens to this contract
 
 ```solidity
-function notifyRewardAmount(address rewardToken_, uint256 builderAmount_, uint256 sponsorsAmount_) external payable;
+function notifyRewardAmount(address rewardToken_, uint256 sponsorsAmount_) external payable;
 ```
 
 **Parameters**
@@ -368,7 +368,6 @@ function notifyRewardAmount(address rewardToken_, uint256 builderAmount_, uint25
 | Name              | Type      | Description                                                                                                         |
 | ----------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
 | `rewardToken_`    | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
-| `builderAmount_`  | `uint256` | amount of rewards for the builder                                                                                   |
 | `sponsorsAmount_` | `uint256` | amount of rewards for the sponsors                                                                                  |
 
 ### notifyRewardAmountAndUpdateShares
