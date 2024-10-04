@@ -23,6 +23,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     error InvalidRewardAmount();
     error BuilderRewardsLocked();
     error GaugeHalted();
+    error BeforeDistribution();
 
     // -----------------------------
     // ----------- Events ----------
@@ -321,6 +322,8 @@ contract Gauge is ReentrancyGuardUpgradeable {
 
     /**
      * @notice transfers reward tokens to this contract
+     * @dev reverts if Gauge is halted
+     *  reverts if distribution for the epoch has not finished
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      * @param sponsorsAmount_ amount of rewards for the sponsors
@@ -330,6 +333,8 @@ contract Gauge is ReentrancyGuardUpgradeable {
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
         if (sponsorsManager.isGaugeHalted(address(this))) revert GaugeHalted();
+        // Gauges cannot be incentivized before the distribution of the epoch finishes
+        if (sponsorsManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
         _notifyRewardAmount(
             rewardToken_,
             0, /*builderAmount_*/
