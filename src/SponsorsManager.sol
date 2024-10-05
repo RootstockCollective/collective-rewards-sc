@@ -378,9 +378,7 @@ contract SponsorsManager is BuilderRegistry {
     function _haltGauge(Gauge gauge_) internal override {
         super._haltGauge(gauge_);
         // allocations are not considered for the reward's distribution
-        (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
-        totalPotentialReward -=
-            gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(0, 0, _periodFinish, _epochStart, _epochDuration);
+        totalPotentialReward -= gauge_.rewardShares();
         haltedGaugeLastPeriodFinish[gauge_] = _periodFinish;
     }
 

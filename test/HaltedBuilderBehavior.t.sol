@@ -70,10 +70,10 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // THEN alice rewardToken balance is 25 + increment of 21.42 = (100 * 6 / 14) * 0.5
         // builder allocations are not considered anymore. Alice lose those rewards
-        assertEq(rewardToken.balanceOf(alice), 46_428_571_428_571_428_558);
+        assertEq(rewardToken.balanceOf(alice), 46_428_571_428_571_428_560);
         // THEN alice coinbase balance is 2.5 + increment of 2.142 = (10 * 6 / 14) * 0.5
         // builder allocations are not considered anymore. Alice lose those rewards
-        assertEq(alice.balance, 4_642_857_142_857_142_842);
+        assertEq(alice.balance, 4_642_857_142_857_142_844);
 
         // WHEN bob claim rewards
         vm.startPrank(bob);
