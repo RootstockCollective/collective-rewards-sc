@@ -301,6 +301,17 @@ contract SponsorsManager is BuilderRegistry {
     {
         if (gaugeToBuilder[gauge_] == address(0)) revert GaugeDoesNotExist();
         (uint256 _allocationDeviation, bool _isNegative) = gauge_.allocate(msg.sender, allocation_, timeUntilNextEpoch_);
+
+        // halted gauges are not taken on account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
+        if (isGaugeHalted(address(gauge_))) {
+            if (_isNegative) {
+                newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
+            } else {
+                newSponsorTotalAllocation_ = sponsorTotalAllocation_ + _allocationDeviation;
+            }
+            return (newSponsorTotalAllocation_, totalPotentialReward_);
+        }
+
         if (_isNegative) {
             newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
             newTotalPotentialReward_ = totalPotentialReward_ - (_allocationDeviation * timeUntilNextEpoch_);
@@ -308,8 +319,6 @@ contract SponsorsManager is BuilderRegistry {
             newSponsorTotalAllocation_ = sponsorTotalAllocation_ + _allocationDeviation;
             newTotalPotentialReward_ = totalPotentialReward_ + (_allocationDeviation * timeUntilNextEpoch_);
         }
-        // halted gauges are not taken on account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
-        if (isGaugeHalted(address(gauge_))) return (newSponsorTotalAllocation_, totalPotentialReward_);
 
         emit NewAllocation(msg.sender, address(gauge_), allocation_);
         return (newSponsorTotalAllocation_, newTotalPotentialReward_);
