@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/e30e31153f9f6ad9e5f8418bbe4287884b6475ef/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/478670c448ae0727d9c690bc82b9249b7907e8dc/src/BuilderRegistry.sol)
 
 **Inherits:** [EpochTimeKeeper](/src/EpochTimeKeeper.sol/abstract.EpochTimeKeeper.md), Ownable2StepUpgradeable
 
