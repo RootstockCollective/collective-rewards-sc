@@ -117,7 +117,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
         assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
     }
-    
+
     /**
      * SCENARIO: builder is halted in the middle of an epoch having allocation
      *  and is resumed in the same epoch
@@ -479,5 +479,37 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         assertEq(sponsorsManager.sponsorTotalAllocation(alice), 6 ether);
         // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
         assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+    }
+
+    /**
+     * SCENARIO: builder is halted in the middle of an epoch, lose some allocations
+     *  when is resumed in the same epoch it does not recover the full reward shares
+     */
+    function test_ResumeGaugeInSameEpochDoNotRecoverShares() public {
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        //   AND half epoch pass
+        //    AND builder is halted
+        _initialState();
+
+        // WHEN alice adds allocations to halted builder
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 4 ether);
+        // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 1_814_400 ether);
+        // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
+        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+
+        // skip some time to resume on another timestamp
+        skip(10);
+
+        // WHEN gauge is resumed
+        _resumeGauge();
+
+        // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 1_814_400 ether);
+        // THEN total allocation didn't change is 10281600 ether = gauge(2 * 1/2 WEEK + 4 * 1/2 WEEK) + gauge2(14 * 1
+        // WEEK)
+        assertEq(sponsorsManager.totalPotentialReward(), 10_281_600 ether);
     }
 }

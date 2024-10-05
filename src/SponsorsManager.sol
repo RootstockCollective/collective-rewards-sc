@@ -399,10 +399,16 @@ contract SponsorsManager is BuilderRegistry {
     function _resumeGauge(Gauge gauge_) internal override {
         super._resumeGauge(gauge_);
         // allocations are considered again for the reward's distribution
-        (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
-        totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-            0, 0, haltedGaugeLastPeriodFinish[gauge_], _epochStart, _epochDuration
-        );
+        // if there was a distribution we need to update the shares with the full epoch duration
+        if (haltedGaugeLastPeriodFinish[gauge_] < _periodFinish) {
+            (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
+            totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
+                0, 0, haltedGaugeLastPeriodFinish[gauge_], _epochStart, _epochDuration
+            );
+        } else {
+            // halt and resume were in the same epoch, we don't update the shares
+            totalPotentialReward += gauge_.rewardShares();
+        }
         haltedGaugeLastPeriodFinish[gauge_] = 0;
     }
 
