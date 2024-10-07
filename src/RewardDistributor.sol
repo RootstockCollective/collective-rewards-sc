@@ -14,6 +14,7 @@ contract RewardDistributor is Upgradeable {
     // ------- Custom Errors -------
     // -----------------------------
     error NotFoundationTreasury();
+    error BIMAddressesAlreadyInitialized();
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -49,20 +50,23 @@ contract RewardDistributor is Upgradeable {
 
     /**
      * @notice contract initializer
+     * @dev initializeBIMAddresses() must be called ASAP after this initialization
      * @param changeExecutor_ See Governed doc
      * @param foundationTreasury_ foundation treasury address
-     * @param sponsorsManager_ SponsorsManager contract address
      */
-    function initialize(
-        address changeExecutor_,
-        address foundationTreasury_,
-        address sponsorsManager_
-    )
-        external
-        initializer
-    {
+    function initialize(address changeExecutor_, address foundationTreasury_) external initializer {
         __Upgradeable_init(changeExecutor_);
         foundationTreasury = foundationTreasury_;
+    }
+
+    /**
+     * @notice BIM addresses initializer
+     * @dev used to solve circular dependency, sponsorsManager is initialized with this contract address
+     *  it must be called ASAP after the initialize.
+     * @param sponsorsManager_ SponsorsManager contract address
+     */
+    function initializeBIMAddresses(address sponsorsManager_) external {
+        if (address(sponsorsManager) != address(0)) revert BIMAddressesAlreadyInitialized();
         sponsorsManager = SponsorsManager(sponsorsManager_);
         rewardToken = IERC20(SponsorsManager(sponsorsManager_).rewardToken());
     }

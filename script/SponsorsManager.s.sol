@@ -18,6 +18,10 @@ contract Deploy is Broadcaster {
         if (_gaugeFactoryAddress == address(0)) {
             _gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
+        address _rewardDistributorAddress = vm.envOr("RewardDistributor", address(0));
+        if (_rewardDistributorAddress == address(0)) {
+            _rewardDistributorAddress = vm.envAddress("REWARD_DISTRIBUTOR_ADDRESS");
+        }
         uint32 _epochDuration = uint32(vm.envUint("EPOCH_DURATION"));
         uint24 _epochStartOffset = uint24(vm.envUint("EPOCH_START_OFFSET"));
         uint128 _kickbackCooldown = uint128(vm.envUint("KICKBACK_COOLDOWN"));
@@ -27,6 +31,7 @@ contract Deploy is Broadcaster {
             _rewardTokenAddress,
             _stakingTokenAddress,
             _gaugeFactoryAddress,
+            _rewardDistributorAddress,
             _epochDuration,
             _epochStartOffset,
             _kickbackCooldown
@@ -39,6 +44,7 @@ contract Deploy is Broadcaster {
         address rewardToken_,
         address stakingToken_,
         address gaugeFactory_,
+        address rewardDistributor_,
         uint32 epochDuration_,
         uint24 epochStartOffset_,
         uint128 kickbackCooldown_
@@ -52,6 +58,7 @@ contract Deploy is Broadcaster {
         require(rewardToken_ != address(0), "Reward token address cannot be empty");
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
         require(gaugeFactory_ != address(0), "Gauge factory address cannot be empty");
+        require(rewardDistributor_ != address(0), "Reward Distributor address cannot be empty");
 
         bytes memory _initializerData = abi.encodeCall(
             SponsorsManager.initialize,
@@ -61,6 +68,7 @@ contract Deploy is Broadcaster {
                 rewardToken_,
                 stakingToken_,
                 gaugeFactory_,
+                rewardDistributor_,
                 epochDuration_,
                 epochStartOffset_,
                 kickbackCooldown_

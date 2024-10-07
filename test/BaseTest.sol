@@ -57,18 +57,23 @@ contract BaseTest is Test {
         rewardToken = _mockTokenDeployer.run(1);
         gaugeBeacon = new GaugeBeaconDeployer().run(address(changeExecutorMock));
         gaugeFactory = new GaugeFactoryDeployer().run(address(gaugeBeacon), address(rewardToken));
+
+        (rewardDistributor, rewardDistributorImpl) =
+            new RewardDistributorDeployer().run(address(changeExecutorMock), foundation);
+
         (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerDeployer().run(
             address(changeExecutorMock),
             kycApprover,
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),
+            address(rewardDistributor),
             epochDuration,
             epochStartOffset,
             kickbackCooldown
         );
-        (rewardDistributor, rewardDistributorImpl) =
-            new RewardDistributorDeployer().run(address(changeExecutorMock), foundation, address(sponsorsManager));
+
+        rewardDistributor.initializeBIMAddresses(address(sponsorsManager));
 
         // allow to execute all the functions protected by governance
         changeExecutorMock.setIsAuthorized(true);
@@ -122,7 +127,7 @@ contract BaseTest is Test {
         returns (Gauge newGauge_)
     {
         vm.startPrank(kycApprover);
-        sponsorsManager.approveBuilderKYC(builder_, rewardReceiver_, kickbackPct_);
+        sponsorsManager.activateBuilder(builder_, rewardReceiver_, kickbackPct_);
         vm.startPrank(governor);
         newGauge_ = sponsorsManager.whitelistBuilder(builder_);
         vm.stopPrank();
@@ -161,7 +166,7 @@ contract BaseTest is Test {
     function _distribute(uint256 amountERC20_, uint256 amountCoinbase_) internal {
         _skipToStartDistributionWindow();
         rewardToken.mint(address(rewardDistributor), amountERC20_);
-        vm.deal(address(rewardDistributor), amountCoinbase_);
+        vm.deal(address(rewardDistributor), amountCoinbase_ + address(rewardDistributor).balance);
         vm.startPrank(foundation);
         rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountCoinbase_);
         while (sponsorsManager.onDistributionPeriod()) {
