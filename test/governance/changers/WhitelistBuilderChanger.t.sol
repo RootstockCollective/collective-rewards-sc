@@ -15,9 +15,9 @@ contract WhitelistBuilderChangerTest is BaseTest {
         changeExecutorMock.setIsAuthorized(false);
         // AND a WhitelistBuilderChanger deployed for a new builder
         _changer = new WhitelistBuilderChangerTemplate(sponsorsManager, _newBuilder);
-        // AND a newBuilder is approved
+        // AND a newBuilder is activated
         vm.prank(kycApprover);
-        sponsorsManager.approveBuilderKYC(_newBuilder, _newBuilder, 0);
+        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
     }
 
     /**

@@ -12,18 +12,20 @@ contract Deploy is Broadcaster {
             _changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }
         address _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
+
+        (proxy_, implementation_) = run(_changeExecutorAddress, _foundationTreasuryAddress);
+
         address _sponsorsManagerAddress = vm.envOr("SponsorsManager", address(0));
         if (_sponsorsManagerAddress == address(0)) {
             _sponsorsManagerAddress = vm.envAddress("SPONSORS_MANAGER_ADDRESS");
         }
 
-        (proxy_, implementation_) = run(_changeExecutorAddress, _foundationTreasuryAddress, _sponsorsManagerAddress);
+        proxy_.initializeBIMAddresses(address(_sponsorsManagerAddress));
     }
 
     function run(
         address changeExecutor_,
-        address foundationTreasury_,
-        address sponsorsManager_
+        address foundationTreasury_
     )
         public
         broadcast
@@ -31,10 +33,9 @@ contract Deploy is Broadcaster {
     {
         require(changeExecutor_ != address(0), "Change executor address cannot be empty");
         require(foundationTreasury_ != address(0), "Foundation Treasury address cannot be empty");
-        require(sponsorsManager_ != address(0), "Sponsors Manager address cannot be empty");
 
         bytes memory _initializerData =
-            abi.encodeCall(RewardDistributor.initialize, (changeExecutor_, foundationTreasury_, sponsorsManager_));
+            abi.encodeCall(RewardDistributor.initialize, (changeExecutor_, foundationTreasury_));
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {
