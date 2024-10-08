@@ -2,9 +2,10 @@
 pragma solidity 0.8.20;
 
 import { HaltedBuilderBehavior } from "./HaltedBuilderBehavior.t.sol";
+import { ResumeBuilderBehavior } from "./ResumeBuilderBehavior.t.sol";
 
-contract RevokeBuilderTest is HaltedBuilderBehavior {
-    function _initialState() internal override {
+contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
+    function _initialState() internal override(HaltedBuilderBehavior, ResumeBuilderBehavior) {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half epoch pass

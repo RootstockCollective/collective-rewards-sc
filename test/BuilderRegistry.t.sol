@@ -14,6 +14,7 @@ contract BuilderRegistryTest is BaseTest {
     event KYCApproved(address indexed builder_);
     event KYCRevoked(address indexed builder_);
     event Whitelisted(address indexed builder_);
+    event Dewhitelisted(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
     event Revoked(address indexed builder_);
@@ -60,6 +61,11 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
         sponsorsManager.whitelistBuilder(builder);
+
+        // WHEN alice calls dewhitelistBuilder
+        //  THEN tx reverts because caller is not the Governor
+        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
+        sponsorsManager.dewhitelistBuilder(builder);
     }
 
     /**
@@ -85,6 +91,13 @@ contract BuilderRegistryTest is BaseTest {
         vm.startPrank(kycApprover);
         vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
         sponsorsManager.approveBuilderKYC(alice);
+
+        vm.stopPrank();
+
+        // WHEN governor calls dewhitelistBuilder for alice
+        //  THEN tx reverts because caller is not a builder
+        vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
+        sponsorsManager.dewhitelistBuilder(alice);
     }
 
     /**
@@ -603,5 +616,167 @@ contract BuilderRegistryTest is BaseTest {
         assertEq(_paused, true);
         // THEN builder is not kyc approved
         assertEq(_kycApproved, false);
+    }
+
+    /**
+     * SCENARIO: governor dewhitelist a builder
+     */
+    function test_DewhitelistBuilder() public {
+        // GIVEN a Whitelisted builder
+        //  WHEN governor calls dewhitelistBuilder
+        //   THEN Dewhitelisted event is emitted
+        vm.expectEmit();
+        emit Dewhitelisted(builder);
+        sponsorsManager.dewhitelistBuilder(builder);
+
+        // THEN builder is not whitelisted
+        (, bool _whitelisted,,,,) = sponsorsManager.builderState(builder);
+        assertEq(_whitelisted, false);
+        // THEN gauge is halted
+        assertEq(sponsorsManager.isGaugeHalted(address(gauge)), true);
+        // THEN halted gauges array length is 1
+        assertEq(sponsorsManager.getHaltedGaugesLength(), 1);
+        // THEN gauge is not rewarded
+        assertEq(sponsorsManager.isGaugeRewarded(address(gauge)), false);
+        // THEN rewarded gauges array length is 1
+        assertEq(sponsorsManager.getGaugesLength(), 1);
+        // THEN haltedGaugeLastPeriodFinish is periodFinish
+        assertEq(sponsorsManager.haltedGaugeLastPeriodFinish(gauge), sponsorsManager.periodFinish());
+    }
+
+    /**
+     * SCENARIO: dewhitelist reverts if builder was already de-whitelisted
+     */
+    function test_RevertsDewhitelistBuilder() public {
+        // GIVEN a de-whitelisted builder
+        sponsorsManager.dewhitelistBuilder(builder);
+
+        //  WHEN governor calls dewhitelistBuilder
+        //   THEN tx reverts because is not whitelisted
+        vm.expectRevert(BuilderRegistry.NotWhitelisted.selector);
+        sponsorsManager.dewhitelistBuilder(builder);
+    }
+
+    /**
+     * SCENARIO: whitelisted builder is de-whitelisted. Cannot be whitelisted again
+     */
+    function test_RevertWhitelistingBuilderTwice() public {
+        // GIVEN a de-whitelisted builder
+        sponsorsManager.dewhitelistBuilder(builder);
+
+        //  WHEN governor calls whitelistBuilder
+        //  THEN tx reverts because builder already exists
+        vm.expectRevert(BuilderRegistry.BuilderAlreadyExists.selector);
+        sponsorsManager.whitelistBuilder(builder);
+    }
+
+    /**
+     * SCENARIO: revokeBuilderKYC reverts if it is not whitelisted
+     */
+    function test_RevertRevokeBuilderKYCNotWhitelisted() public {
+        // GIVEN a de-whitelisted builder
+        sponsorsManager.dewhitelistBuilder(builder);
+
+        //  WHEN builders tries to revoke itself
+        //   THEN tx reverts because is not whitelisted
+        vm.startPrank(builder);
+        vm.expectRevert(BuilderRegistry.NotWhitelisted.selector);
+        sponsorsManager.revokeBuilder();
+    }
+
+    /**
+     * SCENARIO: permitBuilder reverts if it is not whitelisted
+     */
+    function test_RevertPermitBuilderNotWhitelisted() public {
+        // GIVEN a de-whitelisted builder
+        sponsorsManager.dewhitelistBuilder(builder);
+
+        //  WHEN builders tries to permit it
+        //   THEN tx reverts because is not whitelisted
+        vm.startPrank(builder);
+        vm.expectRevert(BuilderRegistry.NotWhitelisted.selector);
+        sponsorsManager.permitBuilder(0.1 ether);
+    }
+
+    /**
+     * SCENARIO: de-whitelisted builder can be paused and unpaused
+     */
+    function test_PauseDewhitelistedBuilder() public {
+        // GIVEN a de-whitelisted builder
+        sponsorsManager.dewhitelistBuilder(builder);
+
+        // AND kycApprover calls pauseBuilder
+        vm.startPrank(kycApprover);
+        sponsorsManager.pauseBuilder(builder, "paused");
+        (, bool _whitelisted, bool _paused,,,) = sponsorsManager.builderState(builder);
+        // THEN builder is not whitelisted
+        assertEq(_whitelisted, false);
+        // THEN builder is paused
+        assertEq(_paused, true);
+
+        // AND kycApprover calls unpauseBuilder
+        sponsorsManager.unpauseBuilder(builder);
+        (, _whitelisted, _paused,,,) = sponsorsManager.builderState(builder);
+        // THEN builder is still not whitelisted
+        assertEq(_whitelisted, false);
+        // THEN builder is not paused
+        assertEq(_paused, false);
+    }
+
+    /**
+     * SCENARIO: paused builder can be de-whitelisted
+     */
+    function test_DewhitelistPausedBuilder() public {
+        // GIVEN paused builder
+        vm.startPrank(kycApprover);
+        sponsorsManager.pauseBuilder(builder, "paused");
+
+        // AND governor calls dewhitelistBuilder
+        sponsorsManager.dewhitelistBuilder(builder);
+        (, bool _whitelisted, bool _paused,,,) = sponsorsManager.builderState(builder);
+        // THEN builder is paused
+        assertEq(_paused, true);
+        // THEN builder is not whitelisted
+        assertEq(_whitelisted, false);
+    }
+
+    /**
+     * SCENARIO: de-whitelisted builder can be KYC revoked
+     */
+    function test_KYCRevokeDewhitelistedBuilder() public {
+        // GIVEN a de-whitelisted builder
+        sponsorsManager.dewhitelistBuilder(builder);
+
+        // AND kycApprover calls revokeBuilderKYC
+        vm.startPrank(kycApprover);
+        sponsorsManager.revokeBuilderKYC(builder);
+        (bool _kycApproved, bool _whitelisted,,,,) = sponsorsManager.builderState(builder);
+        // THEN builder is not whitelisted
+        assertEq(_whitelisted, false);
+        // THEN builder is not kyc approved
+        assertEq(_kycApproved, false);
+    }
+
+    /**
+     * SCENARIO: de-whitelisted and KYC revoked builder is KYC approved again
+     * Its gauge remains halted
+     */
+    function test_KYCApproveDewhitelistedBuilder() public {
+        // GIVEN a de-whitelisted and KYC revoked builder
+        sponsorsManager.dewhitelistBuilder(builder);
+        vm.startPrank(kycApprover);
+        sponsorsManager.revokeBuilderKYC(builder);
+
+        // AND kycApprover calls approveBuilderKYC
+        vm.startPrank(kycApprover);
+        sponsorsManager.approveBuilderKYC(builder);
+
+        (bool _kycApproved, bool _whitelisted,,,,) = sponsorsManager.builderState(builder);
+        // THEN builder is not whitelisted
+        assertEq(_whitelisted, false);
+        // THEN builder is kyc approved
+        assertEq(_kycApproved, true);
+        // THEN gauge remains halted
+        assertEq(sponsorsManager.isGaugeHalted(address(gauge)), true);
     }
 }

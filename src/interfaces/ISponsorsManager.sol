@@ -21,9 +21,9 @@ interface ISponsorsManager {
     function builderRewardReceiver(address builder_) external view returns (address rewardReceiver_);
 
     /**
-     * @notice return true if builder is operational
+     * @notice return true if builder is paused
      */
-    function isBuilderOperational(address builder_) external view returns (bool isOperational_);
+    function isBuilderPaused(address builder_) external view returns (bool isPaused_);
 
     /**
      * @notice return true if gauge is halted

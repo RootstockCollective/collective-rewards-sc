@@ -24,6 +24,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     error AlreadyWhitelisted();
     error AlreadyRevoked();
     error NotKYCApproved();
+    error NotWhitelisted();
     error NotPaused();
     error NotRevoked();
     error IsRevoked();
@@ -40,6 +41,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     event KYCApproved(address indexed builder_);
     event KYCRevoked(address indexed builder_);
     event Whitelisted(address indexed builder_);
+    event Dewhitelisted(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
     event Revoked(address indexed builder_);
@@ -182,10 +184,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
 
         builderState[builder_].kycApproved = true;
 
-        // if the builder is also revoked it must remain halted
-        if (!builderState[builder_].revoked) {
-            _resumeGauge(_gauge);
-        }
+        _resumeGauge(_gauge);
 
         emit KYCApproved(builder_);
     }
@@ -204,7 +203,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
         Gauge _gauge = builderToGauge[builder_];
         // if builder is whitelisted, it has a gauge associated
         if (address(_gauge) != address(0)) {
-            if (!isGaugeHalted(address(_gauge))) _haltGauge(_gauge);
+            _haltGauge(_gauge);
             _gauge.moveBuilderUnclaimedRewards(rewardDistributor);
         }
 
@@ -214,17 +213,39 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     /**
      * @notice whitelist builder and create its gauge
      * @dev reverts if it is not called by the governor address or authorized changer
-     * reverts if builder is not KYCApproved
+     * reverts if is already whitelisted
+     * reverts if it is not KYCApproved
+     * reverts if it has a gauge associated
      * @param builder_ address of the builder
      * @return gauge_ gauge contract
      */
     function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge_) {
         if (builderState[builder_].whitelisted) revert AlreadyWhitelisted();
         if (!builderState[builder_].kycApproved) revert NotKYCApproved();
+        if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
 
         builderState[builder_].whitelisted = true;
         gauge_ = _createGauge(builder_);
         emit Whitelisted(builder_);
+    }
+
+    /**
+     * @notice de-whitelist builder
+     * @dev reverts if it is not called by the governor address or authorized changer
+     * reverts if it does not have a gauge associated
+     * reverts if it is not whitelisted
+     * @param builder_ address of the builder
+     */
+    function dewhitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger {
+        Gauge _gauge = builderToGauge[builder_];
+        if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
+        if (!builderState[builder_].whitelisted) revert NotWhitelisted();
+
+        builderState[builder_].whitelisted = false;
+
+        _haltGauge(_gauge);
+
+        emit Dewhitelisted(builder_);
     }
 
     /**
@@ -259,6 +280,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @notice permit builder
      * @dev reverts if it does not have a gauge associated
      *  reverts if it is not KYC approved
+     *  reverts if it is not whitelisted
      *  reverts if it is not revoked
      * @param kickback_ kickback(100% == 1 ether)
      */
@@ -266,6 +288,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
         Gauge _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
+        if (!builderState[msg.sender].whitelisted) revert NotWhitelisted();
         if (!builderState[msg.sender].revoked) revert NotRevoked();
 
         // TODO: should we have a minimal amount?
@@ -293,12 +316,14 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @notice revoke builder
      * @dev reverts if it does not have a gauge associated
      *  reverts if it is not KYC approved
+     *  reverts if it is not whitelisted
      *  reverts if it is already revoked
      */
     function revokeBuilder() external {
         Gauge _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
+        if (!builderState[msg.sender].whitelisted) revert NotWhitelisted();
         if (builderState[msg.sender].revoked) revert AlreadyRevoked();
 
         builderState[msg.sender].revoked = true;
@@ -358,6 +383,13 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     function isBuilderOperational(address builder_) public view returns (bool) {
         BuilderState memory _builderState = builderState[builder_];
         return _builderState.kycApproved && _builderState.whitelisted && !_builderState.paused;
+    }
+
+    /**
+     * @notice return true if builder is paused
+     */
+    function isBuilderPaused(address builder_) public view returns (bool) {
+        return builderState[builder_].paused;
     }
 
     /**
@@ -431,12 +463,14 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
 
     /**
      * @notice halts a gauge moving it from the active array to the halted one
-     * @dev SponsorsManager override this function to remove its shares
      * @param gauge_ gauge contract to be halted
      */
-    function _haltGauge(Gauge gauge_) internal virtual {
-        _haltedGauges.add(address(gauge_));
-        _gauges.remove(address(gauge_));
+    function _haltGauge(Gauge gauge_) internal {
+        if (!isGaugeHalted(address(gauge_))) {
+            _haltedGauges.add(address(gauge_));
+            _gauges.remove(address(gauge_));
+            _haltGaugeShares(gauge_);
+        }
     }
 
     /**
@@ -444,10 +478,37 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @dev SponsorsManager override this function to restore its shares
      * @param gauge_ gauge contract to be resumed
      */
-    function _resumeGauge(Gauge gauge_) internal virtual {
-        _gauges.add(address(gauge_));
-        _haltedGauges.remove(address(gauge_));
+    function _resumeGauge(Gauge gauge_) internal {
+        if (_canBeResumed(gauge_)) {
+            _gauges.add(address(gauge_));
+            _haltedGauges.remove(address(gauge_));
+            _resumeGaugeShares(gauge_);
+        }
     }
+
+    /**
+     * @notice returns true if gauge can be resumed
+     * @dev kycApproved == true &&
+     *  whitelisted == true &&
+     *  revoked == false
+     * @param gauge_ gauge contract to be resumed
+     */
+    function _canBeResumed(Gauge gauge_) internal view returns (bool) {
+        BuilderState memory _builderState = builderState[gaugeToBuilder[gauge_]];
+        return _builderState.kycApproved && _builderState.whitelisted && !_builderState.revoked;
+    }
+
+    /**
+     * @notice SponsorsManager override this function to remove its shares
+     * @param gauge_ gauge contract to be halted
+     */
+    function _haltGaugeShares(Gauge gauge_) internal virtual { }
+
+    /**
+     * @notice SponsorsManager override this function to restore its shares
+     * @param gauge_ gauge contract to be resumed
+     */
+    function _resumeGaugeShares(Gauge gauge_) internal virtual { }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

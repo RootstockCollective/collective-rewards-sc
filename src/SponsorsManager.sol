@@ -371,12 +371,10 @@ contract SponsorsManager is BuilderRegistry {
     }
 
     /**
-     * @notice halts a gauge moving it from the active array to the halted one
-     *  Removes its shares to not be accounted on the distribution anymore
+     * @notice removes halted gauge shares to not be accounted on the distribution anymore
      * @param gauge_ gauge contract to be halted
      */
-    function _haltGauge(Gauge gauge_) internal override {
-        super._haltGauge(gauge_);
+    function _haltGaugeShares(Gauge gauge_) internal override {
         // allocations are not considered for the reward's distribution
         (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
         totalPotentialReward -=
@@ -385,12 +383,10 @@ contract SponsorsManager is BuilderRegistry {
     }
 
     /**
-     * @notice resumes a gauge moving it from the halted array to the active one
-     *  Adds its shares to be accounted on the distribution again
+     * @notice adds resumed gauge shares to be accounted on the distribution again
      * @param gauge_ gauge contract to be resumed
      */
-    function _resumeGauge(Gauge gauge_) internal override {
-        super._resumeGauge(gauge_);
+    function _resumeGaugeShares(Gauge gauge_) internal override {
         // allocations are considered again for the reward's distribution
         (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
         totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(

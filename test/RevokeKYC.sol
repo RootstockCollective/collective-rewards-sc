@@ -2,10 +2,11 @@
 pragma solidity 0.8.20;
 
 import { HaltedBuilderBehavior } from "./HaltedBuilderBehavior.t.sol";
+import { ResumeBuilderBehavior } from "./ResumeBuilderBehavior.t.sol";
 import { Gauge } from "../src/gauge/Gauge.sol";
 
-contract RevokeKYCTest is HaltedBuilderBehavior {
-    function _initialState() internal override {
+contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
+    function _initialState() internal override(HaltedBuilderBehavior, ResumeBuilderBehavior) {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half epoch pass
@@ -26,9 +27,9 @@ contract RevokeKYCTest is HaltedBuilderBehavior {
 
     /**
      * SCENARIO: builder is KYC revoked in the middle of an epoch having allocation.
-     *  builder receives all the rewards for the current epoch
+     *  builder does not receive rewards, they were sent to rewardDistributor
      */
-    function test_RevertBuilderClaimRewards() public {
+    function test_BuilderClaimRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half epoch pass
@@ -36,10 +37,16 @@ contract RevokeKYCTest is HaltedBuilderBehavior {
         _initialState();
 
         // WHEN builder claim rewards
-        //  THEN tx reverts because builder rewards are locked
         vm.startPrank(builder);
-        vm.expectRevert(Gauge.BuilderRewardsLocked.selector);
         gauge.claimBuilderReward();
+
+        // THEN builder rewardToken balance is 0 because rewards were sent to rewardDistributor
+        assertEq(rewardToken.balanceOf(builder), 0 ether);
+        // THEN builder coinbase balance is 0 because rewards were sent to rewardDistributor
+        assertEq(builder.balance, 0 ether);
+
+        // THEN builderRewards is 0
+        assertEq(gauge.builderRewards(address(rewardToken)), 0 ether);
     }
 
     /**
