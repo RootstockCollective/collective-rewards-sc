@@ -42,6 +42,10 @@ contract GaugeTest is BaseTest {
         (uint256 _epochStart, uint256 _epochDuration) = sponsorsManager.getEpochStartAndDuration();
         vm.expectRevert(Gauge.NotSponsorsManager.selector);
         gauge.notifyRewardAmountAndUpdateShares(1 ether, 1 ether, block.timestamp, _epochStart, _epochDuration);
+        // WHEN alice calls moveBuilderUnclaimedRewards
+        //  THEN tx reverts because caller is not the SponsorsManager contract
+        vm.expectRevert(Gauge.NotSponsorsManager.selector);
+        gauge.moveBuilderUnclaimedRewards(alice);
     }
 
     /**

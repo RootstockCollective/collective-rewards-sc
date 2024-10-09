@@ -57,18 +57,23 @@ contract BaseTest is Test {
         rewardToken = _mockTokenDeployer.run(1);
         gaugeBeacon = new GaugeBeaconDeployer().run(address(changeExecutorMock));
         gaugeFactory = new GaugeFactoryDeployer().run(address(gaugeBeacon), address(rewardToken));
+
+        (rewardDistributor, rewardDistributorImpl) =
+            new RewardDistributorDeployer().run(address(changeExecutorMock), foundation);
+
         (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerDeployer().run(
             address(changeExecutorMock),
             kycApprover,
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),
+            address(rewardDistributor),
             epochDuration,
             epochStartOffset,
             kickbackCooldown
         );
-        (rewardDistributor, rewardDistributorImpl) =
-            new RewardDistributorDeployer().run(address(changeExecutorMock), foundation, address(sponsorsManager));
+
+        rewardDistributor.initializeBIMAddresses(address(sponsorsManager));
 
         // allow to execute all the functions protected by governance
         changeExecutorMock.setIsAuthorized(true);
@@ -82,6 +87,10 @@ contract BaseTest is Test {
         // mint some stakingTokens to alice and bob
         stakingToken.mint(alice, 100_000 ether);
         stakingToken.mint(bob, 100_000 ether);
+
+        // mint some rewardTokens to this contract for reward distribution
+        rewardToken.mint(address(this), 100_000 ether);
+        rewardToken.approve(address(sponsorsManager), 100_000 ether);
 
         _setUp();
     }
@@ -134,10 +143,30 @@ contract BaseTest is Test {
         vm.stopPrank();
     }
 
+    function _initialDistribution() internal {
+        // GIVEN alice allocates to builder and builder2
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+        // AND bob allocates to builder2
+        vm.startPrank(bob);
+        allocationsArray[0] = 0 ether;
+        allocationsArray[1] = 8 ether;
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 rewardToken and 10 coinbase are distributed
+        _distribute(100 ether, 10 ether);
+        // AND half epoch pass
+        _skipRemainingEpochFraction(2);
+    }
+
     function _distribute(uint256 amountERC20_, uint256 amountCoinbase_) internal {
         _skipToStartDistributionWindow();
         rewardToken.mint(address(rewardDistributor), amountERC20_);
-        vm.deal(address(rewardDistributor), amountCoinbase_);
+        vm.deal(address(rewardDistributor), amountCoinbase_ + address(rewardDistributor).balance);
         vm.startPrank(foundation);
         rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountCoinbase_);
         while (sponsorsManager.onDistributionPeriod()) {

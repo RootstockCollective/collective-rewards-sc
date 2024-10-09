@@ -5,30 +5,12 @@ import { BaseTest, Gauge } from "./BaseTest.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 
 contract PauseBuilderTest is BaseTest {
-    function _setUp() internal override {
-        // mint some rewardTokens to this contract for reward distribution
-        rewardToken.mint(address(this), 100_000 ether);
-        rewardToken.approve(address(sponsorsManager), 100_000 ether);
-    }
-
     function _initialState() internal {
-        // GIVEN alice allocates to builder and builder2
-        vm.startPrank(alice);
-        allocationsArray[0] = 2 ether;
-        allocationsArray[1] = 6 ether;
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
-        // AND bob allocates to builder2
-        vm.startPrank(bob);
-        allocationsArray[0] = 0 ether;
-        allocationsArray[1] = 8 ether;
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        //   AND half epoch pass
+        _initialDistribution();
 
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
         // AND builder is paused
         vm.startPrank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "paused");
@@ -197,5 +179,28 @@ contract PauseBuilderTest is BaseTest {
         assertEq(gauge.builderRewards(address(rewardToken)), 0);
         // THEN builder coinbase pending to claim are 0
         assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 0);
+    }
+
+    /**
+     * SCENARIO: revoked builder is paused
+     *  If the builder calls claimBuilderReward the tx reverts
+     */
+    function test_RevokedGaugeIsPaused() public {
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        //   AND half epoch pass
+        _initialDistribution();
+        // AND builder is revoked
+        vm.startPrank(builder);
+        sponsorsManager.revokeBuilder();
+        // AND builder is paused
+        vm.startPrank(kycApprover);
+        sponsorsManager.pauseBuilder(builder, "paused");
+
+        // WHEN builder claim rewards
+        vm.startPrank(builder);
+        // THEN tx reverts because builder rewards are locked
+        vm.expectRevert(Gauge.BuilderRewardsLocked.selector);
+        gauge.claimBuilderReward();
     }
 }

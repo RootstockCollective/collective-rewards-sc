@@ -90,6 +90,7 @@ contract SponsorsManager is BuilderRegistry {
      * @param rewardToken_ address of the token rewarded to builder and voters
      * @param stakingToken_ address of the staking token for builder and voters
      * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param rewardDistributor_ address of the rewardDistributor contract
      * @param epochDuration_ epoch time duration
      * @param epochStartOffset_ offset to add to the first epoch, used to set an specific day to start the epochs
      * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
@@ -100,6 +101,7 @@ contract SponsorsManager is BuilderRegistry {
         address rewardToken_,
         address stakingToken_,
         address gaugeFactory_,
+        address rewardDistributor_,
         uint32 epochDuration_,
         uint24 epochStartOffset_,
         uint128 kickbackCooldown_
@@ -108,7 +110,13 @@ contract SponsorsManager is BuilderRegistry {
         initializer
     {
         __BuilderRegistry_init(
-            changeExecutor_, kycApprover_, gaugeFactory_, epochDuration_, epochStartOffset_, kickbackCooldown_
+            changeExecutor_,
+            kycApprover_,
+            gaugeFactory_,
+            rewardDistributor_,
+            epochDuration_,
+            epochStartOffset_,
+            kickbackCooldown_
         );
         rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);

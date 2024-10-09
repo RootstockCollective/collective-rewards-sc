@@ -17,12 +17,6 @@ contract SponsorsManagerTest is BaseTest {
     event RewardDistributed(address indexed sender_);
     event RewardDistributionFinished(address indexed sender_);
 
-    function _setUp() internal override {
-        // mint some rewardTokens to this contract for reward distribution
-        rewardToken.mint(address(this), 100_000 ether);
-        rewardToken.approve(address(sponsorsManager), 100_000 ether);
-    }
-
     /**
      * SCENARIO: allocate should revert if it is called with arrays with different lengths
      */
