@@ -16,6 +16,12 @@ import { UtilsLib } from "../libraries/UtilsLib.sol";
  */
 contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
+
+    // -----------------------------
+    // ------- Custom Errors -------
+    // -----------------------------
+    error WhitelistStatusWithoutUpdate();
+
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
@@ -65,7 +71,9 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
         onlyGovernorOrAuthorizedChanger
     {
         builderRewardReceiver[builder_] = rewardReceiver_;
-        _whitelistedBuilders.add(builder_);
+        if (!_whitelistedBuilders.add(builder_)) {
+            revert WhitelistStatusWithoutUpdate();
+        }
     }
 
     /**
@@ -75,7 +83,9 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
      */
     function removeWhitelistedBuilder(address builder_) external onlyGovernorOrAuthorizedChanger {
         builderRewardReceiver[builder_] = payable(0);
-        _whitelistedBuilders.remove(builder_);
+        if (!_whitelistedBuilders.remove(builder_)) {
+            revert WhitelistStatusWithoutUpdate();
+        }
     }
 
     /**

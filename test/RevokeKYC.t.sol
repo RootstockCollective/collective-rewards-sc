@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 import { HaltedBuilderBehavior } from "./HaltedBuilderBehavior.t.sol";
 import { ResumeBuilderBehavior } from "./ResumeBuilderBehavior.t.sol";
-import { Gauge } from "../src/gauge/Gauge.sol";
 
 contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     function _initialState() internal override(HaltedBuilderBehavior, ResumeBuilderBehavior) {
@@ -126,23 +125,23 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN rewardDistributor coinbase balance is 0.625 = (10 * 2 / 16) * 0.5
         assertEq(address(rewardDistributor).balance, 0.625 ether);
 
-        uint256 gaugeRewardTokenBalanceBefore = rewardToken.balanceOf(address(gauge));
-        uint256 gaugeCoinbaseBalanceBefore = (address(gauge)).balance;
+        uint256 _gaugeRewardTokenBalanceBefore = rewardToken.balanceOf(address(gauge));
+        uint256 _gaugeCoinbaseBalanceBefore = (address(gauge)).balance;
 
-        uint256 gauge2RewardTokenBalanceBefore = rewardToken.balanceOf(address(gauge2));
-        uint256 gauge2CoinbaseBalanceBefore = (address(gauge2)).balance;
+        uint256 _gauge2RewardTokenBalanceBefore = rewardToken.balanceOf(address(gauge2));
+        uint256 _gauge2CoinbaseBalanceBefore = (address(gauge2)).balance;
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
 
         // THEN gauge rewardToken balance is the same, it didn't receive distributions
-        assertEq(rewardToken.balanceOf(address(gauge)), gaugeRewardTokenBalanceBefore);
+        assertEq(rewardToken.balanceOf(address(gauge)), _gaugeRewardTokenBalanceBefore);
         // THEN gauge coinbase balance is the same, it didn't receive distributions
-        assertEq(address(gauge).balance, gaugeCoinbaseBalanceBefore);
+        assertEq(address(gauge).balance, _gaugeCoinbaseBalanceBefore);
 
         // THEN gauge2 rewardToken balance increases 100 ether, it received all the distributions
-        assertEq(rewardToken.balanceOf(address(gauge2)), gauge2RewardTokenBalanceBefore + 100 ether);
+        assertEq(rewardToken.balanceOf(address(gauge2)), _gauge2RewardTokenBalanceBefore + 100 ether);
         // THEN gauge2 coinbase balance 10 ether, it received all the distributions
-        assertEq(address(gauge2).balance, gauge2CoinbaseBalanceBefore + 10 ether);
+        assertEq(address(gauge2).balance, _gauge2CoinbaseBalanceBefore + 10 ether);
     }
 
     /**
@@ -166,23 +165,23 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN rewardDistributor coinbase balance is 0.625 = (10 * 2 / 16) * 0.5
         assertEq(address(rewardDistributor).balance, 0.625 ether);
 
-        uint256 gaugeRewardTokenBalanceBefore = rewardToken.balanceOf(address(gauge));
-        uint256 gaugeCoinbaseBalanceBefore = (address(gauge)).balance;
+        uint256 _gaugeRewardTokenBalanceBefore = rewardToken.balanceOf(address(gauge));
+        uint256 _gaugeCoinbaseBalanceBefore = (address(gauge)).balance;
 
-        uint256 gauge2RewardTokenBalanceBefore = rewardToken.balanceOf(address(gauge2));
-        uint256 gauge2CoinbaseBalanceBefore = (address(gauge2)).balance;
+        uint256 _gauge2RewardTokenBalanceBefore = rewardToken.balanceOf(address(gauge2));
+        uint256 _gauge2CoinbaseBalanceBefore = (address(gauge2)).balance;
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
 
         // THEN gauge rewardToken balance is the same, it didn't receive distributions
-        assertEq(rewardToken.balanceOf(address(gauge)), gaugeRewardTokenBalanceBefore);
+        assertEq(rewardToken.balanceOf(address(gauge)), _gaugeRewardTokenBalanceBefore);
         // THEN gauge coinbase balance is the same, it didn't receive distributions
-        assertEq(address(gauge).balance, gaugeCoinbaseBalanceBefore);
+        assertEq(address(gauge).balance, _gaugeCoinbaseBalanceBefore);
 
         // THEN gauge2 rewardToken balance increases 100 ether, it received all the distributions
-        assertEq(rewardToken.balanceOf(address(gauge2)), gauge2RewardTokenBalanceBefore + 100 ether);
+        assertEq(rewardToken.balanceOf(address(gauge2)), _gauge2RewardTokenBalanceBefore + 100 ether);
         // THEN gauge2 coinbase balance 10 ether, it received all the distributions
-        assertEq(address(gauge2).balance, gauge2CoinbaseBalanceBefore + 10 ether);
+        assertEq(address(gauge2).balance, _gauge2CoinbaseBalanceBefore + 10 ether);
     }
 
     /**

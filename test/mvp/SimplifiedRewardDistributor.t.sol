@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import { MVPBaseTest } from "./MVPBaseTest.sol";
 import { Governed } from "../../src/governance/Governed.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { SimplifiedRewardDistributor } from "../../src/mvp/SimplifiedRewardDistributor.sol";
 
 contract SimplifiedRewardDistributorTest is MVPBaseTest {
     // -----------------------------
@@ -51,14 +52,14 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
     }
 
     /**
-     * SCENARIO: whitelist a whistelited builder does not add it again to the array
+     * SCENARIO: whitelist a whistelited builder fails
      */
     function test_WhistelitBuilderTwice() public {
         // GIVEN a whitelisted builder
         //  WHEN tries to whistelist it again
+        // THEN reverts
+        vm.expectRevert(SimplifiedRewardDistributor.WhitelistStatusWithoutUpdate.selector);
         simplifiedRewardDistributor.whitelistBuilder(builder, rewardReceiver);
-        // THEN nothing happend, getWhitelistedBuildersLength is still 2
-        assertEq(simplifiedRewardDistributor.getWhitelistedBuildersLength(), 2);
     }
 
     /**
@@ -77,15 +78,15 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
     }
 
     /**
-     * SCENARIO: remove a non-whitelisted builder does not change anything
+     * SCENARIO: remove a non-whitelisted builder reverts
      */
     function test_RemoveNonWhitelistedBuilder() public {
         // GIVEN a new builder
         address payable _newBuilder = payable(makeAddr("newBuilder"));
         //  WHEN tries to remove it form the whitelist
+        // THEN reverts
+        vm.expectRevert(SimplifiedRewardDistributor.WhitelistStatusWithoutUpdate.selector);
         simplifiedRewardDistributor.removeWhitelistedBuilder(_newBuilder);
-        // THEN nothing happend, getWhitelistedBuildersLength is still 2
-        assertEq(simplifiedRewardDistributor.getWhitelistedBuildersLength(), 2);
     }
 
     /**

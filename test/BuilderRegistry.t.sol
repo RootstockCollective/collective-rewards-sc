@@ -91,7 +91,6 @@ contract BuilderRegistryTest is BaseTest {
         vm.startPrank(kycApprover);
         vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
         sponsorsManager.approveBuilderKYC(alice);
-
         vm.stopPrank();
 
         // WHEN governor calls dewhitelistBuilder for alice
