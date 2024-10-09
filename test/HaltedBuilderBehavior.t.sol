@@ -212,13 +212,13 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         //  epoch 2 = 21.42 = (100 * 6 / 14) * 0.5
         //  epoch 3 = 21.42 = (100 * 6 / 14) * 0.5
         //  epoch 4 = 25 = (100 * 8 / 16) * 0.5
-        assertEq(rewardToken.balanceOf(alice), 92_857_142_857_142_857_118);
+        assertEq(rewardToken.balanceOf(alice), 92_857_142_857_142_857_120);
         // THEN alice coinbase balance is:
         //  epoch 1 = 2.5 = (10 * 8 / 16) * 0.5
         //  epoch 2 = 2.142 = (10 * 6 / 14) * 0.5
         //  epoch 3 = 2.142 = (10 * 6 / 14) * 0.5
         //  epoch 4 = 2.5 = (10 * 8 / 16) * 0.5
-        assertEq(alice.balance, 9_285_714_285_714_285_686);
+        assertEq(alice.balance, 9_285_714_285_714_285_688);
 
         // WHEN bob claim rewards
         vm.startPrank(bob);
