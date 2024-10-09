@@ -1,6 +1,6 @@
 # SimplifiedRewardDistributor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/fb8ef4f877539ce87af851afd7f3e24f0ceeca38/src/mvp/SimplifiedRewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/4bde84b8672a43d13ec4c8489206c5b3941b2d60/src/mvp/SimplifiedRewardDistributor.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md), ReentrancyGuardUpgradeable
 
@@ -197,4 +197,12 @@ event Unwhitelisted(address indexed builder_);
 event RewardDistributed(
     address indexed rewardToken_, address indexed builder_, address indexed rewardReceiver_, uint256 amount_
 );
+```
+
+## Errors
+
+### WhitelistStatusWithoutUpdate
+
+```solidity
+error WhitelistStatusWithoutUpdate();
 ```

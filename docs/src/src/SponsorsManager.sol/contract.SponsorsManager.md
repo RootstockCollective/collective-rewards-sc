@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/fb8ef4f877539ce87af851afd7f3e24f0ceeca38/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/4bde84b8672a43d13ec4c8489206c5b3941b2d60/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -134,6 +134,7 @@ function initialize(
     address rewardToken_,
     address stakingToken_,
     address gaugeFactory_,
+    address rewardDistributor_,
     uint32 epochDuration_,
     uint24 epochStartOffset_,
     uint128 kickbackCooldown_
@@ -144,16 +145,17 @@ function initialize(
 
 **Parameters**
 
-| Name                | Type      | Description                                                                       |
-| ------------------- | --------- | --------------------------------------------------------------------------------- |
-| `changeExecutor_`   | `address` | See Governed doc                                                                  |
-| `kycApprover_`      | `address` | See BuilderRegistry doc                                                           |
-| `rewardToken_`      | `address` | address of the token rewarded to builder and voters                               |
-| `stakingToken_`     | `address` | address of the staking token for builder and voters                               |
-| `gaugeFactory_`     | `address` | address of the GaugeFactory contract                                              |
-| `epochDuration_`    | `uint32`  | epoch time duration                                                               |
-| `epochStartOffset_` | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs |
-| `kickbackCooldown_` | `uint128` | time that must elapse for a new kickback from a builder to be applied             |
+| Name                 | Type      | Description                                                                       |
+| -------------------- | --------- | --------------------------------------------------------------------------------- |
+| `changeExecutor_`    | `address` | See Governed doc                                                                  |
+| `kycApprover_`       | `address` | See BuilderRegistry doc                                                           |
+| `rewardToken_`       | `address` | address of the token rewarded to builder and voters                               |
+| `stakingToken_`      | `address` | address of the staking token for builder and voters                               |
+| `gaugeFactory_`      | `address` | address of the GaugeFactory contract                                              |
+| `rewardDistributor_` | `address` | address of the rewardDistributor contract                                         |
+| `epochDuration_`     | `uint32`  | epoch time duration                                                               |
+| `epochStartOffset_`  | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs |
+| `kickbackCooldown_`  | `uint128` | time that must elapse for a new kickback from a builder to be applied             |
 
 ### allocate
 
