@@ -259,7 +259,6 @@ contract Gauge is ReentrancyGuardUpgradeable {
     function claimBuilderReward(address rewardToken_) public {
         address _builder = sponsorsManager.gaugeToBuilder(address(this));
         address _rewardReceiver = sponsorsManager.builderRewardReceiver(_builder);
-        // TODO: if kyc is revoked the locked rewards must be sent back to the foundation
         if (sponsorsManager.isBuilderOperational(_builder) == false) revert BuilderRewardsLocked();
         if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();
 
@@ -271,6 +270,17 @@ contract Gauge is ReentrancyGuardUpgradeable {
             _transferRewardToken(rewardToken_, _rewardReceiver, _reward);
             emit BuilderRewardsClaimed(rewardToken_, _rewardReceiver, _reward);
         }
+    }
+
+    /**
+     * @notice moves builder rewards to another address
+     *  It is triggered only when the builder is KYC revoked
+     * @dev reverts if caller is not the sponsorsManager contract
+     * @param to_ address who receives the rewards
+     */
+    function moveBuilderUnclaimedRewards(address to_) external onlySponsorsManager {
+        _moveBuilderUnclaimedRewards(rewardToken, to_);
+        _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
     }
 
     /**
@@ -534,6 +544,20 @@ contract Gauge is ReentrancyGuardUpgradeable {
             Address.sendValue(payable(to_), amount_);
         } else {
             SafeERC20.safeTransfer(IERC20(rewardToken_), to_, amount_);
+        }
+    }
+
+    /**
+     * @notice moves builder rewards to another address
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param to_ address who receives the rewards
+     */
+    function _moveBuilderUnclaimedRewards(address rewardToken_, address to_) internal {
+        uint256 _rewardTokenAmount = rewardData[rewardToken_].builderRewards;
+        if (_rewardTokenAmount > 0) {
+            rewardData[rewardToken_].builderRewards = 0;
+            _transferRewardToken(rewardToken_, to_, _rewardTokenAmount);
         }
     }
 

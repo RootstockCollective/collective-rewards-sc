@@ -48,20 +48,23 @@ contract Deploy is Broadcaster, OutputWriter {
         GaugeFactory _gaugeFactory = new GaugeFactoryDeployer().run(address(_gaugeBeacon), _rewardTokenAddress);
         save("GaugeFactory", address(_gaugeFactory));
 
+        (RewardDistributor _rewardDistributorProxy, RewardDistributor _rewardDistributorImpl) =
+            new RewardDistributorDeployer().run(address(_changeExecutorProxy), _foundationTreasuryAddress);
+        saveWithProxy("RewardDistributor", address(_rewardDistributorImpl), address(_rewardDistributorProxy));
+
         (SponsorsManager _sponsorManagerProxy, SponsorsManager _sponsorManagerImpl) = new SponsorsManagerDeployer().run(
             address(_changeExecutorProxy),
             _kycApproverAddress,
             _rewardTokenAddress,
             _stakingTokenAddress,
             address(_gaugeFactory),
+            address(_rewardDistributorProxy),
             _epochDuration,
             _epochStartOffset,
             _kickbackCooldown
         );
         saveWithProxy("SponsorsManager", address(_sponsorManagerImpl), address(_sponsorManagerProxy));
 
-        (RewardDistributor _rewardDistributorProxy, RewardDistributor _rewardDistributorImpl) = new RewardDistributorDeployer(
-        ).run(address(_changeExecutorProxy), _foundationTreasuryAddress, address(_sponsorManagerProxy));
-        saveWithProxy("RewardDistributor", address(_rewardDistributorImpl), address(_rewardDistributorProxy));
+        _rewardDistributorProxy.initializeBIMAddresses(address(_sponsorManagerProxy));
     }
 }

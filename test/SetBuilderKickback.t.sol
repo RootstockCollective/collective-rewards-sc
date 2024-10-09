@@ -10,11 +10,7 @@ contract SetBuilderKickbackTest is BaseTest {
     // -----------------------------
     event BuilderKickbackUpdateScheduled(address indexed builder_, uint256 kickback_, uint256 expiration_);
 
-    function _setUp() internal override {
-        // mint some rewardTokens to this contract for reward distribution
-        rewardToken.mint(address(this), 100_000 ether);
-        rewardToken.approve(address(sponsorsManager), 100_000 ether);
-    }
+    function _setUp() internal override { }
 
     function _initialState() internal {
         // GIVEN alice allocates to builder and builder2

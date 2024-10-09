@@ -22,6 +22,7 @@ contract InitializationTest is BaseTest {
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),
+            address(rewardDistributor),
             _epochDuration,
             _epochStartOffset,
             _kickbackCooldown
@@ -36,7 +37,7 @@ contract InitializationTest is BaseTest {
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        rewardDistributor.initialize(address(changeExecutorMock), address(foundation), address(sponsorsManager));
+        rewardDistributor.initialize(address(changeExecutorMock), address(foundation));
     }
 
     /**
