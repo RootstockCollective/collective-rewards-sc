@@ -1,6 +1,6 @@
 # RewardDistributor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/fb8ef4f877539ce87af851afd7f3e24f0ceeca38/src/RewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/4bde84b8672a43d13ec4c8489206c5b3941b2d60/src/RewardDistributor.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md)
 
@@ -75,23 +75,35 @@ constructor();
 
 contract initializer
 
+_initializeBIMAddresses() must be called ASAP after this initialization_
+
 ```solidity
-function initialize(
-    address changeExecutor_,
-    address foundationTreasury_,
-    address sponsorsManager_
-)
-    external
-    initializer;
+function initialize(address changeExecutor_, address foundationTreasury_) external initializer;
 ```
 
 **Parameters**
 
-| Name                  | Type      | Description                      |
-| --------------------- | --------- | -------------------------------- |
-| `changeExecutor_`     | `address` | See Governed doc                 |
-| `foundationTreasury_` | `address` | foundation treasury address      |
-| `sponsorsManager_`    | `address` | SponsorsManager contract address |
+| Name                  | Type      | Description                 |
+| --------------------- | --------- | --------------------------- |
+| `changeExecutor_`     | `address` | See Governed doc            |
+| `foundationTreasury_` | `address` | foundation treasury address |
+
+### initializeBIMAddresses
+
+BIM addresses initializer
+
+_used to solve circular dependency, sponsorsManager is initialized with this contract address it must be called ASAP
+after the initialize._
+
+```solidity
+function initializeBIMAddresses(address sponsorsManager_) external;
+```
+
+**Parameters**
+
+| Name               | Type      | Description                      |
+| ------------------ | --------- | -------------------------------- |
+| `sponsorsManager_` | `address` | SponsorsManager contract address |
 
 ### sendRewards
 
@@ -163,4 +175,10 @@ receive() external payable;
 
 ```solidity
 error NotFoundationTreasury();
+```
+
+### BIMAddressesAlreadyInitialized
+
+```solidity
+error BIMAddressesAlreadyInitialized();
 ```
