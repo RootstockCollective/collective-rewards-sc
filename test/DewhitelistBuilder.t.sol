@@ -14,6 +14,11 @@ contract DewhitelistBuilderTest is HaltedBuilderBehavior {
         sponsorsManager.dewhitelistBuilder(builder);
     }
 
+    function _haltGauge() internal override {
+        // AND builder is dewhitelisted
+        sponsorsManager.dewhitelistBuilder(builder);
+    }
+
     /**
      * SCENARIO: builder is dewhitelisted in the middle of an epoch having allocation.
      *  builder receives all the rewards for the current epoch

@@ -17,6 +17,13 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         vm.stopPrank();
     }
 
+    function _haltGauge() internal override {
+        // AND builder is KYC revoked
+        vm.startPrank(kycApprover);
+        sponsorsManager.revokeBuilderKYC(builder);
+        vm.stopPrank();
+    }
+
     function _resumeGauge() internal override {
         // AND builder is KYC approved again
         vm.startPrank(kycApprover);

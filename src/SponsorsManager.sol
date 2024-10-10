@@ -301,6 +301,17 @@ contract SponsorsManager is BuilderRegistry {
     {
         if (gaugeToBuilder[gauge_] == address(0)) revert GaugeDoesNotExist();
         (uint256 _allocationDeviation, bool _isNegative) = gauge_.allocate(msg.sender, allocation_, timeUntilNextEpoch_);
+
+        // halted gauges are not taken on account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
+        if (isGaugeHalted(address(gauge_))) {
+            if (_isNegative) {
+                newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
+            } else {
+                newSponsorTotalAllocation_ = sponsorTotalAllocation_ + _allocationDeviation;
+            }
+            return (newSponsorTotalAllocation_, totalPotentialReward_);
+        }
+
         if (_isNegative) {
             newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
             newTotalPotentialReward_ = totalPotentialReward_ - (_allocationDeviation * timeUntilNextEpoch_);
@@ -308,8 +319,6 @@ contract SponsorsManager is BuilderRegistry {
             newSponsorTotalAllocation_ = sponsorTotalAllocation_ + _allocationDeviation;
             newTotalPotentialReward_ = totalPotentialReward_ + (_allocationDeviation * timeUntilNextEpoch_);
         }
-        // halted gauges are not taken on account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
-        if (isGaugeHalted(address(gauge_))) return (newSponsorTotalAllocation_, totalPotentialReward_);
 
         emit NewAllocation(msg.sender, address(gauge_), allocation_);
         return (newSponsorTotalAllocation_, newTotalPotentialReward_);
@@ -372,26 +381,34 @@ contract SponsorsManager is BuilderRegistry {
 
     /**
      * @notice removes halted gauge shares to not be accounted on the distribution anymore
+     * @dev reverts if it is executed in distribution period because changing the totalPotentialReward
+     * produce a miscalculation of rewards
      * @param gauge_ gauge contract to be halted
      */
-    function _haltGaugeShares(Gauge gauge_) internal override {
+    function _haltGaugeShares(Gauge gauge_) internal override notInDistributionPeriod {
         // allocations are not considered for the reward's distribution
-        (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
-        totalPotentialReward -=
-            gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(0, 0, _periodFinish, _epochStart, _epochDuration);
+        totalPotentialReward -= gauge_.rewardShares();
         haltedGaugeLastPeriodFinish[gauge_] = _periodFinish;
     }
 
     /**
      * @notice adds resumed gauge shares to be accounted on the distribution again
+     * @dev reverts if it is executed in distribution period because changing the totalPotentialReward
+     * produce a miscalculation of rewards
      * @param gauge_ gauge contract to be resumed
      */
-    function _resumeGaugeShares(Gauge gauge_) internal override {
+    function _resumeGaugeShares(Gauge gauge_) internal override notInDistributionPeriod {
         // allocations are considered again for the reward's distribution
-        (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
-        totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-            0, 0, haltedGaugeLastPeriodFinish[gauge_], _epochStart, _epochDuration
-        );
+        // if there was a distribution we need to update the shares with the full epoch duration
+        if (haltedGaugeLastPeriodFinish[gauge_] < _periodFinish) {
+            (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
+            totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
+                0, 0, haltedGaugeLastPeriodFinish[gauge_], _epochStart, _epochDuration
+            );
+        } else {
+            // halt and resume were in the same epoch, we don't update the shares
+            totalPotentialReward += gauge_.rewardShares();
+        }
         haltedGaugeLastPeriodFinish[gauge_] = 0;
     }
 

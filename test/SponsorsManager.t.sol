@@ -294,7 +294,15 @@ contract SponsorsManagerTest is BaseTest {
             Gauge _newGauge = _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
             gaugesArray.push(_newGauge);
             allocationsArray.push(1 ether);
+
+            // THEN gauges length increase
+            assertEq(sponsorsManager.getGaugesLength(), gaugesArray.length);
+            // THEN new gauge is added in the last index
+            assertEq(sponsorsManager.getGaugeAt(gaugesArray.length - 1), address(_newGauge));
         }
+        vm.prank(builder2);
+        sponsorsManager.revokeBuilder();
+
         vm.prank(alice);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         //  AND 2 ether reward are added
@@ -316,6 +324,16 @@ contract SponsorsManagerTest is BaseTest {
         //  THEN tx reverts because NotInDistributionPeriod
         vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
         sponsorsManager.startDistribution();
+        // WHEN tries to revoke a builder
+        //  THEN tx reverts because NotInDistributionPeriod
+        vm.prank(builder);
+        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
+        sponsorsManager.revokeBuilder();
+        // WHEN tries to permit a builder
+        //  THEN tx reverts because NotInDistributionPeriod
+        vm.prank(builder2);
+        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
+        sponsorsManager.permitBuilder(0.1 ether);
     }
 
     /**

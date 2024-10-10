@@ -17,10 +17,18 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         vm.stopPrank();
     }
 
+    function _haltGauge() internal override {
+        // AND builder is revoked
+        vm.startPrank(builder);
+        sponsorsManager.revokeBuilder();
+        vm.stopPrank();
+    }
+
     function _resumeGauge() internal override {
         // AND builder is permitted
         vm.startPrank(builder);
         sponsorsManager.permitBuilder(0.5 ether);
+        vm.stopPrank();
     }
 
     /**

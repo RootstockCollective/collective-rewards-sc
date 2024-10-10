@@ -1,6 +1,6 @@
 # SimplifiedRewardDistributor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/478670c448ae0727d9c690bc82b9249b7907e8dc/src/mvp/SimplifiedRewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/045ebe9238731fc66a0a58ce2ad5e824fd8a5a50/src/mvp/SimplifiedRewardDistributor.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md), ReentrancyGuardUpgradeable
 
@@ -136,6 +136,14 @@ get whitelisted builder from array
 function getWhitelistedBuilder(uint256 index_) external view returns (address);
 ```
 
+### getWhitelistedBuildersArray
+
+get whitelisted builders array
+
+```solidity
+function getWhitelistedBuildersArray() external view returns (address[] memory);
+```
+
 ### isWhitelisted
 
 return true is builder is whitelisted
@@ -167,4 +175,34 @@ receives coinbase to distribute for rewards
 
 ```solidity
 receive() external payable;
+```
+
+## Events
+
+### Whitelisted
+
+```solidity
+event Whitelisted(address indexed builder_);
+```
+
+### Unwhitelisted
+
+```solidity
+event Unwhitelisted(address indexed builder_);
+```
+
+### RewardDistributed
+
+```solidity
+event RewardDistributed(
+    address indexed rewardToken_, address indexed builder_, address indexed rewardReceiver_, uint256 amount_
+);
+```
+
+## Errors
+
+### WhitelistStatusWithoutUpdate
+
+```solidity
+error WhitelistStatusWithoutUpdate();
 ```

@@ -419,15 +419,16 @@ contract Gauge is ReentrancyGuardUpgradeable {
     function _rewardPerToken(address rewardToken_, uint256 periodFinish_) internal view returns (uint256) {
         RewardData storage _rewardData = rewardData[rewardToken_];
 
-        if (totalAllocation == 0) {
+        uint256 _lastUpdateTime = _rewardData.lastUpdateTime;
+        uint256 __lastTimeRewardApplicable = _lastTimeRewardApplicable(periodFinish_);
+        if (totalAllocation == 0 || _lastUpdateTime >= __lastTimeRewardApplicable) {
             // [PREC]
             return _rewardData.rewardPerTokenStored;
         }
+
         // [PREC] = (([N] - [N]) * [PREC]) / [N]
-        // TODO: could be lastUpdateTime > lastTimeRewardApplicable()??
-        uint256 _rewardPerTokenCurrent = (
-            (_lastTimeRewardApplicable(periodFinish_) - _rewardData.lastUpdateTime) * _rewardData.rewardRate
-        ) / totalAllocation;
+        uint256 _rewardPerTokenCurrent =
+            ((__lastTimeRewardApplicable - _lastUpdateTime) * _rewardData.rewardRate) / totalAllocation;
         // [PREC] = [PREC] + [PREC]
         return _rewardData.rewardPerTokenStored + _rewardPerTokenCurrent;
     }
@@ -522,9 +523,13 @@ contract Gauge is ReentrancyGuardUpgradeable {
      */
     function _updateRewardMissing(address rewardToken_, uint256 periodFinish_) internal {
         RewardData storage _rewardData = rewardData[rewardToken_];
+        uint256 _lastUpdateTime = _rewardData.lastUpdateTime;
+        uint256 __lastTimeRewardApplicable = _lastTimeRewardApplicable(periodFinish_);
+        if (_lastUpdateTime >= __lastTimeRewardApplicable) {
+            return;
+        }
         // [PREC] = [PREC] + ([N] - [N]) * [PREC]
-        _rewardData.rewardMissing +=
-            ((_lastTimeRewardApplicable(periodFinish_) - _rewardData.lastUpdateTime) * _rewardData.rewardRate);
+        _rewardData.rewardMissing += (__lastTimeRewardApplicable - _lastUpdateTime) * _rewardData.rewardRate;
     }
 
     /**
