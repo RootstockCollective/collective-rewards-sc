@@ -23,6 +23,9 @@ fs_permissions = [
 ]
 
 [profile.ci]
+solc = "0.8.20"
+optimizer = true
+optimizer_runs = 10_000
 fuzz = { runs = 10_000 }
 verbosity = 4
 

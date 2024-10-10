@@ -20,7 +20,6 @@ contract Gauge is ReentrancyGuardUpgradeable {
     // -----------------------------
     error NotAuthorized();
     error NotSponsorsManager();
-    error InvalidRewardAmount();
     error BuilderRewardsLocked();
     error GaugeHalted();
 
@@ -330,28 +329,42 @@ contract Gauge is ReentrancyGuardUpgradeable {
     }
 
     /**
-     * @notice transfers reward tokens to this contract
-     * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
-     * @param sponsorsAmount_ amount of rewards for the sponsors
+     * @notice transfers reward tokens to this contract to incentivize sponsors
+     * @param amount_ amount of reward tokens
      */
-    function notifyRewardAmount(address rewardToken_, uint256 sponsorsAmount_) external payable {
+    function incentivizeWithRewardToken(uint256 amount_) external {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
         if (sponsorsManager.isGaugeHalted(address(this))) revert GaugeHalted();
+
         _notifyRewardAmount(
-            rewardToken_,
+            rewardToken,
             0, /*builderAmount_*/
-            sponsorsAmount_,
+            amount_,
             sponsorsManager.periodFinish(),
             sponsorsManager.timeUntilNextEpoch(block.timestamp)
         );
-        if (rewardToken_ == UtilsLib._COINBASE_ADDRESS) {
-            if (sponsorsAmount_ != msg.value) revert InvalidRewardAmount();
-        } else {
-            SafeERC20.safeTransferFrom(IERC20(rewardToken_), msg.sender, address(this), sponsorsAmount_);
-        }
+
+        SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
+    }
+
+    /**
+     * @notice transfers coinbase to this contract to incentivize sponsors
+     */
+    function incentivizeWithCoinbase() external payable {
+        // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
+        // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
+        // calculate rewardPerToken
+        if (sponsorsManager.isGaugeHalted(address(this))) revert GaugeHalted();
+
+        _notifyRewardAmount(
+            UtilsLib._COINBASE_ADDRESS,
+            0, /*builderAmount_*/
+            msg.value,
+            sponsorsManager.periodFinish(),
+            sponsorsManager.timeUntilNextEpoch(block.timestamp)
+        );
     }
 
     /**
