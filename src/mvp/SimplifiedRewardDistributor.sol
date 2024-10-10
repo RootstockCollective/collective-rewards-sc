@@ -3,14 +3,13 @@ pragma solidity 0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { Upgradeable } from "../governance/Upgradeable.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 
 /**
- * @title SimplfiedRewardDistributor
+ * @title SimplifiedRewardDistributor
  * @notice Simplified version for the MVP.
  *  Accumulates all the rewards and distribute them equally to all the builders for each epoch
  */
@@ -21,6 +20,15 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
     // ------- Custom Errors -------
     // -----------------------------
     error WhitelistStatusWithoutUpdate();
+
+    // -----------------------------
+    // ----------- Events ----------
+    // -----------------------------
+    event Whitelisted(address indexed builder_);
+    event Unwhitelisted(address indexed builder_);
+    event RewardDistributed(
+        address indexed rewardToken_, address indexed builder_, address indexed rewardReceiver_, uint256 amount_
+    );
 
     // -----------------------------
     // ---------- Storage ----------
@@ -74,6 +82,7 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
         if (!_whitelistedBuilders.add(builder_)) {
             revert WhitelistStatusWithoutUpdate();
         }
+        emit Whitelisted(builder_);
     }
 
     /**
@@ -86,6 +95,7 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
         if (!_whitelistedBuilders.remove(builder_)) {
             revert WhitelistStatusWithoutUpdate();
         }
+        emit Unwhitelisted(builder_);
     }
 
     /**
@@ -124,6 +134,13 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
     }
 
     /**
+     * @notice get whitelisted builders array
+     */
+    function getWhitelistedBuildersArray() external view returns (address[] memory) {
+        return _whitelistedBuilders.values();
+    }
+
+    /**
      * @notice return true is builder is whitelisted
      */
     function isWhitelisted(address builder_) external view returns (bool) {
@@ -145,12 +162,17 @@ contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable 
         uint256 _rewardTokenPayment = rewardTokenAmount_ / _buildersLength;
         uint256 _coinbasePayment = coinbaseAmount_ / _buildersLength;
         for (uint256 i = 0; i < _buildersLength; i = UtilsLib._uncheckedInc(i)) {
-            address payable _rewardReceiver = builderRewardReceiver[_whitelistedBuilders.at(i)];
+            address _builder = _whitelistedBuilders.at(i);
+            address payable _rewardReceiver = builderRewardReceiver[_builder];
             if (_rewardTokenPayment > 0) {
                 SafeERC20.safeTransfer(rewardToken, _rewardReceiver, _rewardTokenPayment);
+                emit RewardDistributed(address(rewardToken), _builder, _rewardReceiver, _rewardTokenPayment);
             }
             if (_coinbasePayment > 0) {
-                Address.sendValue(_rewardReceiver, _coinbasePayment);
+                (bool _success,) = _rewardReceiver.call{ value: _coinbasePayment, gas: 21_000 }("");
+                if (_success) {
+                    emit RewardDistributed(UtilsLib._COINBASE_ADDRESS, _builder, _rewardReceiver, _coinbasePayment);
+                }
             }
         }
     }

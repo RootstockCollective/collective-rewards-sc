@@ -6,6 +6,8 @@ import { BaseTest } from "./BaseTest.sol";
 abstract contract HaltedBuilderBehavior is BaseTest {
     function _initialState() internal virtual { }
 
+    function _haltGauge() internal virtual { }
+
     function _resumeGauge() internal virtual { }
 
     /**
@@ -68,10 +70,10 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // THEN alice rewardToken balance is 25 + increment of 21.42 = (100 * 6 / 14) * 0.5
         // builder allocations are not considered anymore. Alice lose those rewards
-        assertEq(rewardToken.balanceOf(alice), 46_428_571_428_571_428_558);
+        assertEq(rewardToken.balanceOf(alice), 46_428_571_428_571_428_560);
         // THEN alice coinbase balance is 2.5 + increment of 2.142 = (10 * 6 / 14) * 0.5
         // builder allocations are not considered anymore. Alice lose those rewards
-        assertEq(alice.balance, 4_642_857_142_857_142_842);
+        assertEq(alice.balance, 4_642_857_142_857_142_844);
 
         // WHEN bob claim rewards
         vm.startPrank(bob);
@@ -210,13 +212,13 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         //  epoch 2 = 21.42 = (100 * 6 / 14) * 0.5
         //  epoch 3 = 21.42 = (100 * 6 / 14) * 0.5
         //  epoch 4 = 25 = (100 * 8 / 16) * 0.5
-        assertEq(rewardToken.balanceOf(alice), 92_857_142_857_142_857_118);
+        assertEq(rewardToken.balanceOf(alice), 92_857_142_857_142_857_120);
         // THEN alice coinbase balance is:
         //  epoch 1 = 2.5 = (10 * 8 / 16) * 0.5
         //  epoch 2 = 2.142 = (10 * 6 / 14) * 0.5
         //  epoch 3 = 2.142 = (10 * 6 / 14) * 0.5
         //  epoch 4 = 2.5 = (10 * 8 / 16) * 0.5
-        assertEq(alice.balance, 9_285_714_285_714_285_686);
+        assertEq(alice.balance, 9_285_714_285_714_285_688);
 
         // WHEN bob claim rewards
         vm.startPrank(bob);
@@ -320,5 +322,194 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 0, 100);
         // THEN gauge coinbase balance is 0, there is no remaining rewards
         assertApproxEqAbs(address(gauge).balance, 0, 100);
+    }
+
+    /**
+     * SCENARIO: builder is halted in a new epoch but before a distribution
+     *  so, lastUpdateTime > periodFinish, rewardPerToken should not revert by underflow
+     */
+    function test_HaltedGaugeBeforeDistributionRewardPerToken() public {
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        _initialDistribution();
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // skip some time to halt on another timestamp
+        skip(10);
+
+        // AND builder is halted before a distribution
+        _haltGauge();
+
+        // WHEN rewardPerToken is called
+        // THEN tx does not revert
+        gauge.rewardPerToken(address(rewardToken));
+
+        // WHEN alice claim rewards
+        vm.startPrank(alice);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is 25 = (100 * 8 / 16) * 0.5
+        assertApproxEqAbs(rewardToken.balanceOf(alice), 25 ether, 100);
+        // THEN alice coinbase balance is 2.5 = (10 * 8 / 16) * 0.5
+        assertApproxEqAbs(alice.balance, 2.5 ether, 100);
+    }
+
+    /**
+     * SCENARIO: builder is halted in a new epoch but before a distribution
+     *  so, lastUpdateTime > periodFinish, rewardMissing should not revert by underflow
+     */
+    function test_HaltedGaugeBeforeDistributionRewardMissing() public {
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        _initialDistribution();
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // skip some time to halt on another timestamp
+        skip(10);
+
+        // AND builder is halted before a distribution
+        _haltGauge();
+
+        // WHEN alice removes allocations from halted gauge
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 0);
+
+        // AND alice adds allocations again to halted gauge calculating rewardMissing
+        // THEN tx does not revert
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 1);
+
+        // WHEN alice claim rewards
+        vm.startPrank(alice);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is 25 = (100 * 8 / 16) * 0.5
+        assertApproxEqAbs(rewardToken.balanceOf(alice), 25 ether, 100);
+        // THEN alice coinbase balance is 2.5 = (10 * 8 / 16) * 0.5
+        assertApproxEqAbs(alice.balance, 2.5 ether, 100);
+    }
+
+    /**
+     * SCENARIO: builder increase allocations in the middle of the epoch and is halted.
+     *  totalPotentialReward decreases by builder shares
+     */
+    function test_GaugeIncreaseAllocationMiddleEpochBeforeHalt() public {
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        //   AND half epoch pass
+        _initialDistribution();
+
+        // AND alice adds allocations
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 100 ether);
+
+        // WHEN builder is halted
+        _haltGauge();
+
+        // THEN gauge rewardShares is 30844800 ether = 2 * 1/2 WEEK + 100 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 30_844_800 ether);
+        // THEN alice total allocation is 106
+        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 106 ether);
+        // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
+        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+    }
+
+    /**
+     * SCENARIO: builder decrease allocations in the middle of the epoch and is halted.
+     *  totalPotentialReward decreases by builder shares
+     */
+    function test_GaugeDecreaseAllocationMiddleEpochBeforeHalt() public {
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        _initialDistribution();
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 100 ether);
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+        // AND half epoch pass
+        _skipRemainingEpochFraction(2);
+        // AND alice removes allocations
+        sponsorsManager.allocate(gauge, 0 ether);
+
+        // WHEN builder is halted
+        _haltGauge();
+
+        // THEN gauge rewardShares is 30240000 ether = 100 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 30_240_000 ether);
+        // THEN alice total allocation is 6
+        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 6 ether);
+        // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
+        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+    }
+
+    /**
+     * SCENARIO: builder with lot of allocations is halted and remove all of them
+     *  totalPotentialReward decreases by builder shares
+     */
+    function test_GaugeWithLotAllocationMiddleEpochBeforeHalt() public {
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        //   AND half epoch pass
+        _initialDistribution();
+
+        // AND alice adds allocations
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 100 ether);
+
+        // AND a quarter epoch pass
+        _skipRemainingEpochFraction(2);
+
+        // WHEN builder is halted
+        _haltGauge();
+
+        // AND alice removes allocations
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 0 ether);
+
+        // THEN gauge rewardShares is 15724800 ether = 2 * 1/2 WEEK + 100 * 1/4 WEEK
+        assertEq(gauge.rewardShares(), 15_724_800 ether);
+        // THEN alice total allocation is 6
+        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 6 ether);
+        // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
+        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+    }
+
+    /**
+     * SCENARIO: builder is halted in the middle of an epoch, lose some allocations
+     *  when is resumed in the same epoch it does not recover the full reward shares
+     */
+    function test_ResumeGaugeInSameEpochDoNotRecoverShares() public {
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        //   AND half epoch pass
+        //    AND builder is halted
+        _initialState();
+
+        // WHEN alice adds allocations to halted builder
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 4 ether);
+        // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 1_814_400 ether);
+        // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
+        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+
+        // skip some time to resume on another timestamp
+        skip(10);
+
+        // WHEN gauge is resumed
+        _resumeGauge();
+
+        // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 1_814_400 ether);
+        // THEN total allocation didn't change is 10281600 ether = gauge(2 * 1/2 WEEK + 4 * 1/2 WEEK) + gauge2(14 * 1
+        // WEEK)
+        assertEq(sponsorsManager.totalPotentialReward(), 10_281_600 ether);
     }
 }

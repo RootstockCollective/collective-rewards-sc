@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/478670c448ae0727d9c690bc82b9249b7907e8dc/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/045ebe9238731fc66a0a58ce2ad5e824fd8a5a50/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -134,6 +134,7 @@ function initialize(
     address rewardToken_,
     address stakingToken_,
     address gaugeFactory_,
+    address rewardDistributor_,
     uint32 epochDuration_,
     uint24 epochStartOffset_,
     uint128 kickbackCooldown_
@@ -144,16 +145,17 @@ function initialize(
 
 **Parameters**
 
-| Name                | Type      | Description                                                                       |
-| ------------------- | --------- | --------------------------------------------------------------------------------- |
-| `changeExecutor_`   | `address` | See Governed doc                                                                  |
-| `kycApprover_`      | `address` | See BuilderRegistry doc                                                           |
-| `rewardToken_`      | `address` | address of the token rewarded to builder and voters                               |
-| `stakingToken_`     | `address` | address of the staking token for builder and voters                               |
-| `gaugeFactory_`     | `address` | address of the GaugeFactory contract                                              |
-| `epochDuration_`    | `uint32`  | epoch time duration                                                               |
-| `epochStartOffset_` | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs |
-| `kickbackCooldown_` | `uint128` | time that must elapse for a new kickback from a builder to be applied             |
+| Name                 | Type      | Description                                                                       |
+| -------------------- | --------- | --------------------------------------------------------------------------------- |
+| `changeExecutor_`    | `address` | See Governed doc                                                                  |
+| `kycApprover_`       | `address` | See BuilderRegistry doc                                                           |
+| `rewardToken_`       | `address` | address of the token rewarded to builder and voters                               |
+| `stakingToken_`      | `address` | address of the staking token for builder and voters                               |
+| `gaugeFactory_`      | `address` | address of the GaugeFactory contract                                              |
+| `rewardDistributor_` | `address` | address of the rewardDistributor contract                                         |
+| `epochDuration_`     | `uint32`  | epoch time duration                                                               |
+| `epochStartOffset_`  | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs |
+| `kickbackCooldown_`  | `uint128` | time that must elapse for a new kickback from a builder to be applied             |
 
 ### allocate
 
@@ -341,8 +343,11 @@ function _distribute(
 halts a gauge moving it from the active array to the halted one Removes its shares to not be accounted on the
 distribution anymore
 
+_reverts if it is executed in distribution period because changing the totalPotentialReward produce a miscalculation of
+rewards_
+
 ```solidity
-function _haltGauge(Gauge gauge_) internal override;
+function _haltGauge(Gauge gauge_) internal override notInDistributionPeriod;
 ```
 
 **Parameters**
@@ -356,8 +361,11 @@ function _haltGauge(Gauge gauge_) internal override;
 resumes a gauge moving it from the halted array to the active one Adds its shares to be accounted on the distribution
 again
 
+_reverts if it is executed in distribution period because changing the totalPotentialReward produce a miscalculation of
+rewards_
+
 ```solidity
-function _resumeGauge(Gauge gauge_) internal override;
+function _resumeGauge(Gauge gauge_) internal override notInDistributionPeriod;
 ```
 
 **Parameters**
