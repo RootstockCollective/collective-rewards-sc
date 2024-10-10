@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/4bde84b8672a43d13ec4c8489206c5b3941b2d60/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/045ebe9238731fc66a0a58ce2ad5e824fd8a5a50/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -343,8 +343,11 @@ function _distribute(
 halts a gauge moving it from the active array to the halted one Removes its shares to not be accounted on the
 distribution anymore
 
+_reverts if it is executed in distribution period because changing the totalPotentialReward produce a miscalculation of
+rewards_
+
 ```solidity
-function _haltGauge(Gauge gauge_) internal override;
+function _haltGauge(Gauge gauge_) internal override notInDistributionPeriod;
 ```
 
 **Parameters**
@@ -358,8 +361,11 @@ function _haltGauge(Gauge gauge_) internal override;
 resumes a gauge moving it from the halted array to the active one Adds its shares to be accounted on the distribution
 again
 
+_reverts if it is executed in distribution period because changing the totalPotentialReward produce a miscalculation of
+rewards_
+
 ```solidity
-function _resumeGauge(Gauge gauge_) internal override;
+function _resumeGauge(Gauge gauge_) internal override notInDistributionPeriod;
 ```
 
 **Parameters**

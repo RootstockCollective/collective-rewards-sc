@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/4bde84b8672a43d13ec4c8489206c5b3941b2d60/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/045ebe9238731fc66a0a58ce2ad5e824fd8a5a50/src/BuilderRegistry.sol)
 
 **Inherits:** [EpochTimeKeeper](/src/EpochTimeKeeper.sol/abstract.EpochTimeKeeper.md), Ownable2StepUpgradeable
 
@@ -254,7 +254,8 @@ function unpauseBuilder(address builder_) external onlyOwner;
 
 permit builder
 
-_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if it is not revoked_
+_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if it is not revoked reverts
+if it is executed in distribution period because changing the totalPotentialReward produce a miscalculation of rewards_
 
 ```solidity
 function permitBuilder(uint64 kickback_) external;
@@ -270,7 +271,9 @@ function permitBuilder(uint64 kickback_) external;
 
 revoke builder
 
-_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if it is already revoked_
+_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if builder is already revoked
+reverts if it is executed in distribution period because changing the totalPotentialReward produce a miscalculation of
+rewards_
 
 ```solidity
 function revokeBuilder() external;

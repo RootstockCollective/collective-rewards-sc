@@ -260,6 +260,8 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @dev reverts if it does not have a gauge associated
      *  reverts if it is not KYC approved
      *  reverts if it is not revoked
+     *  reverts if it is executed in distribution period because changing the totalPotentialReward produce a
+     * miscalculation of rewards
      * @param kickback_ kickback(100% == 1 ether)
      */
     function permitBuilder(uint64 kickback_) external {
@@ -293,7 +295,9 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @notice revoke builder
      * @dev reverts if it does not have a gauge associated
      *  reverts if it is not KYC approved
-     *  reverts if it is already revoked
+     *  reverts if builder is already revoked
+     *  reverts if it is executed in distribution period because changing the totalPotentialReward produce a
+     * miscalculation of rewards
      */
     function revokeBuilder() external {
         Gauge _gauge = builderToGauge[msg.sender];
