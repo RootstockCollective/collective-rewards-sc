@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/045ebe9238731fc66a0a58ce2ad5e824fd8a5a50/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/31f66c9965f4301d0ced4f2b88edb0fee5f80cbb/src/BuilderRegistry.sol)
 
 **Inherits:** [EpochTimeKeeper](/src/EpochTimeKeeper.sol/abstract.EpochTimeKeeper.md), Ownable2StepUpgradeable
 
@@ -199,7 +199,8 @@ function revokeBuilderKYC(address builder_) external onlyOwner;
 
 whitelist builder and create its gauge
 
-_reverts if it is not called by the governor address or authorized changer reverts if builder is not KYCApproved_
+_reverts if it is not called by the governor address or authorized changer reverts if is already whitelisted reverts if
+it is not KYCApproved reverts if it has a gauge associated_
 
 ```solidity
 function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge_);
@@ -216,6 +217,23 @@ function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedCha
 | Name     | Type    | Description    |
 | -------- | ------- | -------------- |
 | `gauge_` | `Gauge` | gauge contract |
+
+### dewhitelistBuilder
+
+de-whitelist builder
+
+_reverts if it is not called by the governor address or authorized changer reverts if it does not have a gauge
+associated reverts if it is not whitelisted_
+
+```solidity
+function dewhitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger;
+```
+
+**Parameters**
+
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
 ### pauseBuilder
 
@@ -254,8 +272,9 @@ function unpauseBuilder(address builder_) external onlyOwner;
 
 permit builder
 
-_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if it is not revoked reverts
-if it is executed in distribution period because changing the totalPotentialReward produce a miscalculation of rewards_
+_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if it is not whitelisted
+reverts if it is not revoked reverts if it is executed in distribution period because changing the totalPotentialReward
+produce a miscalculation of rewards_
 
 ```solidity
 function permitBuilder(uint64 kickback_) external;
@@ -271,9 +290,9 @@ function permitBuilder(uint64 kickback_) external;
 
 revoke builder
 
-_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if builder is already revoked
-reverts if it is executed in distribution period because changing the totalPotentialReward produce a miscalculation of
-rewards_
+_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if it is not whitelisted
+reverts if it is already revoked reverts if it is executed in distribution period because changing the
+totalPotentialReward produce a miscalculation of rewards_
 
 ```solidity
 function revokeBuilder() external;
@@ -316,6 +335,14 @@ return true if builder is operational kycApproved == true && whitelisted == true
 
 ```solidity
 function isBuilderOperational(address builder_) public view returns (bool);
+```
+
+### isBuilderPaused
+
+return true if builder is paused
+
+```solidity
+function isBuilderPaused(address builder_) public view returns (bool);
 ```
 
 ### isGaugeOperational
@@ -398,10 +425,8 @@ function _createGauge(address builder_) internal returns (Gauge gauge_);
 
 halts a gauge moving it from the active array to the halted one
 
-_SponsorsManager override this function to remove its shares_
-
 ```solidity
-function _haltGauge(Gauge gauge_) internal virtual;
+function _haltGauge(Gauge gauge_) internal;
 ```
 
 **Parameters**
@@ -417,7 +442,51 @@ resumes a gauge moving it from the halted array to the active one
 _SponsorsManager override this function to restore its shares_
 
 ```solidity
-function _resumeGauge(Gauge gauge_) internal virtual;
+function _resumeGauge(Gauge gauge_) internal;
+```
+
+**Parameters**
+
+| Name     | Type    | Description                  |
+| -------- | ------- | ---------------------------- |
+| `gauge_` | `Gauge` | gauge contract to be resumed |
+
+### \_canBeResumed
+
+returns true if gauge can be resumed
+
+_kycApproved == true && whitelisted == true && revoked == false_
+
+```solidity
+function _canBeResumed(Gauge gauge_) internal view returns (bool);
+```
+
+**Parameters**
+
+| Name     | Type    | Description                  |
+| -------- | ------- | ---------------------------- |
+| `gauge_` | `Gauge` | gauge contract to be resumed |
+
+### \_haltGaugeShares
+
+SponsorsManager override this function to remove its shares
+
+```solidity
+function _haltGaugeShares(Gauge gauge_) internal virtual;
+```
+
+**Parameters**
+
+| Name     | Type    | Description                 |
+| -------- | ------- | --------------------------- |
+| `gauge_` | `Gauge` | gauge contract to be halted |
+
+### \_resumeGaugeShares
+
+SponsorsManager override this function to restore its shares
+
+```solidity
+function _resumeGaugeShares(Gauge gauge_) internal virtual;
 ```
 
 **Parameters**
@@ -450,6 +519,12 @@ event KYCRevoked(address indexed builder_);
 
 ```solidity
 event Whitelisted(address indexed builder_);
+```
+
+### Dewhitelisted
+
+```solidity
+event Dewhitelisted(address indexed builder_);
 ```
 
 ### Paused
@@ -512,6 +587,12 @@ error AlreadyRevoked();
 
 ```solidity
 error NotKYCApproved();
+```
+
+### NotWhitelisted
+
+```solidity
+error NotWhitelisted();
 ```
 
 ### NotPaused
