@@ -1,6 +1,6 @@
 # ChangeExecutor
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8884129e0c22dd8af168020cf4a012261055868b/src/governance/ChangeExecutor.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/3789c417010096773b83946f4623701583f051f7/src/governance/ChangeExecutor.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable, UUPSUpgradeable, [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 

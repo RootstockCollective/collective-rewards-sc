@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/8884129e0c22dd8af168020cf4a012261055868b/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/3789c417010096773b83946f4623701583f051f7/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
