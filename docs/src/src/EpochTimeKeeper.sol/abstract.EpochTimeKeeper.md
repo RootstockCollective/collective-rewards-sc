@@ -1,6 +1,6 @@
 # EpochTimeKeeper
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/31f66c9965f4301d0ced4f2b88edb0fee5f80cbb/src/EpochTimeKeeper.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/70cf24191609d37de8a4fe082b298433d3d79835/src/EpochTimeKeeper.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md)
 
