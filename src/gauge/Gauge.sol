@@ -258,7 +258,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     function claimBuilderReward(address rewardToken_) public {
         address _builder = sponsorsManager.gaugeToBuilder(address(this));
         address _rewardReceiver = sponsorsManager.builderRewardReceiver(_builder);
-        if (sponsorsManager.isBuilderOperational(_builder) == false) revert BuilderRewardsLocked();
+        if (sponsorsManager.isBuilderPaused(_builder)) revert BuilderRewardsLocked();
         if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();
 
         RewardData storage _rewardData = rewardData[rewardToken_];
