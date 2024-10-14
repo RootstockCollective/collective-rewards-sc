@@ -160,7 +160,6 @@ contract SponsorsManagerTest is BaseTest {
 
         address _builder3 = makeAddr("_builder3");
         Gauge _gauge3 = _whitelistBuilder(_builder3, _builder3, 0.5 ether);
-        gaugesArray.push(_gauge3);
         allocationsArray.push(10 ether);
 
         // AND alice allocates again to [gauge, gauge2, gauge3] = [2, 6, 10]
@@ -303,7 +302,6 @@ contract SponsorsManagerTest is BaseTest {
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
             Gauge _newGauge = _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
-            gaugesArray.push(_newGauge);
             allocationsArray.push(1 ether);
 
             // THEN gauges length increase
@@ -743,8 +741,7 @@ contract SponsorsManagerTest is BaseTest {
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
-            Gauge _newGauge = _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
-            gaugesArray.push(_newGauge);
+            _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
             allocationsArray.push(1 ether);
         }
         vm.prank(alice);
@@ -792,8 +789,7 @@ contract SponsorsManagerTest is BaseTest {
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
-            Gauge _newGauge = _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
-            gaugesArray.push(_newGauge);
+            _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
             allocationsArray.push(1 ether);
         }
         vm.prank(alice);
@@ -869,8 +865,7 @@ contract SponsorsManagerTest is BaseTest {
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
-            Gauge _newGauge = _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
-            gaugesArray.push(_newGauge);
+            _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
             allocationsArray.push(1 ether);
         }
         vm.prank(alice);
