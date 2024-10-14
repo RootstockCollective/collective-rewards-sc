@@ -1,6 +1,6 @@
 # Upgradeable
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/f31d9f8f5bef186e32eda9f657a30ca570e27d59/src/governance/Upgradeable.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/e0365450ae51e86dafe26a54f2dc19dfc48e2141/src/governance/Upgradeable.sol)
 
 **Inherits:** UUPSUpgradeable, [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
