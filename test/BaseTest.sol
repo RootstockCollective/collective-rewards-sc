@@ -45,6 +45,7 @@ contract BaseTest is Test {
     address internal bob = makeAddr("bob");
     address internal builder = makeAddr("builder");
     address internal builder2 = makeAddr("builder2");
+    address internal incentivizer = makeAddr("incentivizer");
     address internal builder2Receiver = makeAddr("builder2Receiver");
     address internal kycApprover = makeAddr("kycApprover");
     address internal foundation = makeAddr("foundation");

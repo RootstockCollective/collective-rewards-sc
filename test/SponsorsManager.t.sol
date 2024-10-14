@@ -771,6 +771,128 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
+     * SCENARIO: distribution occurs on different transactions using pagination and
+     * attempts to incentivize a gauge in new epoch before and during distribution should
+     * fail
+     */
+    function test_DistributeAndIncentivizeGaugeDuringPagination() public {
+        // GIVEN a sponsor alice
+        allocationsArray[0] = 1 ether;
+        allocationsArray[1] = 1 ether;
+        //  AND 22 gauges created
+        for (uint256 i = 0; i < 20; i++) {
+            Gauge _newGauge = _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
+            gaugesArray.push(_newGauge);
+            allocationsArray.push(1 ether);
+        }
+        vm.prank(alice);
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // AND 100 ether reward are added
+        sponsorsManager.notifyRewardAmount(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        // WHEN there is an attempt to incentivize a gauge directly before distribution starts
+        // with rewardToken
+        //  THEN notifyRewardAmount reverts with BeforeDistribution error
+        vm.startPrank(incentivizer);
+        vm.expectRevert(Gauge.BeforeDistribution.selector);
+        gauge.incentivizeWithRewardToken(100 ether);
+        vm.stopPrank();
+
+        // WHEN there is an attempt to incentivize a gauge directly before distribution starts
+        // with coinbase
+        //  THEN notifyRewardAmount reverts with BeforeDistribution error
+        vm.startPrank(incentivizer);
+        vm.deal(address(incentivizer), 100 ether);
+        vm.expectRevert(Gauge.BeforeDistribution.selector);
+        gauge.incentivizeWithCoinbase{ value: 100 ether }();
+        vm.stopPrank();
+
+        // WHEN distribute is executed
+        sponsorsManager.startDistribution();
+
+        // THEN last gauge distributed is gauge 20
+        assertEq(sponsorsManager.indexLastGaugeDistributed(), 20);
+
+        // AND some minutes pass
+        skip(600);
+
+        // WHEN there is an attempt to incentivize a gauge directly before distribution ends
+        //  THEN notifyRewardAmount reverts
+        vm.startPrank(incentivizer);
+        vm.expectRevert(Gauge.BeforeDistribution.selector);
+        gauge.incentivizeWithRewardToken(100 ether);
+        vm.stopPrank();
+
+        // WHEN there is an attempt to incentivize a gauge directly before distribution ends
+        // with coinbase
+        //  THEN notifyRewardAmount reverts
+        vm.startPrank(incentivizer);
+        vm.expectRevert(Gauge.BeforeDistribution.selector);
+        gauge.incentivizeWithCoinbase{ value: 100 ether }();
+        vm.stopPrank();
+
+        // AND distribute is executed again
+        sponsorsManager.distribute();
+
+        // THEN distribution period finished
+        assertEq(sponsorsManager.onDistributionPeriod(), false);
+        // THEN last gauge distributed is 0
+        assertEq(sponsorsManager.indexLastGaugeDistributed(), 0);
+
+        for (uint256 i = 0; i < 22; i++) {
+            // THEN reward token balance of all the gauges is 4.545454545454545454 = 100 * 1 / 22
+            assertEq(rewardToken.balanceOf(address(gaugesArray[i])), 4_545_454_545_454_545_454);
+        }
+    }
+
+    /**
+     * SCENARIO: distribution occurs on different transactions using pagination and attempts to incentivize
+     * SponsorsManager between both transactions should fail
+     */
+    function test_DistributeAndIncentivizeSponsorsManagerDuringPagination() public {
+        // GIVEN a sponsor alice
+        allocationsArray[0] = 1 ether;
+        allocationsArray[1] = 1 ether;
+        //  AND 22 gauges created
+        for (uint256 i = 0; i < 20; i++) {
+            Gauge _newGauge = _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
+            gaugesArray.push(_newGauge);
+            allocationsArray.push(1 ether);
+        }
+        vm.prank(alice);
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // AND 100 ether reward are added
+        sponsorsManager.notifyRewardAmount(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        // WHEN distribute is executed
+        sponsorsManager.startDistribution();
+        // THEN distribution period started
+        assertEq(sponsorsManager.onDistributionPeriod(), true);
+
+        // WHEN there is an attempt to add 100 ether reward in the middle of the distribution
+        //  THEN notifyRewardAmount reverts
+        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
+        sponsorsManager.notifyRewardAmount(100 ether);
+
+        // AND distribute is executed again
+        sponsorsManager.distribute();
+
+        // THEN distribution period finished
+        assertEq(sponsorsManager.onDistributionPeriod(), false);
+
+        for (uint256 i = 0; i < 22; i++) {
+            // THEN reward token balance of all the gauges is 4.545454545454545454 = 100 * 1 / 22
+            assertEq(rewardToken.balanceOf(address(gaugesArray[i])), 4_545_454_545_454_545_454);
+        }
+    }
+
+    /**
      * SCENARIO: alice claims all the rewards in a single tx
      */
     function test_ClaimSponsorRewards() public {
@@ -800,6 +922,89 @@ contract SponsorsManagerTest is BaseTest {
 
         // THEN alice rewardToken balance is 50% of the distributed amount
         assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_992);
+    }
+
+    /**
+     * SCENARIO: alice claims all the rewards from a sponsorManager distribution and
+     * incentivized gauge with rewardToken
+     */
+    function test_ClaimSponsorRewardsWithIncentivizerInRewardToken() public {
+        // GIVEN builder and builder2 and kickback percentage of 50%
+        //  AND a sponsor alice
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        // AND alice allocates 2 ether to builder and 6 ether to builder2
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 ether reward are added
+        sponsorsManager.notifyRewardAmount(100 ether);
+        // AND 100 ether are added directly to first gauge by incentivizer
+        vm.startPrank(incentivizer);
+        rewardToken.mint(address(incentivizer), 100 ether);
+        rewardToken.approve(address(gaugesArray[0]), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
+        vm.stopPrank();
+
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        // AND distribute is executed
+        sponsorsManager.startDistribution();
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // WHEN alice claim rewards
+        vm.prank(alice);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is 50% of the distributed amount from the sponsorsManager
+        // and 100% of the rewards incentivized directly to the first gauge
+        // 149.999999999999999990 = 100 ether * 0.5 + 100 ether
+        assertEq(rewardToken.balanceOf(alice), 149_999_999_999_999_999_990);
+    }
+
+    /**
+     * SCENARIO: alice claims all the rewards from a sponsorManager distribution and
+     * incentivized gauge in coinbase
+     */
+    function test_ClaimSponsorRewardsWithIncentivizerInCoinbase() public {
+        // GIVEN builder and builder2 and kickback percentage of 50%
+        //  AND a sponsor alice
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        // AND alice allocates 2 ether to builder and 6 ether to builder2
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 ether reward in coinbase are added
+        sponsorsManager.notifyRewardAmount{ value: 100 ether }(0 ether);
+        // AND 100 ether in coinbase are added directly to first gauge by incentivizer
+        vm.startPrank(incentivizer);
+        vm.deal(address(incentivizer), 100 ether);
+        gauge.incentivizeWithCoinbase{ value: 100 ether }();
+        vm.stopPrank();
+
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        // AND distribute is executed
+        sponsorsManager.startDistribution();
+
+        // AND epoch finishes
+        _skipAndStartNewEpoch();
+
+        // WHEN alice claim rewards
+        vm.prank(alice);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        // THEN alice balance is 50% of the distributed amount from the sponsorsManager
+        // and 100% of the rewards incentivized directly to the first gauge
+        // 149.999999999999999990 = 100 ether * 0.5 + 100 ether
+        assertEq(address(alice).balance, 149_999_999_999_999_999_990);
     }
 
     /**

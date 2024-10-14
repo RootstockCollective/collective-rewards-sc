@@ -22,6 +22,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     error NotSponsorsManager();
     error BuilderRewardsLocked();
     error GaugeHalted();
+    error BeforeDistribution();
 
     // -----------------------------
     // ----------- Events ----------
@@ -310,7 +311,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
         _updateRewards(rewardToken, sponsor_, _periodFinish);
         _updateRewards(UtilsLib._COINBASE_ADDRESS, sponsor_, _periodFinish);
 
-        // to do not deal with signed integers we add allocation if the new one is bigger than the previous one
+        // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
         uint256 _previousAllocation = allocationOf[sponsor_];
         if (allocation_ >= _previousAllocation) {
             allocationDeviation_ = allocation_ - _previousAllocation;
@@ -330,6 +331,8 @@ contract Gauge is ReentrancyGuardUpgradeable {
 
     /**
      * @notice transfers reward tokens to this contract to incentivize sponsors
+     * @dev reverts if Gauge is halted
+     *  reverts if distribution for the epoch has not finished
      * @param amount_ amount of reward tokens
      */
     function incentivizeWithRewardToken(uint256 amount_) external {
@@ -337,6 +340,8 @@ contract Gauge is ReentrancyGuardUpgradeable {
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
         if (sponsorsManager.isGaugeHalted(address(this))) revert GaugeHalted();
+        // Gauges cannot be incentivized before the distribution of the epoch finishes
+        if (sponsorsManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
 
         _notifyRewardAmount(
             rewardToken,
@@ -351,12 +356,16 @@ contract Gauge is ReentrancyGuardUpgradeable {
 
     /**
      * @notice transfers coinbase to this contract to incentivize sponsors
+     * @dev reverts if Gauge is halted
+     *  reverts if distribution for the epoch has not finished
      */
     function incentivizeWithCoinbase() external payable {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
         if (sponsorsManager.isGaugeHalted(address(this))) revert GaugeHalted();
+        // Gauges cannot be incentivized before the distribution of the epoch finishes
+        if (sponsorsManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
 
         _notifyRewardAmount(
             UtilsLib._COINBASE_ADDRESS,
@@ -494,7 +503,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
             _leftover = (timeUntilNextEpoch_) * _rewardRate;
         }
 
-        // if there are no allocations we need to update rewardMissing to don't lose the previous rewards
+        // if there are no allocations we need to update rewardMissing to avoid losing the previous rewards
         if (totalAllocation == 0) {
             _updateRewardMissing(rewardToken_, periodFinish_);
         }

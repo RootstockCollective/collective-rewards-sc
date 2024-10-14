@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/70cf24191609d37de8a4fe082b298433d3d79835/src/gauge/Gauge.sol)
+[Git Source](https://github.com/rsksmart/builder-incentives-sc/blob/f31d9f8f5bef186e32eda9f657a30ca570e27d59/src/gauge/Gauge.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable
 
@@ -371,20 +371,31 @@ function allocate(
 | `allocationDeviation_` | `uint256` | deviation between current allocation and the new one  |
 | `isNegative_`          | `bool`    | true if new allocation is lesser than the current one |
 
-### notifyRewardAmount
+### incentivizeWithRewardToken
 
-transfers reward tokens to this contract
+transfers reward tokens to this contract to incentivize sponsors
+
+_reverts if Gauge is halted reverts if distribution for the epoch has not finished_
 
 ```solidity
-function notifyRewardAmount(address rewardToken_, uint256 sponsorsAmount_) external payable;
+function incentivizeWithRewardToken(uint256 amount_) external;
 ```
 
 **Parameters**
 
-| Name              | Type      | Description                                                                                                         |
-| ----------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
-| `rewardToken_`    | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
-| `sponsorsAmount_` | `uint256` | amount of rewards for the sponsors                                                                                  |
+| Name      | Type      | Description             |
+| --------- | --------- | ----------------------- |
+| `amount_` | `uint256` | amount of reward tokens |
+
+### incentivizeWithCoinbase
+
+transfers coinbase to this contract to incentivize sponsors
+
+_reverts if Gauge is halted reverts if distribution for the epoch has not finished_
+
+```solidity
+function incentivizeWithCoinbase() external payable;
+```
 
 ### notifyRewardAmountAndUpdateShares
 
@@ -606,12 +617,6 @@ error NotAuthorized();
 error NotSponsorsManager();
 ```
 
-### InvalidRewardAmount
-
-```solidity
-error InvalidRewardAmount();
-```
-
 ### BuilderRewardsLocked
 
 ```solidity
@@ -622,6 +627,12 @@ error BuilderRewardsLocked();
 
 ```solidity
 error GaugeHalted();
+```
+
+### BeforeDistribution
+
+```solidity
+error BeforeDistribution();
 ```
 
 ## Structs
