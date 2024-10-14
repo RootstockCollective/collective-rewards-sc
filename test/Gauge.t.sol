@@ -77,20 +77,6 @@ contract GaugeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: notifyRewardAmount reverts if msg.value is wrong
-     */
-    function test_RevertInvalidRewardAmount() public {
-        // GIVEN a SponsorsManager contract
-        vm.startPrank(address(sponsorsManager));
-        // WHEN trying to distribute coinbase sending invalid value
-        //  THEN tx reverts because value sent is wrong
-        vm.expectRevert(Gauge.InvalidRewardAmount.selector);
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 101 ether);
-        vm.expectRevert(Gauge.InvalidRewardAmount.selector);
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 98 ether);
-    }
-
-    /**
      * SCENARIO: SponsorsManager allocates to alice with no rewards distributed
      */
     function test_Allocate() public {
@@ -243,9 +229,9 @@ contract GaugeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables are updated in the middle and at the end of the epoch
+     * SCENARIO: rewards variables for rewardToken are updated in the middle and at the end of the epoch
      */
-    function test_NotifyRewardAmount() public {
+    function test_IncentivizeWithRewardToken() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
@@ -257,11 +243,11 @@ contract GaugeTest is BaseTest {
         skip(1 days);
 
         // WHEN 100 ether are distributed
-        //  THEN notifyRewardAmount event is emitted
+        //  THEN NotifyReward event is emitted
         vm.startPrank(address(sponsorsManager));
         vm.expectEmit();
         emit NotifyReward(address(rewardToken), 0, /*builderAmount_*/ 100 ether);
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -294,9 +280,9 @@ contract GaugeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManager
+     * SCENARIO: rewards variables for rewardToken are updated by incentivizer that is not the SponsorsManager
      */
-    function test_NotifyRewardAmountNotFromSponsorsManager() public {
+    function test_IncentivizeWithRewardTokenNotFromSponsorsManager() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
@@ -313,7 +299,7 @@ contract GaugeTest is BaseTest {
         skip(1 days);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
@@ -332,9 +318,9 @@ contract GaugeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: incentivizer calls notifyRewardAmount with 0 amount
+     * SCENARIO: incentivizer tries to send 0 amount
      */
-    function test_NotifyRewardAmountZeroAmount() public {
+    function test_IncentivizeWithZeroAmount() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
@@ -344,7 +330,7 @@ contract GaugeTest is BaseTest {
 
         // WHEN 0 ether are distributed by Incentivizer in rewardToken
         vm.startPrank(incentivizer);
-        gauge.notifyRewardAmount(address(rewardToken), 0 ether);
+        gauge.incentivizeWithRewardToken(0 ether);
 
         // THEN rewardPerToken is 0
         assertEq(gauge.rewardPerToken(address(rewardToken)), 0);
@@ -353,7 +339,7 @@ contract GaugeTest is BaseTest {
 
         // WHEN 0 ether are distributed by Incentivizer
         vm.startPrank(incentivizer);
-        gauge.notifyRewardAmount(UtilsLib._COINBASE_ADDRESS, 0 ether);
+        gauge.incentivizeWithCoinbase{ value: 0 ether }();
 
         // THEN rewardPerToken is 0
         assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);
@@ -362,9 +348,9 @@ contract GaugeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: incentivizer calls notifyRewardAmount without enough balance
+     * SCENARIO: incentivizer does not have enough balance
      */
-    function test_NotifyRewardAmountNotEnoughBalance() public {
+    function test_incentivizeWithNotEnoughBalance() public {
         // WHEN an Incentivizer has rewardToken
         vm.startPrank(incentivizer);
         rewardToken.mint(address(incentivizer), 50 ether);
@@ -373,18 +359,18 @@ contract GaugeTest is BaseTest {
         // WHEN 100 ether are distributed by Incentivizer in rewardToken
         //  THEN tx reverts because of insufficient allowance
         vm.expectRevert();
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // WHEN 100 ether are distributed by Incentivizer
         //  THEN tx reverts because of insufficient balance
         vm.expectRevert();
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 100 ether);
+        gauge.incentivizeWithCoinbase{ value: 100 ether }();
     }
 
     /**
      * SCENARIO: rewards variables are updated by incentivizer twice in same epoch
      */
-    function test_NotifyRewardAmountIncentivizeTwiceInSameEpoch() public {
+    function test_IncentivizeTwiceInSameEpoch() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
@@ -401,7 +387,7 @@ contract GaugeTest is BaseTest {
         skip(1 days);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
@@ -410,7 +396,7 @@ contract GaugeTest is BaseTest {
         _skipRemainingEpochFraction(2);
 
         // WHEN 100 ether are distributed again by Incentivizer
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // THEN rewardRate is 0.000578703703703703 = 100 ether / 518400 sec + 100 / (518400 sec/2)
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 578_703_703_703_703);
@@ -435,7 +421,7 @@ contract GaugeTest is BaseTest {
     /**
      * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManager using coinbase
      */
-    function test_NotifyRewardAmountWithCoinbaseNotFromSponsorsManager() public {
+    function test_IncentivizeWithCoinbaseNotFromSponsorsManager() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
@@ -451,7 +437,7 @@ contract GaugeTest is BaseTest {
         vm.deal(address(incentivizer), 100 ether);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 100 ether);
+        gauge.incentivizeWithCoinbase{ value: 100 ether }();
 
         // THEN rewardMissing is 0
         assertEq(gauge.rewardMissing(UtilsLib._COINBASE_ADDRESS), 0);
@@ -477,7 +463,7 @@ contract GaugeTest is BaseTest {
      * SCENARIO: there are no initial allocations, incentivizer updates rewards variables and allocations
      * happen after in same first epoch
      */
-    function test_NotifyRewardAmountBeforeAllocation() public {
+    function test_IncentivizeBeforeAllocation() public {
         // GIVEN an Incentivizer with rewardToken
         vm.startPrank(incentivizer);
         rewardToken.mint(address(incentivizer), 100 ether);
@@ -487,8 +473,7 @@ contract GaugeTest is BaseTest {
         skip(1 days);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
-
+        gauge.incentivizeWithRewardToken(100 ether);
         // THEN rewardPerTokenStored is 0
         assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
         // THEN rewardMissing is 0
@@ -562,7 +547,7 @@ contract GaugeTest is BaseTest {
      * are no initial allocations in previous epoch, allocations happen in following epoch and all
      * rewards are distributed and claimed by sponsors with no rewards lost
      */
-    function test_NotifyRewardAmountNoAllocationsInPreviousEpoch() public {
+    function test_IncentivizeWithNoAllocationsInPreviousEpoch() public {
         // GIVEN no allocations to gauge
         // WHEN an Incentivizer has rewardToken
         vm.startPrank(incentivizer);
@@ -573,7 +558,7 @@ contract GaugeTest is BaseTest {
         skip(1 days);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
@@ -648,7 +633,7 @@ contract GaugeTest is BaseTest {
      * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManager when there
      * are no initial allocations in first epoch, allocations happen in third epoch, rewards are not locked
      */
-    function test_NotifyRewardAmountNoAllocationsInTwoEpochs() public {
+    function test_IncentivizeWithNoAllocationsInTwoEpochs() public {
         // GIVEN no allocations to gauge
         // WHEN an Incentivizer has rewardToken
         vm.startPrank(incentivizer);
@@ -659,7 +644,7 @@ contract GaugeTest is BaseTest {
         skip(1 days);
 
         // WHEN 100 ether distributed by Incentivizer
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
@@ -737,7 +722,7 @@ contract GaugeTest is BaseTest {
      * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManager and
      * during distribution
      */
-    function test_NotifyRewardAmountIncentivizerAndSponsorsManager() public {
+    function test_IncentivizeWithIncentivizerAndSponsorsManager() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
@@ -754,7 +739,7 @@ contract GaugeTest is BaseTest {
         rewardToken.approve(address(gauge), 100 ether);
 
         // WHEN 100 ether distributed by Incentivizer
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
@@ -803,7 +788,7 @@ contract GaugeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: calling notifyRewardAmount on epoch before distribution finishes should fail
+     * SCENARIO: trying to incentivize on epoch before distribution finishes should fail
      */
     function test_NotifyRewardAmountIncentivizeInDistributionWindow() public {
         // GIVEN alice allocates 1 ether
@@ -820,7 +805,7 @@ contract GaugeTest is BaseTest {
         rewardToken.approve(address(gauge), 200 ether);
 
         // WHEN 100 ether distributed by Incentivizer
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // AND epoch finishes
         _skipToStartDistributionWindow();
@@ -828,12 +813,12 @@ contract GaugeTest is BaseTest {
         // WHEN there is an attempt to distribute 100 ether in rewardToken by Incentivizer
         //  THEN it reverts since distribution has not finished yet
         vm.expectRevert(Gauge.BeforeDistribution.selector);
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // WHEN there is an attempt to distribute 100 ether in coinbase by Incentivizer
         //  THEN it reverts since distribution has not finished yet
         vm.expectRevert(Gauge.BeforeDistribution.selector);
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 100 ether);
+        gauge.incentivizeWithCoinbase{ value: 100 ether }();
 
         // AND distribution finishes with 100 ether being distributed
         vm.startPrank(address(sponsorsManager));
@@ -1077,7 +1062,8 @@ contract GaugeTest is BaseTest {
 
         // AND 100 ether distributed for sponsors
         vm.startPrank(address(sponsorsManager));
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
+
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -1115,8 +1101,9 @@ contract GaugeTest is BaseTest {
 
         // AND 100 ether distributed for sponsors on both gauges
         vm.startPrank(address(sponsorsManager));
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
-        gauge2.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
+        gauge2.incentivizeWithRewardToken(100 ether);
+
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -1161,7 +1148,8 @@ contract GaugeTest is BaseTest {
 
         // AND 100 ether are distributed for sponsors
         vm.startPrank(address(sponsorsManager));
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
+
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
@@ -1200,17 +1188,18 @@ contract GaugeTest is BaseTest {
 
         // AND 100 ether distributed for sponsors
         vm.startPrank(address(sponsorsManager));
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // AND epoch finishes
         _skipAndStartNewEpoch();
+
         // AND 0 rewardToken are distributed
         _distribute(0, 0);
 
         // AND 200 ether more are distributed for sponsors
         vm.startPrank(address(sponsorsManager));
         rewardToken.approve(address(gauge), 200 ether);
-        gauge.notifyRewardAmount(address(rewardToken), 200 ether);
+        gauge.incentivizeWithRewardToken(200 ether);
 
         // AND epoch finishes
         _skipAndStartNewEpoch();
@@ -1261,13 +1250,13 @@ contract GaugeTest is BaseTest {
 
         // AND 100 ether distributed for sponsors
         vm.startPrank(address(sponsorsManager));
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
         // AND 200 ether more are distributed for sponsors
-        gauge.notifyRewardAmount(address(rewardToken), 200 ether);
+        gauge.incentivizeWithRewardToken(200 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND epoch finish
@@ -1317,9 +1306,8 @@ contract GaugeTest is BaseTest {
 
         // AND 100 ether are distributed for sponsors
         vm.startPrank(address(sponsorsManager));
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        // AND 100 ether distributed for sponsors
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // AND half epoch passes
         _skipRemainingEpochFraction(2);
@@ -1366,9 +1354,8 @@ contract GaugeTest is BaseTest {
 
         // AND 100 ether are distributed for sponsors
         vm.startPrank(address(sponsorsManager));
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        // AND 100 ether distributed for sponsors
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // AND half epoch passes
         _skipRemainingEpochFraction(2);
@@ -1418,7 +1405,8 @@ contract GaugeTest is BaseTest {
 
         // AND 100 ether are distributed for sponsors
         vm.startPrank(address(sponsorsManager));
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        // AND 100 ether distributed for sponsors
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
@@ -1455,7 +1443,7 @@ contract GaugeTest is BaseTest {
         // AND 100 ether are distributed for sponsors
         vm.startPrank(address(sponsorsManager));
         rewardToken.approve(address(gauge), 100_000 ether);
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // AND 0 ether are distributed for sponsors
         _distribute(0, 0);
@@ -1493,9 +1481,7 @@ contract GaugeTest is BaseTest {
 
         // AND 100 ether are distributed for sponsors
         vm.startPrank(address(sponsorsManager));
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // AND epoch finishes
         _skipAndStartNewEpoch();
@@ -1531,9 +1517,7 @@ contract GaugeTest is BaseTest {
 
         // AND 100 ether are distributed for sponsors
         vm.startPrank(address(sponsorsManager));
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 100 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        gauge.incentivizeWithCoinbase{ value: 100 ether }();
 
         // AND epoch finishes
         _skipAndStartNewEpoch();

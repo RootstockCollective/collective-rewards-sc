@@ -798,7 +798,7 @@ contract SponsorsManagerTest is BaseTest {
         //  THEN notifyRewardAmount reverts with BeforeDistribution error
         vm.startPrank(incentivizer);
         vm.expectRevert(Gauge.BeforeDistribution.selector);
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
         vm.stopPrank();
 
         // WHEN there is an attempt to incentivize a gauge directly before distribution starts
@@ -807,7 +807,7 @@ contract SponsorsManagerTest is BaseTest {
         vm.startPrank(incentivizer);
         vm.deal(address(incentivizer), 100 ether);
         vm.expectRevert(Gauge.BeforeDistribution.selector);
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 100 ether);
+        gauge.incentivizeWithCoinbase{ value: 100 ether }();
         vm.stopPrank();
 
         // WHEN distribute is executed
@@ -823,7 +823,7 @@ contract SponsorsManagerTest is BaseTest {
         //  THEN notifyRewardAmount reverts
         vm.startPrank(incentivizer);
         vm.expectRevert(Gauge.BeforeDistribution.selector);
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
         vm.stopPrank();
 
         // WHEN there is an attempt to incentivize a gauge directly before distribution ends
@@ -831,7 +831,7 @@ contract SponsorsManagerTest is BaseTest {
         //  THEN notifyRewardAmount reverts
         vm.startPrank(incentivizer);
         vm.expectRevert(Gauge.BeforeDistribution.selector);
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 100 ether);
+        gauge.incentivizeWithCoinbase{ value: 100 ether }();
         vm.stopPrank();
 
         // AND distribute is executed again
@@ -944,7 +944,7 @@ contract SponsorsManagerTest is BaseTest {
         vm.startPrank(incentivizer);
         rewardToken.mint(address(incentivizer), 100 ether);
         rewardToken.approve(address(gaugesArray[0]), 100 ether);
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
         vm.stopPrank();
 
         // AND distribution window starts
@@ -985,7 +985,7 @@ contract SponsorsManagerTest is BaseTest {
         // AND 100 ether in coinbase are added directly to first gauge by incentivizer
         vm.startPrank(incentivizer);
         vm.deal(address(incentivizer), 100 ether);
-        gauge.notifyRewardAmount{ value: 100 ether }(UtilsLib._COINBASE_ADDRESS, 100 ether);
+        gauge.incentivizeWithCoinbase{ value: 100 ether }();
         vm.stopPrank();
 
         // AND distribution window starts
@@ -1370,7 +1370,7 @@ contract SponsorsManagerTest is BaseTest {
 
         // AND gauge is incentive with 100 ether of rewardToken
         rewardToken.approve(address(gauge), 100 ether);
-        gauge.notifyRewardAmount(address(rewardToken), 100 ether);
+        gauge.incentivizeWithRewardToken(100 ether);
 
         // AND alice allocates 2 ether to builder
         vm.startPrank(alice);
