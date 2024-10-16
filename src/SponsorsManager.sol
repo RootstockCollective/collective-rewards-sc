@@ -260,6 +260,7 @@ contract SponsorsManager is BuilderRegistry {
     function claimSponsorRewards(Gauge[] memory gauges_) external {
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
+            if (gaugeToBuilder[gauges_[i]] == address(0)) revert GaugeDoesNotExist();
             gauges_[i].claimSponsorReward(msg.sender);
         }
     }
