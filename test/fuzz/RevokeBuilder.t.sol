@@ -59,17 +59,17 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             }
         }
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND each not revoked gauge receives its proportional share of rewards based on its allocation
         // AND revoked gauges don't receive rewards
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (revokedBuilders[builders[i]] < RevokeState.revoked) {
                 assertApproxEqAbs(
-                    rewardToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(10_000 ether, i), 100
+                    rewardToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(RT_DISTRIBUTION_AMOUNT, i), 100
                 );
-                assertApproxEqAbs(address(gaugesArray[i]).balance, _calcGaugeReward(1000 ether, i), 100);
+                assertApproxEqAbs(address(gaugesArray[i]).balance, _calcGaugeReward(CB_DISTRIBUTION_AMOUNT, i), 100);
             } else {
                 assertApproxEqAbs(rewardToken.balanceOf(address(gaugesArray[i])), 0, 100);
                 assertApproxEqAbs(address(gaugesArray[i]).balance, 0, 100);
@@ -138,8 +138,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // THEN totalPotentialReward increase by permitted gauges
         assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         _expectedTotalPotentialReward = 0;
         // THEN rewardShares for each non revoked gauge is the entire epoch
@@ -197,8 +197,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // THEN totalPotentialReward increase by permitted gauges
         assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         _expectedTotalPotentialReward = 0;
         // THEN rewardShares for each non revoked gauge is the entire epoch
@@ -238,8 +238,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // AND a random time passes
         skip(randomTime_);
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND a random time passes
         skip(randomTime_);

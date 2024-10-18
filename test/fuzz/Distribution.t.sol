@@ -14,15 +14,17 @@ contract DistributionFuzzTest is BaseFuzz {
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
 
-        // AND there are 3 distributions of 10000 rewardToken and 1000 coinbase each one
-        _distribute(10_000 ether, 1000 ether);
-        _distribute(10_000 ether, 1000 ether);
-        _distribute(10_000 ether, 1000 ether);
+        // AND there are 3 distributions
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND each gauge receives its proportional share of rewards based on its allocation
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            assertApproxEqAbs(rewardToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(30_000 ether, i), 100);
-            assertApproxEqAbs(address(gaugesArray[i]).balance, _calcGaugeReward(3000 ether, i), 100);
+            assertApproxEqAbs(
+                rewardToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(RT_DISTRIBUTION_AMOUNT * 3, i), 100
+            );
+            assertApproxEqAbs(address(gaugesArray[i]).balance, _calcGaugeReward(CB_DISTRIBUTION_AMOUNT * 3, i), 100);
         }
 
         // WHEN all the builders claim their rewards
@@ -30,8 +32,10 @@ contract DistributionFuzzTest is BaseFuzz {
 
         // THEN they receive the rewards after deducting the kickback for the sponsors
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            assertApproxEqAbs(rewardToken.balanceOf(builders[i]), _calcBuilderReward(30_000 ether, i), 100);
-            assertApproxEqAbs(builders[i].balance, _calcBuilderReward(3000 ether, i), 100);
+            assertApproxEqAbs(
+                rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 3, i), 100
+            );
+            assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT * 3, i), 100);
         }
 
         // AND epoch finishes
@@ -44,9 +48,13 @@ contract DistributionFuzzTest is BaseFuzz {
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rewardToken.balanceOf(sponsorsArray[i]), _calcSponsorReward(30_000 ether, i), 0.000000001 ether
+                rewardToken.balanceOf(sponsorsArray[i]),
+                _calcSponsorReward(RT_DISTRIBUTION_AMOUNT * 3, i),
+                0.000000001 ether
             );
-            assertApproxEqAbs(sponsorsArray[i].balance, _calcSponsorReward(3000 ether, i), 0.000000001 ether);
+            assertApproxEqAbs(
+                sponsorsArray[i].balance, _calcSponsorReward(CB_DISTRIBUTION_AMOUNT * 3, i), 0.000000001 ether
+            );
         }
 
         // THEN gauges balances are empty

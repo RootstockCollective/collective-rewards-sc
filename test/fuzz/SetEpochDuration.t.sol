@@ -22,8 +22,8 @@ contract SetEpochDurationFuzzTest is BaseFuzz {
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
         // AND governor sets a random epoch duration and offset
         sponsorsManager.setEpochDuration(newEpochDuration_, epochStartOffset_);
 
@@ -47,8 +47,8 @@ contract SetEpochDurationFuzzTest is BaseFuzz {
         // THEN epoch finishes in 1 week
         assertEq(sponsorsManager.epochNext(block.timestamp), block.timestamp + 1 weeks);
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         (_epochStart, _epochDuration) = sponsorsManager.getEpochStartAndDuration();
         // THEN epoch duration is newEpochDuration_ + epochStartOffset_
@@ -60,8 +60,8 @@ contract SetEpochDurationFuzzTest is BaseFuzz {
         // THEN next epoch is in newEpochDuration_ + epochStartOffset_
         assertEq(sponsorsManager.epochNext(block.timestamp), block.timestamp + newEpochDuration_ + epochStartOffset_);
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
         (_epochStart, _epochDuration) = sponsorsManager.getEpochStartAndDuration();
         // THEN epoch duration is the new random epoch duration
         assertEq(_epochDuration, newEpochDuration_);
@@ -77,8 +77,10 @@ contract SetEpochDurationFuzzTest is BaseFuzz {
 
         // THEN they receive the rewards after deducting the kickback for the sponsors
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            assertApproxEqAbs(rewardToken.balanceOf(builders[i]), _calcBuilderReward(30_000 ether, i), 100);
-            assertApproxEqAbs(builders[i].balance, _calcBuilderReward(3000 ether, i), 100);
+            assertApproxEqAbs(
+                rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 3, i), 100
+            );
+            assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT * 3, i), 100);
         }
 
         // AND epoch finishes
@@ -91,9 +93,13 @@ contract SetEpochDurationFuzzTest is BaseFuzz {
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rewardToken.balanceOf(sponsorsArray[i]), _calcSponsorReward(30_000 ether, i), 0.000000001 ether
+                rewardToken.balanceOf(sponsorsArray[i]),
+                _calcSponsorReward(RT_DISTRIBUTION_AMOUNT * 3, i),
+                0.000000001 ether
             );
-            assertApproxEqAbs(sponsorsArray[i].balance, _calcSponsorReward(3000 ether, i), 0.000000001 ether);
+            assertApproxEqAbs(
+                sponsorsArray[i].balance, _calcSponsorReward(CB_DISTRIBUTION_AMOUNT * 3, i), 0.000000001 ether
+            );
         }
 
         // THEN gauges balances are empty

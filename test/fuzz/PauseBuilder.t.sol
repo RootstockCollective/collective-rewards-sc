@@ -35,8 +35,8 @@ contract PauseBuilderFuzzTest is BaseFuzz {
         // AND unpause randomly
         _randomUnpause(seed_);
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND unpaused builders claims their rewards
         for (uint256 i = 0; i < builders.length; i++) {
@@ -44,8 +44,10 @@ contract PauseBuilderFuzzTest is BaseFuzz {
                 vm.prank(builders[i]);
                 gaugesArray[i].claimBuilderReward();
                 // THEN they receive the rewards after deducting the kickback for the sponsors
-                assertApproxEqAbs(rewardToken.balanceOf(builders[i]), _calcBuilderReward(10_000 ether, i), 100);
-                assertApproxEqAbs(builders[i].balance, _calcBuilderReward(1000 ether, i), 100);
+                assertApproxEqAbs(
+                    rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT, i), 100
+                );
+                assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT, i), 100);
             } else {
                 vm.prank(builders[i]);
                 // THEN tx reverts because builder rewards are locked
@@ -64,9 +66,13 @@ contract PauseBuilderFuzzTest is BaseFuzz {
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rewardToken.balanceOf(sponsorsArray[i]), _calcSponsorReward(10_000 ether, i), 0.000000001 ether
+                rewardToken.balanceOf(sponsorsArray[i]),
+                _calcSponsorReward(RT_DISTRIBUTION_AMOUNT, i),
+                0.000000001 ether
             );
-            assertApproxEqAbs(sponsorsArray[i].balance, _calcSponsorReward(1000 ether, i), 0.000000001 ether);
+            assertApproxEqAbs(
+                sponsorsArray[i].balance, _calcSponsorReward(CB_DISTRIBUTION_AMOUNT, i), 0.000000001 ether
+            );
         }
     }
 
@@ -93,8 +99,8 @@ contract PauseBuilderFuzzTest is BaseFuzz {
         // AND pause randomly
         _randomPause(seed_);
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND a random time passes
         skip(randomTime_);
@@ -102,8 +108,8 @@ contract PauseBuilderFuzzTest is BaseFuzz {
         // AND unpause randomly
         _randomUnpause(seed_);
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution
+        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND unpaused builders claims their rewards
         for (uint256 i = 0; i < builders.length; i++) {
@@ -111,8 +117,10 @@ contract PauseBuilderFuzzTest is BaseFuzz {
                 vm.prank(builders[i]);
                 gaugesArray[i].claimBuilderReward();
                 // THEN they receive the rewards after deducting the kickback for the sponsors
-                assertApproxEqAbs(rewardToken.balanceOf(builders[i]), _calcBuilderReward(20_000 ether, i), 100);
-                assertApproxEqAbs(builders[i].balance, _calcBuilderReward(2000 ether, i), 100);
+                assertApproxEqAbs(
+                    rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 2, i), 100
+                );
+                assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT * 2, i), 100);
             } else {
                 vm.prank(builders[i]);
                 // THEN tx reverts because builder rewards are locked
@@ -131,9 +139,13 @@ contract PauseBuilderFuzzTest is BaseFuzz {
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rewardToken.balanceOf(sponsorsArray[i]), _calcSponsorReward(20_000 ether, i), 0.000000001 ether
+                rewardToken.balanceOf(sponsorsArray[i]),
+                _calcSponsorReward(RT_DISTRIBUTION_AMOUNT * 2, i),
+                0.000000001 ether
             );
-            assertApproxEqAbs(sponsorsArray[i].balance, _calcSponsorReward(2000 ether, i), 0.000000001 ether);
+            assertApproxEqAbs(
+                sponsorsArray[i].balance, _calcSponsorReward(CB_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether
+            );
         }
     }
 
