@@ -134,14 +134,17 @@ contract BaseTest is Test {
         vm.stopPrank();
     }
 
+    function _createGauge(uint64 kickback_) internal {
+        address _newBuilder = makeAddr(string(abi.encode(gaugesArray.length)));
+        builders.push(_newBuilder);
+        Gauge _newGauge = _whitelistBuilder(_newBuilder, _newBuilder, kickback_);
+        gaugesArray.push(_newGauge);
+    }
+
     function _createGauges(uint256 amount_, uint64 kickback_) internal {
         for (uint256 i = 0; i < amount_; i++) {
-            address _newBuilder = makeAddr(string(abi.encode(gaugesArray.length)));
-            builders.push(_newBuilder);
-            Gauge _newGauge = _whitelistBuilder(_newBuilder, _newBuilder, kickback_);
-            gaugesArray.push(_newGauge);
+            _createGauge(kickback_);
         }
-        vm.stopPrank();
     }
 
     function _initialDistribution() internal {
@@ -150,7 +153,6 @@ contract BaseTest is Test {
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
         // AND bob allocates to builder2
         vm.startPrank(bob);
         allocationsArray[0] = 0 ether;
