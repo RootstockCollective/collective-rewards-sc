@@ -178,6 +178,17 @@ contract BaseTest is Test {
         vm.stopPrank();
     }
 
+    function _incentivize(Gauge gauge_, uint256 amountERC20_, uint256 amountCoinbase_) internal {
+        vm.deal(incentivizer, amountCoinbase_);
+        gauge_.incentivizeWithCoinbase{ value: amountCoinbase_ }();
+
+        rewardToken.mint(address(incentivizer), amountERC20_);
+        vm.prank(address(incentivizer));
+        rewardToken.approve(address(gauge_), amountERC20_);
+        vm.prank(address(incentivizer));
+        gauge_.incentivizeWithRewardToken(amountERC20_);
+    }
+
     function _buildersClaim() internal {
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             address _builder = sponsorsManager.gaugeToBuilder(gaugesArray[i]);
