@@ -256,8 +256,6 @@ contract GaugeTest is BaseTest {
         vm.expectEmit();
         emit NotifyReward(address(rewardToken), 0, /*builderAmount_*/ 100 ether);
         gauge.incentivizeWithRewardToken(100 ether);
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
 
         // THEN rewardPerTokenStored is 0
         assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
