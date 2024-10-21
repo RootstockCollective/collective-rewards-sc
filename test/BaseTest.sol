@@ -161,6 +161,9 @@ contract BaseTest is Test {
         _skipRemainingEpochFraction(2);
     }
 
+    /**
+     * @notice skips to new epoch and executes a distribution.
+     */
     function _distribute(uint256 amountERC20_, uint256 amountCoinbase_) internal {
         _skipToStartDistributionWindow();
         rewardToken.mint(address(rewardDistributor), amountERC20_);
@@ -171,6 +174,17 @@ contract BaseTest is Test {
             sponsorsManager.distribute();
         }
         vm.stopPrank();
+    }
+
+    function _incentivize(Gauge gauge_, uint256 amountERC20_, uint256 amountCoinbase_) internal {
+        vm.deal(incentivizer, amountCoinbase_);
+        gauge_.incentivizeWithCoinbase{ value: amountCoinbase_ }();
+
+        rewardToken.mint(address(incentivizer), amountERC20_);
+        vm.prank(address(incentivizer));
+        rewardToken.approve(address(gauge_), amountERC20_);
+        vm.prank(address(incentivizer));
+        gauge_.incentivizeWithRewardToken(amountERC20_);
     }
 
     function _buildersClaim() internal {
