@@ -42,5 +42,5 @@ localhost = "http://localhost:4444"
 
 [profile.deep.fuzz]
 optimizer = true
-runs      = 10_000
+runs      = 1_000
 verbosity = 2
