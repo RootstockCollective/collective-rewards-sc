@@ -9,11 +9,11 @@ import { Upgradeable } from "../governance/Upgradeable.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 
 /**
- * @title SimplifiedRewardDistributor
+ * @title SimplifiedRewardDistributorRootstockCollective
  * @notice Simplified version for the MVP.
- *  Accumulates all the rewards and distribute them equally to all the builders for each epoch
+ *  Accumulates all the rewards and distribute them equally to all the builders for each Collective Rewards cycle
  */
-contract SimplifiedRewardDistributor is Upgradeable, ReentrancyGuardUpgradeable {
+contract SimplifiedRewardDistributorRootstockCollective is Upgradeable, ReentrancyGuardUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     // -----------------------------

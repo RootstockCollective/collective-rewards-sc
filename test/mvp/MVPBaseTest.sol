@@ -5,17 +5,19 @@ import { Test } from "forge-std/src/Test.sol";
 
 import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
 import { Deploy as ChangeExecutorMockDeployer } from "script/test_mock/ChangeExecutorMock.s.sol";
-import { Deploy as SimplifiedRewardDistributorDeployer } from "script/mvp/SimplifiedRewardDistributor.s.sol";
+import { Deploy as SimplifiedRewardDistributorDeployer } from
+    "script/mvp/SimplifiedRewardDistributorRootstockCollective.s.sol";
 import { ChangeExecutorMock } from "../mock/ChangeExecutorMock.sol";
 import { ERC20Mock } from "../mock/ERC20Mock.sol";
-import { SimplifiedRewardDistributor } from "src/mvp/SimplifiedRewardDistributor.sol";
+import { SimplifiedRewardDistributorRootstockCollective } from
+    "src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
 
 contract MVPBaseTest is Test {
     ChangeExecutorMock public changeExecutorMock;
     ChangeExecutorMock public changeExecutorMockImpl;
     ERC20Mock public rewardToken;
-    SimplifiedRewardDistributor public simplifiedRewardDistributor;
-    SimplifiedRewardDistributor public simplifiedRewardDistributorImpl;
+    SimplifiedRewardDistributorRootstockCollective public simplifiedRewardDistributor;
+    SimplifiedRewardDistributorRootstockCollective public simplifiedRewardDistributorImpl;
 
     address internal governor = makeAddr("governor");
     address internal alice = makeAddr("alice");

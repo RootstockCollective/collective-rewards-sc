@@ -5,7 +5,8 @@ import { MVPBaseTest } from "./MVPBaseTest.sol";
 import { Governed } from "../../src/governance/Governed.sol";
 import { UtilsLib } from "../../src/libraries/UtilsLib.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { SimplifiedRewardDistributor } from "../../src/mvp/SimplifiedRewardDistributor.sol";
+import { SimplifiedRewardDistributorRootstockCollective } from
+    "../../src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
 
 contract SimplifiedRewardDistributorTest is MVPBaseTest {
     // -----------------------------
@@ -73,7 +74,7 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
         // GIVEN a whitelisted builder
         //  WHEN tries to whitelist it again
         //   THEN reverts
-        vm.expectRevert(SimplifiedRewardDistributor.WhitelistStatusWithoutUpdate.selector);
+        vm.expectRevert(SimplifiedRewardDistributorRootstockCollective.WhitelistStatusWithoutUpdate.selector);
         simplifiedRewardDistributor.whitelistBuilder(builder, rewardReceiver);
     }
 
@@ -107,7 +108,7 @@ contract SimplifiedRewardDistributorTest is MVPBaseTest {
         address payable _newBuilder = payable(makeAddr("newBuilder"));
         //  WHEN tries to remove it form the whitelist
         // THEN reverts
-        vm.expectRevert(SimplifiedRewardDistributor.WhitelistStatusWithoutUpdate.selector);
+        vm.expectRevert(SimplifiedRewardDistributorRootstockCollective.WhitelistStatusWithoutUpdate.selector);
         simplifiedRewardDistributor.removeWhitelistedBuilder(_newBuilder);
     }
 
