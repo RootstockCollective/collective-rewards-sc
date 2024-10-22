@@ -289,6 +289,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @param allocation_ amount of tokens to allocate
      * @param timeUntilNextEpoch_ time until next epoch
      * @return allocationDeviation_ deviation between current allocation and the new one
+     * @return rewardSharesDeviation_  deviation between current reward shares and the new one
      * @return isNegative_ true if new allocation is lesser than the current one
      */
     function allocate(
@@ -298,7 +299,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     )
         external
         onlySponsorsManager
-        returns (uint256 allocationDeviation_, bool isNegative_)
+        returns (uint256 allocationDeviation_, uint256 rewardSharesDeviation_, bool isNegative_)
     {
         uint256 _periodFinish = sponsorsManager.periodFinish();
         // if sponsors quit before epoch finish we need to store the remaining rewards on first allocation
@@ -315,18 +316,21 @@ contract Gauge is ReentrancyGuardUpgradeable {
         uint256 _previousAllocation = allocationOf[sponsor_];
         if (allocation_ >= _previousAllocation) {
             allocationDeviation_ = allocation_ - _previousAllocation;
+            rewardSharesDeviation_ = allocationDeviation_ * timeUntilNextEpoch_;
             totalAllocation += allocationDeviation_;
-            rewardShares += allocationDeviation_ * timeUntilNextEpoch_;
+            rewardShares += rewardSharesDeviation_;
         } else {
             allocationDeviation_ = _previousAllocation - allocation_;
+            // avoid underflow because rewardShares may not be correctly updated if the distribution was skipped
+            rewardSharesDeviation_ = Math.min(rewardShares, allocationDeviation_ * timeUntilNextEpoch_);
             totalAllocation -= allocationDeviation_;
-            rewardShares -= allocationDeviation_ * timeUntilNextEpoch_;
+            rewardShares -= rewardSharesDeviation_;
             isNegative_ = true;
         }
         allocationOf[sponsor_] = allocation_;
 
         emit NewAllocation(sponsor_, allocation_);
-        return (allocationDeviation_, isNegative_);
+        return (allocationDeviation_, rewardSharesDeviation_, isNegative_);
     }
 
     /**
