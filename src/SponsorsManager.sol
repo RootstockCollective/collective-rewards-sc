@@ -25,6 +25,7 @@ contract SponsorsManager is BuilderRegistry {
     error NotInDistributionPeriod();
     error DistributionPeriodDidNotStart();
     error GaugeDoesNotExist();
+    error BeforeDistribution();
 
     // -----------------------------
     // ----------- Events ----------
@@ -400,6 +401,9 @@ contract SponsorsManager is BuilderRegistry {
      * @param gauge_ gauge contract to be resumed
      */
     function _resumeGaugeShares(Gauge gauge_) internal override notInDistributionPeriod {
+        // gauges cannot be resumed before the distribution,
+        // incentives can stay in the gauge because lastUpdateTime > lastTimeRewardApplicable
+        if (_periodFinish <= block.timestamp) revert BeforeDistribution();
         // allocations are considered again for the reward's distribution
         // if there was a distribution we need to update the shares with the full epoch duration
         if (haltedGaugeLastPeriodFinish[gauge_] < _periodFinish) {

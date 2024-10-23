@@ -131,7 +131,7 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
 
         // AND cooldown time didn't end
-        vm.warp(_cooldownEndTime - 1);
+        vm.warp(_cooldownEndTime - 12 days); // cannot skip an epoch, permit will revert
 
         // WHEN gauge is permitted with a new kickback of 80%
         vm.startPrank(builder);
@@ -141,13 +141,13 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         assertEq(_previous, 0.5 ether);
         // THEN next builder kickback is 80%
         assertEq(_next, 0.8 ether);
-        // THEN builder kickback cooldown finishes in 1 sec
-        assertEq(_cooldownEndTime, block.timestamp + 1);
+        // THEN builder kickback cooldown didn't finish
+        assertGe(_cooldownEndTime, block.timestamp);
         // THEN builder kickback to apply is 50%
         assertEq(sponsorsManager.getKickbackToApply(builder), 0.5 ether);
 
         // THEN cooldown time ends
-        skip(1);
+        skip(12 days);
         // THEN builder kickback to apply is 80%
         assertEq(sponsorsManager.getKickbackToApply(builder), 0.8 ether);
     }
@@ -170,6 +170,9 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // AND cooldown time ends
         vm.warp(_cooldownEndTime);
 
+        // AND there is a distribution to set the new periodFinish and allow the permit
+        _distribute(0, 0);
+
         // WHEN gauge is permitted with a new kickback of 80%
         vm.startPrank(builder);
         sponsorsManager.permitBuilder(0.8 ether);
@@ -179,7 +182,7 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN next builder kickback is 80%
         assertEq(_next, 0.8 ether);
         // THEN builder kickback cooldown finished
-        assertEq(_cooldownEndTime, block.timestamp);
+        assertLe(_cooldownEndTime, block.timestamp);
         // THEN builder kickback to apply is 80%
         assertEq(sponsorsManager.getKickbackToApply(builder), 0.8 ether);
     }
