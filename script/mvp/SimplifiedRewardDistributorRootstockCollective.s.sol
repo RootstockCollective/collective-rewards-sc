@@ -14,7 +14,7 @@ contract Deploy is Broadcaster {
             SimplifiedRewardDistributorRootstockCollective implementation_
         )
     {
-        address _changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
+        address _changeExecutorAddress = vm.envOr("ChangeExecutorRootstockCollective", address(0));
         address _rewardTokenAddress = vm.envOr("RewardToken", address(0));
         if (_changeExecutorAddress == address(0)) {
             _changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");

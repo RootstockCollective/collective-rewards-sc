@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { ChangeExecutor } from "../../src/governance/ChangeExecutor.sol";
+import { ChangeExecutorRootstockCollective } from "../../src/governance/ChangeExecutorRootstockCollective.sol";
 
 /**
  * @title ChangeExecutorMock
  *   @dev Test only contract to mock Governor behavior
  */
-contract ChangeExecutorMock is ChangeExecutor {
+contract ChangeExecutorMock is ChangeExecutorRootstockCollective {
     bool public isAuthorized;
 
     function isAuthorizedChanger(address changer_) external view override returns (bool) {

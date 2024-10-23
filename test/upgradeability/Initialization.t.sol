@@ -52,10 +52,10 @@ contract InitializationTest is BaseTest {
     }
 
     /**
-     * SCENARIO: ChangeExecutor cannot be initialized twice
+     * SCENARIO: ChangeExecutorRootstockCollective cannot be initialized twice
      */
     function test_RevertChangeExecutorInitialize() public {
-        // GIVEN a ChangeExecutor initialized
+        // GIVEN a ChangeExecutorRootstockCollective initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);

@@ -6,7 +6,7 @@ import { Governed } from "../../src/governance/Governed.sol";
 
 contract ProtectedTest is BaseTest {
     /**
-     * SCENARIO: Governor can execute a change without using the ChangeExecutor
+     * SCENARIO: Governor can execute a change without using the ChangeExecutorRootstockCollective
      */
     function test_GovernorHasPermissions() public {
         // GIVEN there is not a changer authorized
@@ -30,11 +30,11 @@ contract ProtectedTest is BaseTest {
     }
 
     /**
-     * SCENARIO: ChangeExecutor upgrade should revert if is not called by the governor
+     * SCENARIO: ChangeExecutorRootstockCollective upgrade should revert if is not called by the governor
      */
     function test_RevertChangeExecutorUpgradeNotGovernor() public {
         // GIVEN a not Governor address
-        //  WHEN tries to upgrade the ChangeExecutor
+        //  WHEN tries to upgrade the ChangeExecutorRootstockCollective
         //   THEN tx reverts because NotGovernor
         vm.expectRevert(Governed.NotGovernor.selector);
         address _newImplementation = makeAddr("newImplementation");

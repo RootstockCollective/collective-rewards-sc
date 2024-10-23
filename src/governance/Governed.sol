@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { IChangeExecutor } from "../interfaces/IChangeExecutor.sol";
+import { IChangeExecutorRootstockCollective } from "../interfaces/IChangeExecutorRootstockCollective.sol";
 
 /**
  * @title Governed
@@ -44,7 +44,7 @@ abstract contract Governed {
     // -----------------------------
 
     /// @notice contract that can articulate more complex changes executed from the governor
-    IChangeExecutor public changeExecutor;
+    IChangeExecutorRootstockCollective public changeExecutor;
 
     // -----------------------------
     // ---- External Functions -----

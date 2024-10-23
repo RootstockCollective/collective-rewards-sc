@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { SponsorsManager } from "../../src/SponsorsManager.sol";
 import { RewardDistributor } from "../../src/RewardDistributor.sol";
 import { Gauge } from "../../src/gauge/Gauge.sol";
-import { ChangeExecutor } from "../../src/governance/ChangeExecutor.sol";
+import { ChangeExecutorRootstockCollective } from "../../src/governance/ChangeExecutorRootstockCollective.sol";
 import { SimplifiedRewardDistributorRootstockCollective } from
     "../../src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
 
@@ -54,9 +54,9 @@ contract GaugeUpgradeMock is Gauge, UpgradeableMock {
 
 /**
  * @title ChangeExecutorUpgradeMock
- * @dev Only for upgradeability testing purposes. Extends ChangeExecutor adding a new variable.
+ * @dev Only for upgradeability testing purposes. Extends ChangeExecutorRootstockCollective adding a new variable.
  */
-contract ChangeExecutorUpgradeMock is ChangeExecutor, UpgradeableMock {
+contract ChangeExecutorUpgradeMock is ChangeExecutorRootstockCollective, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
         return newVariable + uint256(uint160(governor()));
     }

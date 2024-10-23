@@ -11,7 +11,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
     address internal _newBuilder = makeAddr("newBuilder");
 
     function _setUp() internal override {
-        // GIVEN the ChangeExecutor without isAuthorized mock
+        // GIVEN the ChangeExecutorRootstockCollective without isAuthorized mock
         changeExecutorMock.setIsAuthorized(false);
         // AND a WhitelistBuilderChanger deployed for a new builder
         _changer = new WhitelistBuilderChangerTemplate(sponsorsManager, _newBuilder);

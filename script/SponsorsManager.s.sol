@@ -10,7 +10,7 @@ contract Deploy is Broadcaster {
         address _kycApprover = vm.envAddress("KYC_APPROVER_ADDRESS");
         address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
-        address _changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
+        address _changeExecutorAddress = vm.envOr("ChangeExecutorRootstockCollective", address(0));
         if (_changeExecutorAddress == address(0)) {
             _changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }

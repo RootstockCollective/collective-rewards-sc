@@ -7,7 +7,7 @@ import { GaugeBeacon } from "src/gauge/GaugeBeacon.sol";
 
 contract Deploy is Broadcaster {
     function run() public returns (GaugeBeacon) {
-        address _changeExecutorAddress = vm.envOr("ChangeExecutor", address(0));
+        address _changeExecutorAddress = vm.envOr("ChangeExecutorRootstockCollective", address(0));
         if (_changeExecutorAddress == address(0)) {
             _changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
         }

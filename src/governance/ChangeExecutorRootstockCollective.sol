@@ -4,16 +4,16 @@ pragma solidity 0.8.20;
 import { Governed } from "./Governed.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import { IChangeContract } from "../interfaces/IChangeContract.sol";
+import { IChangeContractRootstockCollective } from "../interfaces/IChangeContractRootstockCollective.sol";
 
 /**
- * @title ChangeExecutor
+ * @title ChangeExecutorRootstockCollective
  * @notice This contract is used to handle changes on the project when multiple function calls
  *  or validation are required.
  *  All the governed protected function can be executed when are called through this contract but only can be performed
  *  by the Governor.
  */
-contract ChangeExecutor is ReentrancyGuardUpgradeable, UUPSUpgradeable, Governed {
+contract ChangeExecutorRootstockCollective is ReentrancyGuardUpgradeable, UUPSUpgradeable, Governed {
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
@@ -58,7 +58,7 @@ contract ChangeExecutor is ReentrancyGuardUpgradeable, UUPSUpgradeable, Governed
      * @dev reverts if is not called by the Governor
      * @param changeContract_ Address of the contract that will execute the changes
      */
-    function executeChange(IChangeContract changeContract_) external {
+    function executeChange(IChangeContractRootstockCollective changeContract_) external {
         _executeChange(changeContract_);
     }
 
@@ -80,7 +80,7 @@ contract ChangeExecutor is ReentrancyGuardUpgradeable, UUPSUpgradeable, Governed
      * @dev reverts if is not called by the Governor
      * @param changeContract_ Address of the contract that will execute the changes
      */
-    function _executeChange(IChangeContract changeContract_) internal nonReentrant onlyGovernor {
+    function _executeChange(IChangeContractRootstockCollective changeContract_) internal nonReentrant onlyGovernor {
         _enableChangeContract(changeContract_);
         changeContract_.execute();
         _disableChangeContract();
@@ -99,7 +99,7 @@ contract ChangeExecutor is ReentrancyGuardUpgradeable, UUPSUpgradeable, Governed
      * @notice Authorize the changeContract address to make changes
      * @param changeContract_ Address of the contract that will be authorized
      */
-    function _enableChangeContract(IChangeContract changeContract_) internal {
+    function _enableChangeContract(IChangeContractRootstockCollective changeContract_) internal {
         _currentChangeContract = address(changeContract_);
     }
 

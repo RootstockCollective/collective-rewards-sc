@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 /**
- * @title IChangeContract
+ * @title IChangeContractRootstockCollective
  *   @notice This interface is the one used by the governance system.
  *   @dev If you plan to do some changes to a system governed by this project you should write a contract
  *   that does those changes, like a recipe. This contract MUST not have ANY kind of public or external function
@@ -10,7 +10,7 @@ pragma solidity 0.8.20;
  * governance
  *   system is fully in place.
  */
-interface IChangeContract {
+interface IChangeContractRootstockCollective {
     /**
      * @notice Override this function with a recipe of the changes to be done when this ChangeContract
      * is executed
