@@ -2,8 +2,11 @@
 pragma solidity 0.8.20;
 
 import { BaseFuzz } from "./BaseFuzz.sol";
+import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 
 contract RevokeBuilderFuzzTest is BaseFuzz {
+    using stdStorage for StdStorage;
+
     uint32 public constant MAX_EPOCH_DURATION = 365 days;
     mapping(address builder_ => RevokeState revokedState_) public revokedBuilders;
 
@@ -25,10 +28,13 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
     )
         public
     {
-        randomTime_ = bound(randomTime_, 0, 2 * epochDuration);
+        randomTime_ = bound(randomTime_, 0, epochDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
+
+        // use a low kickbackCooldown to let apply it
+        stdstore.target(address(sponsorsManager)).sig("kickbackCooldown()").checked_write(1 days);
 
         uint256[] memory _kickbackBefore = new uint256[](builders.length);
         for (uint256 i = 0; i < builders.length; i++) {
@@ -36,13 +42,14 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         }
 
         /// AND a random time passes
-        skip(randomTime_);
+        _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
         _randomRevoke(seed_, sponsorsManager.totalPotentialReward());
+        uint256 _revokeTimestamp = block.timestamp;
 
         // AND a random time passes
-        skip(randomTime_);
+        _skipLimitPeriodFinish(randomTime_);
 
         // AND permit randomly
         _randomPermit(seed_, sponsorsManager.totalPotentialReward());
@@ -51,7 +58,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         for (uint256 i = 0; i < builders.length; i++) {
             if (
                 revokedBuilders[builders[i]] == RevokeState.permitted
-                    && randomTime_ >= sponsorsManager.kickbackCooldown()
+                    && block.timestamp - _revokeTimestamp >= sponsorsManager.kickbackCooldown()
             ) {
                 assertEq(sponsorsManager.getKickbackToApply(builders[i]), 0.1 ether);
             } else {
@@ -89,13 +96,13 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
     )
         public
     {
-        randomTime_ = bound(randomTime_, 0, 2 * epochDuration);
+        randomTime_ = bound(randomTime_, 0, epochDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
 
         // AND a random time passes
-        skip(randomTime_);
+        _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
         uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, sponsorsManager.totalPotentialReward());
@@ -104,7 +111,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND a random time passes
-        skip(randomTime_);
+        _skipLimitPeriodFinish(randomTime_);
 
         // AND sponsors randomly modify their allocations
         for (uint256 i = 0; i < sponsorsArray.length; i++) {
@@ -130,7 +137,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND a random time passes
-        skip(randomTime_);
+        _skipLimitPeriodFinish(randomTime_);
 
         // AND permit randomly
         _expectedTotalPotentialReward = _randomPermit(seed_, _expectedTotalPotentialReward);
@@ -167,14 +174,14 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
     )
         public
     {
-        randomTime_ = bound(randomTime_, 0, 2 * epochDuration);
+        randomTime_ = bound(randomTime_, 0, epochDuration);
         newEpochDuration_ = uint32(bound(newEpochDuration_, 2 hours, MAX_EPOCH_DURATION));
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
 
         // AND a random time passes
-        skip(randomTime_);
+        _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
         uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, sponsorsManager.totalPotentialReward());
@@ -183,13 +190,13 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND a random time passes
-        skip(randomTime_);
+        _skipLimitPeriodFinish(randomTime_);
 
         // AND governor sets a random epoch duration
         sponsorsManager.setEpochDuration(newEpochDuration_, 0);
 
         // AND a random time passes
-        skip(randomTime_);
+        _skipLimitPeriodFinish(randomTime_);
 
         // AND permit randomly
         _expectedTotalPotentialReward = _randomPermit(seed_, _expectedTotalPotentialReward);
@@ -224,13 +231,13 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
     )
         public
     {
-        randomTime_ = bound(randomTime_, 0, 2 * epochDuration);
+        randomTime_ = bound(randomTime_, 0, epochDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
 
         // AND a random time passes
-        skip(randomTime_);
+        _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
         _randomRevoke(seed_, sponsorsManager.totalPotentialReward());
@@ -242,7 +249,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND a random time passes
-        skip(randomTime_);
+        _skipLimitPeriodFinish(randomTime_);
 
         // AND permit randomly
         _randomPermit(seed_, sponsorsManager.totalPotentialReward());
@@ -257,6 +264,15 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         }
         // THEN totalPotentialReward is the entire epoch of non revoked gauges
         assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
+    }
+
+    /**
+     * @notice skip some random time but using the current epoch as a limit
+     *  Used to avoid jump to another epoch because permitBuilder will fail if there is no distribution
+     * @param randomTime_ time to skip
+     */
+    function _skipLimitPeriodFinish(uint256 randomTime_) internal {
+        skip(randomTime_ % (sponsorsManager.periodFinish() - block.timestamp - 1));
     }
 
     function _randomRevoke(uint256 seed_, uint256 expectedTotalPotentialReward_) internal returns (uint256) {
