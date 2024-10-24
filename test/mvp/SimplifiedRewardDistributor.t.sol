@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { MVPBaseTest } from "./MVPBaseTest.sol";
-import { Governed } from "../../src/governance/Governed.sol";
+import { Governed } from "src/mvp/Governed.sol";
 import { UtilsLib } from "../../src/libraries/UtilsLib.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { SimplifiedRewardDistributorRootstockCollective } from
