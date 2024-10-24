@@ -193,6 +193,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _skipLimitPeriodFinish(randomTime_);
 
         // AND governor sets a random epoch duration
+        vm.prank(governor);
         sponsorsManager.setEpochDuration(newEpochDuration_, 0);
 
         // AND a random time passes

@@ -3,8 +3,7 @@ pragma solidity 0.8.20;
 
 import { BaseTest, Gauge } from "./BaseTest.sol";
 import { BuilderRegistry } from "../src/BuilderRegistry.sol";
-import { Governed } from "../src/governance/Governed.sol";
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { IGoverned } from "src/interfaces/IGoverned.sol";
 
 contract BuilderRegistryTest is BaseTest {
     // -----------------------------
@@ -21,29 +20,30 @@ contract BuilderRegistryTest is BaseTest {
     event Permitted(address indexed builder_, uint256 kickback_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
-    function test_OnlyOwner() public {
+    function test_OnlyKycApprover() public {
         // GIVEN a sponsor alice
         vm.startPrank(alice);
 
         // WHEN alice calls activateBuilder
         //  THEN tx reverts because caller is not the owner
-        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        vm.expectRevert(IGoverned.NotKycApprover.selector);
         sponsorsManager.activateBuilder(builder, builder, 0);
 
         // WHEN alice calls revokeBuilderKYC
         //  THEN tx reverts because caller is not the owner
-        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        vm.expectRevert(IGoverned.NotKycApprover.selector);
         sponsorsManager.revokeBuilderKYC(builder);
 
         // WHEN alice calls pauseBuilder
         //  THEN tx reverts because caller is not the owner
-        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        vm.expectRevert(IGoverned.NotKycApprover.selector);
         sponsorsManager.pauseBuilder(builder, "paused");
 
         // WHEN alice calls unpauseBuilder
         //  THEN tx reverts because caller is not the owner
-        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        vm.expectRevert(IGoverned.NotKycApprover.selector);
         sponsorsManager.unpauseBuilder(builder);
+        vm.stopPrank();
     }
     /**
      * SCENARIO: functions protected by OnlyGovernor should revert when are not
@@ -54,18 +54,16 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN a sponsor alice
         vm.startPrank(alice);
 
-        // GIVEN mock authorized is false
-        changeExecutorMock.setIsAuthorized(false);
-
         // WHEN alice calls whitelistBuilder
         //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
+        vm.expectRevert(IGoverned.NotAuthorizedChanger.selector);
         sponsorsManager.whitelistBuilder(builder);
 
         // WHEN alice calls dewhitelistBuilder
         //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
+        vm.expectRevert(IGoverned.NotAuthorizedChanger.selector);
         sponsorsManager.dewhitelistBuilder(builder);
+        vm.stopPrank();
     }
 
     /**
@@ -85,17 +83,18 @@ contract BuilderRegistryTest is BaseTest {
         //  THEN tx reverts because caller is not a builder
         vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
         sponsorsManager.permitBuilder(1 ether);
+        vm.stopPrank();
 
         // WHEN kycApprover calls approveBuilderKYC for alice
         //  THEN tx reverts because caller is not a builder
-        vm.startPrank(kycApprover);
         vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
+        vm.prank(kycApprover);
         sponsorsManager.approveBuilderKYC(alice);
-        vm.stopPrank();
 
         // WHEN governor calls dewhitelistBuilder for alice
         //  THEN tx reverts because caller is not a builder
         vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(alice);
     }
 
@@ -194,12 +193,13 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN calls whitelistBuilder
         //  THEN a GaugeCreated event is emitted
         vm.expectEmit(true, false, true, true); // ignore new gauge address
-        emit GaugeCreated(_newBuilder, /*ignored*/ address(0), address(this));
+        emit GaugeCreated(_newBuilder, /*ignored*/ address(0), governor);
 
         //  THEN Whitelisted event is emitted
         vm.expectEmit();
         emit Whitelisted(_newBuilder);
 
+        vm.prank(governor);
         Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
 
         // THEN new gauge is assigned to the new builder
@@ -219,6 +219,7 @@ contract BuilderRegistryTest is BaseTest {
         //  WHEN tries to whitelistBuilder
         //   THEN tx reverts because is already whitelisted
         vm.expectRevert(BuilderRegistry.AlreadyWhitelisted.selector);
+        vm.prank(governor);
         sponsorsManager.whitelistBuilder(builder);
     }
 
@@ -679,6 +680,7 @@ contract BuilderRegistryTest is BaseTest {
         //   THEN Dewhitelisted event is emitted
         vm.expectEmit();
         emit Dewhitelisted(builder);
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(builder);
 
         // THEN builder is not whitelisted
@@ -701,11 +703,13 @@ contract BuilderRegistryTest is BaseTest {
      */
     function test_RevertsDewhitelistBuilder() public {
         // GIVEN a de-whitelisted builder
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(builder);
 
         //  WHEN governor calls dewhitelistBuilder
         //   THEN tx reverts because is not whitelisted
         vm.expectRevert(BuilderRegistry.NotWhitelisted.selector);
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(builder);
     }
 
@@ -714,11 +718,13 @@ contract BuilderRegistryTest is BaseTest {
      */
     function test_RevertWhitelistingBuilderTwice() public {
         // GIVEN a de-whitelisted builder
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(builder);
 
         //  WHEN governor calls whitelistBuilder
         //  THEN tx reverts because builder already exists
         vm.expectRevert(BuilderRegistry.BuilderAlreadyExists.selector);
+        vm.prank(governor);
         sponsorsManager.whitelistBuilder(builder);
     }
 
@@ -727,6 +733,7 @@ contract BuilderRegistryTest is BaseTest {
      */
     function test_RevertRevokeBuilderKYCNotWhitelisted() public {
         // GIVEN a de-whitelisted builder
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(builder);
 
         //  WHEN builders tries to revoke itself
@@ -741,11 +748,12 @@ contract BuilderRegistryTest is BaseTest {
      */
     function test_RevertPermitBuilderNotWhitelisted() public {
         // GIVEN a de-whitelisted builder
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(builder);
 
         //  WHEN builders tries to permit it
         //   THEN tx reverts because is not whitelisted
-        vm.startPrank(builder);
+        vm.prank(builder);
         vm.expectRevert(BuilderRegistry.NotWhitelisted.selector);
         sponsorsManager.permitBuilder(0.1 ether);
     }
@@ -755,6 +763,7 @@ contract BuilderRegistryTest is BaseTest {
      */
     function test_PauseDewhitelistedBuilder() public {
         // GIVEN a de-whitelisted builder
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(builder);
 
         // AND kycApprover calls pauseBuilder
@@ -780,10 +789,11 @@ contract BuilderRegistryTest is BaseTest {
      */
     function test_DewhitelistPausedBuilder() public {
         // GIVEN paused builder
-        vm.startPrank(kycApprover);
+        vm.prank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "paused");
 
         // AND governor calls dewhitelistBuilder
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(builder);
         (,, bool _whitelisted, bool _paused,,,) = sponsorsManager.builderState(builder);
         // THEN builder is paused
@@ -797,6 +807,7 @@ contract BuilderRegistryTest is BaseTest {
      */
     function test_KYCRevokeDewhitelistedBuilder() public {
         // GIVEN a de-whitelisted builder
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(builder);
 
         // AND kycApprover calls revokeBuilderKYC
@@ -815,6 +826,7 @@ contract BuilderRegistryTest is BaseTest {
      */
     function test_KYCApproveDewhitelistedBuilder() public {
         // GIVEN a de-whitelisted and KYC revoked builder
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(builder);
         vm.startPrank(kycApprover);
         sponsorsManager.revokeBuilderKYC(builder);
