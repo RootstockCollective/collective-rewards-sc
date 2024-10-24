@@ -1,6 +1,6 @@
 # ChangeExecutor
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/3fced2c910b8ad44b593fbaf21738ad47cc37c13/src/governance/ChangeExecutor.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b70765ceccba41d63eea90a69573cd6a3445d8c8/src/governance/ChangeExecutor.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable, UUPSUpgradeable, [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
