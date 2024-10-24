@@ -3,11 +3,11 @@ pragma solidity 0.8.20;
 
 import { BaseHandler, TimeManager } from "./BaseHandler.sol";
 import { BaseTest } from "../../BaseTest.sol";
-import { ERC20Mock } from "test/mock/ERC20Mock.sol";
+import { StakingTokenMock } from "../../mock/StakingTokenMock.sol";
 import { Gauge } from "src/gauge/Gauge.sol";
 
 contract AllocateHandler is BaseHandler {
-    ERC20Mock public stakingToken;
+    StakingTokenMock public stakingToken;
 
     address[] public sponsors;
     mapping(address sponsor => bool exists) public sponsorExists;
