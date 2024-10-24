@@ -6,6 +6,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { BuilderRegistry } from "./BuilderRegistry.sol";
+import { ICollectiveRewardsCheck } from "./interfaces/ICollectiveRewardsCheck.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
 
@@ -13,7 +14,7 @@ import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
  * @title SponsorsManager
  * @notice Creates gauges, manages sponsors votes and distribute rewards
  */
-contract SponsorsManager is BuilderRegistry {
+contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
     // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
     uint256 internal constant _MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
@@ -119,6 +120,25 @@ contract SponsorsManager is BuilderRegistry {
     // -----------------------------
     // ---- External Functions -----
     // -----------------------------
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId_) public view override returns (bool) {
+        return interfaceId_ == type(ICollectiveRewardsCheck).interfaceId || super.supportsInterface(interfaceId_);
+    }
+
+    /**
+     * @notice returns true if can withdraw, remaining balance should exceed the current allocation
+     * @param targetAddress_ address who wants to withdraw stakingToken
+     * @param value_ amount of stakingToken to withdraw
+     */
+    function canWithdraw(address targetAddress_, uint256 value_) external view returns (bool) {
+        uint256 _allocation = sponsorTotalAllocation[targetAddress_];
+        if (_allocation == 0) return true;
+
+        return stakingToken.balanceOf(targetAddress_) >= _allocation + value_;
+    }
 
     /**
      * @notice allocates votes for a gauge

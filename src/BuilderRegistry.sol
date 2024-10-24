@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import { EpochTimeKeeper } from "./EpochTimeKeeper.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
+import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { GaugeFactory } from "./gauge/GaugeFactory.sol";
@@ -12,7 +13,7 @@ import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
  */
-abstract contract BuilderRegistry is EpochTimeKeeper {
+abstract contract BuilderRegistry is EpochTimeKeeper, ERC165Upgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_KICKBACK = UtilsLib._PRECISION;
@@ -136,6 +137,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper {
         onlyInitializing
     {
         __EpochTimeKeeper_init(governanceManager_, epochDuration_, epochStartOffset_);
+        __ERC165_init();
         gaugeFactory = GaugeFactory(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
         kickbackCooldown = kickbackCooldown_;
