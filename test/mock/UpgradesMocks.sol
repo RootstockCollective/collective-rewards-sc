@@ -38,7 +38,7 @@ contract SponsorsManagerUpgradeMock is SponsorsManager, UpgradeableMock {
  */
 contract RewardDistributorUpgradeMock is RewardDistributor, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
-        return newVariable + uint256(uint160(foundationTreasury));
+        return newVariable + uint256(uint160(_governed.foundationTreasury()));
     }
 }
 
@@ -58,7 +58,7 @@ contract GaugeUpgradeMock is Gauge, UpgradeableMock {
  */
 contract ChangeExecutorUpgradeMock is ChangeExecutorRootstockCollective, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
-        return newVariable + uint256(uint160(governor()));
+        return newVariable + uint256(uint160(_governed.governor()));
     }
 }
 
