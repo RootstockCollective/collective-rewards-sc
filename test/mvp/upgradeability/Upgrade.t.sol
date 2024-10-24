@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { MVPBaseTest } from "../MVPBaseTest.sol";
-import { SimplifiedRewardDistributorUpgradeMock } from "../../mock/UpgradesMocks.sol";
+import { SimplifiedRewardDistributorUpgradeMock } from "test/mock/UpgradesMocks.sol";
 
 contract MVPUpgradeTest is MVPBaseTest {
     /**
