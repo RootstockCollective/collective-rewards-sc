@@ -1,3 +1,3 @@
 # Contents
 
-- [SimplifiedRewardDistributor](SimplifiedRewardDistributor.sol/contract.SimplifiedRewardDistributor.md)
+- [SimplifiedRewardDistributorRootstockCollective](SimplifiedRewardDistributorRootstockCollective.sol/contract.SimplifiedRewardDistributorRootstockCollective.md)
