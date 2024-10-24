@@ -4,16 +4,16 @@ pragma solidity 0.8.20;
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
+import { IGoverned } from "../src/interfaces/IGoverned.sol";
 
 contract Deploy is Broadcaster {
     function run() public returns (RewardDistributor proxy_, RewardDistributor implementation_) {
-        address _changeExecutorAddress = vm.envOr("ChangeExecutorRootstockCollective", address(0));
-        if (_changeExecutorAddress == address(0)) {
-            _changeExecutorAddress = vm.envAddress("CHANGE_EXECUTOR_ADDRESS");
+        address _governed = vm.envOr("Governed", address(0));
+        if (_governed == address(0)) {
+            _governed = vm.envAddress("ACCESS_CONTROL_ADDRESS");
         }
-        address _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
 
-        (proxy_, implementation_) = run(_changeExecutorAddress, _foundationTreasuryAddress);
+        (proxy_, implementation_) = run(_governed);
 
         address _sponsorsManagerAddress = vm.envOr("SponsorsManager", address(0));
         if (_sponsorsManagerAddress == address(0)) {
@@ -23,19 +23,10 @@ contract Deploy is Broadcaster {
         proxy_.initializeBIMAddresses(address(_sponsorsManagerAddress));
     }
 
-    function run(
-        address changeExecutor_,
-        address foundationTreasury_
-    )
-        public
-        broadcast
-        returns (RewardDistributor, RewardDistributor)
-    {
-        require(changeExecutor_ != address(0), "Change executor address cannot be empty");
-        require(foundationTreasury_ != address(0), "Foundation Treasury address cannot be empty");
+    function run(address governed_) public broadcast returns (RewardDistributor, RewardDistributor) {
+        require(governed_ != address(0), "Access control address cannot be empty");
 
-        bytes memory _initializerData =
-            abi.encodeCall(RewardDistributor.initialize, (changeExecutor_, foundationTreasury_));
+        bytes memory _initializerData = abi.encodeCall(RewardDistributor.initialize, (IGoverned(governed_)));
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {
