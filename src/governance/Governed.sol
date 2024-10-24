@@ -1,41 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { IChangeExecutorRootstockCollective } from "../interfaces/IChangeExecutorRootstockCollective.sol";
+import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { IGoverned } from "src/interfaces/IGoverned.sol";
 
 /**
  * @title Governed
- * @notice Base contract to be inherited by governed contracts
- * @dev This contract is not usable on its own since it does not have any _productive useful_ behavior
- * The only purpose of this contract is to define some useful modifiers and functions to be used on the
- * governance aspect of the child contract
+ * @notice This contract manages roles
+ * @dev This contract is upgradeable via the UUPS proxy pattern.
  */
-abstract contract Governed {
-    // -----------------------------
-    // ------- Custom Errors -------
-    // -----------------------------
-    error NotGovernorOrAuthorizedChanger();
-    error NotGovernor();
-
+contract Governed is Ownable2StepUpgradeable, UUPSUpgradeable, IGoverned {
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
 
-    /**
-     * @notice Modifier that protects the function
-     * @dev You should use this modifier in any function that should be called through
-     * the governance system
-     */
-    modifier onlyGovernorOrAuthorizedChanger() {
-        _checkIfGovernorOrAuthorizedChanger();
+    modifier onlyValidAddress(address account_) {
+        if (account_ == address(0)) revert InvalidAddress(account_);
         _;
     }
 
-    /**
-     * @notice Reverts if caller is not the governor
-     */
     modifier onlyGovernor() {
-        if (msg.sender != governor()) revert NotGovernor();
+        if (msg.sender != governor) revert NotGovernor();
+        _;
+    }
+
+    modifier onlyChangerAdmin() {
+        if (msg.sender != changerAdmin) revert NotChangerAdmin();
         _;
     }
 
@@ -43,38 +34,172 @@ abstract contract Governed {
     // ---------- Storage ----------
     // -----------------------------
 
-    /// @notice contract that can articulate more complex changes executed from the governor
-    IChangeExecutorRootstockCollective public changeExecutor;
+    /// @notice The address of the governor.
+    address public governor;
+    /// @notice The address of the changer admin.
+    address public changerAdmin;
+    /// @notice The address of the changer.
+    address public changer;
+    /// @notice The address of the foundation treasury.
+    address public foundationTreasury;
+    /// @notice The address of the KYC approver.
+    address public kycApprover;
+
+    /**
+     * @dev Disables initializers for the contract. This ensures the contract is upgradeable.
+     */
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /**
+     * @notice Initializes the contract with the initial governor, foundation treasury, and KYC approver.
+     * @dev Used instead of a constructor for upgradeable contracts.
+     * @param governor_ The initial governor address.
+     * @param foundationTreasury_ The initial foundation treasury address.
+     * @param kycApprover_ The initial KYC approver address.
+     */
+    function initialize(address governor_, address foundationTreasury_, address kycApprover_) public initializer {
+        __UUPSUpgradeable_init();
+        __Ownable2Step_init();
+
+        _updateGovernor(governor_);
+        _updateFoundationTreasury(foundationTreasury_);
+        _updateKYCApprover(kycApprover_);
+
+        // Governed contract is dependency of the ChangeExecutor during construction
+        // So changer admin can only be set after initialization
+        changerAdmin = address(0);
+    }
 
     // -----------------------------
     // ---- External Functions -----
     // -----------------------------
 
     /**
-     * @notice maintains Governed interface. Returns governed address
+     * @notice Allows the governor to update its own role to a new address.
+     * @param governor_ The new governor address.
+     * @dev Reverts if caller is not the current governor.
      */
-    function governor() public view virtual returns (address) { }
+    function updateGovernor(address governor_) public onlyGovernor {
+        _updateGovernor(governor_);
+    }
+
+    /**
+     * @notice Allows the governor to update the changer admin.
+     * @param changerAdmin_ The new changer admin address.
+     * @dev Only callable by the governor. Reverts if the new address is invalid.
+     */
+    function updateChangerAdmin(address changerAdmin_) public onlyGovernor onlyValidAddress(changerAdmin_) {
+        changerAdmin = changerAdmin_;
+    }
+
+    /**
+     * @notice Allows the changer admin to assign a new changer.
+     * @param changer_ The new changer address.
+     * @dev Only callable by the changer admin. Allows zero address to be set to prevent
+     */
+    function updateChanger(address changer_) public onlyChangerAdmin {
+        changer = changer_;
+    }
+
+    /**
+     * @notice Allows the governor to update the foundation treasury address.
+     * @param foundationTreasury_ The new foundation treasury address.
+     * @dev Only callable by the governor. Reverts if the new address is invalid.
+     */
+    function updateFoundationTreasury(address foundationTreasury_) public onlyGovernor {
+        _updateFoundationTreasury(foundationTreasury_);
+    }
+
+    /**
+     * @notice Allows the governor to update the KYC approver address.
+     * @param kycApprover_ The new KYC approver address.
+     * @dev Only callable by the governor. Reverts if the new address is invalid.
+     */
+    function updateKYCApprover(address kycApprover_) public onlyGovernor {
+        _updateKYCApprover(kycApprover_);
+    }
+
+    /**
+     * @notice Validates if an account is authorized as the governor.
+     * @param account_ The address to be validated.
+     * @dev Reverts with `NotGovernor` if the account is not the governor.
+     */
+    function validateGovernor(address account_) external view {
+        if (account_ != governor) revert NotGovernor();
+    }
+
+    /**
+     * @notice Validates if an account is authorized as the changer.
+     * @param account_ The address to be validated.
+     * @dev Reverts with `NotAuthorizedChanger` if the account is not the changer or governor.
+     */
+    function validateChanger(address account_) external view {
+        if (account_ != changer && account_ != governor) revert NotAuthorizedChanger();
+    }
+
+    /**
+     * @notice Validates if an account is authorized as the KYC approver.
+     * @param account_ The address to be validated.
+     * @dev Reverts with `NotKycApprover` if the account is not the KYC approver.
+     */
+    function validateKycApprover(address account_) external view {
+        if (account_ != kycApprover) revert NotKycApprover();
+    }
+
+    /**
+     * @notice Validates if the caller is the foundation treasury.
+     * @dev Reverts with `NotFoundationTreasury` if the caller is not the foundation treasury.
+     */
+    function validateFoundationTreasury(address account_) external view {
+        if (account_ != foundationTreasury) revert NotFoundationTreasury();
+    }
+
+    /**
+     * @notice Validates if the caller is the changer admin.
+     * @dev Reverts with `NotChangerAdmin` if the caller is not the changer admin.
+     */
+    function validateChangerAdmin(address account_) public view {
+        if (account_ != changerAdmin) revert NotChangerAdmin();
+    }
 
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
 
     /**
-     * @notice Checks if the msg sender is the governor or an authorized changer, reverts otherwise
+     * @dev Updates the governor address.
+     * @param governor_ The new governor address.
+     * @dev Reverts if the new address is invalid (zero address).
      */
-    function _checkIfGovernorOrAuthorizedChanger() internal view {
-        if (msg.sender != governor() && !changeExecutor.isAuthorizedChanger(msg.sender)) {
-            revert NotGovernorOrAuthorizedChanger();
-        }
+    function _updateGovernor(address governor_) private onlyValidAddress(governor_) {
+        governor = governor_;
     }
 
     /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     * @dev Updates the foundation treasury address.
+     * @param foundationTreasury_ The new foundation treasury address.
+     * @dev Reverts if the new address is invalid (zero address).
      */
+    function _updateFoundationTreasury(address foundationTreasury_) private onlyValidAddress(foundationTreasury_) {
+        foundationTreasury = foundationTreasury_;
+    }
 
-    // Purposely left unused to save some state space to allow for future upgrades
-    // slither-disable-next-line unused-state
-    uint256[50] private __gap;
+    /**
+     * @dev Updates the KYC approver address.
+     * @param kycApprover_ The new KYC approver address.
+     * @dev Reverts if the new address is invalid (zero address).
+     */
+    function _updateKYCApprover(address kycApprover_) private onlyValidAddress(kycApprover_) {
+        kycApprover = kycApprover_;
+    }
+
+    /**
+     * @notice Authorizes an upgrade to a new contract implementation.
+     * @param newImplementation_ The address of the new implementation contract.
+     * @dev Only callable by the governor.
+     */
+    function _authorizeUpgrade(address newImplementation_) internal override onlyGovernor { }
 }
