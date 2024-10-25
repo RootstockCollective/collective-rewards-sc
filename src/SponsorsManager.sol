@@ -376,10 +376,19 @@ contract SponsorsManager is BuilderRegistry {
         // [N] = [N] * [N] / [N]
         uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
         uint256 _builderKickback = getKickbackToApply(gaugeToBuilder[gauge_]);
-        IERC20(rewardToken).approve(address(gauge_), _amountERC20);
         return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
             _amountERC20, _builderKickback, periodFinish_, epochStart_, epochDuration_
         );
+    }
+
+    /**
+     * @notice approves rewardTokens to a given gauge
+     * @dev give full allowance when it is whitelisted and remove it when it is dewhitelisted
+     * @param gauge_ gauge contract to approve rewardTokens
+     * @param value_ amount of rewardTokens to approve
+     */
+    function _rewardTokenApprove(address gauge_, uint256 value_) internal override {
+        IERC20(rewardToken).approve(gauge_, value_);
     }
 
     /**
