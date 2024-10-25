@@ -226,6 +226,9 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
 
         builderState[builder_].whitelisted = true;
         gauge_ = _createGauge(builder_);
+
+        _rewardTokenApprove(address(gauge_), type(uint256).max);
+
         emit Whitelisted(builder_);
     }
 
@@ -244,6 +247,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
         builderState[builder_].whitelisted = false;
 
         _haltGauge(_gauge);
+        _rewardTokenApprove(address(_gauge), 0);
 
         emit Dewhitelisted(builder_);
     }
@@ -502,6 +506,12 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
         return _builderState.kycApproved && _builderState.whitelisted && !_builderState.revoked;
     }
 
+    /**
+     * @notice SponsorsManager override this function to modify gauge rewardToken allowance
+     * @param gauge_ gauge contract to approve rewardTokens
+     * @param value_ amount of rewardTokens to approve
+     */
+    function _rewardTokenApprove(address gauge_, uint256 value_) internal virtual { }
     /**
      * @notice SponsorsManager override this function to remove its shares
      * @param gauge_ gauge contract to be halted
