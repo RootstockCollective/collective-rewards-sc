@@ -198,60 +198,25 @@ contract SponsorsManager is BuilderRegistry {
      *  until all the gauges were distributed
      * @dev reverts if is called outside the distribution window
      *  reverts if it is called during the distribution period
+     * @return finished_ true if distribution has finished
      */
-    function startDistribution() external onlyInDistributionWindow notInDistributionPeriod {
-        onDistributionPeriod = true;
+    function startDistribution() external onlyInDistributionWindow notInDistributionPeriod returns (bool finished_) {
         emit RewardDistributionStarted(msg.sender);
-        distribute();
+        finished_ = _distribute();
+        onDistributionPeriod = !finished_;
     }
 
     /**
-     * @notice distribute accumulated reward tokens to the gauges
+     * @notice continues pagination to distribute accumulated reward tokens to the gauges
      * @dev reverts if distribution period has not yet started
      *  This function is paginated and it finishes once all gauges distribution are completed,
      *  ending the distribution period and voting restrictions.
+     * @return finished_ true if distribution has finished
      */
-    function distribute() public {
+    function distribute() external returns (bool finished_) {
         if (onDistributionPeriod == false) revert DistributionPeriodDidNotStart();
-        uint256 _newTotalPotentialReward = tempTotalPotentialReward;
-        uint256 _gaugeIndex = indexLastGaugeDistributed;
-        uint256 _gaugesLength = getGaugesLength();
-        uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
-
-        // cache variables read in the loop
-        uint256 _rewardsERC20 = rewardsERC20;
-        uint256 _rewardsCoinbase = rewardsCoinbase;
-        uint256 _totalPotentialReward = totalPotentialReward;
-        uint256 __periodFinish = _periodFinish;
-        (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
-        // loop through all pending distributions
-        while (_gaugeIndex < _lastDistribution) {
-            _newTotalPotentialReward += _distribute(
-                Gauge(getGaugeAt(_gaugeIndex)),
-                _rewardsERC20,
-                _rewardsCoinbase,
-                _totalPotentialReward,
-                __periodFinish,
-                _epochStart,
-                _epochDuration
-            );
-            _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
-        }
-        emit RewardDistributed(msg.sender);
-        // all the gauges were distributed, so distribution period is finished
-        if (_lastDistribution == _gaugesLength) {
-            emit RewardDistributionFinished(msg.sender);
-            indexLastGaugeDistributed = 0;
-            rewardsERC20 = rewardsCoinbase = 0;
-            onDistributionPeriod = false;
-            tempTotalPotentialReward = 0;
-            totalPotentialReward = _newTotalPotentialReward;
-            _periodFinish = epochNext(block.timestamp);
-        } else {
-            // Define new reference to batch beginning
-            indexLastGaugeDistributed = _gaugeIndex;
-            tempTotalPotentialReward = _newTotalPotentialReward;
-        }
+        finished_ = _distribute();
+        onDistributionPeriod = !finished_;
     }
 
     /**
@@ -348,6 +313,56 @@ contract SponsorsManager is BuilderRegistry {
     }
 
     /**
+     * @notice distribute accumulated reward tokens to the gauges
+     * @dev reverts if distribution period has not yet started
+     *  This function is paginated and it finishes once all gauges distribution are completed,
+     *  ending the distribution period and voting restrictions.
+     * @return true if distribution has finished
+     */
+    function _distribute() internal returns (bool) {
+        uint256 _newTotalPotentialReward = tempTotalPotentialReward;
+        uint256 _gaugeIndex = indexLastGaugeDistributed;
+        uint256 _gaugesLength = getGaugesLength();
+        uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
+
+        // cache variables read in the loop
+        uint256 _rewardsERC20 = rewardsERC20;
+        uint256 _rewardsCoinbase = rewardsCoinbase;
+        uint256 _totalPotentialReward = totalPotentialReward;
+        uint256 __periodFinish = _periodFinish;
+        (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
+        // loop through all pending distributions
+        while (_gaugeIndex < _lastDistribution) {
+            _newTotalPotentialReward += _gaugeDistribute(
+                Gauge(getGaugeAt(_gaugeIndex)),
+                _rewardsERC20,
+                _rewardsCoinbase,
+                _totalPotentialReward,
+                __periodFinish,
+                _epochStart,
+                _epochDuration
+            );
+            _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
+        }
+        emit RewardDistributed(msg.sender);
+        // all the gauges were distributed, so distribution period is finished
+        if (_lastDistribution == _gaugesLength) {
+            emit RewardDistributionFinished(msg.sender);
+            indexLastGaugeDistributed = 0;
+            rewardsERC20 = rewardsCoinbase = 0;
+            onDistributionPeriod = false;
+            tempTotalPotentialReward = 0;
+            totalPotentialReward = _newTotalPotentialReward;
+            _periodFinish = epochNext(block.timestamp);
+            return true;
+        }
+        // Define new reference to batch beginning
+        indexLastGaugeDistributed = _gaugeIndex;
+        tempTotalPotentialReward = _newTotalPotentialReward;
+        return false;
+    }
+
+    /**
      * @notice internal function used to distribute reward tokens to a gauge
      * @param gauge_ address of the gauge to distribute
      * @param rewardsERC20_ ERC20 rewards to distribute
@@ -358,7 +373,7 @@ contract SponsorsManager is BuilderRegistry {
      * @param epochDuration_ cached epoch duration
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
-    function _distribute(
+    function _gaugeDistribute(
         Gauge gauge_,
         uint256 rewardsERC20_,
         uint256 rewardsCoinbase_,
