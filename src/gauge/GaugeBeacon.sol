@@ -5,7 +5,7 @@ import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/Upgradea
 import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 contract GaugeBeacon is UpgradeableBeacon {
-    IGovernanceManager private _governanceManager;
+    IGovernanceManager public governanceManager;
 
     /**
      * @notice constructor
@@ -18,7 +18,7 @@ contract GaugeBeacon is UpgradeableBeacon {
     )
         UpgradeableBeacon(gaugeImplementation_, governanceManager_.governor())
     {
-        _governanceManager = governanceManager_;
+        governanceManager = governanceManager_;
     }
 
     // -----------------------------
@@ -32,6 +32,6 @@ contract GaugeBeacon is UpgradeableBeacon {
      *  we need to override this function to allow upgrade the beacon by a changer
      */
     function _checkOwner() internal view override {
-        _governanceManager.validateChanger(msg.sender);
+        governanceManager.validateChanger(msg.sender);
     }
 }
