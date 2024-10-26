@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { BaseTest, Gauge } from "../../BaseTest.sol";
 import { WhitelistBuilderChangerTemplate } from
     "../../../src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol";
-import { IGoverned } from "src/interfaces/IGoverned.sol";
+import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 contract WhitelistBuilderChangerTest is BaseTest {
     WhitelistBuilderChangerTemplate internal _changer;
@@ -19,7 +19,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
 
         vm.prank(governor);
-        governed.updateChangerAdmin(address(changeExecutor));
+        governanceManager.updateChangerAdmin(address(changeExecutor));
     }
 
     /**
@@ -30,7 +30,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         //  WHEN tries to directly execute the changer
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
         vm.prank(alice);
-        vm.expectRevert(IGoverned.NotAuthorizedChanger.selector);
+        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
         _changer.execute();
     }
 
@@ -41,7 +41,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         //  WHEN tries no governor tries to execute the changer
         //   THEN tx reverts because NotGovernor
         vm.prank(alice);
-        vm.expectRevert(IGoverned.NotGovernor.selector);
+        vm.expectRevert(IGovernanceManager.NotGovernor.selector);
         changeExecutor.executeChange(_changer);
     }
 

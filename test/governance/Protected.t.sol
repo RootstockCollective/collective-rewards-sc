@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, SponsorsManager } from "../BaseTest.sol";
-import { IGoverned } from "src/interfaces/IGoverned.sol";
+import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 contract ProtectedTest is BaseTest {
     /**
@@ -22,7 +22,7 @@ contract ProtectedTest is BaseTest {
         vm.prank(alice);
         //  WHEN tries to upgrade the SponsorsManager
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
-        vm.expectRevert(IGoverned.NotAuthorizedChanger.selector);
+        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
         address _newImplementation = makeAddr("newImplementation");
         sponsorsManager.upgradeToAndCall(_newImplementation, "0x0");
     }
@@ -35,7 +35,7 @@ contract ProtectedTest is BaseTest {
         vm.prank(alice);
         //  WHEN tries to upgrade the ChangeExecutor
         //   THEN tx reverts because NotGovernor
-        vm.expectRevert(abi.encodeWithSelector(IGoverned.NotGovernor.selector));
+        vm.expectRevert(abi.encodeWithSelector(IGovernanceManager.NotGovernor.selector));
         address _newImplementation = makeAddr("newImplementation");
         changeExecutor.upgradeToAndCall(_newImplementation, "0x0");
     }
@@ -47,7 +47,7 @@ contract ProtectedTest is BaseTest {
         // GIVEN a non-Governor tries to upgrade the GaugeBeacon
         vm.prank(alice);
         //  THEN tx reverts because NotGovernorOrAuthorizedChanger
-        vm.expectRevert(IGoverned.NotAuthorizedChanger.selector);
+        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
         address _newImplementation = makeAddr("newImplementation");
         gaugeBeacon.upgradeTo(_newImplementation);
     }

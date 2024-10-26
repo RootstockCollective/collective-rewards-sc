@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { IGoverned } from "src/interfaces/IGoverned.sol";
+import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 /**
  * @title Upgradeable
@@ -16,7 +16,7 @@ abstract contract Upgradeable is UUPSUpgradeable {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyValidChanger() {
-        _governed.validateChanger(msg.sender);
+        _governanceManager.validateChanger(msg.sender);
         _;
     }
 
@@ -24,7 +24,7 @@ abstract contract Upgradeable is UUPSUpgradeable {
     // ---------- Storage ----------
     // -----------------------------
 
-    IGoverned internal _governed;
+    IGovernanceManager internal _governanceManager;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -32,12 +32,12 @@ abstract contract Upgradeable is UUPSUpgradeable {
 
     /**
      * @notice contract initializer
-     * @param governed_ contract with permissioned roles
+     * @param governanceManager_ contract with permissioned roles
      */
     /* solhint-disable-next-line func-name-mixedcase */
-    function __Upgradeable_init(IGoverned governed_) internal onlyInitializing {
+    function __Upgradeable_init(IGovernanceManager governanceManager_) internal onlyInitializing {
         __UUPSUpgradeable_init();
-        _governed = governed_;
+        _governanceManager = governanceManager_;
     }
 
     // -----------------------------

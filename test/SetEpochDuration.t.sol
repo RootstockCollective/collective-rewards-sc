@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { BaseTest } from "./BaseTest.sol";
 import { EpochTimeKeeper } from "../src/EpochTimeKeeper.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
-import { IGoverned } from "src/interfaces/IGoverned.sol";
+import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 contract SetEpochDurationTest is BaseTest {
     // -----------------------------
@@ -43,7 +43,7 @@ contract SetEpochDurationTest is BaseTest {
         //   THEN tx reverts because caller is not the Governor
 
         vm.prank(alice);
-        vm.expectRevert(IGoverned.NotAuthorizedChanger.selector);
+        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
         sponsorsManager.setEpochDuration(3 weeks, 0 days);
     }
 

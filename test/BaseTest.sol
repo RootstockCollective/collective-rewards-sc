@@ -16,8 +16,8 @@ import { Gauge } from "src/gauge/Gauge.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { Deploy as GovernedDeployer } from "script/governance/Governed.s.sol";
-import { IGoverned } from "src/interfaces/IGoverned.sol";
+import { Deploy as GovernanceManagerDeployer } from "script/governance/GovernanceManager.s.sol";
+import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 contract BaseTest is Test {
     ChangeExecutor public changeExecutorImpl;
@@ -25,7 +25,7 @@ contract BaseTest is Test {
     ERC20Mock public stakingToken;
     ERC20Mock public rewardToken;
 
-    IGoverned public governed;
+    IGovernanceManager public governanceManager;
     GaugeBeacon public gaugeBeacon;
     GaugeFactory public gaugeFactory;
     address[] public builders;
@@ -55,21 +55,21 @@ contract BaseTest is Test {
     /* solhint-enable private-vars-leading-underscore */
 
     function setUp() public {
-        (governed,) = new GovernedDeployer().run(address(this), foundation, kycApprover);
-        (changeExecutor, changeExecutorImpl) = new ChangeExecutorDeployer().run(address(governed));
-        governed.updateChangerAdmin(address(changeExecutor));
-        governed.updateGovernor(governor);
+        (governanceManager,) = new GovernanceManagerDeployer().run(address(this), foundation, kycApprover);
+        (changeExecutor, changeExecutorImpl) = new ChangeExecutorDeployer().run(address(governanceManager));
+        governanceManager.updateChangerAdmin(address(changeExecutor));
+        governanceManager.updateGovernor(governor);
 
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         stakingToken = _mockTokenDeployer.run(0);
         rewardToken = _mockTokenDeployer.run(1);
-        gaugeBeacon = new GaugeBeaconDeployer().run(address(governed));
+        gaugeBeacon = new GaugeBeaconDeployer().run(address(governanceManager));
         gaugeFactory = new GaugeFactoryDeployer().run(address(gaugeBeacon), address(rewardToken));
 
-        (rewardDistributor, rewardDistributorImpl) = new RewardDistributorDeployer().run(address(governed));
+        (rewardDistributor, rewardDistributorImpl) = new RewardDistributorDeployer().run(address(governanceManager));
 
         (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerDeployer().run(
-            address(governed),
+            address(governanceManager),
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),

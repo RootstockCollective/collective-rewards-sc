@@ -3,8 +3,8 @@ pragma solidity 0.8.20;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import { IChangeContractRootstockCollective } from "../interfaces/IChangeContractRootstockCollective.sol";
-import { IGoverned } from "src/interfaces/IGoverned.sol";
+import { IChangeContractRootstockCollective } from "../interfaces/IChangeContractRootstockCollective";
+import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 /**
  * @title ChangeExecutorRootstockCollective
@@ -15,7 +15,7 @@ import { IGoverned } from "src/interfaces/IGoverned.sol";
  */
 contract ChangeExecutorRootstockCollective is ReentrancyGuardUpgradeable, UUPSUpgradeable {
     modifier onlyGovernor() {
-        _governed.validateGovernor(msg.sender);
+        _governanceManager.validateGovernor(msg.sender);
         _;
     }
     // -----------------------------
@@ -23,7 +23,7 @@ contract ChangeExecutorRootstockCollective is ReentrancyGuardUpgradeable, UUPSUp
     // -----------------------------
 
     /// @notice changer contract address to be executed
-    IGoverned internal _governed;
+    IGovernanceManager internal _governanceManager;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -36,12 +36,12 @@ contract ChangeExecutorRootstockCollective is ReentrancyGuardUpgradeable, UUPSUp
 
     /**
      * @notice contract initializer
-     * @param governed_ contract with permissioned roles
+     * @param governanceManager_ contract with permissioned roles
      */
-    function initialize(IGoverned governed_) external initializer {
+    function initialize(IGovernanceManager governanceManager_) external initializer {
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
-        _governed = governed_;
+        _governanceManager = governanceManager_;
     }
 
     // -----------------------------
@@ -67,9 +67,9 @@ contract ChangeExecutorRootstockCollective is ReentrancyGuardUpgradeable, UUPSUp
      * @param changeContract_ Address of the contract that will execute the changes
      */
     function _executeChange(IChangeContractRootstockCollective changeContract_) internal {
-        _governed.updateChanger(address(changeContract_));
+        _governanceManager.updateChanger(address(changeContract_));
         changeContract_.execute();
-        _governed.updateChanger(address(0));
+        _governanceManager.updateChanger(address(0));
     }
 
     /**

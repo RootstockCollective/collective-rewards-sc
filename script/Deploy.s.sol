@@ -14,8 +14,8 @@ import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
-import { Deploy as GovernedDeployer } from "script/governance/Governed.s.sol";
-import { Governed } from "src/governance/Governed.sol";
+import { Deploy as GovernanceManagerDeployer } from "script/governance/GovernanceManager.s.sol";
+import { GovernanceManager } from "src/governance/GovernanceManager.sol";
 
 contract Deploy is Broadcaster, OutputWriter {
     address private _rewardTokenAddress;
@@ -38,33 +38,34 @@ contract Deploy is Broadcaster, OutputWriter {
     }
 
     function run() public {
-        // initialize Governed contract with the current deploy contract as governor
+        // initialize GovernanceManager contract with the current deploy contract as governor
         // so it can setup remaining permissions
-        (Governed _governedProxy, Governed _governedImpl) = new GovernedDeployer().run(address(this));
-        saveWithProxy("Governed", address(_governedImpl), address(_governedProxy));
+        (GovernanceManager _governanceManagerProxy, GovernanceManager _governanceManagerImpl) =
+            new GovernanceManagerDeployer().run(address(this));
+        saveWithProxy("GovernanceManager", address(_governanceManagerImpl), address(_governanceManagerProxy));
 
         GaugeBeacon _gaugeBeacon = new GaugeBeaconDeployer().run(address(_changeExecutorProxy));
         (ChangeExecutor _changeExecutorProxy, ChangeExecutor _changeExecutorImpl) =
-            new ChangeExecutorDeployer().run(address(_governedProxy));
+            new ChangeExecutorDeployer().run(address(_governanceManagerProxy));
         saveWithProxy("ChangeExecutor", address(_changeExecutorImpl), address(_changeExecutorProxy));
 
         // Update the changer admin role and transfer the ownership to the governor
-        _governedProxy.updateChangerAdmin(address(_changeExecutorProxy));
+        _governanceManagerProxy.updateChangerAdmin(address(_changeExecutorProxy));
         address _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
-        _governedProxy.updateGovernor(_governorAddress);
+        _governanceManagerProxy.updateGovernor(_governorAddress);
 
-        GaugeBeacon _gaugeBeacon = new GaugeBeaconDeployer().run(address(_governedProxy));
+        GaugeBeacon _gaugeBeacon = new GaugeBeaconDeployer().run(address(_governanceManagerProxy));
         save("GaugeBeacon", address(_gaugeBeacon));
 
         GaugeFactory _gaugeFactory = new GaugeFactoryDeployer().run(address(_gaugeBeacon), _rewardTokenAddress);
         save("GaugeFactory", address(_gaugeFactory));
 
         (RewardDistributor _rewardDistributorProxy, RewardDistributor _rewardDistributorImpl) =
-            new RewardDistributorDeployer().run(address(_governedProxy));
+            new RewardDistributorDeployer().run(address(_governanceManagerProxy));
         saveWithProxy("RewardDistributor", address(_rewardDistributorImpl), address(_rewardDistributorProxy));
 
         (SponsorsManager _sponsorManagerProxy, SponsorsManager _sponsorManagerImpl) = new SponsorsManagerDeployer().run(
-            address(_governedProxy),
+            address(_governanceManagerProxy),
             _rewardTokenAddress,
             _stakingTokenAddress,
             address(_gaugeFactory),

@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { IGoverned } from "src/interfaces/IGoverned.sol";
+import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 /**
- * @title Governed
+ * @title GovernanceManager
  * @notice This contract manages roles
  * @dev This contract is upgradeable via the UUPS proxy pattern.
  */
-contract Governed is Ownable2StepUpgradeable, UUPSUpgradeable, IGoverned {
+contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
@@ -62,13 +61,12 @@ contract Governed is Ownable2StepUpgradeable, UUPSUpgradeable, IGoverned {
      */
     function initialize(address governor_, address foundationTreasury_, address kycApprover_) public initializer {
         __UUPSUpgradeable_init();
-        __Ownable2Step_init();
 
         _updateGovernor(governor_);
         _updateFoundationTreasury(foundationTreasury_);
         _updateKYCApprover(kycApprover_);
 
-        // Governed contract is dependency of the ChangeExecutor during construction
+        // GovernanceManager contract is dependency of the ChangeExecutor during construction
         // So changer admin can only be set after initialization
         changerAdmin = address(0);
     }
