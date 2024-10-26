@@ -2,23 +2,23 @@
 pragma solidity 0.8.20;
 
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
-import { IGoverned } from "src/interfaces/IGoverned.sol";
+import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 contract GaugeBeacon is UpgradeableBeacon {
-    IGoverned private _governed;
+    IGovernanceManager private _governanceManager;
 
     /**
      * @notice constructor
-     * @param governed_ contract with permissioned roles
+     * @param governanceManager_ contract with permissioned roles
      * @param gaugeImplementation_ address of the Gauge initial implementation
      */
     constructor(
-        IGoverned governed_,
+        IGovernanceManager governanceManager_,
         address gaugeImplementation_
     )
-        UpgradeableBeacon(gaugeImplementation_, governed_.governor())
+        UpgradeableBeacon(gaugeImplementation_, governanceManager_.governor())
     {
-        _governed = governed_;
+        _governanceManager = governanceManager_;
     }
 
     // -----------------------------
@@ -32,6 +32,6 @@ contract GaugeBeacon is UpgradeableBeacon {
      *  we need to override this function to allow upgrade the beacon by a changer
      */
     function _checkOwner() internal view override {
-        _governed.validateChanger(msg.sender);
+        _governanceManager.validateChanger(msg.sender);
     }
 }

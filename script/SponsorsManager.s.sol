@@ -6,15 +6,15 @@ pragma solidity 0.8.20;
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
-import { IGoverned } from "../src/interfaces/IGoverned.sol";
+import { IGovernanceManager } from "../src/interfaces/IGovernanceManager.sol";
 
 contract Deploy is Broadcaster {
     function run() public returns (SponsorsManager proxy_, SponsorsManager implementation_) {
         address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
-        address _governed = vm.envOr("Governed", address(0));
-        if (_governed == address(0)) {
-            _governed = vm.envAddress("ACCESS_CONTROL_ADDRESS");
+        address _governanceManager = vm.envOr("GovernanceManager", address(0));
+        if (_governanceManager == address(0)) {
+            _governanceManager = vm.envAddress("ACCESS_CONTROL_ADDRESS");
         }
         address _gaugeFactoryAddress = vm.envOr("GaugeFactory", address(0));
         if (_gaugeFactoryAddress == address(0)) {
@@ -28,7 +28,7 @@ contract Deploy is Broadcaster {
         uint24 _epochStartOffset = uint24(vm.envUint("EPOCH_START_OFFSET"));
         uint128 _kickbackCooldown = uint128(vm.envUint("KICKBACK_COOLDOWN"));
         (proxy_, implementation_) = run(
-            _governed,
+            _governanceManager,
             _rewardTokenAddress,
             _stakingTokenAddress,
             _gaugeFactoryAddress,
@@ -40,7 +40,7 @@ contract Deploy is Broadcaster {
     }
 
     function run(
-        address governed_,
+        address governanceManager_,
         address rewardToken_,
         address stakingToken_,
         address gaugeFactory_,
@@ -53,7 +53,7 @@ contract Deploy is Broadcaster {
         broadcast
         returns (SponsorsManager, SponsorsManager)
     {
-        require(governed_ != address(0), "Access control address cannot be empty");
+        require(governanceManager_ != address(0), "Access control address cannot be empty");
         require(rewardToken_ != address(0), "Reward token address cannot be empty");
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
         require(gaugeFactory_ != address(0), "Gauge factory address cannot be empty");
@@ -62,7 +62,7 @@ contract Deploy is Broadcaster {
         bytes memory _initializerData = abi.encodeCall(
             SponsorsManager.initialize,
             (
-                IGoverned(governed_),
+                IGovernanceManager(governanceManager_),
                 rewardToken_,
                 stakingToken_,
                 gaugeFactory_,

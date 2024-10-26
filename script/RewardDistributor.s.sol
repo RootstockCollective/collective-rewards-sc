@@ -4,16 +4,16 @@ pragma solidity 0.8.20;
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
-import { IGoverned } from "../src/interfaces/IGoverned.sol";
+import { IGovernanceManager } from "../src/interfaces/IGovernanceManager.sol";
 
 contract Deploy is Broadcaster {
     function run() public returns (RewardDistributor proxy_, RewardDistributor implementation_) {
-        address _governed = vm.envOr("Governed", address(0));
-        if (_governed == address(0)) {
-            _governed = vm.envAddress("ACCESS_CONTROL_ADDRESS");
+        address _governanceManager = vm.envOr("GovernanceManager", address(0));
+        if (_governanceManager == address(0)) {
+            _governanceManager = vm.envAddress("ACCESS_CONTROL_ADDRESS");
         }
 
-        (proxy_, implementation_) = run(_governed);
+        (proxy_, implementation_) = run(_governanceManager);
 
         address _sponsorsManagerAddress = vm.envOr("SponsorsManager", address(0));
         if (_sponsorsManagerAddress == address(0)) {
@@ -23,10 +23,11 @@ contract Deploy is Broadcaster {
         proxy_.initializeBIMAddresses(address(_sponsorsManagerAddress));
     }
 
-    function run(address governed_) public broadcast returns (RewardDistributor, RewardDistributor) {
-        require(governed_ != address(0), "Access control address cannot be empty");
+    function run(address governanceManager_) public broadcast returns (RewardDistributor, RewardDistributor) {
+        require(governanceManager_ != address(0), "Access control address cannot be empty");
 
-        bytes memory _initializerData = abi.encodeCall(RewardDistributor.initialize, (IGoverned(governed_)));
+        bytes memory _initializerData =
+            abi.encodeCall(RewardDistributor.initialize, (IGovernanceManager(governanceManager_)));
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {

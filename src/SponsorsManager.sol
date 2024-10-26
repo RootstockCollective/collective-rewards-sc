@@ -7,7 +7,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { BuilderRegistry } from "./BuilderRegistry.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
-import { IGoverned } from "./interfaces/IGoverned.sol";
+import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
 
 /**
  * @title SponsorsManager
@@ -86,7 +86,7 @@ contract SponsorsManager is BuilderRegistry {
 
     /**
      * @notice contract initializer
-     * @param governed_ contract with permissioned roles
+     * @param governanceManager_ contract with permissioned roles
      * @param rewardToken_ address of the token rewarded to builder and voters
      * @param stakingToken_ address of the staking token for builder and voters
      * @param gaugeFactory_ address of the GaugeFactory contract
@@ -96,7 +96,7 @@ contract SponsorsManager is BuilderRegistry {
      * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function initialize(
-        IGoverned governed_,
+        IGovernanceManager governanceManager_,
         address rewardToken_,
         address stakingToken_,
         address gaugeFactory_,
@@ -109,8 +109,8 @@ contract SponsorsManager is BuilderRegistry {
         initializer
     {
         __BuilderRegistry_init(
-            governed_,
-            governed_.kycApprover(),
+            governanceManager_,
+            governanceManager_.kycApprover(),
             gaugeFactory_,
             rewardDistributor_,
             epochDuration_,

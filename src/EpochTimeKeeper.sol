@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { Upgradeable } from "./governance/Upgradeable.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
-import { IGoverned } from "./interfaces/IGoverned.sol";
+import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
 
 abstract contract EpochTimeKeeper is Upgradeable {
     uint256 internal constant _DISTRIBUTION_WINDOW = 1 hours;
@@ -55,19 +55,19 @@ abstract contract EpochTimeKeeper is Upgradeable {
      * @notice contract initializer
      * @dev the first epoch will end in epochDuration_ + epochStartOffset_ seconds to to ensure that
      *  it lasts at least as long as the desired period
-     * @param governed_ contract with permissioned roles
+     * @param governanceManager_ contract with permissioned roles
      * @param epochDuration_ epoch time duration
      * @param epochStartOffset_ offset to add to the first epoch, used to set an specific day to start the epochs
      */
     function __EpochTimeKeeper_init(
-        IGoverned governed_,
+        IGovernanceManager governanceManager_,
         uint32 epochDuration_,
         uint24 epochStartOffset_
     )
         internal
         onlyInitializing
     {
-        __Upgradeable_init(governed_);
+        __Upgradeable_init(governanceManager_);
 
         // read from store
         EpochData memory _epochData = epochData;

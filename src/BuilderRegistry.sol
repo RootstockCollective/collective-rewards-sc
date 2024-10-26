@@ -7,7 +7,7 @@ import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/acc
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { GaugeFactory } from "./gauge/GaugeFactory.sol";
-import { IGoverned } from "./interfaces/IGoverned.sol";
+import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
 
 /**
  * @title BuilderRegistry
@@ -57,7 +57,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyKycApprover() {
-        _governed.validateKycApprover(msg.sender);
+        _governanceManager.validateKycApprover(msg.sender);
         _;
     }
 
@@ -118,7 +118,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
 
     /**
      * @notice contract initializer
-     * @param governed_ contract with permissioned roles
+     * @param governanceManager_ contract with permissioned roles
      * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
      * @param gaugeFactory_ address of the GaugeFactory contract
      * @param rewardDistributor_ address of the rewardDistributor contract
@@ -127,7 +127,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function __BuilderRegistry_init(
-        IGoverned governed_,
+        IGovernanceManager governanceManager_,
         address kycApprover_,
         address gaugeFactory_,
         address rewardDistributor_,
@@ -138,7 +138,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
         internal
         onlyInitializing
     {
-        __EpochTimeKeeper_init(governed_, epochDuration_, epochStartOffset_);
+        __EpochTimeKeeper_init(governanceManager_, epochDuration_, epochStartOffset_);
         __Ownable2Step_init();
         __Ownable_init(kycApprover_);
         gaugeFactory = GaugeFactory(gaugeFactory_);

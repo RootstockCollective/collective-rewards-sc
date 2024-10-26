@@ -2,9 +2,9 @@
 pragma solidity 0.8.20;
 
 /**
- * @title IGoverned
+ * @title IGovernanceManager
  */
-interface IGoverned {
+interface IGovernanceManager {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------

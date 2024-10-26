@@ -17,7 +17,7 @@ contract InitializationTest is BaseTest {
         uint128 _kickbackCooldown = 2 weeks;
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         sponsorsManager.initialize(
-            governed,
+            governanceManager,
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),
@@ -36,7 +36,7 @@ contract InitializationTest is BaseTest {
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        rewardDistributor.initialize(governed);
+        rewardDistributor.initialize(governanceManager);
     }
 
     /**
@@ -59,6 +59,6 @@ contract InitializationTest is BaseTest {
         //   THEN tx reverts because InvalidInitialization
         vm.prank(governor);
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        changeExecutor.initialize(governed);
+        changeExecutor.initialize(governanceManager);
     }
 }
