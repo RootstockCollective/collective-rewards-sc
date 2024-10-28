@@ -3,21 +3,19 @@ pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { ChangeExecutor } from "src/governance/ChangeExecutor.sol";
-import { IGovernanceManager } from "../../src/interfaces/IGovernanceManager.sol";
+import { ChangeExecutor } from "src/mvp/ChangeExecutor.sol";
 
 contract Deploy is Broadcaster {
     function run() public returns (ChangeExecutor proxy_, ChangeExecutor implementation_) {
-        address _governanceManager = vm.envAddress("ACCESS_CONTROL_ADDRESS");
+        address _governor = vm.envAddress("GOVERNOR_ADDRESS");
 
-        (proxy_, implementation_) = run(_governanceManager);
+        (proxy_, implementation_) = run(_governor);
     }
 
-    function run(address governanceManager_) public broadcast returns (ChangeExecutor, ChangeExecutor) {
-        require(governanceManager_ != address(0), "Access control address cannot be empty");
+    function run(address governor_) public broadcast returns (ChangeExecutor, ChangeExecutor) {
+        require(governor_ != address(0), "Access control address cannot be empty");
 
-        bytes memory _initializerData =
-            abi.encodeCall(ChangeExecutor.initialize, (IGovernanceManager(governanceManager_)));
+        bytes memory _initializerData = abi.encodeCall(ChangeExecutor.initialize, (governor_));
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {

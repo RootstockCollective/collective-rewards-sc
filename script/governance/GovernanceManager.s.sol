@@ -14,16 +14,6 @@ contract Deploy is Broadcaster {
         (proxy_, implementation_) = run(_governorAddress, _treasuryAddress, _kycApproverAddress);
     }
 
-    function run(address governorAddress_)
-        public
-        returns (GovernanceManager proxy_, GovernanceManager implementation_)
-    {
-        address _treasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
-        address _kycApproverAddress = vm.envAddress("KYC_APPROVER_ADDRESS");
-
-        (proxy_, implementation_) = run(governorAddress_, _treasuryAddress, _kycApproverAddress);
-    }
-
     function run(
         address governor_,
         address treasury_,

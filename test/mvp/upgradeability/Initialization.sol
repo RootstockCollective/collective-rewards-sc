@@ -15,4 +15,16 @@ contract MVPInitializationTest is MVPBaseTest {
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         simplifiedRewardDistributor.initialize(address(changeExecutorMock), address(rewardToken));
     }
+
+    /**
+     * SCENARIO: ChangeExecutor cannot be initialized twice
+     */
+    function test_RevertChangeExecutorInitialize() public {
+        // GIVEN a ChangeExecutor initialized
+        //  WHEN tries to initialize the proxy again
+        //   THEN tx reverts because InvalidInitialization
+        vm.prank(governor);
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        changeExecutorMock.initialize(governor);
+    }
 }

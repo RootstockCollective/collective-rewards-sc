@@ -51,14 +51,14 @@ contract InitializationTest is BaseTest {
     }
 
     /**
-     * SCENARIO: ChangeExecutorRootstockCollective cannot be initialized twice
+     * SCENARIO: GovernanceManager cannot be initialized twice
      */
-    function test_RevertChangeExecutorInitialize() public {
-        // GIVEN a ChangeExecutorRootstockCollective initialized
+    function test_RevertGovernanceManagerInitialize() public {
+        // GIVEN a GovernanceManager initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.prank(governor);
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        changeExecutor.initialize(governanceManager);
+        governanceManager.initialize(governor, foundation, kycApprover);
     }
 }

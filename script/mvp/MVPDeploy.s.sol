@@ -3,13 +3,10 @@ pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
-import { ChangeExecutorRootstockCollective } from "src/governance/ChangeExecutorRootstockCollective.sol";
-import { Deploy as ChangeExecutorDeployerRootstockCollective } from
-    "script/governance/ChangeExecutorRootstockCollective.s.sol";
-import { SimplifiedRewardDistributorRootstockCollective } from
-    "src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
-import { Deploy as SimplifiedRewardDistributorRootstockCollectiveDeployer } from
-    "script/mvp/SimplifiedRewardDistributorRootstockCollective.s.sol";
+import { ChangeExecutor } from "src/mvp/ChangeExecutor.sol";
+import { Deploy as ChangeExecutorDeployerRootstockCollective } from "./ChangeExecutorDeployerRootstockCollective.s.sol";
+import { SimplifiedRewardDistributor } from "src/mvp/SimplifiedRewardDistributor.sol";
+import { Deploy as SimplifiedRewardDistributorRootstockCollectiveDeployer } from "script/mvp/SimplifiedRewardDistributorRootstockCollectiveDeployer.s.sol";
 
 contract MVPDeploy is Broadcaster, OutputWriter {
     address private _governorAddress;

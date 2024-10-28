@@ -3,10 +3,12 @@ pragma solidity 0.8.20;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
+import { IChangeContract } from "src/interfaces/IChangeContract.sol";
 
 /**
  * @title GovernanceManager
- * @notice This contract manages roles
+ * @notice This contract manages governance addresses.
+ * @notice It also allows the governor to execute contracts that implement the IChangeContract interface.
  * @dev This contract is upgradeable via the UUPS proxy pattern.
  */
 contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
@@ -24,19 +26,12 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
         _;
     }
 
-    modifier onlyChangerAdmin() {
-        if (msg.sender != changerAdmin) revert NotChangerAdmin();
-        _;
-    }
-
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
 
     /// @notice The address of the governor.
     address public governor;
-    /// @notice The address of the changer admin.
-    address public changerAdmin;
     /// @notice The address of the changer.
     address public changer;
     /// @notice The address of the foundation treasury.
@@ -65,15 +60,22 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
         _updateGovernor(governor_);
         _updateFoundationTreasury(foundationTreasury_);
         _updateKYCApprover(kycApprover_);
-
-        // GovernanceManager contract is dependency of the ChangeExecutor during construction
-        // So changer admin can only be set after initialization
-        changerAdmin = address(0);
     }
 
     // -----------------------------
     // ---- External Functions -----
     // -----------------------------
+
+    /**
+     * @notice Function to be called to make the changes in changeContract
+     * @dev reverts if is not called by the Governor
+     * @param changeContract_ Address of the contract that will execute the changes
+     */
+    function executeChange(IChangeContract changeContract_) external onlyGovernor {
+        _updateChanger(address(changeContract_));
+        changeContract_.execute();
+        _updateChanger(address(0));
+    }
 
     /**
      * @notice Allows the governor to update its own role to a new address.
@@ -82,24 +84,6 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
      */
     function updateGovernor(address governor_) public onlyGovernor {
         _updateGovernor(governor_);
-    }
-
-    /**
-     * @notice Allows the governor to update the changer admin.
-     * @param changerAdmin_ The new changer admin address.
-     * @dev Only callable by the governor. Reverts if the new address is invalid.
-     */
-    function updateChangerAdmin(address changerAdmin_) public onlyGovernor onlyValidAddress(changerAdmin_) {
-        changerAdmin = changerAdmin_;
-    }
-
-    /**
-     * @notice Allows the changer admin to assign a new changer.
-     * @param changer_ The new changer address.
-     * @dev Only callable by the changer admin. Allows zero address to be set to prevent
-     */
-    function updateChanger(address changer_) public onlyChangerAdmin {
-        changer = changer_;
     }
 
     /**
@@ -155,14 +139,6 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
         if (account_ != foundationTreasury) revert NotFoundationTreasury();
     }
 
-    /**
-     * @notice Validates if the caller is the changer admin.
-     * @dev Reverts with `NotChangerAdmin` if the caller is not the changer admin.
-     */
-    function validateChangerAdmin(address account_) public view {
-        if (account_ != changerAdmin) revert NotChangerAdmin();
-    }
-
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
@@ -192,6 +168,15 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
      */
     function _updateKYCApprover(address kycApprover_) private onlyValidAddress(kycApprover_) {
         kycApprover = kycApprover_;
+    }
+
+    /**
+     * @notice Assigns a new changer.
+     * @param changer_ The new changer address.
+     * @dev Allows zero address to be set to remove the current changer
+     */
+    function _updateChanger(address changer_) internal {
+        changer = changer_;
     }
 
     /**

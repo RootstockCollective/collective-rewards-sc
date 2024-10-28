@@ -109,13 +109,7 @@ contract SponsorsManager is BuilderRegistry {
         initializer
     {
         __BuilderRegistry_init(
-            governanceManager_,
-            governanceManager_.kycApprover(),
-            gaugeFactory_,
-            rewardDistributor_,
-            epochDuration_,
-            epochStartOffset_,
-            kickbackCooldown_
+            governanceManager_, gaugeFactory_, rewardDistributor_, epochDuration_, epochStartOffset_, kickbackCooldown_
         );
         rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
