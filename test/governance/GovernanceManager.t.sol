@@ -9,7 +9,6 @@ contract GovernanceManagerTest is BaseTest {
         assertEq(governanceManager.governor(), governor);
         assertEq(governanceManager.foundationTreasury(), foundation);
         assertEq(governanceManager.kycApprover(), kycApprover);
-        assertEq(governanceManager.changerAdmin(), address(changeExecutor));
     }
 
     function test_UpdateGovernor() public {
@@ -22,32 +21,6 @@ contract GovernanceManagerTest is BaseTest {
         vm.prank(alice);
         vm.expectRevert(IGovernanceManager.NotGovernor.selector);
         governanceManager.updateGovernor(address(0x7));
-    }
-
-    function test_UpdateChangerAdmin() public {
-        vm.prank(governor);
-        governanceManager.updateChangerAdmin(alice);
-        assertEq(governanceManager.changerAdmin(), alice);
-    }
-
-    function test_FailUpdateChangerAdminByNonGovernor() public {
-        vm.prank(alice);
-        vm.expectRevert(IGovernanceManager.NotGovernor.selector);
-        governanceManager.updateChangerAdmin(alice);
-    }
-
-    function test_UpdateChangerByAdmin() public {
-        vm.prank(governor);
-        governanceManager.updateChangerAdmin(bob);
-        vm.prank(bob);
-        governanceManager.updateChanger(alice);
-        assertEq(governanceManager.changer(), alice);
-    }
-
-    function test_FailUpdateChangerByNonChangerAdmin() public {
-        vm.prank(alice);
-        vm.expectRevert(IGovernanceManager.NotChangerAdmin.selector);
-        governanceManager.updateChanger(alice);
     }
 
     function test_UpdateTreasury() public {
@@ -84,12 +57,6 @@ contract GovernanceManagerTest is BaseTest {
         governanceManager.validateGovernor(governor);
         vm.expectRevert(IGovernanceManager.NotGovernor.selector);
         governanceManager.validateGovernor(alice);
-    }
-
-    function test_ValidateChangerAdmin() public {
-        governanceManager.validateChangerAdmin(address(changeExecutor));
-        vm.expectRevert(IGovernanceManager.NotChangerAdmin.selector);
-        governanceManager.validateChangerAdmin(alice);
     }
 
     function test_ValidateKYCApprover() public {

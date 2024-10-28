@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+import { IChangeContract } from "src/interfaces/IChangeContract.sol";
+
 /**
  * @title IGovernanceManager
  */
@@ -18,11 +20,6 @@ interface IGovernanceManager {
      * @notice Thrown when the caller is not authorized as a changer.
      */
     error NotAuthorizedChanger();
-
-    /**
-     * @notice Thrown when the caller is not the the changer admin.
-     */
-    error NotChangerAdmin();
 
     /**
      * @notice Thrown when the caller is not the foundation treasury.
@@ -47,21 +44,22 @@ interface IGovernanceManager {
      * @dev Used instead of a constructor for upgradeable contracts.
      * @param governor_ The initial governor address.
      * @param foundationTreasury_ The initial foundation treasury address.
-     * @param kycApprover_ The initial KYC approver address.
+     * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
      */
     function initialize(address governor_, address foundationTreasury_, address kycApprover_) external;
+
+    /**
+     * @notice Function to be called to make the changes in changeContract
+     * @dev reverts if is not called by the Governor
+     * @param changeContract_ Address of the contract that will execute the changes
+     */
+    function executeChange(IChangeContract changeContract_) external;
 
     /**
      * @notice Returns the address of the current governor.
      * @return The governor address.
      */
     function governor() external view returns (address);
-
-    /**
-     * @notice Returns the address of the current changer admin.
-     * @return The changer admin address.
-     */
-    function changerAdmin() external view returns (address);
 
     /**
      * @notice Returns the address of the current changer.
@@ -110,32 +108,11 @@ interface IGovernanceManager {
     function validateFoundationTreasury(address account_) external view;
 
     /**
-     * @notice Validates if the given account is the changer admin.
-     * @param account_ The address to be validated as the changer admin.
-     * @dev Reverts with `NotChangerAdmin` if the account is not the changer admin.
-     */
-    function validateChangerAdmin(address account_) external view;
-
-    /**
      * @notice Updates the governor
      * @param newGovernor_ The new address to be set as the governor.
      * @dev Only callable by the current governor. Reverts with `NotGovernor` if called by someone else.
      */
     function updateGovernor(address newGovernor_) external;
-
-    /**
-     * @notice Updates the changer admin
-     * @param changerAdmin_ The new address to be set as the changer admin.
-     * @dev Only callable by the governor. Reverts with `NotGovernor` if called by someone else.
-     */
-    function updateChangerAdmin(address changerAdmin_) external;
-
-    /**
-     * @notice Updates the changer
-     * @param changer_ The new address to be set as the changer.
-     * @dev Only callable by the changer admin. Reverts with `NotAuthorizedChanger` if called by someone else.
-     */
-    function updateChanger(address changer_) external;
 
     /**
      * @notice Updates the foundation treasury

@@ -28,19 +28,6 @@ contract ProtectedTest is BaseTest {
     }
 
     /**
-     * SCENARIO: ChangeExecutorRootstockCollective upgrade should revert if is not called by the governor
-     */
-    function test_RevertChangeExecutorUpgradeNotGovernor() public {
-        // GIVEN a not Governor address
-        vm.prank(alice);
-        //  WHEN tries to upgrade the ChangeExecutor
-        //   THEN tx reverts because NotGovernor
-        vm.expectRevert(abi.encodeWithSelector(IGovernanceManager.NotGovernor.selector));
-        address _newImplementation = makeAddr("newImplementation");
-        changeExecutor.upgradeToAndCall(_newImplementation, "0x0");
-    }
-
-    /**
      * SCENARIO: Gauge upgrade should revert if is not called by the governor or an authorized changer
      */
     function test_RevertGaugeUpgradeNotGovernor() public {
@@ -50,5 +37,17 @@ contract ProtectedTest is BaseTest {
         vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
         address _newImplementation = makeAddr("newImplementation");
         gaugeBeacon.upgradeTo(_newImplementation);
+    }
+
+    /**
+     * SCENARIO: GovernanceManager upgrade should revert if is not called by the governor
+     */
+    function test_RevertGovernanceManagerUpgradeNotGovernor() public {
+        // GIVEN a non-Governor tries to upgrade the GovernanceManager
+        vm.prank(alice);
+        //  THEN tx reverts because NotGovernor
+        vm.expectRevert(IGovernanceManager.NotGovernor.selector);
+        address _newImplementation = makeAddr("newImplementation");
+        governanceManager.upgradeToAndCall(_newImplementation, "0x0");
     }
 }

@@ -114,7 +114,6 @@ abstract contract BuilderRegistry is EpochTimeKeeper {
     /**
      * @notice contract initializer
      * @param governanceManager_ contract with permissioned roles
-     * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
      * @param gaugeFactory_ address of the GaugeFactory contract
      * @param rewardDistributor_ address of the rewardDistributor contract
      * @param epochDuration_ epoch time duration
@@ -123,7 +122,6 @@ abstract contract BuilderRegistry is EpochTimeKeeper {
      */
     function __BuilderRegistry_init(
         IGovernanceManager governanceManager_,
-        address kycApprover_,
         address gaugeFactory_,
         address rewardDistributor_,
         uint32 epochDuration_,

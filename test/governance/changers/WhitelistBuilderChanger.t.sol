@@ -11,15 +11,11 @@ contract WhitelistBuilderChangerTest is BaseTest {
     address internal _newBuilder = makeAddr("newBuilder");
 
     function _setUp() internal override {
-        // GIVEN the ChangeExecutor without isAuthorized mock
-        // AND a WhitelistBuilderChanger deployed for a new builder
+        // GIVEN WhitelistBuilderChanger deployed for a new builder
         _changer = new WhitelistBuilderChangerTemplate(sponsorsManager, _newBuilder);
         // AND a newBuilder is activated
         vm.prank(kycApprover);
         sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
-
-        vm.prank(governor);
-        governanceManager.updateChangerAdmin(address(changeExecutor));
     }
 
     /**
@@ -42,7 +38,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         //   THEN tx reverts because NotGovernor
         vm.prank(alice);
         vm.expectRevert(IGovernanceManager.NotGovernor.selector);
-        changeExecutor.executeChange(_changer);
+        governanceManager.executeChange(_changer);
     }
 
     /**
@@ -51,7 +47,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
     function test_ExecuteChange() public {
         //  WHEN governor executes the changer
         vm.prank(governor);
-        changeExecutor.executeChange(_changer);
+        governanceManager.executeChange(_changer);
         //  THEN the change is successfully executed
         Gauge _newGauge = _changer.newGauge();
         //  THEN gauge is added on SponsorsManager

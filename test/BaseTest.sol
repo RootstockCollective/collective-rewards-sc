@@ -7,25 +7,21 @@ import { Deploy as GaugeBeaconDeployer } from "script/gauge/GaugeBeacon.s.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
 import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
-import { Deploy as ChangeExecutorDeployer } from "script/governance/ChangeExecutor.s.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { GaugeBeacon } from "src/gauge/GaugeBeacon.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
-import { ChangeExecutor } from "src/governance/ChangeExecutor.sol";
 import { Gauge } from "src/gauge/Gauge.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Deploy as GovernanceManagerDeployer } from "script/governance/GovernanceManager.s.sol";
-import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
+import { GovernanceManager } from "src/governance/GovernanceManager.sol";
 
 contract BaseTest is Test {
-    ChangeExecutor public changeExecutorImpl;
-    ChangeExecutor public changeExecutor;
     ERC20Mock public stakingToken;
     ERC20Mock public rewardToken;
 
-    IGovernanceManager public governanceManager;
+    GovernanceManager public governanceManager;
     GaugeBeacon public gaugeBeacon;
     GaugeFactory public gaugeFactory;
     address[] public builders;
@@ -55,10 +51,7 @@ contract BaseTest is Test {
     /* solhint-enable private-vars-leading-underscore */
 
     function setUp() public {
-        (governanceManager,) = new GovernanceManagerDeployer().run(address(this), foundation, kycApprover);
-        (changeExecutor, changeExecutorImpl) = new ChangeExecutorDeployer().run(address(governanceManager));
-        governanceManager.updateChangerAdmin(address(changeExecutor));
-        governanceManager.updateGovernor(governor);
+        (governanceManager,) = new GovernanceManagerDeployer().run(governor, foundation, kycApprover);
 
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         stakingToken = _mockTokenDeployer.run(0);

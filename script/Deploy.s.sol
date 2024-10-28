@@ -3,9 +3,6 @@ pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
-import { ChangeExecutorRootstockCollective } from "src/governance/ChangeExecutorRootstockCollective.sol";
-import { Deploy as ChangeExecutorDeployerRootstockCollective } from
-    "script/governance/ChangeExecutorRootstockCollective.s.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
 import { GaugeBeacon } from "src/gauge/GaugeBeacon.sol";
@@ -38,21 +35,9 @@ contract Deploy is Broadcaster, OutputWriter {
     }
 
     function run() public {
-        // initialize GovernanceManager contract with the current deploy contract as governor
-        // so it can setup remaining permissions
         (GovernanceManager _governanceManagerProxy, GovernanceManager _governanceManagerImpl) =
-            new GovernanceManagerDeployer().run(address(this));
+            new GovernanceManagerDeployer().run();
         saveWithProxy("GovernanceManager", address(_governanceManagerImpl), address(_governanceManagerProxy));
-
-        GaugeBeacon _gaugeBeacon = new GaugeBeaconDeployer().run(address(_changeExecutorProxy));
-        (ChangeExecutor _changeExecutorProxy, ChangeExecutor _changeExecutorImpl) =
-            new ChangeExecutorDeployer().run(address(_governanceManagerProxy));
-        saveWithProxy("ChangeExecutor", address(_changeExecutorImpl), address(_changeExecutorProxy));
-
-        // Update the changer admin role and transfer the ownership to the governor
-        _governanceManagerProxy.updateChangerAdmin(address(_changeExecutorProxy));
-        address _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
-        _governanceManagerProxy.updateGovernor(_governorAddress);
 
         GaugeBeacon _gaugeBeacon = new GaugeBeaconDeployer().run(address(_governanceManagerProxy));
         save("GaugeBeacon", address(_gaugeBeacon));
