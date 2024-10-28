@@ -1,6 +1,6 @@
 # IChangeContractRootstockCollective
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/836e10d50a4acb5647d0f97e64cf45b167023c99/src/interfaces/IChangeContractRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/fd421a0c60123969201eb8a254d52884f4ffef70/src/interfaces/IChangeContractRootstockCollective.sol)
 
 This interface is the one used by the governance system.
 

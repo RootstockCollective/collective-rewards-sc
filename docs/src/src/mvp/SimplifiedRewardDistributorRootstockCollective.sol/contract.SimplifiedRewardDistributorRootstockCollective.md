@@ -1,6 +1,6 @@
 # SimplifiedRewardDistributorRootstockCollective
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/836e10d50a4acb5647d0f97e64cf45b167023c99/src/mvp/SimplifiedRewardDistributorRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/fd421a0c60123969201eb8a254d52884f4ffef70/src/mvp/SimplifiedRewardDistributorRootstockCollective.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md), ReentrancyGuardUpgradeable
 

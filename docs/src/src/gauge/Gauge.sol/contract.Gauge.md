@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b70765ceccba41d63eea90a69573cd6a3445d8c8/src/gauge/Gauge.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/fd421a0c60123969201eb8a254d52884f4ffef70/src/gauge/Gauge.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable
 
@@ -353,7 +353,7 @@ function allocate(
 )
     external
     onlySponsorsManager
-    returns (uint256 allocationDeviation_, bool isNegative_);
+    returns (uint256 allocationDeviation_, uint256 rewardSharesDeviation_, bool isNegative_);
 ```
 
 **Parameters**
@@ -366,10 +366,11 @@ function allocate(
 
 **Returns**
 
-| Name                   | Type      | Description                                           |
-| ---------------------- | --------- | ----------------------------------------------------- |
-| `allocationDeviation_` | `uint256` | deviation between current allocation and the new one  |
-| `isNegative_`          | `bool`    | true if new allocation is lesser than the current one |
+| Name                     | Type      | Description                                             |
+| ------------------------ | --------- | ------------------------------------------------------- |
+| `allocationDeviation_`   | `uint256` | deviation between current allocation and the new one    |
+| `rewardSharesDeviation_` | `uint256` | deviation between current reward shares and the new one |
+| `isNegative_`            | `bool`    | true if new allocation is lesser than the current one   |
 
 ### incentivizeWithRewardToken
 

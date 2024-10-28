@@ -1,6 +1,6 @@
 # IChangeExecutorRootstockCollective
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/836e10d50a4acb5647d0f97e64cf45b167023c99/src/interfaces/IChangeExecutorRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/fd421a0c60123969201eb8a254d52884f4ffef70/src/interfaces/IChangeExecutorRootstockCollective.sol)
 
 This interface is check if a changer is authotized by the governance system
 

@@ -1,6 +1,6 @@
 # Upgradeable
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b70765ceccba41d63eea90a69573cd6a3445d8c8/src/governance/Upgradeable.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/fd421a0c60123969201eb8a254d52884f4ffef70/src/governance/Upgradeable.sol)
 
 **Inherits:** UUPSUpgradeable, [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
@@ -40,9 +40,9 @@ function __Upgradeable_init(address changeExecutor_) internal onlyInitializing;
 
 **Parameters**
 
-| Name              | Type      | Description                     |
-| ----------------- | --------- | ------------------------------- |
-| `changeExecutor_` | `address` | ChangeExecutor contract address |
+| Name              | Type      | Description                                        |
+| ----------------- | --------- | -------------------------------------------------- |
+| `changeExecutor_` | `address` | ChangeExecutorRootstockCollective contract address |
 
 ### governor
 

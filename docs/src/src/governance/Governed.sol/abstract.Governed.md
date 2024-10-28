@@ -1,6 +1,6 @@
 # Governed
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b70765ceccba41d63eea90a69573cd6a3445d8c8/src/governance/Governed.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/fd421a0c60123969201eb8a254d52884f4ffef70/src/governance/Governed.sol)
 
 Base contract to be inherited by governed contracts
 
@@ -14,7 +14,7 @@ contract is to define some useful modifiers and functions to be used on the gove
 contract that can articulate more complex changes executed from the governor
 
 ```solidity
-IChangeExecutor public changeExecutor;
+IChangeExecutorRootstockCollective public changeExecutor;
 ```
 
 ### \_\_gap
