@@ -13,7 +13,7 @@ The RootstockCollective team will send a response indicating the next steps in h
 reply to your report, the security team will keep you informed of the progress towards a fix and full announcement, and
 may ask for additional information or guidance.
 
-**Ensure the bug was not already reported** by searching on GitHub under
+**Ensure the bug has not already been reported** by searching on GitHub under
 [Issues](https://github.com/rootstockcollective/collective-rewards-sc/issues).
 
 ## Vulnerability Handling
