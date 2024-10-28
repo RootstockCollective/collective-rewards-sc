@@ -27,6 +27,6 @@ RootstockCollective will make a best effort to meet the following response times
 
 We'll try to keep you informed about our progress throughout the process.
 
-### Disclose Policy
+### Disclosure Policy
 
 - Public disclosure of a vulnerability makes it ineligible for a bounty.
