@@ -1,7 +1,7 @@
-# Builder Incentives Smart Contracts [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
+# Rewards Smart Contracts for RootstockCollective [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
 
-[gha]: https://github.com/rsksmart/builder-incentives-sc/actions
-[gha-badge]: https://github.com/rsksmart/builder-incentives-sc/actions/workflows/ci.yml/badge.svg
+[gha]: https://github.com/RootstockCollective/collective-rewards-sc/actions
+[gha-badge]: https://github.com/RootstockCollective/collective-rewards-sc/actions/workflows/ci.yml/badge.svg
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 [license]: https://opensource.org/licenses/MIT
@@ -54,8 +54,8 @@ If this is your first time with Foundry, check out the
 Clone the repo and install the dependencies
 
 ```sh
-git clone https://github.com/rsksmart/builder-incentives-sc.git
-cd builder-incentives-sc
+git clone https://github.com/RootstockCollective/collective-rewards-sc.git
+cd collective-rewards-sc
 bun install # install Solhint, Prettier, Hardhat and other Node.js deps
 ```
 
@@ -73,7 +73,7 @@ and change the values to
 export PRIVATE_KEY="{your-private-key}"
 ```
 
-When you change to the project directory (`cd builder-incentives-sc`), the shell will ask you to run
+When you change to the project directory (`cd collective-rewards-sc`), the shell will ask you to run
 
 ```sh
 direnv allow

@@ -1,8 +1,9 @@
 {
-  "name": "@prb/foundry-template",
-  "description": "Smart contracts to implement builder incentive/staker reward mechanisms",
+  "name": "@rootstock-collective/collective-rewards-sc",
+  "description": "Smart contracts to implement RootstockCollective reward mechanisms",
   "version": "0.0.1",
-  "author": "RSK Smart - Tokenomics Squad",
+  "author": "Rootstock Collective",
+  "repository": "https://github.com/RootstockCollective/collective-rewards-sc.git",
   "contributors": [
     {
       "name": "Antonio Morrone",
