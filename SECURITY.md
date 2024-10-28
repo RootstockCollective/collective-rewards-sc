@@ -20,7 +20,7 @@ may ask for additional information or guidance.
 
 ### Response Time
 
-RootstockCollective will make a best effort to meet the following response times for reported vulnerabilities:
+RootstockCollective will make its best effort to meet the following response times for reported vulnerabilities:
 
 - Time to first response (from report submission) - 5 business days
 - Time to triage (from report submit) - 7 business days
