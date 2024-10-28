@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b70765ceccba41d63eea90a69573cd6a3445d8c8/src/SponsorsManager.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/fd421a0c60123969201eb8a254d52884f4ffef70/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -440,4 +440,10 @@ error DistributionPeriodDidNotStart();
 
 ```solidity
 error GaugeDoesNotExist();
+```
+
+### BeforeDistribution
+
+```solidity
+error BeforeDistribution();
 ```

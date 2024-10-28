@@ -2,10 +2,10 @@
 pragma solidity 0.8.20;
 
 /**
- * @title IChangeExecutor
+ * @title IChangeExecutorRootstockCollective
  *   @notice This interface is check if a changer is authotized by the governance system
  */
-interface IChangeExecutor {
+interface IChangeExecutorRootstockCollective {
     /**
      * @notice returns governor address
      */

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { IChangeContract } from "../../interfaces/IChangeContract.sol";
+import { IChangeContractRootstockCollective } from "../../interfaces/IChangeContractRootstockCollective.sol";
 import { SponsorsManager } from "../../SponsorsManager.sol";
 import { Gauge } from "../../gauge/Gauge.sol";
 
@@ -9,7 +9,7 @@ import { Gauge } from "../../gauge/Gauge.sol";
  * @title WhitelistBuilderChangerTemplate
  *   @notice ChangeContract used to whitelist a builder and create its Gauger contract
  */
-contract WhitelistBuilderChangerTemplate is IChangeContract {
+contract WhitelistBuilderChangerTemplate is IChangeContractRootstockCollective {
     /// @notice SponsorsManager contract address
     SponsorsManager public immutable sponsorsManager;
     /// @notice builder address to be whitelisted

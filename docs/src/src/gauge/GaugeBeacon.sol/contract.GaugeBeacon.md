@@ -1,6 +1,6 @@
 # GaugeBeacon
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b70765ceccba41d63eea90a69573cd6a3445d8c8/src/gauge/GaugeBeacon.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/fd421a0c60123969201eb8a254d52884f4ffef70/src/gauge/GaugeBeacon.sol)
 
 **Inherits:** UpgradeableBeacon, [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
@@ -15,15 +15,15 @@ constructor(
     address changeExecutor_,
     address gaugeImplementation_
 )
-    UpgradeableBeacon(gaugeImplementation_, IChangeExecutor(changeExecutor_).governor());
+    UpgradeableBeacon(gaugeImplementation_, IChangeExecutorRootstockCollective(changeExecutor_).governor());
 ```
 
 **Parameters**
 
-| Name                   | Type      | Description                                 |
-| ---------------------- | --------- | ------------------------------------------- |
-| `changeExecutor_`      | `address` | ChangeExecutor contract address             |
-| `gaugeImplementation_` | `address` | address of the Gauge initial implementation |
+| Name                   | Type      | Description                                        |
+| ---------------------- | --------- | -------------------------------------------------- |
+| `changeExecutor_`      | `address` | ChangeExecutorRootstockCollective contract address |
+| `gaugeImplementation_` | `address` | address of the Gauge initial implementation        |
 
 ### governor
 

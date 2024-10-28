@@ -1,5 +1,5 @@
 # Contents
 
-- [IChangeContract](IChangeContract.sol/interface.IChangeContract.md)
-- [IChangeExecutor](IChangeExecutor.sol/interface.IChangeExecutor.md)
+- [IChangeContractRootstockCollective](IChangeContractRootstockCollective.sol/interface.IChangeContractRootstockCollective.md)
+- [IChangeExecutorRootstockCollective](IChangeExecutorRootstockCollective.sol/interface.IChangeExecutorRootstockCollective.md)
 - [ISponsorsManager](ISponsorsManager.sol/interface.ISponsorsManager.md)

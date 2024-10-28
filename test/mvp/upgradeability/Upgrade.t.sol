@@ -6,10 +6,10 @@ import { SimplifiedRewardDistributorUpgradeMock } from "../../mock/UpgradesMocks
 
 contract MVPUpgradeTest is MVPBaseTest {
     /**
-     * SCENARIO: SimplifiedRewardDistributor is upgraded
+     * SCENARIO: SimplifiedRewardDistributorRootstockCollective is upgraded
      */
     function test_UpgradeSimplifiedRewardDistributorr() public {
-        // GIVEN a SimplifiedRewardDistributor proxy with an implementation
+        // GIVEN a SimplifiedRewardDistributorRootstockCollective proxy with an implementation
         // AND a new implementation
         SimplifiedRewardDistributorUpgradeMock _simplifiedRewardDistributorNewImpl =
             new SimplifiedRewardDistributorUpgradeMock();

@@ -43,10 +43,10 @@ contract UpgradeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: ChangeExecutor is upgraded
+     * SCENARIO: ChangeExecutorRootstockCollective is upgraded
      */
     function test_UpgradeChangeExecutor() public {
-        // GIVEN a ChangeExecutor proxy with an implementation
+        // GIVEN a ChangeExecutorRootstockCollective proxy with an implementation
         // AND a new implementation
         ChangeExecutorUpgradeMock _changeExecutorNewImpl = new ChangeExecutorUpgradeMock();
         //WHEN the proxy is upgraded and initialized

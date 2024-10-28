@@ -6,10 +6,10 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 
 contract MVPInitializationTest is MVPBaseTest {
     /**
-     * SCENARIO: SimplifiedRewardDistributor cannot be initialized twice
+     * SCENARIO: SimplifiedRewardDistributorRootstockCollective cannot be initialized twice
      */
     function test_RevertSimplifiedRewardDistributorInitialize() public {
-        // GIVEN a SimplifiedRewardDistributor initialized
+        // GIVEN a SimplifiedRewardDistributorRootstockCollective initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);

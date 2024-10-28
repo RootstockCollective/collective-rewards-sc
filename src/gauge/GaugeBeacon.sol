@@ -2,21 +2,21 @@
 pragma solidity 0.8.20;
 
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
-import { Governed, IChangeExecutor } from "../governance/Governed.sol";
+import { Governed, IChangeExecutorRootstockCollective } from "../governance/Governed.sol";
 
 contract GaugeBeacon is UpgradeableBeacon, Governed {
     /**
      * @notice constructor
-     * @param changeExecutor_ ChangeExecutor contract address
+     * @param changeExecutor_ ChangeExecutorRootstockCollective contract address
      * @param gaugeImplementation_ address of the Gauge initial implementation
      */
     constructor(
         address changeExecutor_,
         address gaugeImplementation_
     )
-        UpgradeableBeacon(gaugeImplementation_, IChangeExecutor(changeExecutor_).governor())
+        UpgradeableBeacon(gaugeImplementation_, IChangeExecutorRootstockCollective(changeExecutor_).governor())
     {
-        changeExecutor = IChangeExecutor(changeExecutor_);
+        changeExecutor = IChangeExecutorRootstockCollective(changeExecutor_);
     }
 
     // -----------------------------

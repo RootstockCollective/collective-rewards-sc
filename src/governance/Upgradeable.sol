@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { Governed, IChangeExecutor } from "./Governed.sol";
+import { Governed, IChangeExecutorRootstockCollective } from "./Governed.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /**
@@ -25,12 +25,12 @@ abstract contract Upgradeable is UUPSUpgradeable, Governed {
 
     /**
      * @notice contract initializer
-     * @param changeExecutor_ ChangeExecutor contract address
+     * @param changeExecutor_ ChangeExecutorRootstockCollective contract address
      */
     function __Upgradeable_init(address changeExecutor_) internal onlyInitializing {
         __UUPSUpgradeable_init();
-        changeExecutor = IChangeExecutor(changeExecutor_);
-        _governor = IChangeExecutor(changeExecutor_).governor();
+        changeExecutor = IChangeExecutorRootstockCollective(changeExecutor_);
+        _governor = IChangeExecutorRootstockCollective(changeExecutor_).governor();
     }
 
     // -----------------------------

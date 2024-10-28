@@ -4,8 +4,9 @@ pragma solidity 0.8.20;
 import { SponsorsManager } from "../../src/SponsorsManager.sol";
 import { RewardDistributor } from "../../src/RewardDistributor.sol";
 import { Gauge } from "../../src/gauge/Gauge.sol";
-import { ChangeExecutor } from "../../src/governance/ChangeExecutor.sol";
-import { SimplifiedRewardDistributor } from "../../src/mvp/SimplifiedRewardDistributor.sol";
+import { ChangeExecutorRootstockCollective } from "../../src/governance/ChangeExecutorRootstockCollective.sol";
+import { SimplifiedRewardDistributorRootstockCollective } from
+    "../../src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
 
 /**
  * @title UpgradeableMock
@@ -53,9 +54,9 @@ contract GaugeUpgradeMock is Gauge, UpgradeableMock {
 
 /**
  * @title ChangeExecutorUpgradeMock
- * @dev Only for upgradeability testing purposes. Extends ChangeExecutor adding a new variable.
+ * @dev Only for upgradeability testing purposes. Extends ChangeExecutorRootstockCollective adding a new variable.
  */
-contract ChangeExecutorUpgradeMock is ChangeExecutor, UpgradeableMock {
+contract ChangeExecutorUpgradeMock is ChangeExecutorRootstockCollective, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
         return newVariable + uint256(uint160(governor()));
     }
@@ -63,9 +64,10 @@ contract ChangeExecutorUpgradeMock is ChangeExecutor, UpgradeableMock {
 
 /**
  * @title SimplifiedRewardDistributorUpgradeMock
- * @dev Only for upgradeability testing purposes. Extends SimplifiedRewardDistributor adding a new variable.
+ * @dev Only for upgradeability testing purposes. Extends SimplifiedRewardDistributorRootstockCollective adding a new
+ * variable.
  */
-contract SimplifiedRewardDistributorUpgradeMock is SimplifiedRewardDistributor, UpgradeableMock {
+contract SimplifiedRewardDistributorUpgradeMock is SimplifiedRewardDistributorRootstockCollective, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
         return newVariable + uint256(uint160(governor()));
     }
