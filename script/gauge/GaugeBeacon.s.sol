@@ -8,7 +8,10 @@ import { IGovernanceManager } from "../../src/interfaces/IGovernanceManager.sol"
 
 contract Deploy is Broadcaster {
     function run() public returns (GaugeBeacon) {
-        address _governanceManager = vm.envAddress("ACCESS_CONTROL_ADDRESS");
+        address _governanceManager = vm.envOr("GovernanceManager", address(0));
+        if (_governanceManager == address(0)) {
+            _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
+        }
         return run(_governanceManager);
     }
 
