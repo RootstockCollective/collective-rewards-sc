@@ -14,7 +14,7 @@ contract Deploy is Broadcaster {
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         address _governanceManager = vm.envOr("GovernanceManager", address(0));
         if (_governanceManager == address(0)) {
-            _governanceManager = vm.envAddress("ACCESS_CONTROL_ADDRESS");
+            _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
         }
         address _gaugeFactoryAddress = vm.envOr("GaugeFactory", address(0));
         if (_gaugeFactoryAddress == address(0)) {

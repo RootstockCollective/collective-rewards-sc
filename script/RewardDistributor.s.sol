@@ -10,7 +10,7 @@ contract Deploy is Broadcaster {
     function run() public returns (RewardDistributor proxy_, RewardDistributor implementation_) {
         address _governanceManager = vm.envOr("GovernanceManager", address(0));
         if (_governanceManager == address(0)) {
-            _governanceManager = vm.envAddress("ACCESS_CONTROL_ADDRESS");
+            _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
         }
 
         (proxy_, implementation_) = run(_governanceManager);
