@@ -16,7 +16,7 @@ abstract contract Upgradeable is UUPSUpgradeable {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyValidChanger() {
-        _governanceManager.validateChanger(msg.sender);
+        governanceManager.validateChanger(msg.sender);
         _;
     }
 
@@ -24,7 +24,7 @@ abstract contract Upgradeable is UUPSUpgradeable {
     // ---------- Storage ----------
     // -----------------------------
 
-    IGovernanceManager internal _governanceManager;
+    IGovernanceManager public governanceManager;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -37,7 +37,7 @@ abstract contract Upgradeable is UUPSUpgradeable {
     /* solhint-disable-next-line func-name-mixedcase */
     function __Upgradeable_init(IGovernanceManager governanceManager_) internal onlyInitializing {
         __UUPSUpgradeable_init();
-        _governanceManager = governanceManager_;
+        governanceManager = governanceManager_;
     }
 
     // -----------------------------
