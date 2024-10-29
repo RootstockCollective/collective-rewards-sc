@@ -1,6 +1,6 @@
 # EpochTimeKeeper
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/9e93ef13dfa486a88912b2b33742981b36e991ee/src/EpochTimeKeeper.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/8bd29e5db4bf3fe742eaa77d7d0078590ca8f07f/src/EpochTimeKeeper.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md)
 

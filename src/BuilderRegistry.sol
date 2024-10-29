@@ -20,9 +20,11 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     // ------- Custom Errors -------
     // -----------------------------
 
+    error AlreadyActivated();
     error AlreadyKYCApproved();
     error AlreadyWhitelisted();
     error AlreadyRevoked();
+    error NotActivated();
     error NotKYCApproved();
     error NotWhitelisted();
     error NotPaused();
@@ -33,6 +35,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     error InvalidBuilderKickback();
     error BuilderAlreadyExists();
     error BuilderDoesNotExist();
+    error GaugeDoesNotExist();
 
     // -----------------------------
     // ----------- Events ----------
@@ -53,11 +56,12 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     // ---------- Structs ----------
     // -----------------------------
     struct BuilderState {
+        bool activated;
         bool kycApproved;
         bool whitelisted;
         bool paused;
         bool revoked;
-        bytes8 reserved; // for future upgrades
+        bytes7 reserved; // for future upgrades
         bytes20 pausedReason;
     }
 
@@ -138,18 +142,17 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     // -----------------------------
 
     /**
-     * @notice activates builder setting the reward receiver and the kickback
+     * @notice activates builder for the first time, setting the reward receiver and the kickback
+     *  Sets activate flag to true. It cannot be switched to false anymore
      * @dev reverts if it is not called by the owner address
-     * reverts if it is already KYC approved
-     * reverts if it has a gauge associated
+     * reverts if it is already activated
      * @param builder_ address of the builder
      * @param rewardReceiver_ address of the builder reward receiver
      * @param kickback_ kickback(100% == 1 ether)
      */
     function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyOwner {
-        if (builderState[builder_].kycApproved) revert AlreadyKYCApproved();
-        if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
-
+        if (builderState[builder_].activated) revert AlreadyActivated();
+        builderState[builder_].activated = true;
         builderState[builder_].kycApproved = true;
         builderRewardReceiver[builder_] = rewardReceiver_;
         // TODO: should we have a minimal amount?
@@ -173,14 +176,16 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     /**
      * @notice approves builder's KYC after a revocation
      * @dev reverts if it is not called by the owner address
+     * reverts if it is not activated
      * reverts if it is already KYC approved
      * reverts if it does not have a gauge associated
      * @param builder_ address of the builder
      */
     function approveBuilderKYC(address builder_) external onlyOwner {
         Gauge _gauge = builderToGauge[builder_];
-        if (builderState[builder_].kycApproved) revert AlreadyKYCApproved();
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
+        if (!builderState[builder_].activated) revert NotActivated();
+        if (builderState[builder_].kycApproved) revert AlreadyKYCApproved();
 
         builderState[builder_].kycApproved = true;
 
@@ -214,14 +219,12 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @notice whitelist builder and create its gauge
      * @dev reverts if it is not called by the governor address or authorized changer
      * reverts if is already whitelisted
-     * reverts if it is not KYCApproved
      * reverts if it has a gauge associated
      * @param builder_ address of the builder
      * @return gauge_ gauge contract
      */
     function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge_) {
         if (builderState[builder_].whitelisted) revert AlreadyWhitelisted();
-        if (!builderState[builder_].kycApproved) revert NotKYCApproved();
         if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
 
         builderState[builder_].whitelisted = true;
@@ -467,6 +470,15 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
         gaugeToBuilder[gauge_] = builder_;
         _gauges.add(address(gauge_));
         emit GaugeCreated(builder_, address(gauge_), msg.sender);
+    }
+
+    /**
+     * @notice reverts if builder was not activated or approved by the community
+     */
+    function _validateGauge(Gauge gauge_) internal view {
+        address _builder = gaugeToBuilder[gauge_];
+        if (_builder == address(0)) revert GaugeDoesNotExist();
+        if (!builderState[_builder].activated) revert NotActivated();
     }
 
     /**

@@ -1,6 +1,6 @@
 # UtilsLib
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/9e93ef13dfa486a88912b2b33742981b36e991ee/src/libraries/UtilsLib.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/8bd29e5db4bf3fe742eaa77d7d0078590ca8f07f/src/libraries/UtilsLib.sol)
 
 ## State Variables
 

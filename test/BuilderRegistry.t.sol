@@ -69,7 +69,7 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: should revert if is not called by a builder
+     * SCENARIO: should revert if it is not called by a builder
      */
     function test_RevertBuilderDoesNotExist() public {
         // GIVEN  a whitelisted builder
@@ -115,7 +115,7 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.activateBuilder(_newBuilder, _newRewardReceiver, 0.1 ether);
 
         // THEN builder is kycApproved
-        (bool _kycApproved,,,,,) = sponsorsManager.builderState(_newBuilder);
+        (, bool _kycApproved,,,,,) = sponsorsManager.builderState(_newBuilder);
         assertEq(_kycApproved, true);
 
         // THEN builder rewards receiver is set
@@ -123,17 +123,12 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: activateBuilder should reverts if it is already approved
+     * SCENARIO: approveBuilderKYC should revert if it is already approved
      */
     function test_RevertAlreadyKYCApproved() public {
         // GIVEN a builder KYC approved
         //  AND a kycApprover
         vm.startPrank(kycApprover);
-
-        // WHEN tries to activateBuilder
-        //  THEN tx reverts because is already kycApproved
-        vm.expectRevert(BuilderRegistry.AlreadyKYCApproved.selector);
-        sponsorsManager.activateBuilder(builder, builder, 0);
 
         // WHEN tries to approveBuilderKYC
         //  THEN tx reverts because is already kycApproved
@@ -142,7 +137,37 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: activateBuilder should reverts if kickback is higher than 100
+     * SCENARIO: activateBuilder should revert if it is already activated
+     */
+    function test_RevertAlreadyKYCActivated() public {
+        // GIVEN a builder KYC approved
+        //  AND a kycApprover
+        vm.startPrank(kycApprover);
+
+        // WHEN tries to activateBuilder
+        //  THEN tx reverts because is already activated
+        vm.expectRevert(BuilderRegistry.AlreadyActivated.selector);
+        sponsorsManager.activateBuilder(builder, builder, 0);
+    }
+
+    /**
+     * SCENARIO: approveBuilderKYC should revert if it is not activated
+     */
+    function test_RevertNotKYCActivated() public {
+        // GIVEN a new builder
+        address _newBuilder = makeAddr("newBuilder");
+        //  AND is whitelisted
+        sponsorsManager.whitelistBuilder(_newBuilder);
+
+        // WHEN tries to approveBuilderKYC
+        //  THEN tx reverts because is not activated
+        vm.startPrank(kycApprover);
+        vm.expectRevert(BuilderRegistry.NotActivated.selector);
+        sponsorsManager.approveBuilderKYC(_newBuilder);
+    }
+
+    /**
+     * SCENARIO: activateBuilder should revert if kickback is higher than 100
      */
     function test_ActivateBuilderInvalidBuilderKickback() public {
         // GIVEN a new builder
@@ -182,12 +207,12 @@ contract BuilderRegistryTest is BaseTest {
         // THEN new builder is assigned to the new gauge
         assertEq(sponsorsManager.gaugeToBuilder(_newGauge), _newBuilder);
         // THEN builder is whitelisted
-        (, bool _whitelisted,,,,) = sponsorsManager.builderState(_newBuilder);
+        (,, bool _whitelisted,,,,) = sponsorsManager.builderState(_newBuilder);
         assertEq(_whitelisted, true);
     }
 
     /**
-     * SCENARIO: whitelistBuilder should reverts if it is already whitelisted
+     * SCENARIO: whitelistBuilder should revert if it is already whitelisted
      */
     function test_RevertAlreadyWhitelisted() public {
         // GIVEN a builder whitelisted
@@ -210,7 +235,7 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.pauseBuilder(builder, "paused");
 
         // THEN builder is paused
-        (,, bool _paused,,, bytes20 _reason) = sponsorsManager.builderState(builder);
+        (,,, bool _paused,,, bytes20 _reason) = sponsorsManager.builderState(builder);
         assertEq(_paused, true);
         // THEN builder paused reason is "paused"
         assertEq(_reason, "paused");
@@ -225,7 +250,7 @@ contract BuilderRegistryTest is BaseTest {
         vm.prank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "This is a short test");
         // THEN builder is paused
-        (,, bool _paused,,, bytes20 _reason) = sponsorsManager.builderState(builder);
+        (,,, bool _paused,,, bytes20 _reason) = sponsorsManager.builderState(builder);
         assertEq(_paused, true);
         // THEN builder paused reason is "This is a short test"
         assertEq(_reason, "This is a short test");
@@ -239,7 +264,7 @@ contract BuilderRegistryTest is BaseTest {
         //  AND kycApprover calls pauseBuilder
         vm.prank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "paused");
-        (,, bool _paused,,, bytes20 _reason) = sponsorsManager.builderState(builder);
+        (,,, bool _paused,,, bytes20 _reason) = sponsorsManager.builderState(builder);
         assertEq(_paused, true);
         // THEN builder paused reason is "paused"
         assertEq(_reason, "paused");
@@ -248,7 +273,7 @@ contract BuilderRegistryTest is BaseTest {
         vm.prank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "pausedAgain");
         // THEN builder is still paused
-        (,, _paused,,, _reason) = sponsorsManager.builderState(builder);
+        (,,, _paused,,, _reason) = sponsorsManager.builderState(builder);
         assertEq(_paused, true);
         // THEN builder paused reason is "pausedAgain"
         assertEq(_reason, "pausedAgain");
@@ -268,7 +293,7 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.unpauseBuilder(builder);
 
         // THEN builder is not paused
-        (,, bool _paused,,, bytes20 _reason) = sponsorsManager.builderState(builder);
+        (,,, bool _paused,,, bytes20 _reason) = sponsorsManager.builderState(builder);
         assertEq(_paused, false);
         // THEN builder paused reason is clean
         assertEq(_reason, "");
@@ -289,7 +314,7 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.permitBuilder(1 ether);
 
         // THEN builder is not revoked
-        (,,, bool _revoked,,) = sponsorsManager.builderState(builder);
+        (,,,, bool _revoked,,) = sponsorsManager.builderState(builder);
         assertEq(_revoked, false);
         // THEN gauge is not halted
         assertEq(sponsorsManager.isGaugeHalted(address(gauge)), false);
@@ -304,7 +329,7 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: permitBuilder should reverts if is not revoked
+     * SCENARIO: permitBuilder should revert if it is not revoked
      */
     function test_PermitBuilderRevert() public {
         // GIVEN a builder not paused
@@ -324,7 +349,7 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: permitBuilder should reverts if kickback is higher than 100
+     * SCENARIO: permitBuilder should revert if kickback is higher than 100
      */
     function test_PermitBuilderInvalidBuilderKickback() public {
         // GIVEN a revoked builder
@@ -350,7 +375,7 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.revokeBuilder();
 
         // THEN builder is revoked
-        (,,, bool _revoked,,) = sponsorsManager.builderState(builder);
+        (,,,, bool _revoked,,) = sponsorsManager.builderState(builder);
         assertEq(_revoked, true);
         // THEN gauge is halted
         assertEq(sponsorsManager.isGaugeHalted(address(gauge)), true);
@@ -365,7 +390,7 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: revokeBuilder should reverts if is already revoked
+     * SCENARIO: revokeBuilder should revert if it is already revoked
      */
     function test_RevertAlreadyRevoked() public {
         // GIVEN a revoked builder
@@ -387,39 +412,67 @@ contract BuilderRegistryTest is BaseTest {
 
         // WHEN kycApprover tries to activating it again
         //  THEN tx reverts because builder already exists
-        vm.expectRevert(BuilderRegistry.BuilderAlreadyExists.selector);
+        vm.expectRevert(BuilderRegistry.AlreadyActivated.selector);
         sponsorsManager.activateBuilder(builder, builder, 0);
     }
 
     /**
-     * SCENARIO: new builder is KYC revoked and activated again
+     * SCENARIO: whitelistBuilder before activate it
      */
-    function test_ApproveKYCRevokedBuilderAgain() public {
+    function test_WhitelistBuilderBeforeActivate() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
-        // AND kycApprover activates it
-        vm.startPrank(kycApprover);
-        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
-        // AND kycApprover revokes it KYC
-        sponsorsManager.revokeBuilderKYC(_newBuilder);
+        //  AND is whitelisted
+        Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
+        // THEN new gauge is assigned to the new builder
+        assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
+        // THEN new builder is assigned to the new gauge
+        assertEq(sponsorsManager.gaugeToBuilder(_newGauge), _newBuilder);
+        (bool _activated, bool _kycApproved, bool _whitelisted,,,,) = sponsorsManager.builderState(_newBuilder);
+        // THEN builder is whitelisted
+        assertEq(_whitelisted, true);
+        // THEN builder is not activated
+        assertEq(_activated, false);
+        // THEN builder is not KYC approved
+        assertEq(_kycApproved, false);
 
-        // WHEN kycApprover activates it again
-        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0);
-        // THEN builder is kycApproved
-        (bool _kycApproved,,,,,) = sponsorsManager.builderState(_newBuilder);
+        // WHEN new builder is activated
+        vm.prank(kycApprover);
+        sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 0.1 ether);
+        (_activated, _kycApproved, _whitelisted,,,,) = sponsorsManager.builderState(_newBuilder);
+        // THEN builder is whitelisted
+        assertEq(_whitelisted, true);
+        // THEN builder is activated
+        assertEq(_activated, true);
+        // THEN builder is KYC approved
         assertEq(_kycApproved, true);
     }
 
     /**
-     * SCENARIO: whitelistBuilder should reverts if it is not KYC approved
+     * SCENARIO: whitelistBuilder can be de-whitelisted without being activated before
      */
-    function test_RevertWhitelistBuilderNotKYCApproved() public {
+    function test_DeWhitelistBuilderWithoutActivate() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
-        //  WHEN tries to whitelistBuilder
-        //   THEN tx reverts because is not KYC approved
-        vm.expectRevert(BuilderRegistry.NotKYCApproved.selector);
-        sponsorsManager.whitelistBuilder(_newBuilder);
+        //  AND is whitelisted
+        Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
+        // THEN new gauge is assigned to the new builder
+        assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
+        // THEN new builder is assigned to the new gauge
+        assertEq(sponsorsManager.gaugeToBuilder(_newGauge), _newBuilder);
+        (bool _activated, bool _kycApproved, bool _whitelisted,,,,) = sponsorsManager.builderState(_newBuilder);
+        // THEN builder is whitelisted
+        assertEq(_whitelisted, true);
+        // THEN builder is not activated
+        assertEq(_activated, false);
+        // THEN builder is not KYC approved
+        assertEq(_kycApproved, false);
+
+        // WHEN new builder is de-whitelisted
+        sponsorsManager.dewhitelistBuilder(_newBuilder);
+        (,, _whitelisted,,,,) = sponsorsManager.builderState(_newBuilder);
+        // THEN builder is not whitelisted
+        assertEq(_whitelisted, false);
     }
 
     /**
@@ -483,7 +536,7 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.revokeBuilderKYC(builder);
 
         // THEN builder is not kycApproved
-        (bool _kycApproved,,,,,) = sponsorsManager.builderState(builder);
+        (, bool _kycApproved,,,,,) = sponsorsManager.builderState(builder);
         assertEq(_kycApproved, false);
         // THEN gauge is halted
         assertEq(sponsorsManager.isGaugeHalted(address(gauge)), true);
@@ -512,7 +565,7 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.approveBuilderKYC(builder);
 
         // THEN builder is kycApproved
-        (bool _kycApproved,,,,,) = sponsorsManager.builderState(builder);
+        (, bool _kycApproved,,,,,) = sponsorsManager.builderState(builder);
         assertEq(_kycApproved, true);
         // THEN gauge is not halted
         assertEq(sponsorsManager.isGaugeHalted(address(gauge)), false);
@@ -535,7 +588,7 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.revokeBuilderKYC(builder);
         // AND kycApprover calls pauseBuilder
         sponsorsManager.pauseBuilder(builder, "paused");
-        (bool _kycApproved,, bool _paused,,,) = sponsorsManager.builderState(builder);
+        (, bool _kycApproved,, bool _paused,,,) = sponsorsManager.builderState(builder);
         // THEN builder is not kycApproved
         assertEq(_kycApproved, false);
         // THEN builder is paused
@@ -543,7 +596,7 @@ contract BuilderRegistryTest is BaseTest {
 
         // AND kycApprover calls unpauseBuilder
         sponsorsManager.unpauseBuilder(builder);
-        (_kycApproved,, _paused,,,) = sponsorsManager.builderState(builder);
+        (, _kycApproved,, _paused,,,) = sponsorsManager.builderState(builder);
         // THEN builder is still not kycApproved
         assertEq(_kycApproved, false);
         // THEN builder is not paused
@@ -560,7 +613,7 @@ contract BuilderRegistryTest is BaseTest {
         // AND kycApprover calls pauseBuilder
         vm.startPrank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "paused");
-        (,, bool _paused, bool _revoked,,) = sponsorsManager.builderState(builder);
+        (,,, bool _paused, bool _revoked,,) = sponsorsManager.builderState(builder);
         // THEN builder is revoked
         assertEq(_revoked, true);
         // THEN builder is paused
@@ -568,7 +621,7 @@ contract BuilderRegistryTest is BaseTest {
 
         // AND kycApprover calls unpauseBuilder
         sponsorsManager.unpauseBuilder(builder);
-        (,, _paused, _revoked,,) = sponsorsManager.builderState(builder);
+        (,,, _paused, _revoked,,) = sponsorsManager.builderState(builder);
         // THEN builder is still revoked
         assertEq(_revoked, true);
         // THEN builder is not paused
@@ -585,7 +638,7 @@ contract BuilderRegistryTest is BaseTest {
         // AND builder calls revokeBuilder
         vm.startPrank(builder);
         sponsorsManager.revokeBuilder();
-        (,, bool _paused, bool _revoked,,) = sponsorsManager.builderState(builder);
+        (,,, bool _paused, bool _revoked,,) = sponsorsManager.builderState(builder);
         // THEN builder is paused
         assertEq(_paused, true);
         // THEN builder is revoked
@@ -593,7 +646,7 @@ contract BuilderRegistryTest is BaseTest {
 
         // AND builder calls permitBuilder
         sponsorsManager.permitBuilder(0.1 ether);
-        (,, _paused, _revoked,,) = sponsorsManager.builderState(builder);
+        (,,, _paused, _revoked,,) = sponsorsManager.builderState(builder);
         // THEN builder is still paused
         assertEq(_paused, true);
         // THEN builder is not revoked
@@ -610,7 +663,7 @@ contract BuilderRegistryTest is BaseTest {
 
         // AND kycApprover calls revokeBuilderKYC
         sponsorsManager.revokeBuilderKYC(builder);
-        (bool _kycApproved,, bool _paused,,,) = sponsorsManager.builderState(builder);
+        (, bool _kycApproved,, bool _paused,,,) = sponsorsManager.builderState(builder);
         // THEN builder is paused
         assertEq(_paused, true);
         // THEN builder is not kyc approved
@@ -629,7 +682,7 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.dewhitelistBuilder(builder);
 
         // THEN builder is not whitelisted
-        (, bool _whitelisted,,,,) = sponsorsManager.builderState(builder);
+        (,, bool _whitelisted,,,,) = sponsorsManager.builderState(builder);
         assertEq(_whitelisted, false);
         // THEN gauge is halted
         assertEq(sponsorsManager.isGaugeHalted(address(gauge)), true);
@@ -707,7 +760,7 @@ contract BuilderRegistryTest is BaseTest {
         // AND kycApprover calls pauseBuilder
         vm.startPrank(kycApprover);
         sponsorsManager.pauseBuilder(builder, "paused");
-        (, bool _whitelisted, bool _paused,,,) = sponsorsManager.builderState(builder);
+        (,, bool _whitelisted, bool _paused,,,) = sponsorsManager.builderState(builder);
         // THEN builder is not whitelisted
         assertEq(_whitelisted, false);
         // THEN builder is paused
@@ -715,7 +768,7 @@ contract BuilderRegistryTest is BaseTest {
 
         // AND kycApprover calls unpauseBuilder
         sponsorsManager.unpauseBuilder(builder);
-        (, _whitelisted, _paused,,,) = sponsorsManager.builderState(builder);
+        (,, _whitelisted, _paused,,,) = sponsorsManager.builderState(builder);
         // THEN builder is still not whitelisted
         assertEq(_whitelisted, false);
         // THEN builder is not paused
@@ -732,7 +785,7 @@ contract BuilderRegistryTest is BaseTest {
 
         // AND governor calls dewhitelistBuilder
         sponsorsManager.dewhitelistBuilder(builder);
-        (, bool _whitelisted, bool _paused,,,) = sponsorsManager.builderState(builder);
+        (,, bool _whitelisted, bool _paused,,,) = sponsorsManager.builderState(builder);
         // THEN builder is paused
         assertEq(_paused, true);
         // THEN builder is not whitelisted
@@ -749,7 +802,7 @@ contract BuilderRegistryTest is BaseTest {
         // AND kycApprover calls revokeBuilderKYC
         vm.startPrank(kycApprover);
         sponsorsManager.revokeBuilderKYC(builder);
-        (bool _kycApproved, bool _whitelisted,,,,) = sponsorsManager.builderState(builder);
+        (, bool _kycApproved, bool _whitelisted,,,,) = sponsorsManager.builderState(builder);
         // THEN builder is not whitelisted
         assertEq(_whitelisted, false);
         // THEN builder is not kyc approved
@@ -770,7 +823,7 @@ contract BuilderRegistryTest is BaseTest {
         vm.startPrank(kycApprover);
         sponsorsManager.approveBuilderKYC(builder);
 
-        (bool _kycApproved, bool _whitelisted,,,,) = sponsorsManager.builderState(builder);
+        (, bool _kycApproved, bool _whitelisted,,,,) = sponsorsManager.builderState(builder);
         // THEN builder is not whitelisted
         assertEq(_whitelisted, false);
         // THEN builder is kyc approved

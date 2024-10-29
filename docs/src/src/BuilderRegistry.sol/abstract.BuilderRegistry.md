@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/9e93ef13dfa486a88912b2b33742981b36e991ee/src/BuilderRegistry.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/8bd29e5db4bf3fe742eaa77d7d0078590ca8f07f/src/BuilderRegistry.sol)
 
 **Inherits:** [EpochTimeKeeper](/src/EpochTimeKeeper.sol/abstract.EpochTimeKeeper.md), Ownable2StepUpgradeable
 
@@ -145,10 +145,10 @@ function __BuilderRegistry_init(
 
 ### activateBuilder
 
-activates builder setting the reward receiver and the kickback
+activates builder for the first time, setting the reward receiver and the kickback Sets activate flag to true. It cannot
+be switched to false anymore
 
-_reverts if it is not called by the owner address reverts if it is already KYC approved reverts if it has a gauge
-associated_
+_reverts if it is not called by the owner address reverts if it is already activated_
 
 ```solidity
 function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyOwner;
@@ -166,8 +166,8 @@ function activateBuilder(address builder_, address rewardReceiver_, uint64 kickb
 
 approves builder's KYC after a revocation
 
-_reverts if it is not called by the owner address reverts if it is already KYC approved reverts if it does not have a
-gauge associated_
+_reverts if it is not called by the owner address reverts if it is not activated reverts if it is already KYC approved
+reverts if it does not have a gauge associated_
 
 ```solidity
 function approveBuilderKYC(address builder_) external onlyOwner;
@@ -200,7 +200,7 @@ function revokeBuilderKYC(address builder_) external onlyOwner;
 whitelist builder and create its gauge
 
 _reverts if it is not called by the governor address or authorized changer reverts if is already whitelisted reverts if
-it is not KYCApproved reverts if it has a gauge associated_
+it has a gauge associated_
 
 ```solidity
 function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge_);
@@ -421,6 +421,14 @@ function _createGauge(address builder_) internal returns (Gauge gauge_);
 | -------- | ------- | -------------- |
 | `gauge_` | `Gauge` | gauge contract |
 
+### \_validateGauge
+
+reverts if builder was not activated or approved by the community
+
+```solidity
+function _validateGauge(Gauge gauge_) internal view;
+```
+
 ### \_haltGauge
 
 halts a gauge moving it from the active array to the halted one
@@ -580,6 +588,12 @@ event GaugeCreated(address indexed builder_, address indexed gauge_, address cre
 
 ## Errors
 
+### AlreadyActivated
+
+```solidity
+error AlreadyActivated();
+```
+
 ### AlreadyKYCApproved
 
 ```solidity
@@ -596,6 +610,12 @@ error AlreadyWhitelisted();
 
 ```solidity
 error AlreadyRevoked();
+```
+
+### NotActivated
+
+```solidity
+error NotActivated();
 ```
 
 ### NotKYCApproved
@@ -658,17 +678,24 @@ error BuilderAlreadyExists();
 error BuilderDoesNotExist();
 ```
 
+### GaugeDoesNotExist
+
+```solidity
+error GaugeDoesNotExist();
+```
+
 ## Structs
 
 ### BuilderState
 
 ```solidity
 struct BuilderState {
+    bool activated;
     bool kycApproved;
     bool whitelisted;
     bool paused;
     bool revoked;
-    bytes8 reserved;
+    bytes7 reserved;
     bytes20 pausedReason;
 }
 ```
