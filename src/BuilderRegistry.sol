@@ -56,7 +56,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyKycApprover() {
-        _governanceManager.validateKycApprover(msg.sender);
+        governanceManager.validateKycApprover(msg.sender);
         _;
     }
 

@@ -21,7 +21,7 @@ contract RewardDistributor is Upgradeable {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyFoundationTreasury() {
-        _governanceManager.validateFoundationTreasury(msg.sender);
+        governanceManager.validateFoundationTreasury(msg.sender);
         _;
     }
 
