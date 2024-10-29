@@ -17,9 +17,9 @@ contract GovernanceManagerTest is BaseTest {
         assertEq(governanceManager.governor(), address(0x7));
     }
 
-    function test_FailUpdateGovernorByNonGovernor() public {
+    function test_FailUpdateGovernorByNotAuthorizedChanger() public {
         vm.prank(alice);
-        vm.expectRevert(IGovernanceManager.NotGovernor.selector);
+        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
         governanceManager.updateGovernor(address(0x7));
     }
 
@@ -29,9 +29,9 @@ contract GovernanceManagerTest is BaseTest {
         assertEq(governanceManager.foundationTreasury(), address(0x8));
     }
 
-    function test_FailUpdateTreasuryByNonGovernor() public {
+    function test_FailUpdateTreasuryByNotAuthorizedChanger() public {
         vm.prank(alice);
-        vm.expectRevert(IGovernanceManager.NotGovernor.selector);
+        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
         governanceManager.updateFoundationTreasury(address(0x8));
     }
 
@@ -41,9 +41,9 @@ contract GovernanceManagerTest is BaseTest {
         assertEq(governanceManager.kycApprover(), bob);
     }
 
-    function test_FailUpdateKYCApproverByNonGovernor() public {
+    function test_FailUpdateKYCApproverByNotAuthorizedChanger() public {
         vm.prank(alice);
-        vm.expectRevert(IGovernanceManager.NotGovernor.selector);
+        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
         governanceManager.updateKYCApprover(bob);
     }
 

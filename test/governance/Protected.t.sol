@@ -42,11 +42,11 @@ contract ProtectedTest is BaseTest {
     /**
      * SCENARIO: GovernanceManager upgrade should revert if is not called by the governor
      */
-    function test_RevertGovernanceManagerUpgradeNotGovernor() public {
+    function test_RevertGovernanceManagerUpgradeNotAuthorizedChanger() public {
         // GIVEN a non-Governor tries to upgrade the GovernanceManager
         vm.prank(alice);
         //  THEN tx reverts because NotGovernor
-        vm.expectRevert(IGovernanceManager.NotGovernor.selector);
+        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
         address _newImplementation = makeAddr("newImplementation");
         governanceManager.upgradeToAndCall(_newImplementation, "0x0");
     }

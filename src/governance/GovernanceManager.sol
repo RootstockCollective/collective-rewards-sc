@@ -26,6 +26,11 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
         _;
     }
 
+    modifier onlyValidChanger() {
+        validateChanger(msg.sender);
+        _;
+    }
+
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
@@ -82,7 +87,7 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
      * @param governor_ The new governor address.
      * @dev Reverts if caller is not the current governor.
      */
-    function updateGovernor(address governor_) public onlyGovernor {
+    function updateGovernor(address governor_) public onlyValidChanger {
         _updateGovernor(governor_);
     }
 
@@ -91,7 +96,7 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
      * @param foundationTreasury_ The new foundation treasury address.
      * @dev Only callable by the governor. Reverts if the new address is invalid.
      */
-    function updateFoundationTreasury(address foundationTreasury_) public onlyGovernor {
+    function updateFoundationTreasury(address foundationTreasury_) public onlyValidChanger {
         _updateFoundationTreasury(foundationTreasury_);
     }
 
@@ -100,7 +105,7 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
      * @param kycApprover_ The new KYC approver address.
      * @dev Only callable by the governor. Reverts if the new address is invalid.
      */
-    function updateKYCApprover(address kycApprover_) public onlyGovernor {
+    function updateKYCApprover(address kycApprover_) public onlyValidChanger {
         _updateKYCApprover(kycApprover_);
     }
 
@@ -118,7 +123,7 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
      * @param account_ The address to be validated.
      * @dev Reverts with `NotAuthorizedChanger` if the account is not the changer or governor.
      */
-    function validateChanger(address account_) external view {
+    function validateChanger(address account_) public view {
         if (account_ != changer && account_ != governor) revert NotAuthorizedChanger();
     }
 
@@ -184,7 +189,7 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
      * @param newImplementation_ The address of the new implementation contract.
      * @dev Only callable by the governor.
      */
-    function _authorizeUpgrade(address newImplementation_) internal override onlyGovernor { }
+    function _authorizeUpgrade(address newImplementation_) internal override onlyValidChanger { }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
