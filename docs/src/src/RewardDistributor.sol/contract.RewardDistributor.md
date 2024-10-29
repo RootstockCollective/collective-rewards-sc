@@ -1,6 +1,6 @@
 # RewardDistributor
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/cd4ed9801405421948684a5dc8bfd5ae9d517187/src/RewardDistributor.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/14b7e2ea53e1a8ed6cfeed541bfbce82f4af7661/src/RewardDistributor.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md)
 
