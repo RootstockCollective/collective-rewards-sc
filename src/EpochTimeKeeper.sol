@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import { Upgradeable } from "./governance/Upgradeable.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
+import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
 
 abstract contract EpochTimeKeeper is Upgradeable {
     uint256 internal constant _DISTRIBUTION_WINDOW = 1 hours;
@@ -54,19 +55,19 @@ abstract contract EpochTimeKeeper is Upgradeable {
      * @notice contract initializer
      * @dev the first epoch will end in epochDuration_ + epochStartOffset_ seconds to to ensure that
      *  it lasts at least as long as the desired period
-     * @param changeExecutor_ See Governed doc
+     * @param governanceManager_ contract with permissioned roles
      * @param epochDuration_ epoch time duration
      * @param epochStartOffset_ offset to add to the first epoch, used to set an specific day to start the epochs
      */
     function __EpochTimeKeeper_init(
-        address changeExecutor_,
+        IGovernanceManager governanceManager_,
         uint32 epochDuration_,
         uint24 epochStartOffset_
     )
         internal
         onlyInitializing
     {
-        __Upgradeable_init(changeExecutor_);
+        __Upgradeable_init(governanceManager_);
 
         // read from store
         EpochData memory _epochData = epochData;
@@ -91,13 +92,7 @@ abstract contract EpochTimeKeeper is Upgradeable {
      * @param newEpochDuration_ new epoch duration
      * @param epochStartOffset_ offset to add to the first epoch, used to set an specific day to start the epochs
      */
-    function setEpochDuration(
-        uint32 newEpochDuration_,
-        uint24 epochStartOffset_
-    )
-        external
-        onlyGovernorOrAuthorizedChanger
-    {
+    function setEpochDuration(uint32 newEpochDuration_, uint24 epochStartOffset_) external onlyValidChanger {
         if (newEpochDuration_ < 2 * _DISTRIBUTION_WINDOW) revert EpochDurationTooShort();
 
         (uint256 _start, uint256 _duration) = getEpochStartAndDuration();

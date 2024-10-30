@@ -3,16 +3,16 @@ pragma solidity 0.8.20;
 
 import { EpochTimeKeeper } from "./EpochTimeKeeper.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
-import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { Gauge } from "./gauge/Gauge.sol";
 import { GaugeFactory } from "./gauge/GaugeFactory.sol";
+import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
 
 /**
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
  */
-abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
+abstract contract BuilderRegistry is EpochTimeKeeper {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_KICKBACK = UtilsLib._PRECISION;
@@ -48,6 +48,14 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
     event Permitted(address indexed builder_, uint256 kickback_, uint256 cooldown_);
     event BuilderKickbackUpdateScheduled(address indexed builder_, uint256 kickback_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
+
+    // -----------------------------
+    // --------- Modifiers ---------
+    // -----------------------------
+    modifier onlyKycApprover() {
+        governanceManager.validateKycApprover(msg.sender);
+        _;
+    }
 
     // -----------------------------
     // ---------- Structs ----------
@@ -105,8 +113,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
 
     /**
      * @notice contract initializer
-     * @param changeExecutor_ See Governed doc
-     * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
+     * @param governanceManager_ contract with permissioned roles
      * @param gaugeFactory_ address of the GaugeFactory contract
      * @param rewardDistributor_ address of the rewardDistributor contract
      * @param epochDuration_ epoch time duration
@@ -114,8 +121,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function __BuilderRegistry_init(
-        address changeExecutor_,
-        address kycApprover_,
+        IGovernanceManager governanceManager_,
         address gaugeFactory_,
         address rewardDistributor_,
         uint32 epochDuration_,
@@ -125,9 +131,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
         internal
         onlyInitializing
     {
-        __EpochTimeKeeper_init(changeExecutor_, epochDuration_, epochStartOffset_);
-        __Ownable2Step_init();
-        __Ownable_init(kycApprover_);
+        __EpochTimeKeeper_init(governanceManager_, epochDuration_, epochStartOffset_);
         gaugeFactory = GaugeFactory(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
         kickbackCooldown = kickbackCooldown_;
@@ -146,7 +150,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @param rewardReceiver_ address of the builder reward receiver
      * @param kickback_ kickback(100% == 1 ether)
      */
-    function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyOwner {
+    function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyKycApprover {
         if (builderState[builder_].kycApproved) revert AlreadyKYCApproved();
         if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
 
@@ -177,7 +181,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * reverts if it does not have a gauge associated
      * @param builder_ address of the builder
      */
-    function approveBuilderKYC(address builder_) external onlyOwner {
+    function approveBuilderKYC(address builder_) external onlyKycApprover {
         Gauge _gauge = builderToGauge[builder_];
         if (builderState[builder_].kycApproved) revert AlreadyKYCApproved();
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
@@ -195,7 +199,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * reverts if it is not KYC approved
      * @param builder_ address of the builder
      */
-    function revokeBuilderKYC(address builder_) external onlyOwner {
+    function revokeBuilderKYC(address builder_) external onlyKycApprover {
         if (!builderState[builder_].kycApproved) revert NotKYCApproved();
 
         builderState[builder_].kycApproved = false;
@@ -219,7 +223,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @param builder_ address of the builder
      * @return gauge_ gauge contract
      */
-    function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge_) {
+    function whitelistBuilder(address builder_) external onlyValidChanger returns (Gauge gauge_) {
         if (builderState[builder_].whitelisted) revert AlreadyWhitelisted();
         if (!builderState[builder_].kycApproved) revert NotKYCApproved();
         if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
@@ -239,7 +243,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * reverts if it is not whitelisted
      * @param builder_ address of the builder
      */
-    function dewhitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger {
+    function dewhitelistBuilder(address builder_) external onlyValidChanger {
         Gauge _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[builder_].whitelisted) revert NotWhitelisted();
@@ -258,7 +262,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * @param builder_ address of the builder
      * @param reason_ reason for the pause
      */
-    function pauseBuilder(address builder_, bytes20 reason_) external onlyOwner {
+    function pauseBuilder(address builder_, bytes20 reason_) external onlyKycApprover {
         // pause can be overwritten to change the reason
         builderState[builder_].paused = true;
         builderState[builder_].pausedReason = reason_;
@@ -271,7 +275,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, Ownable2StepUpgradeable {
      * reverts if it is not paused
      * @param builder_ address of the builder
      */
-    function unpauseBuilder(address builder_) external onlyOwner {
+    function unpauseBuilder(address builder_) external onlyKycApprover {
         if (!builderState[builder_].paused) revert NotPaused();
 
         builderState[builder_].paused = false;

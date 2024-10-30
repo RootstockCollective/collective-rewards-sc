@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { IChangeExecutorRootstockCollective } from "../interfaces/IChangeExecutorRootstockCollective.sol";
+import { IChangeExecutorRootstockCollective } from "../mvp/IChangeExecutorRootstockCollective.sol";
 
 /**
  * @title Governed

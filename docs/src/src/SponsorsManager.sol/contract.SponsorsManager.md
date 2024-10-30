@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/14b7e2ea53e1a8ed6cfeed541bfbce82f4af7661/src/SponsorsManager.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/08262d3859b92bc5ef98f1d6cf55bac36a294db3/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -129,8 +129,7 @@ contract initializer
 
 ```solidity
 function initialize(
-    address changeExecutor_,
-    address kycApprover_,
+    IGovernanceManager governanceManager_,
     address rewardToken_,
     address stakingToken_,
     address gaugeFactory_,
@@ -145,17 +144,16 @@ function initialize(
 
 **Parameters**
 
-| Name                 | Type      | Description                                                                       |
-| -------------------- | --------- | --------------------------------------------------------------------------------- |
-| `changeExecutor_`    | `address` | See Governed doc                                                                  |
-| `kycApprover_`       | `address` | See BuilderRegistry doc                                                           |
-| `rewardToken_`       | `address` | address of the token rewarded to builder and voters                               |
-| `stakingToken_`      | `address` | address of the staking token for builder and voters                               |
-| `gaugeFactory_`      | `address` | address of the GaugeFactory contract                                              |
-| `rewardDistributor_` | `address` | address of the rewardDistributor contract                                         |
-| `epochDuration_`     | `uint32`  | epoch time duration                                                               |
-| `epochStartOffset_`  | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs |
-| `kickbackCooldown_`  | `uint128` | time that must elapse for a new kickback from a builder to be applied             |
+| Name                 | Type                 | Description                                                                       |
+| -------------------- | -------------------- | --------------------------------------------------------------------------------- |
+| `governanceManager_` | `IGovernanceManager` | contract with permissioned roles                                                  |
+| `rewardToken_`       | `address`            | address of the token rewarded to builder and voters                               |
+| `stakingToken_`      | `address`            | address of the staking token for builder and voters                               |
+| `gaugeFactory_`      | `address`            | address of the GaugeFactory contract                                              |
+| `rewardDistributor_` | `address`            | address of the rewardDistributor contract                                         |
+| `epochDuration_`     | `uint32`             | epoch time duration                                                               |
+| `epochStartOffset_`  | `uint24`             | offset to add to the first epoch, used to set an specific day to start the epochs |
+| `kickbackCooldown_`  | `uint128`            | time that must elapse for a new kickback from a builder to be applied             |
 
 ### allocate
 

@@ -25,6 +25,7 @@ contract SetEpochDurationFuzzTest is BaseFuzz {
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
         // AND governor sets a random epoch duration and offset
+        vm.prank(governor);
         sponsorsManager.setEpochDuration(newEpochDuration_, epochStartOffset_);
 
         (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart,) =

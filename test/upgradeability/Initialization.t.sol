@@ -17,8 +17,7 @@ contract InitializationTest is BaseTest {
         uint128 _kickbackCooldown = 2 weeks;
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         sponsorsManager.initialize(
-            address(changeExecutorMock),
-            kycApprover,
+            governanceManager,
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),
@@ -37,7 +36,7 @@ contract InitializationTest is BaseTest {
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        rewardDistributor.initialize(address(changeExecutorMock), address(foundation));
+        rewardDistributor.initialize(governanceManager);
     }
 
     /**
@@ -52,13 +51,14 @@ contract InitializationTest is BaseTest {
     }
 
     /**
-     * SCENARIO: ChangeExecutorRootstockCollective cannot be initialized twice
+     * SCENARIO: GovernanceManager cannot be initialized twice
      */
-    function test_RevertChangeExecutorInitialize() public {
-        // GIVEN a ChangeExecutorRootstockCollective initialized
+    function test_RevertGovernanceManagerInitialize() public {
+        // GIVEN a GovernanceManager initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
+        vm.prank(governor);
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        changeExecutorMock.initialize(governor);
+        governanceManager.initialize(governor, foundation, kycApprover);
     }
 }
