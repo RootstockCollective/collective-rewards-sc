@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/14b7e2ea53e1a8ed6cfeed541bfbce82f4af7661/src/BuilderRegistry.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/7c67f35acfa1cb5c5c14389ab0b33fdb67194a5c/src/BuilderRegistry.sol)
 
 **Inherits:** [EpochTimeKeeper](/src/EpochTimeKeeper.sol/abstract.EpochTimeKeeper.md), Ownable2StepUpgradeable
 
