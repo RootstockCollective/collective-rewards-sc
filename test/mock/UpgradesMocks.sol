@@ -5,7 +5,8 @@ import { SponsorsManager } from "../../src/SponsorsManager.sol";
 import { RewardDistributor } from "../../src/RewardDistributor.sol";
 import { Gauge } from "../../src/gauge/Gauge.sol";
 import { ChangeExecutorRootstockCollective } from "src/mvp/ChangeExecutorRootstockCollective.sol";
-import { SimplifiedRewardDistributorRootstockCollective } from "src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
+import { SimplifiedRewardDistributorRootstockCollective } from
+    "src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
 import { GovernanceManager } from "src/governance/GovernanceManager.sol";
 
 /**

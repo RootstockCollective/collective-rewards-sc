@@ -3,10 +3,12 @@ pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
-import { ChangeExecutor } from "src/mvp/ChangeExecutor.sol";
-import { Deploy as ChangeExecutorDeployerRootstockCollective } from "./ChangeExecutorDeployerRootstockCollective.s.sol";
-import { SimplifiedRewardDistributor } from "src/mvp/SimplifiedRewardDistributor.sol";
-import { Deploy as SimplifiedRewardDistributorRootstockCollectiveDeployer } from "script/mvp/SimplifiedRewardDistributorRootstockCollectiveDeployer.s.sol";
+import { ChangeExecutorRootstockCollective } from "src/mvp/ChangeExecutorRootstockCollective.sol";
+import { Deploy as ChangeExecutorRootstockCollectiveDeployer } from "./ChangeExecutorRootstockCollective.s.sol";
+import { SimplifiedRewardDistributorRootstockCollective } from
+    "src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
+import { Deploy as SimplifiedRewardDistributorRootstockCollectiveDeployer } from
+    "script/mvp/SimplifiedRewardDistributorRootstockCollective.s.sol";
 
 contract MVPDeploy is Broadcaster, OutputWriter {
     address private _governorAddress;
@@ -22,7 +24,7 @@ contract MVPDeploy is Broadcaster, OutputWriter {
 
     function run() public {
         (ChangeExecutorRootstockCollective _changeExecutorProxy, ChangeExecutorRootstockCollective _changeExecutorImpl)
-        = new ChangeExecutorDeployerRootstockCollective().run(_governorAddress);
+        = new ChangeExecutorRootstockCollectiveDeployer().run(_governorAddress);
         saveWithProxy("ChangeExecutorRootstockCollective", address(_changeExecutorImpl), address(_changeExecutorProxy));
 
         (

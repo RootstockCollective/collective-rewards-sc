@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { Governed } from "./Governed.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { IChangeExecutorRootstockCollective } from "../interfaces/IChangeExecutorRootstockCollective.sol";
+import { IChangeExecutorRootstockCollective } from "../mvp/IChangeExecutorRootstockCollective.sol";
 
 /**
  * @title Governed
