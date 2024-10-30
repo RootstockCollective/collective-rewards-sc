@@ -1,6 +1,6 @@
 # GovernanceManager
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/eae48ddb77cb2599eb8b47e67086c59f8ff057a6/src/governance/GovernanceManager.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/08262d3859b92bc5ef98f1d6cf55bac36a294db3/src/governance/GovernanceManager.sol)
 
 **Inherits:** UUPSUpgradeable,
 [IGovernanceManager](/src/interfaces/IGovernanceManager.sol/interface.IGovernanceManager.md)
