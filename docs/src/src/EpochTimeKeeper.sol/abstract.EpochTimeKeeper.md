@@ -1,6 +1,6 @@
 # EpochTimeKeeper
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/14b7e2ea53e1a8ed6cfeed541bfbce82f4af7661/src/EpochTimeKeeper.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/eae48ddb77cb2599eb8b47e67086c59f8ff057a6/src/EpochTimeKeeper.sol)
 
 **Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md)
 
@@ -46,7 +46,7 @@ the desired period_
 
 ```solidity
 function __EpochTimeKeeper_init(
-    address changeExecutor_,
+    IGovernanceManager governanceManager_,
     uint32 epochDuration_,
     uint24 epochStartOffset_
 )
@@ -56,11 +56,11 @@ function __EpochTimeKeeper_init(
 
 **Parameters**
 
-| Name                | Type      | Description                                                                       |
-| ------------------- | --------- | --------------------------------------------------------------------------------- |
-| `changeExecutor_`   | `address` | See Governed doc                                                                  |
-| `epochDuration_`    | `uint32`  | epoch time duration                                                               |
-| `epochStartOffset_` | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs |
+| Name                 | Type                 | Description                                                                       |
+| -------------------- | -------------------- | --------------------------------------------------------------------------------- |
+| `governanceManager_` | `IGovernanceManager` | contract with permissioned roles                                                  |
+| `epochDuration_`     | `uint32`             | epoch time duration                                                               |
+| `epochStartOffset_`  | `uint24`             | offset to add to the first epoch, used to set an specific day to start the epochs |
 
 ### setEpochDuration
 
@@ -69,12 +69,7 @@ schedule a new epoch duration. It will be applied for the next epoch
 _reverts if is too short. It must be greater than 2 time the distribution window_
 
 ```solidity
-function setEpochDuration(
-    uint32 newEpochDuration_,
-    uint24 epochStartOffset_
-)
-    external
-    onlyGovernorOrAuthorizedChanger;
+function setEpochDuration(uint32 newEpochDuration_, uint24 epochStartOffset_) external onlyValidChanger;
 ```
 
 **Parameters**
