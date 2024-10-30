@@ -62,12 +62,6 @@ interface IGovernanceManager {
     function governor() external view returns (address);
 
     /**
-     * @notice Returns the address of the current changer.
-     * @return The changer address.
-     */
-    function changer() external view returns (address);
-
-    /**
      * @notice Returns the address of the foundation treasury.
      * @return The foundation treasury address.
      */

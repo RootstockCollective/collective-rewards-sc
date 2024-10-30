@@ -38,8 +38,8 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
 
     /// @notice The address of the governor.
     address public governor;
-    /// @notice The address of the changer.
-    address public changer;
+    /// @notice The address of the authorized changer.
+    address internal _authorizedChanger;
     /// @notice The address of the foundation treasury.
     address public foundationTreasury;
     /// @notice The address of the KYC approver.
@@ -78,9 +78,9 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
      * @param changeContract_ Address of the contract that will execute the changes
      */
     function executeChange(IChangeContractRootstockCollective changeContract_) external onlyGovernor {
-        _updateChanger(address(changeContract_));
+        _authorizeChanger(address(changeContract_));
         changeContract_.execute();
-        _updateChanger(address(0));
+        _authorizeChanger(address(0));
     }
 
     /**
@@ -120,12 +120,12 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
     }
 
     /**
-     * @notice Validates if an account is authorized as the changer.
+     * @notice Validates if an account is authorized to perform changes.
      * @param account_ The address to be validated.
-     * @dev Reverts with `NotAuthorizedChanger` if the account is not the changer or governor.
+     * @dev Reverts with `NotAuthorizedChanger` if the account is not the authorized changer or governor.
      */
     function validateChanger(address account_) public view {
-        if (account_ != changer && account_ != governor) revert NotAuthorizedChanger();
+        if (account_ != _authorizedChanger && account_ != governor) revert NotAuthorizedChanger();
     }
 
     /**
@@ -177,12 +177,12 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
     }
 
     /**
-     * @notice Assigns a new changer.
-     * @param changer_ The new changer address.
-     * @dev Allows zero address to be set to remove the current changer
+     * @notice Assigns a new authorized changer.
+     * @param authorizedChanger_ The new authorized changer address.
+     * @dev Allows zero address to be set to remove the current authorized changer
      */
-    function _updateChanger(address changer_) internal {
-        changer = changer_;
+    function _authorizeChanger(address authorizedChanger_) internal {
+        _authorizedChanger = authorizedChanger_;
     }
 
     /**
