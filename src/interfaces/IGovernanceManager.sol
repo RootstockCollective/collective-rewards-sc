@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { IChangeContract } from "src/interfaces/IChangeContract.sol";
+import { IChangeContractRootstockCollective } from "src/interfaces/IChangeContractRootstockCollective.sol";
 
 /**
  * @title IGovernanceManager
@@ -53,7 +53,7 @@ interface IGovernanceManager {
      * @dev reverts if is not called by the Governor
      * @param changeContract_ Address of the contract that will execute the changes
      */
-    function executeChange(IChangeContract changeContract_) external;
+    function executeChange(IChangeContractRootstockCollective changeContract_) external;
 
     /**
      * @notice Returns the address of the current governor.

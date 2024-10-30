@@ -4,16 +4,16 @@ pragma solidity 0.8.20;
 import { Governed } from "./Governed.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import { IChangeContractRootstockCollective } from "../interfaces/IChangeContractRootstockCollective.sol";
+import { IChangeContractRootstockCollective } from "src/interfaces/IChangeContractRootstockCollective.sol";
 
 /**
- * @title ChangeExecutor
+ * @title ChangeExecutorRootstockCollective
  * @notice This contract is used to handle changes on the project when multiple function calls
  *  or validation are required.
  *  All the governed protected function can be executed when are called through this contract but only can be performed
  *  by the Governor.
  */
-contract ChangeExecutor is ReentrancyGuardUpgradeable, UUPSUpgradeable, Governed {
+contract ChangeExecutorRootstockCollective is ReentrancyGuardUpgradeable, UUPSUpgradeable, Governed {
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------

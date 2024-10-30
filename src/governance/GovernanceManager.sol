@@ -3,12 +3,13 @@ pragma solidity 0.8.20;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
-import { IChangeContract } from "src/interfaces/IChangeContract.sol";
+import { IChangeContractRootstockCollective } from "src/interfaces/IChangeContractRootstockCollective.sol";
 
 /**
  * @title GovernanceManager
  * @notice This contract manages governance addresses.
- * @notice It also allows the governor to execute contracts that implement the IChangeContract interface.
+ * @notice It also allows the governor to execute contracts that implement the IChangeContractRootstockCollective
+ * interface.
  * @dev This contract is upgradeable via the UUPS proxy pattern.
  */
 contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
@@ -76,7 +77,7 @@ contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
      * @dev reverts if is not called by the Governor
      * @param changeContract_ Address of the contract that will execute the changes
      */
-    function executeChange(IChangeContract changeContract_) external onlyGovernor {
+    function executeChange(IChangeContractRootstockCollective changeContract_) external onlyGovernor {
         _updateChanger(address(changeContract_));
         changeContract_.execute();
         _updateChanger(address(0));

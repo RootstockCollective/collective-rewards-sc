@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { ChangeExecutorRootstockCollective.sol } from "src/mvp/ChangeExecutorRootstockCollective.sol";
+import { ChangeExecutorRootstockCollective } from "src/mvp/ChangeExecutorRootstockCollective.sol";
 
 /**
  * @title ChangeExecutorMock
