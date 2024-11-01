@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import { Test } from "forge-std/src/Test.sol";
 import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
+import { Deploy as MockStakingTokenDeployer } from "script/test_mock/MockStakingToken.s.sol";
 import { Deploy as ChangeExecutorMockDeployer } from "script/test_mock/ChangeExecutorMock.s.sol";
 import { Deploy as GaugeBeaconDeployer } from "script/gauge/GaugeBeacon.s.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
@@ -10,6 +11,7 @@ import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol"
 import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
 import { ChangeExecutorMock } from "./mock/ChangeExecutorMock.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
+import { StakingTokenMock } from "./mock/StakingTokenMock.sol";
 import { GaugeBeacon } from "src/gauge/GaugeBeacon.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
 import { Gauge } from "src/gauge/Gauge.sol";
@@ -20,7 +22,7 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 contract BaseTest is Test {
     ChangeExecutorMock public changeExecutorMockImpl;
     ChangeExecutorMock public changeExecutorMock;
-    ERC20Mock public stakingToken;
+    StakingTokenMock public stakingToken;
     ERC20Mock public rewardToken;
 
     GaugeBeacon public gaugeBeacon;
@@ -54,7 +56,8 @@ contract BaseTest is Test {
     function setUp() public {
         (changeExecutorMock, changeExecutorMockImpl) = new ChangeExecutorMockDeployer().run(governor);
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
-        stakingToken = _mockTokenDeployer.run(0);
+        MockStakingTokenDeployer _mockStakingTokenDeployer = new MockStakingTokenDeployer();
+        stakingToken = _mockStakingTokenDeployer.run(0);
         rewardToken = _mockTokenDeployer.run(1);
         gaugeBeacon = new GaugeBeaconDeployer().run(address(changeExecutorMock));
         gaugeFactory = new GaugeFactoryDeployer().run(address(gaugeBeacon), address(rewardToken));
