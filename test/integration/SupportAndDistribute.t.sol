@@ -32,7 +32,7 @@ contract SupportAndDistributeTest is BaseTest {
      *  -   All the rewards for sponsors and builders are distributed correctly
      */
 
-    function test_E2E_SupportAndDistribute() public {
+    function test_integration_SupportAndDistribute() public {
         // TODO: add incentives to gauges before the distribution
 
         // GIVEN 10 gauges with 40% of kickback
@@ -181,14 +181,14 @@ contract SupportAndDistributeTest is BaseTest {
         // THEN builder 6 receives 1.837 coinbase = 6 * 102 / 333
         assertApproxEqAbs(_clearCoinbaseBalance(builders[6]), 1_837_837_837_837_837_838, 100);
 
-        // THEN builder 4 receives 0.36 rewardToken = 60 * 2 / 333
+        // THEN builder 8 receives 0.36 rewardToken = 60 * 2 / 333
         assertApproxEqAbs(_clearERC20Balance(builders[8]), 3_603_603_603_603_603_603, 100);
-        // THEN builder 4 receives 0.036 coinbase = 6 * 2 / 333
+        // THEN builder 8 receives 0.036 coinbase = 6 * 2 / 333
         assertApproxEqAbs(_clearCoinbaseBalance(builders[8]), 360_360_360_360_360_360, 100);
 
-        // THEN builder 5 receives 36.03 rewardToken = 60 * 200 / 333
+        // THEN builder 10 receives 36.03 rewardToken = 60 * 200 / 333
         assertApproxEqAbs(_clearERC20Balance(builders[10]), 36_036_036_036_036_036_036, 100);
-        // THEN builder 5 receives 3.603 coinbase = 6 * 200 / 333
+        // THEN builder 10 receives 3.603 coinbase = 6 * 200 / 333
         assertApproxEqAbs(_clearCoinbaseBalance(builders[10]), 3_603_603_603_603_603_603, 100);
 
         // WHEN alice votes to gauges 15 and 20

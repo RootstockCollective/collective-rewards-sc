@@ -270,7 +270,7 @@ contract SponsorsManager is BuilderRegistry {
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
             gauge_.allocate(msg.sender, allocation_, timeUntilNextEpoch_);
 
-        // halted gauges are not taken on account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
+        // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
         if (isGaugeHalted(address(gauge_))) {
             if (_isNegative) {
                 newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
