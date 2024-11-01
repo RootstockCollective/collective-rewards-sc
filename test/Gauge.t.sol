@@ -16,7 +16,15 @@ contract GaugeTest is BaseTest {
     event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 sponsorsAmount_);
 
     function _setUp() internal override {
-        // mint some rewardTokens to sponsorsManager simulating a distribution
+        // mint some rewardTokens and deal to incentivizer
+        rewardToken.mint(address(incentivizer), 100_000 ether);
+        vm.deal(address(incentivizer), 100_000 ether);
+        vm.prank(address(incentivizer));
+        rewardToken.approve(address(gauge), 100_000 ether);
+        vm.prank(address(incentivizer));
+        rewardToken.approve(address(gauge2), 100_000 ether);
+
+        // mint some rewardTokens and deal to sponsorsManager
         rewardToken.mint(address(sponsorsManager), 100_000 ether);
         vm.deal(address(sponsorsManager), 100_000 ether);
         vm.prank(address(sponsorsManager));
@@ -244,7 +252,7 @@ contract GaugeTest is BaseTest {
 
         // WHEN 100 ether are distributed
         //  THEN NotifyReward event is emitted
-        vm.startPrank(address(sponsorsManager));
+        vm.startPrank(address(incentivizer));
         vm.expectEmit();
         emit NotifyReward(address(rewardToken), 0, /*builderAmount_*/ 100 ether);
         gauge.incentivizeWithRewardToken(100 ether);
@@ -351,9 +359,11 @@ contract GaugeTest is BaseTest {
      * SCENARIO: incentivizer does not have enough balance
      */
     function test_incentivizeWithNotEnoughBalance() public {
+        // GIVEN an incentivizer with limited balance
+        address _incentivizer2 = makeAddr("incentivizer2");
         // WHEN an Incentivizer has rewardToken
-        vm.startPrank(incentivizer);
-        rewardToken.mint(address(incentivizer), 50 ether);
+        vm.startPrank(_incentivizer2);
+        rewardToken.mint(address(_incentivizer2), 50 ether);
         rewardToken.approve(address(gauge), 50 ether);
 
         // WHEN 100 ether are distributed by Incentivizer in rewardToken
@@ -643,7 +653,7 @@ contract GaugeTest is BaseTest {
         // AND 1 day passes
         skip(1 days);
 
-        // WHEN 100 ether distributed by Incentivizer
+        // WHEN 100 ether are distributed by Incentivizer
         gauge.incentivizeWithRewardToken(100 ether);
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
@@ -724,21 +734,17 @@ contract GaugeTest is BaseTest {
      */
     function test_IncentivizeWithIncentivizerAndSponsorsManager() public {
         // GIVEN alice allocates 1 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.allocate(gauge, 5 ether);
 
         // AND 1 day passes
         skip(1 days);
 
-        // WHEN an Incentivizer has rewardToken
-        vm.startPrank(incentivizer);
-        rewardToken.mint(address(incentivizer), 100 ether);
-        rewardToken.approve(address(gauge), 100 ether);
-
-        // WHEN 100 ether distributed by Incentivizer
+        // WHEN 100 ether are distributed by Incentivizer
+        vm.prank(incentivizer);
         gauge.incentivizeWithRewardToken(100 ether);
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
@@ -804,7 +810,7 @@ contract GaugeTest is BaseTest {
         rewardToken.mint(address(incentivizer), 200 ether);
         rewardToken.approve(address(gauge), 200 ether);
 
-        // WHEN 100 ether distributed by Incentivizer
+        // WHEN 100 ether are distributed by Incentivizer
         gauge.incentivizeWithRewardToken(100 ether);
 
         // AND epoch finishes
@@ -1054,18 +1060,18 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimSponsorRewards() public {
         // GIVEN alice allocates 1 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.allocate(gauge, 5 ether);
 
         // AND 100 ether distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
+        vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
 
-        // simulates a distribution setting the periodFinish
-        _setPeriodFinish();
+        // AND there is a distribution
+        _distribute(0, 0);
 
         // AND epoch finishes
         _skipAndStartNewEpoch();
@@ -1076,13 +1082,13 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewardPerToken(address(rewardToken)), 16_666_666_666_666_666_666);
 
         // WHEN alice claims rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
@@ -1093,16 +1099,17 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimSponsorRewardsWrongGauge() public {
         // GIVEN alice allocates 1 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.allocate(gauge2, 5 ether);
 
         // AND 100 ether distributed for sponsors on both gauges
-        vm.startPrank(address(sponsorsManager));
+        vm.startPrank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
         gauge2.incentivizeWithRewardToken(100 ether);
+        vm.stopPrank();
 
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -1111,25 +1118,25 @@ contract GaugeTest is BaseTest {
         _skipAndStartNewEpoch();
 
         // WHEN alice claims rewards on gauge2
-        vm.startPrank(alice);
+        vm.prank(alice);
         gauge2.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 0
         assertEq(rewardToken.balanceOf(alice), 0);
 
         // WHEN alice claims rewards on gauge
-        vm.startPrank(alice);
+        vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 100
         assertApproxEqAbs(rewardToken.balanceOf(alice), 100 ether, 10);
 
         // WHEN bob claims rewards on gauge
-        vm.startPrank(bob);
+        vm.prank(bob);
         gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 0
         assertEq(rewardToken.balanceOf(bob), 0);
 
         // WHEN bob claims rewards on gauge2
-        vm.startPrank(bob);
+        vm.prank(bob);
         gauge2.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 100
         assertApproxEqAbs(rewardToken.balanceOf(bob), 100 ether, 10);
@@ -1140,14 +1147,14 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimSponsorRewardsPartial() public {
         // GIVEN alice allocates 1 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.allocate(gauge, 5 ether);
 
         // AND 100 ether are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
+        vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
 
         // simulates a distribution setting the periodFinish
@@ -1162,13 +1169,13 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewardPerToken(address(rewardToken)), 5_555_555_555_555_555_555);
 
         // WHEN alice claims rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 5.555555555555555555 = 1 * 5.555555555555555555
         assertEq(rewardToken.balanceOf(alice), 5_555_555_555_555_555_555);
 
         // WHEN bob claims rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 27.777777777777777775 = 5 * 5.555555555555555555
         assertEq(rewardToken.balanceOf(bob), 27_777_777_777_777_777_775);
@@ -1180,14 +1187,14 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimSponsorRewardsAccumulative() public {
         // GIVEN alice allocates 1 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.allocate(gauge, 5 ether);
 
         // AND 100 ether distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
+        vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
 
         // AND epoch finishes
@@ -1197,8 +1204,7 @@ contract GaugeTest is BaseTest {
         _distribute(0, 0);
 
         // AND 200 ether more are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
-        rewardToken.approve(address(gauge), 200 ether);
+        vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(200 ether);
 
         // AND epoch finishes
@@ -1222,13 +1228,13 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewardPerToken(address(rewardToken)), 49_999_999_999_999_999_999);
 
         // WHEN alice claims rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 49.999999999999999999 = 1 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_999);
 
         // WHEN bob claims rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 249.999999999999999995 = 5 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(bob), 249_999_999_999_999_999_995);
@@ -1239,23 +1245,24 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimSponsorRewards2DistributionOnSameEpoch() public {
         // GIVEN alice allocates 1 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.allocate(gauge, 5 ether);
 
         // AND 1 days pass
         skip(1 days);
 
         // AND 100 ether distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
+        vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND half epoch pass
         _skipRemainingEpochFraction(2);
         // AND 200 ether more are distributed for sponsors
+        vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(200 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -1281,13 +1288,13 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 0);
 
         // WHEN alice claims rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 49.999999999999999999 = 1 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_999);
 
         // WHEN bob claims rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 249.999999999999999995 = 5 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(bob), 249_999_999_999_999_999_995);
@@ -1298,14 +1305,14 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimSponsorRewardsAliceQuit() public {
         // GIVEN alice allocates 1 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.allocate(gauge, 5 ether);
 
         // AND 100 ether are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
+        vm.prank(address(incentivizer));
         // AND 100 ether distributed for sponsors
         gauge.incentivizeWithRewardToken(100 ether);
 
@@ -1313,7 +1320,7 @@ contract GaugeTest is BaseTest {
         _skipRemainingEpochFraction(2);
 
         // WHEN alice deallocates all
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 0 ether);
 
         // time until next epoch is 518400
@@ -1329,13 +1336,13 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewardPerToken(address(rewardToken)), 18_333_333_333_333_333_332);
 
         // WHEN alice claims rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is 8.333333333333333333 = 1 * 8.333333333333333333
         assertEq(rewardToken.balanceOf(alice), 8_333_333_333_333_333_333);
 
         // WHEN bob claims rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 91.666666666666666660 = 5 * 18.333333333333333332
         assertEq(rewardToken.balanceOf(bob), 91_666_666_666_666_666_660);
@@ -1346,14 +1353,14 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimSponsorRewardsAliceAllocatesAgain() public {
         // GIVEN alice allocates 1 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.allocate(gauge, 5 ether);
 
         // AND 100 ether are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
+        vm.prank(address(incentivizer));
         // AND 100 ether distributed for sponsors
         gauge.incentivizeWithRewardToken(100 ether);
 
@@ -1361,7 +1368,7 @@ contract GaugeTest is BaseTest {
         _skipRemainingEpochFraction(2);
 
         // WHEN alice allocates 1 ether more
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 2 ether);
 
         // time until next epoch is 518400
@@ -1377,14 +1384,14 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewardPerToken(address(rewardToken)), 15_476_190_476_190_476_190);
 
         // WHEN alice claims rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is
         //  22.619047619047619047 = 1 * 8.333333333333333333 + 2 * (15.476190476190476190 - 8.333333333333333333)
         assertEq(rewardToken.balanceOf(alice), 22_619_047_619_047_619_047);
 
         // WHEN bob claims rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 91.666666666666666660 = 5 * 15.476190476190476190
         assertEq(rewardToken.balanceOf(bob), 77_380_952_380_952_380_950);
@@ -1397,14 +1404,14 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimMissingSponsorRewardsOnNextEpoch() public {
         // GIVEN alice allocates 2 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 2 ether);
 
         // AND 1 days pass
         skip(1 days);
 
         // AND 100 ether are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
+        vm.prank(address(incentivizer));
         // AND 100 ether distributed for sponsors
         gauge.incentivizeWithRewardToken(100 ether);
 
@@ -1412,7 +1419,7 @@ contract GaugeTest is BaseTest {
         _skipRemainingEpochFraction(2);
 
         // AND alice deallocates all
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 0 ether);
 
         // time until next epoch is 518400
@@ -1427,10 +1434,10 @@ contract GaugeTest is BaseTest {
         _distribute(0, 0);
 
         // AND alice allocates 1 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.allocate(gauge, 5 ether);
 
         // THEN lastUpdateTime is epoch start
@@ -1441,8 +1448,7 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewardMissing(address(rewardToken)) / 10 ** 18, 0);
 
         // AND 100 ether are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
-        rewardToken.approve(address(gauge), 100_000 ether);
+        vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
 
         // AND 0 ether are distributed for sponsors
@@ -1455,14 +1461,14 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewardPerToken(address(rewardToken)), 49_999_999_999_999_999_998);
 
         // WHEN alice claims rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice rewardToken balance is
         //  74.999999999999999997 = 2 * 24.999999999999999999 + 1 * (49.999999999999999998 - 24.999999999999999999)
         assertEq(rewardToken.balanceOf(alice), 74_999_999_999_999_999_997);
 
         // WHEN bob claims rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         gauge.claimSponsorReward(bob);
         // THEN bob rewardToken balance is 124.999999999999999995 = 5 * (49.999999999999999998 - 24.999999999999999999)
         assertEq(rewardToken.balanceOf(bob), 124_999_999_999_999_999_995);
@@ -1473,14 +1479,14 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimERC20Rewards() public {
         // GIVEN alice allocates 1 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.allocate(gauge, 5 ether);
 
         // AND 100 ether are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
+        vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
 
         // AND epoch finishes
@@ -1492,13 +1498,13 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewardPerToken(address(rewardToken)), 16_666_666_666_666_666_666);
 
         // WHEN alice claims rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         gauge.claimSponsorReward(address(rewardToken), alice);
         // THEN alice coinbase balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         gauge.claimSponsorReward(address(rewardToken), bob);
         // THEN bob coinbase balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
@@ -1509,14 +1515,14 @@ contract GaugeTest is BaseTest {
      */
     function test_ClaimCoinbaseRewards() public {
         // GIVEN alice allocates 1 ether
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.allocate(gauge, 5 ether);
 
         // AND 100 ether are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
+        vm.prank(address(incentivizer));
         gauge.incentivizeWithCoinbase{ value: 100 ether }();
 
         // AND epoch finishes
@@ -1528,13 +1534,13 @@ contract GaugeTest is BaseTest {
         assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 16_666_666_666_666_666_666);
 
         // WHEN alice claims rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         gauge.claimSponsorReward(UtilsLib._COINBASE_ADDRESS, alice);
         // THEN alice coinbase balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(alice.balance, 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         gauge.claimSponsorReward(UtilsLib._COINBASE_ADDRESS, bob);
         // THEN bob coinbase balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(bob.balance, 83_333_333_333_333_333_330);
