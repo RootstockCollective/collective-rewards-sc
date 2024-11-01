@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import { stdStorage, StdStorage, stdError } from "forge-std/src/Test.sol";
 import { BaseTest, SponsorsManager, Gauge } from "./BaseTest.sol";
+import { BuilderRegistry } from "../src/BuilderRegistry.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 
 contract SponsorsManagerTest is BaseTest {
@@ -42,18 +43,47 @@ contract SponsorsManagerTest is BaseTest {
         //  WHEN alice calls allocate using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(SponsorsManager.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistry.GaugeDoesNotExist.selector);
         sponsorsManager.allocate(_wrongGauge, 100 ether);
         //  WHEN alice calls allocateBatch using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(SponsorsManager.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistry.GaugeDoesNotExist.selector);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
 
         //  WHEN alice calls claimSponsorRewards using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(SponsorsManager.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistry.GaugeDoesNotExist.selector);
+        sponsorsManager.claimSponsorRewards(gaugesArray);
+    }
+
+    /**
+     * SCENARIO: should revert if gauge is whitelisted but not activated
+     */
+    function test_RevertGaugeIsWhitelistedButNotActivated() public {
+        // GIVEN a new builder
+        address _newBuilder = makeAddr("newBuilder");
+        //  AND is whitelisted
+        Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
+
+        gaugesArray.push(_newGauge);
+        allocationsArray.push(100 ether);
+        //  WHEN alice calls allocate using the new gauge
+        //   THEN tx reverts because NotActivated
+        vm.prank(alice);
+        vm.expectRevert(BuilderRegistry.NotActivated.selector);
+        sponsorsManager.allocate(_newGauge, 100 ether);
+        //  WHEN alice calls allocateBatch using the new gauge
+        //   THEN tx reverts because NotActivated
+        vm.prank(alice);
+        vm.expectRevert(BuilderRegistry.NotActivated.selector);
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+
+        //  WHEN alice calls claimSponsorRewards using the new gauge
+        //   THEN tx reverts because NotActivated
+        vm.prank(alice);
+        vm.expectRevert(BuilderRegistry.NotActivated.selector);
         sponsorsManager.claimSponsorRewards(gaugesArray);
     }
 
