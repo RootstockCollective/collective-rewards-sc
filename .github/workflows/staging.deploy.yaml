@@ -1,29 +1,18 @@
----
-name: Deploy Contracts for QA
-
+name: Deploy to Testnet
 on:
-  workflow_dispatch:
-    inputs:
-      chainId:
-        description: "Chain ID"
-        required: true
-        default: "31"
-        type: choice
-        options:
-          - 31
-  pull_request_review:
-    types: [submitted]
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+' # matches tags like v1.2.3-rc.4
 
 env:
-  CHAIN_ID: ${{ inputs.chainId || '31' }}
+  CHAIN_ID: 31
   DEPLOYMENTS_DIR: "deployments/"
 
 jobs:
   deploy:
     runs-on: "ubuntu-latest"
-    if: github.event_name == 'workflow_dispatch' || github.event.review.state == 'approved'
     environment:
-      name: QA
+      name: TESTNET
     steps:
       - name: "Check out the repo"
         uses: "actions/checkout@v4"
@@ -66,7 +55,7 @@ jobs:
           echo "EPOCH_DURATION=$EPOCH_DURATION" >> $GITHUB_ENV
           echo "EPOCH_START_OFFSET=$EPOCH_START_OFFSET" >> $GITHUB_ENV
 
-          echo "PRIVATE_KEY=${{ secrets.QA_DEPLOYMENT_PRIVATE_KEY }}" >> $GITHUB_ENV
+          echo "PRIVATE_KEY=${{ secrets.TESTNET_DEPLOYMENT_PRIVATE_KEY }}" >> $GITHUB_ENV
           echo $PWD
 
       - name: "Deploy Contract"

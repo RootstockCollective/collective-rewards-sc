@@ -1,0 +1,72 @@
+---
+name: Deploy Contracts for QA
+
+on:
+  workflow_dispatch: # Manually triggered from GitHub Actions tab
+  pull_request:
+    types: [labeled] # Triggered by a label in a PR
+
+env:
+  CHAIN_ID: 31
+  ENVIRONMENT: "qa"
+  DEPLOYMENTS_DIR: "deployments/"
+
+jobs:
+  deploy:
+    runs-on: "ubuntu-latest"
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'deploy to QA'
+    environment:
+      name: QA
+    steps:
+      - name: "Check out the repo"
+        uses: "actions/checkout@v4"
+
+      - name: "Install Foundry"
+        uses: "foundry-rs/foundry-toolchain@v1"
+        with:
+          version: "nightly-f625d0fa7c51e65b4bf1e8f7931cd1c6e2e285e9"
+
+      - name: "Install Bun"
+        uses: "oven-sh/setup-bun@v1"
+
+      - name: "Install the Node.js dependencies"
+        run: "bun install"
+
+      - name: "Install the jq"
+        run: "sudo apt-get update && sudo apt-get install jq direnv"
+
+      - name: "Load and export environment variables"
+        id: load-env
+        run: |
+          cp .env.private.example .env
+          echo "$CHAIN_ID" > .chain_id
+          source .envrc
+          echo "RPC_URL=$RPC_URL" >> $GITHUB_ENV
+          echo "DEPLOYMENT_CONTEXT=$DEPLOYMENT_CONTEXT" >> $GITHUB_ENV
+          echo "REWARD_TOKEN_ADDRESS=$REWARD_TOKEN_ADDRESS" >> $GITHUB_ENV
+          echo "GOVERNOR_ADDRESS=$GOVERNOR_ADDRESS" >> $GITHUB_ENV
+
+          echo "KYC_APPROVER_ADDRESS=$KYC_APPROVER_ADDRESS" >> $GITHUB_ENV
+          echo "NO_DD=$NO_DD" >> $GITHUB_ENV
+          echo "GAS_PRICE=$GAS_PRICE" >> $GITHUB_ENV
+          echo "STAKING_TOKEN_ADDRESS=$STAKING_TOKEN_ADDRESS" >> $GITHUB_ENV
+
+          echo "CHANGE_EXECUTOR_ADDRESS=$CHANGE_EXECUTOR_ADDRESS" >> $GITHUB_ENV
+          echo "STAKING_TOKEN_ADDRESS=$STAKING_TOKEN_ADDRESS" >> $GITHUB_ENV
+          echo "CHANGE_EXECUTOR_ADDRESS=$CHANGE_EXECUTOR_ADDRESS" >> $GITHUB_ENV
+          echo "FOUNDATION_TREASURY_ADDRESS=$FOUNDATION_TREASURY_ADDRESS" >> $GITHUB_ENV
+          echo "KICKBACK_COOLDOWN=$KICKBACK_COOLDOWN" >> $GITHUB_ENV
+          echo "EPOCH_DURATION=$EPOCH_DURATION" >> $GITHUB_ENV
+          echo "EPOCH_START_OFFSET=$EPOCH_START_OFFSET" >> $GITHUB_ENV
+
+          echo "PRIVATE_KEY=${{ secrets.QA_DEPLOYMENT_PRIVATE_KEY }}" >> $GITHUB_ENV
+          echo $PWD
+
+      - name: "Deploy Contract"
+        run: "bun run deploy"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: contracts
+          path: deployments/testnet_qa
