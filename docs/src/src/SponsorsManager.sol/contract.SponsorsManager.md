@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/14b7e2ea53e1a8ed6cfeed541bfbce82f4af7661/src/SponsorsManager.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/eab59780321156e2e502e0e3dd17da2f799b184f/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -208,19 +208,31 @@ starts the distribution period blocking all the allocations until all the gauges
 _reverts if is called outside the distribution window reverts if it is called during the distribution period_
 
 ```solidity
-function startDistribution() external onlyInDistributionWindow notInDistributionPeriod;
+function startDistribution() external onlyInDistributionWindow notInDistributionPeriod returns (bool finished_);
 ```
+
+**Returns**
+
+| Name        | Type   | Description                       |
+| ----------- | ------ | --------------------------------- |
+| `finished_` | `bool` | true if distribution has finished |
 
 ### distribute
 
-distribute accumulated reward tokens to the gauges
+continues pagination to distribute accumulated reward tokens to the gauges
 
 _reverts if distribution period has not yet started This function is paginated and it finishes once all gauges
 distribution are completed, ending the distribution period and voting restrictions._
 
 ```solidity
-function distribute() public;
+function distribute() external returns (bool finished_);
 ```
+
+**Returns**
+
+| Name        | Type   | Description                       |
+| ----------- | ------ | --------------------------------- |
+| `finished_` | `bool` | true if distribution has finished |
 
 ### claimSponsorRewards
 
@@ -304,10 +316,27 @@ function _updateAllocation(
 
 ### \_distribute
 
+distribute accumulated reward tokens to the gauges
+
+_reverts if distribution period has not yet started This function is paginated and it finishes once all gauges
+distribution are completed, ending the distribution period and voting restrictions._
+
+```solidity
+function _distribute() internal returns (bool);
+```
+
+**Returns**
+
+| Name     | Type   | Description                       |
+| -------- | ------ | --------------------------------- |
+| `<none>` | `bool` | true if distribution has finished |
+
+### \_gaugeDistribute
+
 internal function used to distribute reward tokens to a gauge
 
 ```solidity
-function _distribute(
+function _gaugeDistribute(
     Gauge gauge_,
     uint256 rewardsERC20_,
     uint256 rewardsCoinbase_,
@@ -337,6 +366,23 @@ function _distribute(
 | Name     | Type      | Description                                                                   |
 | -------- | --------- | ----------------------------------------------------------------------------- |
 | `<none>` | `uint256` | newGaugeRewardShares\_ new gauge rewardShares, updated after the distribution |
+
+### \_rewardTokenApprove
+
+approves rewardTokens to a given gauge
+
+_give full allowance when it is whitelisted and remove it when it is dewhitelisted_
+
+```solidity
+function _rewardTokenApprove(address gauge_, uint256 value_) internal override;
+```
+
+**Parameters**
+
+| Name     | Type      | Description                            |
+| -------- | --------- | -------------------------------------- |
+| `gauge_` | `address` | gauge contract to approve rewardTokens |
+| `value_` | `uint256` | amount of rewardTokens to approve      |
 
 ### \_haltGaugeShares
 

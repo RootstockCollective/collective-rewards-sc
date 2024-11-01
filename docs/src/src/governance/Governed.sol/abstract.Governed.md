@@ -1,6 +1,6 @@
 # Governed
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/14b7e2ea53e1a8ed6cfeed541bfbce82f4af7661/src/governance/Governed.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/eab59780321156e2e502e0e3dd17da2f799b184f/src/governance/Governed.sol)
 
 Base contract to be inherited by governed contracts
 

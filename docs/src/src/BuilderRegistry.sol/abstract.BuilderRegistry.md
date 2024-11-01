@@ -1,6 +1,6 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/14b7e2ea53e1a8ed6cfeed541bfbce82f4af7661/src/BuilderRegistry.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/eab59780321156e2e502e0e3dd17da2f799b184f/src/BuilderRegistry.sol)
 
 **Inherits:** [EpochTimeKeeper](/src/EpochTimeKeeper.sol/abstract.EpochTimeKeeper.md), Ownable2StepUpgradeable
 
@@ -466,6 +466,21 @@ function _canBeResumed(Gauge gauge_) internal view returns (bool);
 | Name     | Type    | Description                  |
 | -------- | ------- | ---------------------------- |
 | `gauge_` | `Gauge` | gauge contract to be resumed |
+
+### \_rewardTokenApprove
+
+SponsorsManager override this function to modify gauge rewardToken allowance
+
+```solidity
+function _rewardTokenApprove(address gauge_, uint256 value_) internal virtual;
+```
+
+**Parameters**
+
+| Name     | Type      | Description                            |
+| -------- | --------- | -------------------------------------- |
+| `gauge_` | `address` | gauge contract to approve rewardTokens |
+| `value_` | `uint256` | amount of rewardTokens to approve      |
 
 ### \_haltGaugeShares
 
