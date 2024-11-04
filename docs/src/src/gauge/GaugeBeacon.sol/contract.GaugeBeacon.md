@@ -1,8 +1,16 @@
 # GaugeBeacon
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/93d5161844768d71b8f7420d54b86b3a341b2a7b/src/gauge/GaugeBeacon.sol)
+[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/6055db6ff187da599d0ad220410df3adfbe4a79d/src/gauge/GaugeBeacon.sol)
 
-**Inherits:** UpgradeableBeacon, [Governed](/src/governance/Governed.sol/abstract.Governed.md)
+**Inherits:** UpgradeableBeacon
+
+## State Variables
+
+### governanceManager
+
+```solidity
+IGovernanceManager public governanceManager;
+```
 
 ## Functions
 
@@ -12,26 +20,18 @@ constructor
 
 ```solidity
 constructor(
-    address changeExecutor_,
+    IGovernanceManager governanceManager_,
     address gaugeImplementation_
 )
-    UpgradeableBeacon(gaugeImplementation_, IChangeExecutorRootstockCollective(changeExecutor_).governor());
+    UpgradeableBeacon(gaugeImplementation_, governanceManager_.governor());
 ```
 
 **Parameters**
 
-| Name                   | Type      | Description                                        |
-| ---------------------- | --------- | -------------------------------------------------- |
-| `changeExecutor_`      | `address` | ChangeExecutorRootstockCollective contract address |
-| `gaugeImplementation_` | `address` | address of the Gauge initial implementation        |
-
-### governor
-
-maintains Governed interface. Returns governed address
-
-```solidity
-function governor() public view override returns (address);
-```
+| Name                   | Type                 | Description                                 |
+| ---------------------- | -------------------- | ------------------------------------------- |
+| `governanceManager_`   | `IGovernanceManager` | contract with permissioned roles            |
+| `gaugeImplementation_` | `address`            | address of the Gauge initial implementation |
 
 ### \_checkOwner
 
@@ -42,5 +42,5 @@ _Due we cannot override UpgradeableBeacon.sol to remove the OnlyOwner modifier o
 this function to allow upgrade the beacon by a changer_
 
 ```solidity
-function _checkOwner() internal view override onlyGovernorOrAuthorizedChanger;
+function _checkOwner() internal view override;
 ```

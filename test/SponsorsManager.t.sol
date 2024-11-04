@@ -56,6 +56,18 @@ contract SponsorsManagerTest is BaseTest {
         vm.prank(alice);
         vm.expectRevert(BuilderRegistry.GaugeDoesNotExist.selector);
         sponsorsManager.claimSponsorRewards(gaugesArray);
+
+        //  WHEN alice calls claimSponsorRewards using the wrong gauge
+        //   THEN tx reverts because GaugeDoesNotExist
+        vm.prank(alice);
+        vm.expectRevert(BuilderRegistry.GaugeDoesNotExist.selector);
+        sponsorsManager.claimSponsorRewards(address(rewardToken), gaugesArray);
+
+        //  WHEN alice calls claimSponsorRewards using the wrong gauge
+        //   THEN tx reverts because GaugeDoesNotExist
+        vm.prank(alice);
+        vm.expectRevert(BuilderRegistry.GaugeDoesNotExist.selector);
+        sponsorsManager.claimSponsorRewards(UtilsLib._COINBASE_ADDRESS, gaugesArray);
     }
 
     /**
@@ -1042,6 +1054,76 @@ contract SponsorsManagerTest is BaseTest {
         // and 100% of the rewards incentivized directly to the first gauge
         // 149.999999999999999990 = 100 ether * 0.5 + 100 ether
         assertEq(address(alice).balance, 149_999_999_999_999_999_990);
+    }
+
+    /**
+     * SCENARIO: alice claims all the ERC20 rewards in a single tx
+     */
+    function test_ClaimSponsorERC20Rewards() public {
+        // GIVEN builder and builder2 which kickback percentage is 50%
+        //  AND a sponsor alice
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        // AND alice allocates 2 ether to builder and 6 ether to builder2
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 ether rewardToken and 50 ether coinbase are added
+        sponsorsManager.notifyRewardAmount{ value: 50 ether }(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        // AND distribute is executed
+        sponsorsManager.startDistribution();
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // WHEN alice claim rewards
+        vm.prank(alice);
+        sponsorsManager.claimSponsorRewards(address(rewardToken), gaugesArray);
+
+        // THEN alice rewardToken balance is 50% of the distributed amount
+        assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_992);
+
+        // THEN coinbase balance is 0 of the distributed amount
+        assertEq(alice.balance, 0);
+    }
+
+    /**
+     * SCENARIO: alice claims all the coinbase rewards in a single tx
+     */
+    function test_ClaimSponsorCoinbaseRewards() public {
+        // GIVEN builder and builder2 which kickback percentage is 50%
+        //  AND a sponsor alice
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        // AND alice allocates 2 ether to builder and 6 ether to builder2
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 ether rewardToken and 50 ether coinbase are added
+        sponsorsManager.notifyRewardAmount{ value: 50 ether }(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        // AND distribute is executed
+        sponsorsManager.startDistribution();
+
+        // AND epoch finish
+        _skipAndStartNewEpoch();
+
+        // WHEN alice claim rewards
+        vm.prank(alice);
+        sponsorsManager.claimSponsorRewards(UtilsLib._COINBASE_ADDRESS, gaugesArray);
+
+        // THEN alice coinbase balance is 50% of the distributed amount
+        assertEq(alice.balance, 24_999_999_999_999_999_992);
+
+        // THEN rewardToken balance is 0 of the distributed amount
+        assertEq(rewardToken.balanceOf(alice), 0);
     }
 
     /**

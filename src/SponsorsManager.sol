@@ -226,6 +226,20 @@ contract SponsorsManager is BuilderRegistry {
     }
 
     /**
+     * @notice claims sponsor rewards from a batch of gauges
+     * @param gauges_ array of gauges to claim
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     */
+    function claimSponsorRewards(address rewardToken_, Gauge[] memory gauges_) external {
+        uint256 _length = gauges_.length;
+        for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
+            if (gaugeToBuilder[gauges_[i]] == address(0)) revert GaugeDoesNotExist();
+            gauges_[i].claimSponsorReward(rewardToken_, msg.sender);
+        }
+    }
+
+    /**
      * @notice returns timestamp end of current rewards period
      *  If it is called by a halted gauge returns the timestamp of the last period distributed
      *  This is important because unclaimed rewards must stop accumulating rewards and halted gauges

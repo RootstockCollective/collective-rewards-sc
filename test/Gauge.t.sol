@@ -1500,13 +1500,13 @@ contract GaugeTest is BaseTest {
         // WHEN alice claims rewards
         vm.prank(alice);
         gauge.claimSponsorReward(address(rewardToken), alice);
-        // THEN alice coinbase balance is 16.666666666666666666 = 1 * 16.666666666666666666
+        // THEN alice rewardToken balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
         vm.prank(bob);
         gauge.claimSponsorReward(address(rewardToken), bob);
-        // THEN bob coinbase balance is 83.333333333333333330 = 5 * 16.666666666666666666
+        // THEN bob rewardToken balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
     }
 

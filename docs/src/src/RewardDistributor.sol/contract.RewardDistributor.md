@@ -1,8 +1,8 @@
 # RewardDistributor
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/93d5161844768d71b8f7420d54b86b3a341b2a7b/src/RewardDistributor.sol)
+[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/6055db6ff187da599d0ad220410df3adfbe4a79d/src/RewardDistributor.sol)
 
-**Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md)
+**Inherits:** [Upgradeable](/src/mvp/Upgradeable.sol/abstract.Upgradeable.md)
 
 Accumulates all the rewards to be distributed for each epoch
 
@@ -78,15 +78,14 @@ contract initializer
 _initializeBIMAddresses() must be called ASAP after this initialization_
 
 ```solidity
-function initialize(address changeExecutor_, address foundationTreasury_) external initializer;
+function initialize(IGovernanceManager governanceManager_) external initializer;
 ```
 
 **Parameters**
 
-| Name                  | Type      | Description                 |
-| --------------------- | --------- | --------------------------- |
-| `changeExecutor_`     | `address` | See Governed doc            |
-| `foundationTreasury_` | `address` | foundation treasury address |
+| Name                 | Type                 | Description                      |
+| -------------------- | -------------------- | -------------------------------- |
+| `governanceManager_` | `IGovernanceManager` | contract with permissioned roles |
 
 ### initializeBIMAddresses
 

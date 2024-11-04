@@ -1,6 +1,6 @@
 # ISponsorsManager
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/93d5161844768d71b8f7420d54b86b3a341b2a7b/src/interfaces/ISponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/6055db6ff187da599d0ad220410df3adfbe4a79d/src/interfaces/ISponsorsManager.sol)
 
 ## Functions
 

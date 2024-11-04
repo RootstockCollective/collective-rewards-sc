@@ -1,8 +1,8 @@
 # BuilderRegistry
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/93d5161844768d71b8f7420d54b86b3a341b2a7b/src/BuilderRegistry.sol)
+[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/6055db6ff187da599d0ad220410df3adfbe4a79d/src/BuilderRegistry.sol)
 
-**Inherits:** [EpochTimeKeeper](/src/EpochTimeKeeper.sol/abstract.EpochTimeKeeper.md), Ownable2StepUpgradeable
+**Inherits:** [EpochTimeKeeper](/src/EpochTimeKeeper.sol/abstract.EpochTimeKeeper.md)
 
 Keeps registers of the builders
 
@@ -113,14 +113,19 @@ uint256[50] private __gap;
 
 ## Functions
 
+### onlyKycApprover
+
+```solidity
+modifier onlyKycApprover();
+```
+
 ### \_\_BuilderRegistry_init
 
 contract initializer
 
 ```solidity
 function __BuilderRegistry_init(
-    address changeExecutor_,
-    address kycApprover_,
+    IGovernanceManager governanceManager_,
     address gaugeFactory_,
     address rewardDistributor_,
     uint32 epochDuration_,
@@ -133,15 +138,14 @@ function __BuilderRegistry_init(
 
 **Parameters**
 
-| Name                 | Type      | Description                                                                                  |
-| -------------------- | --------- | -------------------------------------------------------------------------------------------- |
-| `changeExecutor_`    | `address` | See Governed doc                                                                             |
-| `kycApprover_`       | `address` | account responsible of approving Builder's Know you Costumer policies and Legal requirements |
-| `gaugeFactory_`      | `address` | address of the GaugeFactory contract                                                         |
-| `rewardDistributor_` | `address` | address of the rewardDistributor contract                                                    |
-| `epochDuration_`     | `uint32`  | epoch time duration                                                                          |
-| `epochStartOffset_`  | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs            |
-| `kickbackCooldown_`  | `uint128` | time that must elapse for a new kickback from a builder to be applied                        |
+| Name                 | Type                 | Description                                                                       |
+| -------------------- | -------------------- | --------------------------------------------------------------------------------- |
+| `governanceManager_` | `IGovernanceManager` | contract with permissioned roles                                                  |
+| `gaugeFactory_`      | `address`            | address of the GaugeFactory contract                                              |
+| `rewardDistributor_` | `address`            | address of the rewardDistributor contract                                         |
+| `epochDuration_`     | `uint32`             | epoch time duration                                                               |
+| `epochStartOffset_`  | `uint24`             | offset to add to the first epoch, used to set an specific day to start the epochs |
+| `kickbackCooldown_`  | `uint128`            | time that must elapse for a new kickback from a builder to be applied             |
 
 ### activateBuilder
 
@@ -151,7 +155,7 @@ be switched to false anymore
 _reverts if it is not called by the owner address reverts if it is already activated_
 
 ```solidity
-function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyOwner;
+function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyKycApprover;
 ```
 
 **Parameters**
@@ -170,7 +174,7 @@ _reverts if it is not called by the owner address reverts if it is not activated
 reverts if it does not have a gauge associated_
 
 ```solidity
-function approveBuilderKYC(address builder_) external onlyOwner;
+function approveBuilderKYC(address builder_) external onlyKycApprover;
 ```
 
 **Parameters**
@@ -186,7 +190,7 @@ revokes builder's KYC and sent builder unclaimed rewards to rewardDistributor co
 _reverts if it is not called by the owner address reverts if it is not KYC approved_
 
 ```solidity
-function revokeBuilderKYC(address builder_) external onlyOwner;
+function revokeBuilderKYC(address builder_) external onlyKycApprover;
 ```
 
 **Parameters**
@@ -203,7 +207,7 @@ _reverts if it is not called by the governor address or authorized changer rever
 it has a gauge associated_
 
 ```solidity
-function whitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger returns (Gauge gauge_);
+function whitelistBuilder(address builder_) external onlyValidChanger returns (Gauge gauge_);
 ```
 
 **Parameters**
@@ -226,7 +230,7 @@ _reverts if it is not called by the governor address or authorized changer rever
 associated reverts if it is not whitelisted_
 
 ```solidity
-function dewhitelistBuilder(address builder_) external onlyGovernorOrAuthorizedChanger;
+function dewhitelistBuilder(address builder_) external onlyValidChanger;
 ```
 
 **Parameters**
@@ -242,7 +246,7 @@ pause builder
 _reverts if it is not called by the owner address_
 
 ```solidity
-function pauseBuilder(address builder_, bytes20 reason_) external onlyOwner;
+function pauseBuilder(address builder_, bytes20 reason_) external onlyKycApprover;
 ```
 
 **Parameters**
@@ -259,7 +263,7 @@ unpause builder
 _reverts if it is not called by the owner address reverts if it is not paused_
 
 ```solidity
-function unpauseBuilder(address builder_) external onlyOwner;
+function unpauseBuilder(address builder_) external onlyKycApprover;
 ```
 
 **Parameters**

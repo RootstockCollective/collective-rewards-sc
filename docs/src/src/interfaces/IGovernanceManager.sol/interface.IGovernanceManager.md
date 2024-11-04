@@ -1,6 +1,6 @@
 # IGovernanceManager
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/08262d3859b92bc5ef98f1d6cf55bac36a294db3/src/interfaces/IGovernanceManager.sol)
+[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/6055db6ff187da599d0ad220410df3adfbe4a79d/src/interfaces/IGovernanceManager.sol)
 
 ## Functions
 
@@ -51,20 +51,6 @@ function governor() external view returns (address);
 | Name     | Type      | Description           |
 | -------- | --------- | --------------------- |
 | `<none>` | `address` | The governor address. |
-
-### changer
-
-Returns the address of the current changer.
-
-```solidity
-function changer() external view returns (address);
-```
-
-**Returns**
-
-| Name     | Type      | Description          |
-| -------- | --------- | -------------------- |
-| `<none>` | `address` | The changer address. |
 
 ### foundationTreasury
 
