@@ -1,11 +1,14 @@
 # ChangeExecutorRootstockCollective
 
-<<<<<<< HEAD
+<<<<<<< HEAD <<<<<<< HEAD
 [Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/93d5161844768d71b8f7420d54b86b3a341b2a7b/src/governance/ChangeExecutorRootstockCollective.sol)
 =======
 [Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/4458056df04f5875676ab19eeb61c095640acd7a/src/governance/ChangeExecutorRootstockCollective.sol)
 
-> > > > > > > e514e20 (docs: automated docgen by GitHub Action)
+> > > > > > > # e514e20 (docs: automated docgen by GitHub Action)
+> > > > > > >
+> > > > > > > [Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/07de5fea7631b345ab1f8d59e79b48cb3bd6e6d2/src/governance/ChangeExecutorRootstockCollective.sol)
+> > > > > > > 4dd012a (docs: automated docgen by GitHub Action)
 
 **Inherits:** ReentrancyGuardUpgradeable, UUPSUpgradeable, [Governed](/src/governance/Governed.sol/abstract.Governed.md)
 
