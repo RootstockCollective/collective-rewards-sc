@@ -127,6 +127,10 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
                         _expectedTotalPotentialReward -= (_allocationBefore - sponsorsAllocations[i][j])
                             * sponsorsManager.timeUntilNextEpoch(block.timestamp);
                     }
+                } else {
+                    if (sponsorsAllocations[i][j] > _allocationBefore) {
+                        sponsorsAllocations[i][j] = _allocationBefore;
+                    }
                 }
             }
             vm.prank(sponsorsArray[i]);

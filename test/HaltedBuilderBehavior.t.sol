@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest } from "./BaseTest.sol";
+import { BaseTest, SponsorsManager } from "./BaseTest.sol";
 
 abstract contract HaltedBuilderBehavior is BaseTest {
     function _initialState() internal virtual { }
@@ -85,10 +85,10 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
     /**
      * SCENARIO: builder is halted in the middle of an epoch having allocation.
-     *  Alice modifies its allocation but the total reward shares don't change
+     *  Alice modifies reduce its allocation but the total reward shares don't change
      *  and the sponsorTotalAllocation is updated
      */
-    function test_HaltedGaugeModifyAllocation() public {
+    function test_NegativeAllocationOnHaltedGauge() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half epoch pass
@@ -102,16 +102,6 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         assertEq(gauge.rewardShares(), 604_800 ether);
         // THEN alice total allocation is 6
         assertEq(sponsorsManager.sponsorTotalAllocation(alice), 6 ether);
-        // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
-
-        // WHEN alice adds allocations to revoked builder
-        vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 4 ether);
-        // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
-        assertEq(gauge.rewardShares(), 1_814_400 ether);
-        // THEN alice total allocation is 10
-        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 10 ether);
         // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
         assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
     }
@@ -169,20 +159,6 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // WHEN alice removes allocations from halted gauge
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 0);
-
-        // AND alice adds allocations again to halted gauge calculating rewardMissing
-        // THEN tx does not revert
-        vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1);
-
-        // WHEN alice claim rewards
-        vm.startPrank(alice);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
-
-        // THEN alice rewardToken balance is 25 = (100 * 8 / 16) * 0.5
-        assertApproxEqAbs(rewardToken.balanceOf(alice), 25 ether, 100);
-        // THEN alice coinbase balance is 2.5 = (10 * 8 / 16) * 0.5
-        assertApproxEqAbs(alice.balance, 2.5 ether, 100);
     }
 
     /**
@@ -271,5 +247,25 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         assertEq(sponsorsManager.sponsorTotalAllocation(alice), 6 ether);
         // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
         assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+    }
+
+    /**
+     * SCENARIO: builder is halted in the middle of an epoch having allocation.
+     *  If the builder increase allocations tx fails
+     */
+    function test_HaltedGaugeCannotIncreaseAllocations() public {
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        //   AND half epoch pass
+        _initialDistribution();
+
+        // WHEN builder is halted
+        _haltGauge();
+
+        // WHEN alice adds allocations
+        vm.startPrank(alice);
+        // THEN tx reverts
+        vm.expectRevert(SponsorsManager.PositiveAllocationOnHaltedGauge.selector);
+        sponsorsManager.allocate(gauge, 100 ether);
     }
 }

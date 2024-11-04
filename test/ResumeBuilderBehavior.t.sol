@@ -225,10 +225,10 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         _initialState();
 
         // WHEN alice adds allocations to halted builder
-        vm.prank(alice);
-        sponsorsManager.allocate(gauge, 4 ether);
-        // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
-        assertEq(gauge.rewardShares(), 1_814_400 ether);
+        vm.startPrank(alice);
+        sponsorsManager.allocate(gauge, 1 ether);
+        // THEN gauge rewardShares is 907200 ether = 2 * 1/2 WEEK + 1 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 907_200 ether);
         // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
         assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
 
@@ -238,10 +238,10 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         // WHEN gauge is resumed
         _resumeGauge();
 
-        // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
-        assertEq(gauge.rewardShares(), 1_814_400 ether);
-        // THEN total allocation didn't change is 10281600 ether = gauge(2 * 1/2 WEEK + 4 * 1/2 WEEK) + gauge2(14 * 1
+        // THEN gauge rewardShares is 907200 ether = 2 * 1/2 WEEK + 1 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 907_200 ether);
+        // THEN total allocation didn't change is 9374400 ether = gauge(2 * 1/2 WEEK + 1 * 1/2 WEEK) + gauge2(14 * 1
         // WEEK)
-        assertEq(sponsorsManager.totalPotentialReward(), 10_281_600 ether);
+        assertEq(sponsorsManager.totalPotentialReward(), 9_374_400 ether);
     }
 }

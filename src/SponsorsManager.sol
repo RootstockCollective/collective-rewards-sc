@@ -27,6 +27,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
     error NotInDistributionPeriod();
     error DistributionPeriodDidNotStart();
     error BeforeDistribution();
+    error PositiveAllocationOnHaltedGauge();
 
     // -----------------------------
     // ----------- Events ----------
@@ -302,11 +303,10 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
 
         // halted gauges are not taken on account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
         if (isGaugeHalted(address(gauge_))) {
-            if (_isNegative) {
-                newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
-            } else {
-                newSponsorTotalAllocation_ = sponsorTotalAllocation_ + _allocationDeviation;
+            if (!_isNegative) {
+                revert PositiveAllocationOnHaltedGauge();
             }
+            newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
             return (newSponsorTotalAllocation_, totalPotentialReward_);
         }
 

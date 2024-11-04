@@ -352,11 +352,12 @@ contract SponsorsManagerTest is BaseTest {
             // THEN new gauge is added in the last index
             assertEq(sponsorsManager.getGaugeAt(gaugesArray.length - 1), address(_newGauge));
         }
+        vm.prank(alice);
+        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+
         vm.prank(builder2);
         sponsorsManager.revokeBuilder();
 
-        vm.prank(alice);
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         //  AND 2 ether reward are added
         sponsorsManager.notifyRewardAmount(2 ether);
         // AND distribution window starts

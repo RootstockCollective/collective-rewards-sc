@@ -314,7 +314,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
 
         // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
         uint256 _previousAllocation = allocationOf[sponsor_];
-        if (allocation_ >= _previousAllocation) {
+        if (allocation_ > _previousAllocation) {
             allocationDeviation_ = allocation_ - _previousAllocation;
             rewardSharesDeviation_ = allocationDeviation_ * timeUntilNextEpoch_;
             totalAllocation += allocationDeviation_;
