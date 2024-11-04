@@ -47,8 +47,8 @@ contract BaseTest is Test {
     address internal builder2 = makeAddr("builder2");
     address internal incentivizer = makeAddr("incentivizer");
     address internal builder2Receiver = makeAddr("builder2Receiver");
-    address internal kycApprover = makeAddr("kycApprover");
-    address internal foundation = makeAddr("foundation");
+    address public kycApprover = makeAddr("kycApprover");
+    address public foundation = makeAddr("foundation");
     /* solhint-enable private-vars-leading-underscore */
 
     function setUp() public {
@@ -79,11 +79,8 @@ contract BaseTest is Test {
         // allow to execute all the functions protected by governance
         changeExecutorMock.setIsAuthorized(true);
 
-        builders.push(builder);
-        builders.push(builder2);
         gauge = _whitelistBuilder(builder, builder, 0.5 ether);
         gauge2 = _whitelistBuilder(builder2, builder2Receiver, 0.5 ether);
-        gaugesArray = [gauge, gauge2];
 
         // mint some stakingTokens to alice and bob
         stakingToken.mint(alice, 100_000 ether);
@@ -129,16 +126,16 @@ contract BaseTest is Test {
     {
         vm.startPrank(kycApprover);
         sponsorsManager.activateBuilder(builder_, rewardReceiver_, kickbackPct_);
+        builders.push(builder_);
         vm.startPrank(governor);
         newGauge_ = sponsorsManager.whitelistBuilder(builder_);
+        gaugesArray.push(newGauge_);
         vm.stopPrank();
     }
 
     function _createGauge(uint64 kickback_) internal {
         address _newBuilder = makeAddr(string(abi.encode(gaugesArray.length)));
-        builders.push(_newBuilder);
-        Gauge _newGauge = _whitelistBuilder(_newBuilder, _newBuilder, kickback_);
-        gaugesArray.push(_newGauge);
+        _whitelistBuilder(_newBuilder, _newBuilder, kickback_);
     }
 
     function _createGauges(uint256 amount_, uint64 kickback_) internal {
@@ -207,6 +204,22 @@ contract BaseTest is Test {
         vm.startPrank(address_);
         Address.sendValue(payable(address(this)), balance_);
         vm.stopPrank();
+    }
+
+    function gaugesArrayLength() public view returns (uint256) {
+        return gaugesArray.length;
+    }
+
+    function addGauge(Gauge gauge_) public {
+        gaugesArray.push(gauge_);
+    }
+
+    function buildersArrayLength() public view returns (uint256) {
+        return builders.length;
+    }
+
+    function addBuilder(address builder_) public {
+        builders.push(builder_);
     }
 
     receive() external payable { }

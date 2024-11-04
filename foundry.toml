@@ -21,6 +21,12 @@ fs_permissions = [
   { access = "read-write", path = "./deployments"}
 ]
 
+[invariant]
+runs = 20 # The number of calls to make in the invariant tests
+depth = 100 # The number of times to run the invariant tests
+call_override  = false
+fail_on_revert = true
+
 [fuzz]
 runs = 200
 
@@ -40,7 +46,16 @@ wrap_comments = true
 [rpc_endpoints]
 localhost = "http://localhost:4444"
 
+[profile.deep]
+verbosity = 3
+
 [profile.deep.fuzz]
 optimizer = true
 runs      = 1_000
-verbosity = 2
+
+[profile.deep.invariant]
+optimizer = true
+runs      = 200  # The number of calls to make in the invariant tests
+depth     = 250  # The number of times to run the invariant tests
+call_override  = false
+fail_on_revert = true
