@@ -2,17 +2,17 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, GaugeRootstockCollective } from "../../BaseTest.sol";
-import { WhitelistBuilderChangerTemplate } from
-    "../../../src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol";
+import { WhitelistBuilderChangerTemplateRootstockCollective } from
+    "../../../src/governance/changerTemplates/WhitelistBuilderChangerTemplateRootstockCollective.sol";
 import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 contract WhitelistBuilderChangerTest is BaseTest {
-    WhitelistBuilderChangerTemplate internal _changer;
+    WhitelistBuilderChangerTemplateRootstockCollective internal _changer;
     address internal _newBuilder = makeAddr("newBuilder");
 
     function _setUp() internal override {
         // GIVEN WhitelistBuilderChanger deployed for a new builder
-        _changer = new WhitelistBuilderChangerTemplate(sponsorsManager, _newBuilder);
+        _changer = new WhitelistBuilderChangerTemplateRootstockCollective(sponsorsManager, _newBuilder);
     }
 
     /**
