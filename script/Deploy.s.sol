@@ -19,16 +19,16 @@ contract Deploy is Broadcaster, OutputWriter {
     address private _stakingTokenAddress;
     address private _kycApproverAddress;
     address private _foundationTreasuryAddress;
-    uint32 private _epochDuration;
-    uint24 private _epochStartOffset;
+    uint32 private _cycleDuration;
+    uint24 private _cycleStartOffset;
     uint128 private _kickbackCooldown;
 
     function setUp() public {
         _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
-        _epochDuration = uint32(vm.envUint("EPOCH_DURATION"));
-        _epochStartOffset = uint24(vm.envUint("EPOCH_START_OFFSET"));
+        _cycleDuration = uint32(vm.envUint("CYCLE_DURATION"));
+        _cycleStartOffset = uint24(vm.envUint("CYCLE_START_OFFSET"));
         _kickbackCooldown = uint128(vm.envUint("KICKBACK_COOLDOWN"));
 
         outputWriterSetup();
@@ -55,8 +55,8 @@ contract Deploy is Broadcaster, OutputWriter {
             _stakingTokenAddress,
             address(_gaugeFactory),
             address(_rewardDistributorProxy),
-            _epochDuration,
-            _epochStartOffset,
+            _cycleDuration,
+            _cycleStartOffset,
             _kickbackCooldown
         );
         saveWithProxy("SponsorsManager", address(_sponsorManagerImpl), address(_sponsorManagerProxy));

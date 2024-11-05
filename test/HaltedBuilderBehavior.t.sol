@@ -9,17 +9,17 @@ abstract contract HaltedBuilderBehavior is BaseTest {
     function _haltGauge() internal virtual { }
 
     /**
-     * SCENARIO: builder is halted in the middle of an epoch having allocation.
-     *  Sponsors receive all the rewards for the current epoch
+     * SCENARIO: builder is halted in the middle of an cycle having allocation.
+     *  Sponsors receive all the rewards for the current cycle
      */
     function test_HaltedGaugeReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is halted
         _initialState();
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
         assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
@@ -44,13 +44,13 @@ abstract contract HaltedBuilderBehavior is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is halted in the middle of an epoch having allocation.  and builder
-     *  don't receive those rewards on the next epoch
+     * SCENARIO: builder is halted in the middle of an cycle having allocation.  and builder
+     *  don't receive those rewards on the next cycle
      */
     function test_HaltedGaugeDoNotReceiveNextRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is halted
         _initialState();
 
@@ -59,8 +59,8 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
         assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
 
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // WHEN alice claim rewards
         vm.startPrank(alice);
@@ -84,14 +84,14 @@ abstract contract HaltedBuilderBehavior is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is halted in the middle of an epoch having allocation.
+     * SCENARIO: builder is halted in the middle of an cycle having allocation.
      *  Alice reduce its allocation but the total reward shares don't change
      *  and the sponsorTotalAllocation is updated
      */
     function test_NegativeAllocationOnHaltedGauge() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is halted
         _initialState();
 
@@ -107,7 +107,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is halted in a new epoch but before a distribution
+     * SCENARIO: builder is halted in a new cycle but before a distribution
      *  so, lastUpdateTime > periodFinish, rewardPerToken should not revert by underflow
      */
     function test_HaltedGaugeBeforeDistributionRewardPerToken() public {
@@ -115,8 +115,8 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         //  AND 100 rewardToken and 10 coinbase are distributed
         _initialDistribution();
 
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // skip some time to halt on another timestamp
         skip(10);
@@ -139,7 +139,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is halted in a new epoch but before a distribution
+     * SCENARIO: builder is halted in a new cycle but before a distribution
      *  so, lastUpdateTime > periodFinish, rewardMissing should not revert by underflow
      */
     function test_HaltedGaugeBeforeDistributionRewardMissing() public {
@@ -147,8 +147,8 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         //  AND 100 rewardToken and 10 coinbase are distributed
         _initialDistribution();
 
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // skip some time to halt on another timestamp
         skip(10);
@@ -162,13 +162,13 @@ abstract contract HaltedBuilderBehavior is BaseTest {
     }
 
     /**
-     * SCENARIO: builder increase allocations in the middle of the epoch and is halted.
+     * SCENARIO: builder increase allocations in the middle of the cycle and is halted.
      *  totalPotentialReward decreases by builder shares
      */
-    function test_GaugeIncreaseAllocationMiddleEpochBeforeHalt() public {
+    function test_GaugeIncreaseAllocationMiddleCycleBeforeHalt() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
 
         // AND alice adds allocations
@@ -187,22 +187,22 @@ abstract contract HaltedBuilderBehavior is BaseTest {
     }
 
     /**
-     * SCENARIO: builder decrease allocations in the middle of the epoch and is halted.
+     * SCENARIO: builder decrease allocations in the middle of the cycle and is halted.
      *  totalPotentialReward decreases by builder shares
      */
-    function test_GaugeDecreaseAllocationMiddleEpochBeforeHalt() public {
+    function test_GaugeDecreaseAllocationMiddleCycleBeforeHalt() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         _initialDistribution();
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
         vm.prank(alice);
         sponsorsManager.allocate(gauge, 100 ether);
 
-        // AND epoch finish
-        _skipAndStartNewEpoch();
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND cycle finish
+        _skipAndStartNewCycle();
+        // AND half cycle pass
+        _skipRemainingCycleFraction(2);
         // AND alice removes allocations
         sponsorsManager.allocate(gauge, 0 ether);
 
@@ -221,18 +221,18 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      * SCENARIO: builder with lot of allocations is halted and remove all of them
      *  totalPotentialReward decreases by builder shares
      */
-    function test_GaugeWithLotAllocationMiddleEpochBeforeHalt() public {
+    function test_GaugeWithLotAllocationMiddleCycleBeforeHalt() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
 
         // AND alice adds allocations
         vm.prank(alice);
         sponsorsManager.allocate(gauge, 100 ether);
 
-        // AND a quarter epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND a quarter cycle pass
+        _skipRemainingCycleFraction(2);
 
         // WHEN builder is halted
         _haltGauge();

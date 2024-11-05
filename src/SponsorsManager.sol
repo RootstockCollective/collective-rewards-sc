@@ -93,8 +93,8 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @param stakingToken_ address of the staking token for builder and voters
      * @param gaugeFactory_ address of the GaugeFactory contract
      * @param rewardDistributor_ address of the rewardDistributor contract
-     * @param epochDuration_ epoch time duration
-     * @param epochStartOffset_ offset to add to the first epoch, used to set an specific day to start the epochs
+     * @param cycleDuration_ Collective Rewards cycle time duration
+     * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
      * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function initialize(
@@ -103,19 +103,19 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
         address stakingToken_,
         address gaugeFactory_,
         address rewardDistributor_,
-        uint32 epochDuration_,
-        uint24 epochStartOffset_,
+        uint32 cycleDuration_,
+        uint24 cycleStartOffset_,
         uint128 kickbackCooldown_
     )
         external
         initializer
     {
         __BuilderRegistry_init(
-            governanceManager_, gaugeFactory_, rewardDistributor_, epochDuration_, epochStartOffset_, kickbackCooldown_
+            governanceManager_, gaugeFactory_, rewardDistributor_, cycleDuration_, cycleStartOffset_, kickbackCooldown_
         );
         rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
-        _periodFinish = epochNext(block.timestamp);
+        _periodFinish = cycleNext(block.timestamp);
     }
 
     // -----------------------------
@@ -154,7 +154,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
             allocation_,
             sponsorTotalAllocation[msg.sender],
             totalPotentialReward,
-            timeUntilNextEpoch(block.timestamp)
+            timeUntilNextCycle(block.timestamp)
         );
 
         _updateAllocation(msg.sender, _newSponsorTotalAllocation, _newTotalPotentialReward);
@@ -179,10 +179,10 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
         // TODO: check length < MAX or let revert by out of gas?
         uint256 _sponsorTotalAllocation = sponsorTotalAllocation[msg.sender];
         uint256 _totalPotentialReward = totalPotentialReward;
-        uint256 _timeUntilNextEpoch = timeUntilNextEpoch(block.timestamp);
+        uint256 _timeUntilNextCycle = timeUntilNextCycle(block.timestamp);
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             (uint256 _newSponsorTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
-                gauges_[i], allocations_[i], _sponsorTotalAllocation, _totalPotentialReward, _timeUntilNextEpoch
+                gauges_[i], allocations_[i], _sponsorTotalAllocation, _totalPotentialReward, _timeUntilNextCycle
             );
             _sponsorTotalAllocation = _newSponsorTotalAllocation;
             _totalPotentialReward = _newTotalPotentialReward;
@@ -281,7 +281,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @param allocation_ amount of votes to allocate
      * @param sponsorTotalAllocation_ current sponsor total allocation
      * @param totalPotentialReward_ current total potential reward
-     * @param timeUntilNextEpoch_ time until next epoch
+     * @param timeUntilNextCycle_ time until next cycle
      * @return newSponsorTotalAllocation_ sponsor total allocation after new the allocation
      * @return newTotalPotentialReward_ total potential reward  after the new allocation
      */
@@ -290,7 +290,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
         uint256 allocation_,
         uint256 sponsorTotalAllocation_,
         uint256 totalPotentialReward_,
-        uint256 timeUntilNextEpoch_
+        uint256 timeUntilNextCycle_
     )
         internal
         returns (uint256 newSponsorTotalAllocation_, uint256 newTotalPotentialReward_)
@@ -299,7 +299,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
         _validateGauge(gauge_);
 
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
-            gauge_.allocate(msg.sender, allocation_, timeUntilNextEpoch_);
+            gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
 
         // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
         if (isGaugeHalted(address(gauge_))) {
@@ -360,7 +360,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
         uint256 _rewardsCoinbase = rewardsCoinbase;
         uint256 _totalPotentialReward = totalPotentialReward;
         uint256 __periodFinish = _periodFinish;
-        (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
             _newTotalPotentialReward += _gaugeDistribute(
@@ -369,8 +369,8 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
                 _rewardsCoinbase,
                 _totalPotentialReward,
                 __periodFinish,
-                _epochStart,
-                _epochDuration
+                _cycleStart,
+                _cycleDuration
             );
             _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
         }
@@ -383,7 +383,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
             onDistributionPeriod = false;
             tempTotalPotentialReward = 0;
             totalPotentialReward = _newTotalPotentialReward;
-            _periodFinish = epochNext(block.timestamp);
+            _periodFinish = cycleNext(block.timestamp);
             return true;
         }
         // Define new reference to batch beginning
@@ -399,8 +399,8 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @param rewardsCoinbase_ Coinbase rewards to distribute
      * @param totalPotentialReward_ cached total potential reward
      * @param periodFinish_ cached period finish
-     * @param epochStart_ cached epoch start timestamp
-     * @param epochDuration_ cached epoch duration
+     * @param cycleStart_ cached cycle start timestamp
+     * @param cycleDuration_ cached cycle duration
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
     function _gaugeDistribute(
@@ -409,8 +409,8 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
         uint256 rewardsCoinbase_,
         uint256 totalPotentialReward_,
         uint256 periodFinish_,
-        uint256 epochStart_,
-        uint256 epochDuration_
+        uint256 cycleStart_,
+        uint256 cycleDuration_
     )
         internal
         returns (uint256)
@@ -422,7 +422,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
         uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
         uint256 _builderKickback = getKickbackToApply(gaugeToBuilder[gauge_]);
         return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
-            _amountERC20, _builderKickback, periodFinish_, epochStart_, epochDuration_
+            _amountERC20, _builderKickback, periodFinish_, cycleStart_, cycleDuration_
         );
     }
 
@@ -459,14 +459,14 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
         // incentives can stay in the gauge because lastUpdateTime > lastTimeRewardApplicable
         if (_periodFinish <= block.timestamp) revert BeforeDistribution();
         // allocations are considered again for the reward's distribution
-        // if there was a distribution we need to update the shares with the full epoch duration
+        // if there was a distribution we need to update the shares with the full cycle duration
         if (haltedGaugeLastPeriodFinish[gauge_] < _periodFinish) {
-            (uint256 _epochStart, uint256 _epochDuration) = getEpochStartAndDuration();
+            (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
             totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-                0, 0, haltedGaugeLastPeriodFinish[gauge_], _epochStart, _epochDuration
+                0, 0, haltedGaugeLastPeriodFinish[gauge_], _cycleStart, _cycleDuration
             );
         } else {
-            // halt and resume were in the same epoch, we don't update the shares
+            // halt and resume were in the same cycle, we don't update the shares
             totalPotentialReward += gauge_.rewardShares();
         }
         haltedGaugeLastPeriodFinish[gauge_] = 0;

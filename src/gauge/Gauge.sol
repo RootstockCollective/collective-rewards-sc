@@ -70,7 +70,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     ISponsorsManager public sponsorsManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
-    /// @notice epoch rewards shares, optimistically tracking the time weighted votes allocations for this gauge
+    /// @notice cycle rewards shares, optimistically tracking the time weighted votes allocations for this gauge
     uint256 public rewardShares;
     /// @notice amount of stakingToken allocated by a sponsor
     mapping(address sponsor => uint256 allocation) public allocationOf;
@@ -167,7 +167,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     }
 
     /**
-     * @notice gets the last time the reward is applicable, now or when the epoch finished
+     * @notice gets the last time the reward is applicable, now or when the cycle finished
      * @return lastTimeRewardApplicable minimum between current timestamp or periodFinish
      */
     function lastTimeRewardApplicable() public view returns (uint256) {
@@ -287,7 +287,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @dev reverts if caller is not the sponsorsManager contract
      * @param sponsor_ address of user who allocates tokens
      * @param allocation_ amount of tokens to allocate
-     * @param timeUntilNextEpoch_ time until next epoch
+     * @param timeUntilNextCycle_ time until next cycle
      * @return allocationDeviation_ deviation between current allocation and the new one
      * @return rewardSharesDeviation_  deviation between current reward shares and the new one
      * @return isNegative_ true if new allocation is lesser than the current one
@@ -295,14 +295,14 @@ contract Gauge is ReentrancyGuardUpgradeable {
     function allocate(
         address sponsor_,
         uint256 allocation_,
-        uint256 timeUntilNextEpoch_
+        uint256 timeUntilNextCycle_
     )
         external
         onlySponsorsManager
         returns (uint256 allocationDeviation_, uint256 rewardSharesDeviation_, bool isNegative_)
     {
         uint256 _periodFinish = sponsorsManager.periodFinish();
-        // if sponsors quit before epoch finish we need to store the remaining rewards on first allocation
+        // if sponsors quit before cycle finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
             _updateRewardMissing(rewardToken, _periodFinish);
@@ -316,13 +316,13 @@ contract Gauge is ReentrancyGuardUpgradeable {
         uint256 _previousAllocation = allocationOf[sponsor_];
         if (allocation_ > _previousAllocation) {
             allocationDeviation_ = allocation_ - _previousAllocation;
-            rewardSharesDeviation_ = allocationDeviation_ * timeUntilNextEpoch_;
+            rewardSharesDeviation_ = allocationDeviation_ * timeUntilNextCycle_;
             totalAllocation += allocationDeviation_;
             rewardShares += rewardSharesDeviation_;
         } else {
             allocationDeviation_ = _previousAllocation - allocation_;
             // avoid underflow because rewardShares may not be correctly updated if the distribution was skipped
-            rewardSharesDeviation_ = Math.min(rewardShares, allocationDeviation_ * timeUntilNextEpoch_);
+            rewardSharesDeviation_ = Math.min(rewardShares, allocationDeviation_ * timeUntilNextCycle_);
             totalAllocation -= allocationDeviation_;
             rewardShares -= rewardSharesDeviation_;
             isNegative_ = true;
@@ -336,7 +336,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     /**
      * @notice transfers reward tokens to this contract to incentivize sponsors
      * @dev reverts if Gauge is halted
-     *  reverts if distribution for the epoch has not finished
+     *  reverts if distribution for the cycle has not finished
      * @param amount_ amount of reward tokens
      */
     function incentivizeWithRewardToken(uint256 amount_) external {
@@ -344,7 +344,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
         if (sponsorsManager.isGaugeHalted(address(this))) revert GaugeHalted();
-        // Gauges cannot be incentivized before the distribution of the epoch finishes
+        // Gauges cannot be incentivized before the distribution of the cycle finishes
         if (sponsorsManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
 
         _notifyRewardAmount(
@@ -352,7 +352,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
             0, /*builderAmount_*/
             amount_,
             sponsorsManager.periodFinish(),
-            sponsorsManager.timeUntilNextEpoch(block.timestamp)
+            sponsorsManager.timeUntilNextCycle(block.timestamp)
         );
 
         SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
@@ -361,14 +361,14 @@ contract Gauge is ReentrancyGuardUpgradeable {
     /**
      * @notice transfers coinbase to this contract to incentivize sponsors
      * @dev reverts if Gauge is halted
-     *  reverts if distribution for the epoch has not finished
+     *  reverts if distribution for the cycle has not finished
      */
     function incentivizeWithCoinbase() external payable {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
         if (sponsorsManager.isGaugeHalted(address(this))) revert GaugeHalted();
-        // Gauges cannot be incentivized before the distribution of the epoch finishes
+        // Gauges cannot be incentivized before the distribution of the cycle finishes
         if (sponsorsManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
 
         _notifyRewardAmount(
@@ -376,7 +376,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
             0, /*builderAmount_*/
             msg.value,
             sponsorsManager.periodFinish(),
-            sponsorsManager.timeUntilNextEpoch(block.timestamp)
+            sponsorsManager.timeUntilNextCycle(block.timestamp)
         );
     }
 
@@ -386,16 +386,16 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @param amountERC20_ amount of ERC20 rewards
      * @param builderKickback_  builder kickback percentage
      * @param periodFinish_ timestamp end of current rewards period
-     * @param epochStart_ epoch start timestamp
-     * @param epochDuration_ epoch time duration
+     * @param cycleStart_ Collective Rewards cycle start timestamp
+     * @param cycleDuration_ Collective Rewards cycle time duration
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
     function notifyRewardAmountAndUpdateShares(
         uint256 amountERC20_,
         uint256 builderKickback_,
         uint256 periodFinish_,
-        uint256 epochStart_,
-        uint256 epochDuration_
+        uint256 cycleStart_,
+        uint256 cycleDuration_
     )
         external
         payable
@@ -404,19 +404,19 @@ contract Gauge is ReentrancyGuardUpgradeable {
     {
         uint256 _sponsorAmountERC20 = UtilsLib._mulPrec(builderKickback_, amountERC20_);
         uint256 _sponsorAmountCoinbase = UtilsLib._mulPrec(builderKickback_, msg.value);
-        uint256 _timeUntilNextEpoch = UtilsLib._calcTimeUntilNextEpoch(epochStart_, epochDuration_, block.timestamp);
+        uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
         _notifyRewardAmount(
-            rewardToken, amountERC20_ - _sponsorAmountERC20, _sponsorAmountERC20, periodFinish_, _timeUntilNextEpoch
+            rewardToken, amountERC20_ - _sponsorAmountERC20, _sponsorAmountERC20, periodFinish_, _timeUntilNextCycle
         );
         _notifyRewardAmount(
             UtilsLib._COINBASE_ADDRESS,
             msg.value - _sponsorAmountCoinbase,
             _sponsorAmountCoinbase,
             periodFinish_,
-            _timeUntilNextEpoch
+            _timeUntilNextCycle
         );
 
-        newGaugeRewardShares_ = totalAllocation * epochDuration_;
+        newGaugeRewardShares_ = totalAllocation * cycleDuration_;
         rewardShares = newGaugeRewardShares_;
 
         SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amountERC20_);
@@ -427,7 +427,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
     // -----------------------------
 
     /**
-     * @notice gets the last time the reward is applicable, now or when the epoch finished
+     * @notice gets the last time the reward is applicable, now or when the cycle finished
      * @param periodFinish_ timestamp end of current rewards period
      * @return lastTimeRewardApplicable minimum between current timestamp or periodFinish
      */
@@ -485,14 +485,14 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @param builderAmount_ amount of rewards for the builder
      * @param sponsorsAmount_ amount of rewards for the sponsors
      * @param periodFinish_ timestamp end of current rewards period
-     * @param timeUntilNextEpoch_ time until next epoch
+     * @param timeUntilNextCycle_ time until next cycle
      */
     function _notifyRewardAmount(
         address rewardToken_,
         uint256 builderAmount_,
         uint256 sponsorsAmount_,
         uint256 periodFinish_,
-        uint256 timeUntilNextEpoch_
+        uint256 timeUntilNextCycle_
     )
         internal
     {
@@ -504,7 +504,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
         // if period finished there is not remaining reward
         if (block.timestamp < periodFinish_) {
             // [PREC] = [N] * [PREC]
-            _leftover = (timeUntilNextEpoch_) * _rewardRate;
+            _leftover = (timeUntilNextCycle_) * _rewardRate;
         }
 
         // if there are no allocations we need to update rewardMissing to avoid losing the previous rewards
@@ -514,7 +514,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
 
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
         _rewardRate =
-            (sponsorsAmount_ * UtilsLib._PRECISION + _rewardData.rewardMissing + _leftover) / timeUntilNextEpoch_;
+            (sponsorsAmount_ * UtilsLib._PRECISION + _rewardData.rewardMissing + _leftover) / timeUntilNextCycle_;
 
         _rewardData.builderRewards += builderAmount_;
         _rewardData.rewardPerTokenStored = _rewardPerToken(rewardToken_, periodFinish_);

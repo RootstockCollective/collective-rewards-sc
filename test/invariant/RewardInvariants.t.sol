@@ -14,7 +14,7 @@ contract RewardInvariants is BaseInvariants {
         uint256 _totalGaugesBalances;
         uint256 _totalIncentives;
 
-        timeManager.increaseTimestamp(sponsorsManager.epochNext(block.timestamp) - block.timestamp);
+        timeManager.increaseTimestamp(sponsorsManager.cycleNext(block.timestamp) - block.timestamp);
 
         _buildersClaim();
 

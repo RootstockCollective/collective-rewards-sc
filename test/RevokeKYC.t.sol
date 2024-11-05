@@ -8,7 +8,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     function _initialState() internal override(HaltedBuilderBehavior, ResumeBuilderBehavior) {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
 
         // AND builder is KYC revoked
@@ -32,13 +32,13 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is KYC revoked in the middle of an epoch having allocation.
+     * SCENARIO: builder is KYC revoked in the middle of an cycle having allocation.
      *  builder does not receive rewards, they were sent to rewardDistributor
      */
     function test_BuilderClaimRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is KYC revoked
         _initialState();
 
@@ -56,13 +56,13 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is KYC revoked in the middle of an epoch having allocation.
+     * SCENARIO: builder is KYC revoked in the middle of an cycle having allocation.
      *  builder's unclaimed rewards are sent to rewardDistributor
      */
     function test_BuilderUnclaimedRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is KYC revoked
         _initialState();
 
@@ -81,7 +81,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     function test_ResumedBuilderClaimsAll() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is KYC revoked
         _initialState();
 
@@ -112,13 +112,13 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is paused and KYC revoked in the middle of an epoch having allocation.
+     * SCENARIO: builder is paused and KYC revoked in the middle of an cycle having allocation.
      *  builder's unclaimed rewards are sent to rewardDistributor
      */
     function test_PausedBuilderIsKYCRevoked() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
         // AND builder is paused
         vm.startPrank(kycApprover);
@@ -152,13 +152,13 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder has revoked itself and KYC revoked in the middle of an epoch having allocation.
+     * SCENARIO: builder has revoked itself and KYC revoked in the middle of an cycle having allocation.
      *  builder's unclaimed rewards are sent to rewardDistributor
      */
     function test_RevokedBuilderIsKYCRevoked() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
         // AND builder is revoked
         vm.startPrank(builder);
@@ -198,7 +198,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     function test_HaltedGaugeDoNotResumeTwice() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
         // AND builder is revoked
         vm.startPrank(builder);

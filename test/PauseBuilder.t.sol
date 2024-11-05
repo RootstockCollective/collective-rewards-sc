@@ -8,7 +8,7 @@ contract PauseBuilderTest is BaseTest {
     function _initialState() internal {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
 
         // AND builder is paused
@@ -18,17 +18,17 @@ contract PauseBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is paused in the middle of an epoch having allocation.
+     * SCENARIO: builder is paused in the middle of an cycle having allocation.
      *  Sponsors claim all the rewards
      */
     function test_PausedGaugeSponsorsReceiveRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is paused
         _initialState();
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // WHEN alice claim rewards
         vm.startPrank(alice);
@@ -50,17 +50,17 @@ contract PauseBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is paused in the middle of an epoch having allocation.
+     * SCENARIO: builder is paused in the middle of an cycle having allocation.
      *  If the builder calls claimBuilderReward the tx reverts
      */
     function test_PausedGaugeBuilderCannotReceiveRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is paused
         _initialState();
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // WHEN builder claim rewards
         vm.startPrank(builder);
@@ -88,13 +88,13 @@ contract PauseBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is paused in the middle of an epoch having allocation.
+     * SCENARIO: builder is paused in the middle of an cycle having allocation.
      *  Alice can modify its allocation
      */
     function test_PausedGaugeModifyAllocation() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is paused
         _initialState();
 
@@ -116,18 +116,18 @@ contract PauseBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is paused in the middle of an epoch having rewards to claim,
-     *  is unpaused in the same epoch and can claim them
+     * SCENARIO: builder is paused in the middle of an cycle having rewards to claim,
+     *  is unpaused in the same cycle and can claim them
      */
-    function test_ResumeGaugeInSameEpoch() public {
+    function test_ResumeGaugeInSameCycle() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is paused
         _initialState();
 
-        // AND 3/4 epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND 3/4 cycle pass
+        _skipRemainingCycleFraction(2);
 
         // WHEN gauge is unpaused
         vm.startPrank(kycApprover);
@@ -148,18 +148,18 @@ contract PauseBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is paused in the middle of an epoch having rewards to claim,
-     *  is unpaused in the next epoch and can claim the previous rewards and the new ones
+     * SCENARIO: builder is paused in the middle of an cycle having rewards to claim,
+     *  is unpaused in the next cycle and can claim the previous rewards and the new ones
      */
-    function test_ResumeGaugeInNextEpoch() public {
+    function test_ResumeGaugeInNextCycle() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is paused
         _initialState();
 
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
 
@@ -188,7 +188,7 @@ contract PauseBuilderTest is BaseTest {
     function test_RevokedGaugeIsPaused() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
         // AND builder is revoked
         vm.startPrank(builder);

@@ -144,7 +144,7 @@ contract SetBuilderKickbackTest is BaseTest {
         assertEq(_clearCoinbaseBalance(builder), 0.625 ether);
 
         // WHEN alice claims the rewards
-        _skipAndStartNewEpoch();
+        _skipAndStartNewCycle();
         vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice receives 50% of rewardToken 6.25 = (100 * 2 / 16) * 0.5
@@ -168,7 +168,7 @@ contract SetBuilderKickbackTest is BaseTest {
         assertEq(_clearCoinbaseBalance(builder), 0.25 ether);
 
         // WHEN alice claims the rewards
-        _skipAndStartNewEpoch();
+        _skipAndStartNewCycle();
         vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice receives 80% of rewardToken 10 = (100 * 2 / 16) * 0.8
@@ -216,7 +216,7 @@ contract SetBuilderKickbackTest is BaseTest {
         assertEq(_clearCoinbaseBalance(builder), 1.125 ether);
 
         // WHEN alice claims the rewards
-        _skipAndStartNewEpoch();
+        _skipAndStartNewCycle();
         vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice receives 10% of rewardToken 1.25 = (100 * 2 / 16) * 0.1
@@ -248,7 +248,7 @@ contract SetBuilderKickbackTest is BaseTest {
         assertEq(_clearCoinbaseBalance(builder), 1.125 ether);
 
         // WHEN alice claims the rewards
-        _skipAndStartNewEpoch();
+        _skipAndStartNewCycle();
         vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice receives 10% of rewardToken 1.25 = (100 * 2 / 16) * 0.1
@@ -267,7 +267,7 @@ contract SetBuilderKickbackTest is BaseTest {
         assertEq(_clearCoinbaseBalance(builder), 1.125 ether);
 
         // WHEN alice claims the rewards
-        _skipAndStartNewEpoch();
+        _skipAndStartNewCycle();
         vm.prank(alice);
         gauge.claimSponsorReward(alice);
         // THEN alice receives 10% of rewardToken 1.25 = (100 * 2 / 16) * 0.1

@@ -3,75 +3,75 @@ pragma solidity 0.8.20;
 
 import { BaseFuzz } from "./BaseFuzz.sol";
 
-contract SetEpochDurationFuzzTest is BaseFuzz {
-    uint32 public constant MAX_EPOCH_DURATION = 365 days;
+contract SetCycleDurationFuzzTest is BaseFuzz {
+    uint32 public constant MAX_CYCLE_DURATION = 365 days;
     uint24 public constant MAX_OFFSET = 20 weeks;
 
-    function testFuzz_SetEpochDuration(
+    function testFuzz_SetCycleDuration(
         uint256 buildersAmount_,
         uint256 sponsorsAmount_,
         uint256 seed_,
-        uint32 newEpochDuration_,
-        uint24 epochStartOffset_
+        uint32 newCycleDuration_,
+        uint24 cycleStartOffset_
     )
         public
     {
-        newEpochDuration_ = uint32(bound(newEpochDuration_, 2 hours, MAX_EPOCH_DURATION));
-        epochStartOffset_ = uint24(bound(epochStartOffset_, 0, MAX_OFFSET));
+        newCycleDuration_ = uint32(bound(newCycleDuration_, 2 hours, MAX_CYCLE_DURATION));
+        cycleStartOffset_ = uint24(bound(cycleStartOffset_, 0, MAX_OFFSET));
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
-        // AND governor sets a random epoch duration and offset
+        // AND governor sets a random cycle duration and offset
         vm.prank(governor);
-        sponsorsManager.setEpochDuration(newEpochDuration_, epochStartOffset_);
+        sponsorsManager.setCycleDuration(newCycleDuration_, cycleStartOffset_);
 
         (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart,) =
-            sponsorsManager.epochData();
-        (_previousDuration, _nextDuration, _previousStart, _nextStart,) = sponsorsManager.epochData();
-        // THEN previous epoch duration is 1 week
+            sponsorsManager.cycleData();
+        (_previousDuration, _nextDuration, _previousStart, _nextStart,) = sponsorsManager.cycleData();
+        // THEN previous cycle duration is 1 week
         assertEq(_previousDuration, 1 weeks);
-        // THEN next epoch duration is the new random epoch duration
-        assertEq(_nextDuration, newEpochDuration_);
-        // THEN previous epoch starts is 1 week ago
+        // THEN next cycle duration is the new random cycle duration
+        assertEq(_nextDuration, newCycleDuration_);
+        // THEN previous cycle starts is 1 week ago
         assertEq(_previousStart, block.timestamp - 1 weeks);
-        // THEN next epoch starts in 1 weeks from now
+        // THEN next cycle starts in 1 weeks from now
         assertEq(_nextStart, block.timestamp + 1 weeks);
 
-        (uint256 _epochStart, uint256 _epochDuration) = sponsorsManager.getEpochStartAndDuration();
-        // THEN epoch starts is 1 week ago
-        assertEq(_epochStart, block.timestamp - 1 weeks);
-        // THEN epoch duration is 1 week
-        assertEq(_epochDuration, 1 weeks);
-        // THEN epoch finishes in 1 week
-        assertEq(sponsorsManager.epochNext(block.timestamp), block.timestamp + 1 weeks);
+        (uint256 _cycleStart, uint256 _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
+        // THEN cycle starts is 1 week ago
+        assertEq(_cycleStart, block.timestamp - 1 weeks);
+        // THEN cycle duration is 1 week
+        assertEq(_cycleDuration, 1 weeks);
+        // THEN cycle finishes in 1 week
+        assertEq(sponsorsManager.cycleNext(block.timestamp), block.timestamp + 1 weeks);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
-        (_epochStart, _epochDuration) = sponsorsManager.getEpochStartAndDuration();
-        // THEN epoch duration is newEpochDuration_ + epochStartOffset_
-        assertEq(_epochDuration, newEpochDuration_ + epochStartOffset_);
-        // THEN epochs start time is now
-        assertEq(_epochStart, block.timestamp);
+        (_cycleStart, _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
+        // THEN cycle duration is newCycleDuration_ + cycleStartOffset_
+        assertEq(_cycleDuration, newCycleDuration_ + cycleStartOffset_);
+        // THEN cycles start time is now
+        assertEq(_cycleStart, block.timestamp);
         // THEN distribution window ends in 1 hour
         assertEq(sponsorsManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
-        // THEN next epoch is in newEpochDuration_ + epochStartOffset_
-        assertEq(sponsorsManager.epochNext(block.timestamp), block.timestamp + newEpochDuration_ + epochStartOffset_);
+        // THEN next cycle is in newCycleDuration_ + cycleStartOffset_
+        assertEq(sponsorsManager.cycleNext(block.timestamp), block.timestamp + newCycleDuration_ + cycleStartOffset_);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
-        (_epochStart, _epochDuration) = sponsorsManager.getEpochStartAndDuration();
-        // THEN epoch duration is the new random epoch duration
-        assertEq(_epochDuration, newEpochDuration_);
-        // THEN epochs starts time is the new random epoch duration ago
-        assertEq(_epochStart, block.timestamp - newEpochDuration_);
+        (_cycleStart, _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
+        // THEN cycle duration is the new random cycle duration
+        assertEq(_cycleDuration, newCycleDuration_);
+        // THEN cycles starts time is the new random cycle duration ago
+        assertEq(_cycleStart, block.timestamp - newCycleDuration_);
         // THEN distribution window ends in 1 hour
         assertEq(sponsorsManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
-        // THEN next epoch is after the new random epoch duration
-        assertEq(sponsorsManager.epochNext(block.timestamp), block.timestamp + newEpochDuration_);
+        // THEN next cycle is after the new random cycle duration
+        assertEq(sponsorsManager.cycleNext(block.timestamp), block.timestamp + newCycleDuration_);
 
         // WHEN all the builders claim their rewards
         _buildersClaim();
@@ -84,8 +84,8 @@ contract SetEpochDurationFuzzTest is BaseFuzz {
             assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT * 3, i), 100);
         }
 
-        // AND epoch finishes
-        _skipAndStartNewEpoch();
+        // AND cycle finishes
+        _skipAndStartNewCycle();
 
         // WHEN sponsors claim their rewards
         for (uint256 i = 0; i < sponsorsArray.length; i++) {

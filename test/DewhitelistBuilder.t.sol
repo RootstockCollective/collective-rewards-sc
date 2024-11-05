@@ -7,7 +7,7 @@ contract DewhitelistBuilderTest is HaltedBuilderBehavior {
     function _initialState() internal override {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
 
         // AND builder is dewhitelisted
@@ -22,13 +22,13 @@ contract DewhitelistBuilderTest is HaltedBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is dewhitelisted in the middle of an epoch having allocation.
-     *  builder receives all the rewards for the current epoch
+     * SCENARIO: builder is dewhitelisted in the middle of an cycle having allocation.
+     *  builder receives all the rewards for the current cycle
      */
     function test_BuildersReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is dewhitelisted
         _initialState();
 
@@ -47,13 +47,13 @@ contract DewhitelistBuilderTest is HaltedBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is dewhitelisted in the middle of an epoch having allocation.
-     *  Builder doesn't receive those rewards on the next epoch
+     * SCENARIO: builder is dewhitelisted in the middle of an cycle having allocation.
+     *  Builder doesn't receive those rewards on the next cycle
      */
     function test_BuilderDoesNotReceiveNextRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is dewhitelisted
         _initialState();
         // AND 100 rewardToken and 10 coinbase are distributed

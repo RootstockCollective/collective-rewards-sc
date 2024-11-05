@@ -37,15 +37,15 @@ library UtilsLib {
     }
 
     /**
-     * @notice calculates when an epoch ends or the next one starts based on given `epochDuration_` and a `timestamp_`
-     * @param epochStart_ epoch start timestamp
-     * @param epochDuration_ epoch time duration
+     * @notice calculates when an cycle ends or the next one starts based on given `cycleDuration_` and a `timestamp_`
+     * @param cycleStart_ Collective Rewards cycle start timestamp
+     * @param cycleDuration_ Collective Rewards cycle time duration
      * @param timestamp_ timestamp to calculate
-     * @return epochNext timestamp when the epoch ends or the next starts
+     * @return cycleNext timestamp when the cycle ends or the next starts
      */
-    function _calcEpochNext(
-        uint256 epochStart_,
-        uint256 epochDuration_,
+    function _calcCycleNext(
+        uint256 cycleStart_,
+        uint256 cycleDuration_,
         uint256 timestamp_
     )
         internal
@@ -53,29 +53,29 @@ library UtilsLib {
         returns (uint256)
     {
         unchecked {
-            return timestamp_ + _calcTimeUntilNextEpoch(epochStart_, epochDuration_, timestamp_);
+            return timestamp_ + _calcTimeUntilNextCycle(cycleStart_, cycleDuration_, timestamp_);
         }
     }
 
     /**
-     * @notice calculates the time left until the next epoch based on given `epochDuration_` and a `timestamp_`
-     * @param epochStart_ epoch start timestamp
-     * @param epochDuration_ epoch time duration
+     * @notice calculates the time left until the next cycle based on given `cycleDuration_` and a `timestamp_`
+     * @param cycleStart_ Collective Rewards cycle start timestamp
+     * @param cycleDuration_ Collective Rewards cycle time duration
      * @param timestamp_ timestamp to calculate
-     * @return timeUntilNextEpoch amount of time until next epoch
+     * @return timeUntilNextCycle amount of time until next cycle
      */
-    function _calcTimeUntilNextEpoch(
-        uint256 epochStart_,
-        uint256 epochDuration_,
+    function _calcTimeUntilNextCycle(
+        uint256 cycleStart_,
+        uint256 cycleDuration_,
         uint256 timestamp_
     )
         internal
         pure
         returns (uint256)
     {
-        uint256 _timeSinceStart = timestamp_ - epochStart_;
+        uint256 _timeSinceStart = timestamp_ - cycleStart_;
         unchecked {
-            return epochDuration_ - (_timeSinceStart % epochDuration_);
+            return cycleDuration_ - (_timeSinceStart % cycleDuration_);
         }
     }
 }

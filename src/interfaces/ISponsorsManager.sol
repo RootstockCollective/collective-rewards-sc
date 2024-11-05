@@ -31,7 +31,7 @@ interface ISponsorsManager {
     function isGaugeHalted(address gauge_) external view returns (bool isHalted_);
 
     /**
-     * @notice gets time left until the next epoch based on given `timestamp_`
+     * @notice gets time left until the next cycle based on given `timestamp_`
      */
-    function timeUntilNextEpoch(uint256 timestamp_) external view returns (uint256 timeUntilNextEpoch_);
+    function timeUntilNextCycle(uint256 timestamp_) external view returns (uint256 timeUntilNextCycle_);
 }

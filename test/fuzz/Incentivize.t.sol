@@ -10,7 +10,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
     mapping(Gauge gauge_ => uint256 newRewards_) public rewardsAdded;
 
     /**
-     * SCENARIO: After a distribution, in a random part of the epoch gauges are incentivize.
+     * SCENARIO: After a distribution, in a random part of the cycle gauges are incentivize.
      *  There is another distribution, builder receive only the rewards for the distributions.
      *  Sponsors receive the rewards for the distributions plus the incentives
      */
@@ -25,8 +25,8 @@ contract IncentivizeFuzzTest is BaseFuzz {
     {
         uint256 _qIncentives = bound(incentiveAmount_, 1, MAX_INCENTIVES);
         incentiveAmount_ = bound(incentiveAmount_, 0, MAX_INCENTIVE_AMOUNT);
-        // cannot incentivize in a new epoch and without a distribution, it will revert by BeforeDistribution()
-        incentiveTime_ = bound(incentiveTime_, 0, epochDuration - 1);
+        // cannot incentivize in a new cycle and without a distribution, it will revert by BeforeDistribution()
+        incentiveTime_ = bound(incentiveTime_, 0, cycleDuration - 1);
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
@@ -34,7 +34,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
-        // AND a random part of the epoch passes
+        // AND a random part of the cycle passes
         skip(incentiveTime_);
 
         // AND there are random incentivize calls
@@ -69,8 +69,8 @@ contract IncentivizeFuzzTest is BaseFuzz {
             assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT * 2, i), 100);
         }
 
-        // AND epoch finishes
-        _skipAndStartNewEpoch();
+        // AND cycle finishes
+        _skipAndStartNewCycle();
 
         // WHEN sponsors claim their rewards
         for (uint256 i = 0; i < sponsorsArray.length; i++) {
@@ -97,12 +97,12 @@ contract IncentivizeFuzzTest is BaseFuzz {
             } else {
                 assertApproxEqAbs(
                     gaugesArray[i].rewardRate(address(rewardToken)) / 10 ** 18,
-                    rewardsAdded[gaugesArray[i]] / epochDuration,
+                    rewardsAdded[gaugesArray[i]] / cycleDuration,
                     0.000000001 ether
                 );
                 assertApproxEqAbs(
                     gaugesArray[i].rewardRate(UtilsLib._COINBASE_ADDRESS) / 10 ** 18,
-                    rewardsAdded[gaugesArray[i]] / epochDuration,
+                    rewardsAdded[gaugesArray[i]] / cycleDuration,
                     0.000000001 ether
                 );
             }

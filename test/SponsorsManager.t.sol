@@ -106,8 +106,8 @@ contract SponsorsManagerTest is BaseTest {
     function test_AllocateBatch() public {
         // GIVEN a SponsorManager contract
         vm.startPrank(alice);
-        // AND a new epoch
-        _skipAndStartNewEpoch();
+        // AND a new cycle
+        _skipAndStartNewCycle();
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
         // WHEN alice allocates 2 ether to builder and 6 ether to builder2
@@ -138,8 +138,8 @@ contract SponsorsManagerTest is BaseTest {
     function test_AllocateBatchGaugeRepeated() public {
         // GIVEN a SponsorManager contract
         vm.startPrank(alice);
-        // AND a new epoch
-        _skipAndStartNewEpoch();
+        // AND a new cycle
+        _skipAndStartNewCycle();
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
 
@@ -165,8 +165,8 @@ contract SponsorsManagerTest is BaseTest {
     function test_AllocateOverride() public {
         // GIVEN a SponsorManager contract
         vm.startPrank(alice);
-        // AND a new epoch
-        _skipAndStartNewEpoch();
+        // AND a new cycle
+        _skipAndStartNewCycle();
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
         // WHEN alice allocates 2 ether to builder and 6 ether to builder2
@@ -192,8 +192,8 @@ contract SponsorsManagerTest is BaseTest {
      */
     function test_AllocateBatchOverride() public {
         // GIVEN a SponsorManager contract
-        // AND a new epoch
-        _skipAndStartNewEpoch();
+        // AND a new cycle
+        _skipAndStartNewCycle();
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
 
@@ -228,8 +228,8 @@ contract SponsorsManagerTest is BaseTest {
     function test_ModifyAllocation() public {
         // GIVEN a SponsorManager contract
         vm.startPrank(alice);
-        // AND a new epoch
-        _skipAndStartNewEpoch();
+        // AND a new cycle
+        _skipAndStartNewCycle();
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
         // WHEN alice allocates 2 ether to builder and 6 ether to builder2
@@ -239,8 +239,8 @@ contract SponsorsManagerTest is BaseTest {
         // THEN alice total allocation is 8 ether
         assertEq(sponsorsManager.sponsorTotalAllocation(alice), 8 ether);
 
-        // WHEN half epoch pass
-        _skipRemainingEpochFraction(2);
+        // WHEN half cycle pass
+        _skipRemainingCycleFraction(2);
         // AND alice modifies the allocation: 10 ether to builder and 0 ether to builder2
         allocationsArray[0] = 10 ether;
         allocationsArray[1] = 0 ether;
@@ -488,10 +488,10 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: distribute twice on the same epoch with different allocations.
+     * SCENARIO: distribute twice on the same cycle with different allocations.
      *  The second allocation occurs on the distribution window timestamp.
      */
-    function test_DistributeTwiceSameEpoch() public {
+    function test_DistributeTwiceSameCycle() public {
         // GIVEN a SponsorManager contract
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
@@ -531,13 +531,13 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: alice transfer part of her allocation in the middle of the epoch
+     * SCENARIO: alice transfer part of her allocation in the middle of the cycle
      *  from builder to builder2, so the rewards accounted on that time are moved to builder2 too
      */
     function test_ModifyAllocationBeforeDistribution() public {
         // GIVEN a SponsorManager contract
-        // AND a new epoch
-        _skipAndStartNewEpoch();
+        // AND a new cycle
+        _skipAndStartNewCycle();
         // AND alice allocates 10 ether to builder
         vm.prank(alice);
         sponsorsManager.allocate(gauge, 10 ether);
@@ -546,8 +546,8 @@ contract SponsorsManagerTest is BaseTest {
         vm.prank(bob);
         sponsorsManager.allocate(gauge2, 10 ether);
 
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND half cycle pass
+        _skipRemainingCycleFraction(2);
         // AND alice modifies his allocations 5 ether to builder2
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 5 ether);
@@ -582,13 +582,13 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: alice removes all her allocation in the middle of the epoch
+     * SCENARIO: alice removes all her allocation in the middle of the cycle
      *  from builder, so the rewards accounted on that time decrease
      */
     function test_UnallocationBeforeDistribution() public {
         // GIVEN a SponsorManager contract
-        // AND a new epoch
-        _skipAndStartNewEpoch();
+        // AND a new cycle
+        _skipAndStartNewCycle();
         // AND alice allocates 10 ether to builder
         vm.prank(alice);
         sponsorsManager.allocate(gauge, 10 ether);
@@ -597,8 +597,8 @@ contract SponsorsManagerTest is BaseTest {
         vm.prank(bob);
         sponsorsManager.allocate(gauge2, 10 ether);
 
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND half cycle pass
+        _skipRemainingCycleFraction(2);
         // AND alice unallocates all from builder
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 0);
@@ -632,13 +632,13 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: alice removes part of her allocation in the middle of the epoch
+     * SCENARIO: alice removes part of her allocation in the middle of the cycle
      *  from builder, so the rewards accounted on that time decrease
      */
     function test_RemoveAllocationBeforeDistribution() public {
         // GIVEN a SponsorManager contract
-        // AND a new epoch
-        _skipAndStartNewEpoch();
+        // AND a new cycle
+        _skipAndStartNewCycle();
         // AND alice allocates 10 ether to builder
         vm.prank(alice);
         sponsorsManager.allocate(gauge, 10 ether);
@@ -647,8 +647,8 @@ contract SponsorsManagerTest is BaseTest {
         vm.prank(bob);
         sponsorsManager.allocate(gauge2, 10 ether);
 
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND half cycle pass
+        _skipRemainingCycleFraction(2);
         // AND alice removes 5 ether from builder
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 5 ether);
@@ -682,13 +682,13 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: alice adds allocation in the middle of the epoch
+     * SCENARIO: alice adds allocation in the middle of the cycle
      *  to builder, so the rewards accounted on that time increase
      */
     function test_AddAllocationBeforeDistribution() public {
         // GIVEN a SponsorManager contract
-        // AND a new epoch
-        _skipAndStartNewEpoch();
+        // AND a new cycle
+        _skipAndStartNewCycle();
         // AND alice allocates 10 ether to builder
         vm.prank(alice);
         sponsorsManager.allocate(gauge, 10 ether);
@@ -697,8 +697,8 @@ contract SponsorsManagerTest is BaseTest {
         vm.prank(bob);
         sponsorsManager.allocate(gauge2, 10 ether);
 
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND half cycle pass
+        _skipRemainingCycleFraction(2);
         // AND alice adds 5 ether to builder
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 15 ether);
@@ -732,7 +732,7 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: distribute on 2 consecutive epoch with different allocations
+     * SCENARIO: distribute on 2 consecutive cycle with different allocations
      */
     function test_DistributeTwice() public {
         // GIVEN a sponsor alice
@@ -754,8 +754,8 @@ contract SponsorsManagerTest is BaseTest {
         // AND distribution window starts
         _skipToStartDistributionWindow();
         sponsorsManager.startDistribution();
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // AND bob modifies his allocations 16 ether to builder and 4 ether to builder2
         vm.startPrank(bob);
@@ -824,7 +824,7 @@ contract SponsorsManagerTest is BaseTest {
 
     /**
      * SCENARIO: distribution occurs on different transactions using pagination and
-     * attempts to incentivize a gauge in new epoch before and during distribution should
+     * attempts to incentivize a gauge in new cycle before and during distribution should
      * fail
      */
     function test_DistributeAndIncentivizeGaugeDuringPagination() public {
@@ -963,8 +963,8 @@ contract SponsorsManagerTest is BaseTest {
         // AND distribute is executed
         sponsorsManager.startDistribution();
 
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // WHEN alice claim rewards
         vm.prank(alice);
@@ -1003,8 +1003,8 @@ contract SponsorsManagerTest is BaseTest {
         // AND distribute is executed
         sponsorsManager.startDistribution();
 
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // WHEN alice claim rewards
         vm.prank(alice);
@@ -1044,8 +1044,8 @@ contract SponsorsManagerTest is BaseTest {
         // AND distribute is executed
         sponsorsManager.startDistribution();
 
-        // AND epoch finishes
-        _skipAndStartNewEpoch();
+        // AND cycle finishes
+        _skipAndStartNewCycle();
 
         // WHEN alice claim rewards
         vm.prank(alice);
@@ -1078,8 +1078,8 @@ contract SponsorsManagerTest is BaseTest {
         // AND distribute is executed
         sponsorsManager.startDistribution();
 
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // WHEN alice claim rewards
         vm.prank(alice);
@@ -1113,8 +1113,8 @@ contract SponsorsManagerTest is BaseTest {
         // AND distribute is executed
         sponsorsManager.startDistribution();
 
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // WHEN alice claim rewards
         vm.prank(alice);
@@ -1128,10 +1128,10 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: after a distribution, in the middle of the epoch, gauge loses all allocations.
-     *  One distribution later, alice allocates there again in the next epoch and earn the old remaining rewards
+     * SCENARIO: after a distribution, in the middle of the cycle, gauge loses all allocations.
+     *  One distribution later, alice allocates there again in the next cycle and earn the old remaining rewards
      */
-    function test_GaugeLosesAllocationForOneEpoch() public {
+    function test_GaugeLosesAllocationForOneCycle() public {
         // GIVEN alice allocates to gauge and gauge2
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
@@ -1145,8 +1145,8 @@ contract SponsorsManagerTest is BaseTest {
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND half cycle pass
+        _skipRemainingCycleFraction(2);
 
         // WHEN alice removes allocations from gauge
         vm.prank(alice);
@@ -1162,22 +1162,22 @@ contract SponsorsManagerTest is BaseTest {
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
 
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // WHEN alice claim rewards
         vm.prank(alice);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN alice rewardToken balance is:
-        //  epoch 1 = 21.875 = 3.125 + 18.75 = (100 * 2 / 16) * 0.5 * 0.5 WEEKS + (100 * 6 / 16) * 0.5
-        //  epoch 2 = 23.33 = 3.333 + 20 = (100 * 1 / 15) * 0.5 + (100 * 6 / 15) * 0.5
-        //  epoch 3 = 3.125 + 25 = 3.125(missingRewards) + (100 * 8 / 16) * 0.5
+        //  cycle 1 = 21.875 = 3.125 + 18.75 = (100 * 2 / 16) * 0.5 * 0.5 WEEKS + (100 * 6 / 16) * 0.5
+        //  cycle 2 = 23.33 = 3.333 + 20 = (100 * 1 / 15) * 0.5 + (100 * 6 / 15) * 0.5
+        //  cycle 3 = 3.125 + 25 = 3.125(missingRewards) + (100 * 8 / 16) * 0.5
         assertEq(rewardToken.balanceOf(alice), 73_333_333_333_333_333_314);
         // THEN alice coinbase balance is:
-        //  epoch 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
-        //  epoch 2 = 2.333 = 0.3333 + 2 = (10 * 1 / 15) * 0.5 + (10 * 6 / 15) * 0.5
-        //  epoch 3 = 0.3125 + 2.5 = 0.3125(missingRewards) + (10 * 8 / 16) * 0.5
+        //  cycle 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
+        //  cycle 2 = 2.333 = 0.3333 + 2 = (10 * 1 / 15) * 0.5 + (10 * 6 / 15) * 0.5
+        //  cycle 3 = 0.3125 + 2.5 = 0.3125(missingRewards) + (10 * 8 / 16) * 0.5
         assertEq(alice.balance, 7_333_333_333_333_333_314);
 
         // WHEN bob claim rewards
@@ -1185,39 +1185,39 @@ contract SponsorsManagerTest is BaseTest {
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN bob rewardToken balance is:
-        //  epoch 1 = 25 = (100 * 8 / 16) * 0.5
-        //  epoch 2 = 26.66 = (100 * 8 / 15) * 0.5
-        //  epoch 3 = 25 = (100 * 8 / 16) * 0.5
+        //  cycle 1 = 25 = (100 * 8 / 16) * 0.5
+        //  cycle 2 = 26.66 = (100 * 8 / 15) * 0.5
+        //  cycle 3 = 25 = (100 * 8 / 16) * 0.5
         assertEq(rewardToken.balanceOf(bob), 76_666_666_666_666_666_648);
         // THEN bob coinbase balance is:
-        //  epoch 1 = 2.5 = (10 * 8 / 16) * 0.5
-        //  epoch 2 = 2.66 = (10 * 8 / 15) * 0.5
-        //  epoch 3 = 2.5 = (10 * 8 / 16) * 0.5
+        //  cycle 1 = 2.5 = (10 * 8 / 16) * 0.5
+        //  cycle 2 = 2.66 = (10 * 8 / 15) * 0.5
+        //  cycle 3 = 2.5 = (10 * 8 / 16) * 0.5
         assertEq(bob.balance, 7_666_666_666_666_666_648);
 
         // WHEN builders claim rewards
         _buildersClaim();
 
         // THEN builder rewardToken balance is:
-        //  epoch 1 = 6.25 = (100 * 2 / 16) * 0.5
-        //  epoch 2 = 3.333 = (100 * 1 / 15) * 0.5
-        //  epoch 3 = 6.25 = (100 * 2 / 16) * 0.5
+        //  cycle 1 = 6.25 = (100 * 2 / 16) * 0.5
+        //  cycle 2 = 3.333 = (100 * 1 / 15) * 0.5
+        //  cycle 3 = 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder), 15_833_333_333_333_333_333);
         // THEN builder coinbase balance is:
-        //  epoch 1 = 0.625 = (10 * 2 / 16) * 0.5
-        //  epoch 2 = 0.3333 = (10 * 1 / 15) * 0.5
-        //  epoch 3 = 0.625 = (10 * 2 / 16) * 0.5
+        //  cycle 1 = 0.625 = (10 * 2 / 16) * 0.5
+        //  cycle 2 = 0.3333 = (10 * 1 / 15) * 0.5
+        //  cycle 3 = 0.625 = (10 * 2 / 16) * 0.5
         assertEq(builder.balance, 1_583_333_333_333_333_333);
 
         // THEN builder2Receiver rewardToken balance is:
-        //  epoch 1 = 43.75 = (100 * 14 / 16) * 0.5
-        //  epoch 2 = 46.66 = (100 * 14 / 15) * 0.5
-        //  epoch 3 = 43.75 = (100 * 14 / 16) * 0.5
+        //  cycle 1 = 43.75 = (100 * 14 / 16) * 0.5
+        //  cycle 2 = 46.66 = (100 * 14 / 15) * 0.5
+        //  cycle 3 = 43.75 = (100 * 14 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder2Receiver), 134_166_666_666_666_666_667);
         // THEN builder2Receiver coinbase balance is:
-        //  epoch 1 = 4.375 = (10 * 14 / 16) * 0.5
-        //  epoch 2 = 4.66 = (10 * 14 / 15) * 0.5
-        //  epoch 3 = 4.375 = (10 * 14 / 16) * 0.5
+        //  cycle 1 = 4.375 = (10 * 14 / 16) * 0.5
+        //  cycle 2 = 4.66 = (10 * 14 / 15) * 0.5
+        //  cycle 3 = 4.375 = (10 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 13_416_666_666_666_666_667);
 
         // THEN gauge rewardToken balance is 0, there is no remaining rewards
@@ -1227,10 +1227,10 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: after a distribution, in the middle of the epoch, gauge loses all allocations.
-     *  One distribution later, alice allocates there again in 2 epochs later and earn the old remaining rewards
+     * SCENARIO: after a distribution, in the middle of the cycle, gauge loses all allocations.
+     *  One distribution later, alice allocates there again in 2 cycles later and earn the old remaining rewards
      */
-    function test_GaugeLosesAllocationForTwoEpochs() public {
+    function test_GaugeLosesAllocationForTwoCycles() public {
         // GIVEN alice allocates to gauge and gauge2
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
@@ -1244,8 +1244,8 @@ contract SponsorsManagerTest is BaseTest {
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND half cycle pass
+        _skipRemainingCycleFraction(2);
 
         // WHEN alice removes allocations from gauge
         vm.prank(alice);
@@ -1263,24 +1263,24 @@ contract SponsorsManagerTest is BaseTest {
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
 
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
 
         // WHEN alice claim rewards
         vm.prank(alice);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN alice rewardToken balance is:
-        //  epoch 1 = 21.875 = 3.125 + 18.75 = (100 * 2 / 16) * 0.5 * 0.5 WEEKS + (100 * 6 / 16) * 0.5
-        //  epoch 2 = 20 = (100 * 6 / 15) * 0.5
-        //  epoch 3 = 6.455 + 21.42  = (3.33 + 3.125)(missingRewards) + (100 * 6 / 14) * 0.5
-        //  epoch 4 = 6.25 + 18.75 = (100 * 2 / 16) * 0.5 + (100 * 6 / 16) * 0.5
+        //  cycle 1 = 21.875 = 3.125 + 18.75 = (100 * 2 / 16) * 0.5 * 0.5 WEEKS + (100 * 6 / 16) * 0.5
+        //  cycle 2 = 20 = (100 * 6 / 15) * 0.5
+        //  cycle 3 = 6.455 + 21.42  = (3.33 + 3.125)(missingRewards) + (100 * 6 / 14) * 0.5
+        //  cycle 4 = 6.25 + 18.75 = (100 * 2 / 16) * 0.5 + (100 * 6 / 16) * 0.5
         assertEq(rewardToken.balanceOf(alice), 94_761_904_761_904_761_882);
         // THEN alice coinbase balance is:
-        //  epoch 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
-        //  epoch 2 = 2 = (10 * 6 / 15) * 0.5
-        //  epoch 3 = 0.645 + 2.142  = (0.33 + 0.3125)(missingRewards) + (10 * 6 / 14) * 0.5
-        //  epoch 4 = 0.625 + 1.875 = (10 * 2 / 16) * 0.5 + (10 * 6 / 16) * 0.5
+        //  cycle 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
+        //  cycle 2 = 2 = (10 * 6 / 15) * 0.5
+        //  cycle 3 = 0.645 + 2.142  = (0.33 + 0.3125)(missingRewards) + (10 * 6 / 14) * 0.5
+        //  cycle 4 = 0.625 + 1.875 = (10 * 2 / 16) * 0.5 + (10 * 6 / 16) * 0.5
         assertEq(alice.balance, 9_476_190_476_190_476_166);
 
         // WHEN bob claim rewards
@@ -1288,45 +1288,45 @@ contract SponsorsManagerTest is BaseTest {
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN bob rewardToken balance is:
-        //  epoch 1 = 25 = (100 * 8 / 16) * 0.5
-        //  epoch 2 = 26.66 = (100 * 8 / 15) * 0.5
-        //  epoch 3 = 28.57 = (100 * 8 / 14) * 0.5
-        //  epoch 4 = 25 = (100 * 8 / 16) * 0.5
+        //  cycle 1 = 25 = (100 * 8 / 16) * 0.5
+        //  cycle 2 = 26.66 = (100 * 8 / 15) * 0.5
+        //  cycle 3 = 28.57 = (100 * 8 / 14) * 0.5
+        //  cycle 4 = 25 = (100 * 8 / 16) * 0.5
         assertEq(rewardToken.balanceOf(bob), 105_238_095_238_095_238_072);
         // THEN bob coinbase balance is:
-        //  epoch 1 = 2.5 = (10 * 8 / 16) * 0.5
-        //  epoch 2 = 2.66 = (10 * 8 / 15) * 0.5
-        //  epoch 3 = 2.857 = (10 * 8 / 14) * 0.5
-        //  epoch 4 = 2.5 = (10 * 8 / 16) * 0.5
+        //  cycle 1 = 2.5 = (10 * 8 / 16) * 0.5
+        //  cycle 2 = 2.66 = (10 * 8 / 15) * 0.5
+        //  cycle 3 = 2.857 = (10 * 8 / 14) * 0.5
+        //  cycle 4 = 2.5 = (10 * 8 / 16) * 0.5
         assertEq(bob.balance, 10_523_809_523_809_523_784);
 
         // WHEN builders claim rewards
         _buildersClaim();
 
         // THEN builder rewardToken balance is:
-        //  epoch 1 = 6.25 = (100 * 2 / 16) * 0.5
-        //  epoch 2 = 3.333 = (100 * 1 / 15) * 0.5
-        //  epoch 3 = 0
-        //  epoch 4 = 6.25 = (100 * 2 / 16) * 0.5
+        //  cycle 1 = 6.25 = (100 * 2 / 16) * 0.5
+        //  cycle 2 = 3.333 = (100 * 1 / 15) * 0.5
+        //  cycle 3 = 0
+        //  cycle 4 = 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder), 15_833_333_333_333_333_333);
         // THEN builder coinbase balance is:
-        //  epoch 1 = 0.625 = (10 * 2 / 16) * 0.5
-        //  epoch 2 = 0.3333 = (10 * 1 / 15) * 0.5
-        //  epoch 3 = 0
-        //  epoch 4 = 0.625 = (10 * 2 / 16) * 0.5
+        //  cycle 1 = 0.625 = (10 * 2 / 16) * 0.5
+        //  cycle 2 = 0.3333 = (10 * 1 / 15) * 0.5
+        //  cycle 3 = 0
+        //  cycle 4 = 0.625 = (10 * 2 / 16) * 0.5
         assertEq(builder.balance, 1_583_333_333_333_333_333);
 
         // THEN builder2Receiver rewardToken balance is:
-        //  epoch 1 = 43.75 = (100 * 14 / 16) * 0.5
-        //  epoch 2 = 46.66 = (100 * 14 / 15) * 0.5
-        //  epoch 3 = 50 = (100 * 14 / 14) * 0.5
-        //  epoch 4 = 43.75 = (100 * 14 / 16) * 0.5
+        //  cycle 1 = 43.75 = (100 * 14 / 16) * 0.5
+        //  cycle 2 = 46.66 = (100 * 14 / 15) * 0.5
+        //  cycle 3 = 50 = (100 * 14 / 14) * 0.5
+        //  cycle 4 = 43.75 = (100 * 14 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder2Receiver), 184_166_666_666_666_666_667);
         // THEN builder2Receiver coinbase balance is:
-        //  epoch 1 = 4.375 = (10 * 14 / 16) * 0.5
-        //  epoch 2 = 4.66 = (10 * 14 / 15) * 0.5
-        //  epoch 3 = 5 = (10 * 14 / 14) * 0.5
-        //  epoch 4 = 4.375 = (10 * 14 / 16) * 0.5
+        //  cycle 1 = 4.375 = (10 * 14 / 16) * 0.5
+        //  cycle 2 = 4.66 = (10 * 14 / 15) * 0.5
+        //  cycle 3 = 5 = (10 * 14 / 14) * 0.5
+        //  cycle 4 = 4.375 = (10 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 18_416_666_666_666_666_667);
 
         // THEN gauge rewardToken balance is 0, there is no remaining rewards
@@ -1336,12 +1336,12 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: after a distribution, alice deallocates and allocates twice on the same epoch
+     * SCENARIO: after a distribution, alice deallocates and allocates twice on the same cycle
      *  Missing rewards are accumulated
      */
     function test_MissingRewardsAccumulation() public {
         // GIVEN alice allocates to gauge and gauge2
-        _skipAndStartNewEpoch();
+        _skipAndStartNewCycle();
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
@@ -1398,36 +1398,36 @@ contract SponsorsManagerTest is BaseTest {
      * SCENARIO: SponsorsManager is initialized with an offset of 7 weeks. First distribution starts
      *  8 weeks after the deploy
      */
-    function test_InitializedWithAnEpochStartOffset() public {
+    function test_InitializedWithAnCycleStartOffset() public {
         // GIVEN a SponsorsManager contract initialized with 7 weeks of offset
 
-        // all the tests are running with the SponsorsManager already initialized with epochStartOffset = 0
+        // all the tests are running with the SponsorsManager already initialized with cycleStartOffset = 0
         // to simplify the calcs. since, we cannot change that value after the initialization we need this function
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 7 weeks;
 
-        stdstore.target(address(sponsorsManager)).sig("epochData()").depth(4).enable_packed_slots().checked_write(
+        stdstore.target(address(sponsorsManager)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
             _newOffset
         );
 
         (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart, uint24 _offset) =
-            sponsorsManager.epochData();
+            sponsorsManager.cycleData();
 
-        // THEN previous epoch duration is 1 week
+        // THEN previous cycle duration is 1 week
         assertEq(_previousDuration, 1 weeks);
-        // THEN next epoch duration is 1 week
+        // THEN next cycle duration is 1 week
         assertEq(_nextDuration, 1 weeks);
-        // THEN previous epoch start is now
+        // THEN previous cycle start is now
         assertEq(_previousStart, block.timestamp);
-        // THEN previous epoch start is now
+        // THEN previous cycle start is now
         assertEq(_nextStart, block.timestamp);
-        // THEN epoch start offset is 7 weeks
+        // THEN cycle start offset is 7 weeks
         assertEq(_offset, 7 weeks);
 
-        // THEN epoch starts now
-        assertEq(sponsorsManager.epochStart(block.timestamp), block.timestamp);
-        // THEN epoch ends in 8 weeks from now (1 weeks duration + 7 weeks offset)
-        assertEq(sponsorsManager.epochNext(block.timestamp), block.timestamp + 8 weeks);
+        // THEN cycle starts now
+        assertEq(sponsorsManager.cycleStart(block.timestamp), block.timestamp);
+        // THEN cycle ends in 8 weeks from now (1 weeks duration + 7 weeks offset)
+        assertEq(sponsorsManager.cycleNext(block.timestamp), block.timestamp + 8 weeks);
 
         // AND alice allocates 2 ether to builder and 6 ether to builder2
         vm.startPrank(alice);
@@ -1439,18 +1439,18 @@ contract SponsorsManagerTest is BaseTest {
         uint256 _timestampBefore = block.timestamp;
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        // THEN epoch was of 8 weeks
+        // THEN cycle was of 8 weeks
         assertEq(block.timestamp - _timestampBefore, 8 weeks);
         _timestampBefore = block.timestamp;
-        // AND epoch finishes
-        _skipAndStartNewEpoch();
-        // THEN epoch was of 1 weeks
+        // AND cycle finishes
+        _skipAndStartNewCycle();
+        // THEN cycle was of 1 weeks
         assertEq(block.timestamp - _timestampBefore, 1 weeks);
 
-        // THEN epoch starts now
-        assertEq(sponsorsManager.epochStart(block.timestamp), block.timestamp);
-        // THEN epoch ends in 1 weeks
-        assertEq(sponsorsManager.epochNext(block.timestamp), block.timestamp + 1 weeks);
+        // THEN cycle starts now
+        assertEq(sponsorsManager.cycleStart(block.timestamp), block.timestamp);
+        // THEN cycle ends in 1 weeks
+        assertEq(sponsorsManager.cycleNext(block.timestamp), block.timestamp + 1 weeks);
 
         // WHEN alice claim rewards
         vm.prank(alice);
@@ -1466,22 +1466,22 @@ contract SponsorsManagerTest is BaseTest {
      * SCENARIO: SponsorsManager is initialized with an offset of 7 weeks.
      *  There is a notifyReward amount to incentive the gauge before the distribution
      */
-    function test_IncentivizeWithEpochStartOffset() public {
+    function test_IncentivizeWithCycleStartOffset() public {
         // GIVEN a SponsorsManager contract initialized with 7 weeks of offset
 
-        // all the tests are running with the SponsorsManager already initialized with epochStartOffset = 0
+        // all the tests are running with the SponsorsManager already initialized with cycleStartOffset = 0
         // to simplify the calcs. since, we cannot change that value after the initialization we need this function
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 7 weeks;
 
-        stdstore.target(address(sponsorsManager)).sig("epochData()").depth(4).enable_packed_slots().checked_write(
+        stdstore.target(address(sponsorsManager)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
             _newOffset
         );
 
-        // periodFinish is initialized using the epochStartOffset = 0 on initialization, we need to calculate it again
-        // with the newEpochStartOffset = 7 weeks
+        // periodFinish is initialized using the cycleStartOffset = 0 on initialization, we need to calculate it again
+        // with the newCycleStartOffset = 7 weeks
         stdstore.target(address(sponsorsManager)).sig("periodFinish()").checked_write(
-            sponsorsManager.epochNext(block.timestamp)
+            sponsorsManager.cycleNext(block.timestamp)
         );
 
         // AND gauge is incentive with 100 ether of rewardToken
@@ -1494,15 +1494,15 @@ contract SponsorsManagerTest is BaseTest {
         vm.stopPrank();
 
         uint256 _timestampBefore = block.timestamp;
-        // AND epoch finishes
+        // AND cycle finishes
         _distribute(0, 0);
-        // THEN epoch was of 8 weeks
+        // THEN cycle was of 8 weeks
         assertEq(block.timestamp - _timestampBefore, 8 weeks);
 
-        // THEN epoch starts now
-        assertEq(sponsorsManager.epochStart(block.timestamp), block.timestamp);
-        // THEN epoch ends in 1 weeks
-        assertEq(sponsorsManager.epochNext(block.timestamp), block.timestamp + 1 weeks);
+        // THEN cycle starts now
+        assertEq(sponsorsManager.cycleStart(block.timestamp), block.timestamp);
+        // THEN cycle ends in 1 weeks
+        assertEq(sponsorsManager.cycleNext(block.timestamp), block.timestamp + 1 weeks);
 
         // WHEN alice claim rewards
         vm.prank(alice);
@@ -1518,12 +1518,12 @@ contract SponsorsManagerTest is BaseTest {
     function test_DeployStartsInDistributionWindow() public {
         // GIVEN a SponsorsManager contract initialized with 3 days of offset
 
-        // all the tests are running with the SponsorsManager already initialized with epochStartOffset = 0
+        // all the tests are running with the SponsorsManager already initialized with cycleStartOffset = 0
         // to simplify the calcs. since, we cannot change that value after the initialization we need this function
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 3 days;
 
-        stdstore.target(address(sponsorsManager)).sig("epochData()").depth(4).enable_packed_slots().checked_write(
+        stdstore.target(address(sponsorsManager)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
             _newOffset
         );
 
@@ -1552,20 +1552,20 @@ contract SponsorsManagerTest is BaseTest {
         vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
         sponsorsManager.startDistribution();
 
-        // AND epoch duration finishes
-        vm.warp(_deployTimestamp + epochDuration + 1);
+        // AND cycle duration finishes
+        vm.warp(_deployTimestamp + cycleDuration + 1);
         // THEN reverts calling startDistribution
         vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
         sponsorsManager.startDistribution();
 
-        // AND epoch duration + offset is close to finish
-        vm.warp(_deployTimestamp + epochDuration + _newOffset - 1);
+        // AND cycle duration + offset is close to finish
+        vm.warp(_deployTimestamp + cycleDuration + _newOffset - 1);
         // THEN reverts calling startDistribution
         vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
         sponsorsManager.startDistribution();
 
-        // AND epoch duration + offset finishes
-        vm.warp(_deployTimestamp + epochDuration + _newOffset);
+        // AND cycle duration + offset finishes
+        vm.warp(_deployTimestamp + cycleDuration + _newOffset);
         // AND distribution starts
         sponsorsManager.startDistribution();
         // THEN distribution finished
