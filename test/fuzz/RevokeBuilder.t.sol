@@ -7,7 +7,7 @@ import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 contract RevokeBuilderFuzzTest is BaseFuzz {
     using stdStorage for StdStorage;
 
-    uint32 public constant MAX_EPOCH_DURATION = 365 days;
+    uint32 public constant MAX_CYCLE_DURATION = 365 days;
     mapping(address builder_ => RevokeState revokedState_) public revokedBuilders;
 
     enum RevokeState {
@@ -28,7 +28,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
     )
         public
     {
-        randomTime_ = bound(randomTime_, 0, epochDuration);
+        randomTime_ = bound(randomTime_, 0, cycleDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
@@ -96,7 +96,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
     )
         public
     {
-        randomTime_ = bound(randomTime_, 0, epochDuration);
+        randomTime_ = bound(randomTime_, 0, cycleDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
@@ -122,10 +122,10 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
                 if (!sponsorsManager.isGaugeHalted(address(sponsorsGauges[i][j]))) {
                     if (sponsorsAllocations[i][j] > _allocationBefore) {
                         _expectedTotalPotentialReward += (sponsorsAllocations[i][j] - _allocationBefore)
-                            * sponsorsManager.timeUntilNextEpoch(block.timestamp);
+                            * sponsorsManager.timeUntilNextCycle(block.timestamp);
                     } else {
                         _expectedTotalPotentialReward -= (_allocationBefore - sponsorsAllocations[i][j])
-                            * sponsorsManager.timeUntilNextEpoch(block.timestamp);
+                            * sponsorsManager.timeUntilNextCycle(block.timestamp);
                     }
                 } else {
                     if (sponsorsAllocations[i][j] > _allocationBefore) {
@@ -153,33 +153,33 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         _expectedTotalPotentialReward = 0;
-        // THEN rewardShares for each non revoked gauge is the entire epoch
+        // THEN rewardShares for each non revoked gauge is the entire cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (revokedBuilders[builders[i]] != RevokeState.revoked) {
-                _expectedTotalPotentialReward += gaugesArray[i].totalAllocation() * epochDuration;
-                assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * epochDuration);
+                _expectedTotalPotentialReward += gaugesArray[i].totalAllocation() * cycleDuration;
+                assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * cycleDuration);
             }
         }
-        // THEN totalPotentialReward is the entire epoch of non revoked gauges
+        // THEN totalPotentialReward is the entire cycle of non revoked gauges
         assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
     }
 
     /**
-     * SCENARIO: In a random time gauges are revoked and permitted again. There was an epoch duration change in the
+     * SCENARIO: In a random time gauges are revoked and permitted again. There was an cycle duration change in the
      * middle
      *  Shares are updated correctly
      */
-    function testFuzz_RevokeBuilderAndPermitWithNewEpochDuration(
+    function testFuzz_RevokeBuilderAndPermitWithNewCycleDuration(
         uint256 buildersAmount_,
         uint256 sponsorsAmount_,
         uint256 seed_,
         uint256 randomTime_,
-        uint32 newEpochDuration_
+        uint32 newCycleDuration_
     )
         public
     {
-        randomTime_ = bound(randomTime_, 0, epochDuration);
-        newEpochDuration_ = uint32(bound(newEpochDuration_, 2 hours, MAX_EPOCH_DURATION));
+        randomTime_ = bound(randomTime_, 0, cycleDuration);
+        newCycleDuration_ = uint32(bound(newCycleDuration_, 2 hours, MAX_CYCLE_DURATION));
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
@@ -196,9 +196,9 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
-        // AND governor sets a random epoch duration
+        // AND governor sets a random cycle duration
         vm.prank(governor);
-        sponsorsManager.setEpochDuration(newEpochDuration_, 0);
+        sponsorsManager.setCycleDuration(newCycleDuration_, 0);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
@@ -213,14 +213,14 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         _expectedTotalPotentialReward = 0;
-        // THEN rewardShares for each non revoked gauge is the entire epoch
+        // THEN rewardShares for each non revoked gauge is the entire cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (revokedBuilders[builders[i]] != RevokeState.revoked) {
-                _expectedTotalPotentialReward += gaugesArray[i].totalAllocation() * newEpochDuration_;
-                assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * newEpochDuration_);
+                _expectedTotalPotentialReward += gaugesArray[i].totalAllocation() * newCycleDuration_;
+                assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * newCycleDuration_);
             }
         }
-        // THEN totalPotentialReward is the entire epoch of non revoked gauges
+        // THEN totalPotentialReward is the entire cycle of non revoked gauges
         assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
     }
 
@@ -236,7 +236,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
     )
         public
     {
-        randomTime_ = bound(randomTime_, 0, epochDuration);
+        randomTime_ = bound(randomTime_, 0, cycleDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
@@ -260,20 +260,20 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _randomPermit(seed_, sponsorsManager.totalPotentialReward());
 
         uint256 _expectedTotalPotentialReward;
-        // THEN rewardShares for each non revoked gauge is the entire epoch
+        // THEN rewardShares for each non revoked gauge is the entire cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (revokedBuilders[builders[i]] != RevokeState.revoked) {
-                _expectedTotalPotentialReward += gaugesArray[i].totalAllocation() * epochDuration;
-                assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * epochDuration);
+                _expectedTotalPotentialReward += gaugesArray[i].totalAllocation() * cycleDuration;
+                assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * cycleDuration);
             }
         }
-        // THEN totalPotentialReward is the entire epoch of non revoked gauges
+        // THEN totalPotentialReward is the entire cycle of non revoked gauges
         assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
     }
 
     /**
-     * @notice skip some random time but using the current epoch as a limit
-     *  Used to avoid jump to another epoch because permitBuilder will fail if there is no distribution
+     * @notice skip some random time but using the current cycle as a limit
+     *  Used to avoid jump to another cycle because permitBuilder will fail if there is no distribution
      * @param randomTime_ time to skip
      */
     function _skipLimitPeriodFinish(uint256 randomTime_) internal {

@@ -24,8 +24,8 @@ contract Deploy is Broadcaster {
         if (_rewardDistributorAddress == address(0)) {
             _rewardDistributorAddress = vm.envAddress("REWARD_DISTRIBUTOR_ADDRESS");
         }
-        uint32 _epochDuration = uint32(vm.envUint("EPOCH_DURATION"));
-        uint24 _epochStartOffset = uint24(vm.envUint("EPOCH_START_OFFSET"));
+        uint32 _cycleDuration = uint32(vm.envUint("CYCLE_DURATION"));
+        uint24 _cycleStartOffset = uint24(vm.envUint("CYCLE_START_OFFSET"));
         uint128 _kickbackCooldown = uint128(vm.envUint("KICKBACK_COOLDOWN"));
         (proxy_, implementation_) = run(
             _governanceManager,
@@ -33,8 +33,8 @@ contract Deploy is Broadcaster {
             _stakingTokenAddress,
             _gaugeFactoryAddress,
             _rewardDistributorAddress,
-            _epochDuration,
-            _epochStartOffset,
+            _cycleDuration,
+            _cycleStartOffset,
             _kickbackCooldown
         );
     }
@@ -45,8 +45,8 @@ contract Deploy is Broadcaster {
         address stakingToken_,
         address gaugeFactory_,
         address rewardDistributor_,
-        uint32 epochDuration_,
-        uint24 epochStartOffset_,
+        uint32 cycleDuration_,
+        uint24 cycleStartOffset_,
         uint128 kickbackCooldown_
     )
         public
@@ -67,8 +67,8 @@ contract Deploy is Broadcaster {
                 stakingToken_,
                 gaugeFactory_,
                 rewardDistributor_,
-                epochDuration_,
-                epochStartOffset_,
+                cycleDuration_,
+                cycleStartOffset_,
                 kickbackCooldown_
             )
         );

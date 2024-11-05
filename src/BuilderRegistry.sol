@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { EpochTimeKeeper } from "./EpochTimeKeeper.sol";
+import { CycleTimeKeeper } from "./CycleTimeKeeper.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -13,7 +13,7 @@ import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
  */
-abstract contract BuilderRegistry is EpochTimeKeeper, ERC165Upgradeable {
+abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_KICKBACK = UtilsLib._PRECISION;
@@ -121,22 +121,22 @@ abstract contract BuilderRegistry is EpochTimeKeeper, ERC165Upgradeable {
      * @param governanceManager_ contract with permissioned roles
      * @param gaugeFactory_ address of the GaugeFactory contract
      * @param rewardDistributor_ address of the rewardDistributor contract
-     * @param epochDuration_ epoch time duration
-     * @param epochStartOffset_ offset to add to the first epoch, used to set an specific day to start the epochs
+     * @param cycleDuration_ Collective Rewards cycle time duration
+     * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
      * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
      */
     function __BuilderRegistry_init(
         IGovernanceManager governanceManager_,
         address gaugeFactory_,
         address rewardDistributor_,
-        uint32 epochDuration_,
-        uint24 epochStartOffset_,
+        uint32 cycleDuration_,
+        uint24 cycleStartOffset_,
         uint128 kickbackCooldown_
     )
         internal
         onlyInitializing
     {
-        __EpochTimeKeeper_init(governanceManager_, epochDuration_, epochStartOffset_);
+        __CycleTimeKeeper_init(governanceManager_, cycleDuration_, cycleStartOffset_);
         __ERC165_init();
         gaugeFactory = GaugeFactory(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
@@ -299,6 +299,7 @@ abstract contract BuilderRegistry is EpochTimeKeeper, ERC165Upgradeable {
      * miscalculation of rewards
      * @param kickback_ kickback(100% == 1 ether)
      */
+    // function permitBuilder(uint64 kickback_) external {
     function permitBuilder(uint64 kickback_) external {
         Gauge _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();

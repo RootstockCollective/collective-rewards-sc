@@ -15,8 +15,8 @@ contract SupportAndDistributeTest is BaseTest {
         uint64 _kickback = 0.4 ether; // 40%
         _createGauges(10, _kickback);
 
-        // start from a new epoch
-        _skipAndStartNewEpoch();
+        // start from a new cycle
+        _skipAndStartNewCycle();
     }
     /**
      * SCENARIO: All the votes occurs at the beginning of the distribution and are not re-allocated
@@ -51,7 +51,7 @@ contract SupportAndDistributeTest is BaseTest {
 
         // AND 100 rewardTokens and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        _skipAndStartNewEpoch();
+        _skipAndStartNewCycle();
 
         vm.prank(alice);
         // WHEN alice claims the rewards
@@ -93,7 +93,7 @@ contract SupportAndDistributeTest is BaseTest {
 
         // AND 100 rewardTokens and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        _skipAndStartNewEpoch();
+        _skipAndStartNewCycle();
 
         // WHEN alice claims the rewards
         vm.prank(alice);
@@ -146,7 +146,7 @@ contract SupportAndDistributeTest is BaseTest {
 
         // AND 100 rewardTokens and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        _skipAndStartNewEpoch();
+        _skipAndStartNewCycle();
 
         // WHEN alice claims the rewards
         vm.prank(alice);
@@ -213,7 +213,7 @@ contract SupportAndDistributeTest is BaseTest {
 
         // AND 100 rewardTokens and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        _skipAndStartNewEpoch();
+        _skipAndStartNewCycle();
 
         // WHEN alice claims the rewards
         vm.prank(alice);

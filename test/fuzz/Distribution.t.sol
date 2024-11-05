@@ -38,8 +38,8 @@ contract DistributionFuzzTest is BaseFuzz {
             assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT * 3, i), 100);
         }
 
-        // AND epoch finishes
-        _skipAndStartNewEpoch();
+        // AND cycle finishes
+        _skipAndStartNewCycle();
 
         // WHEN sponsors claim their rewards
         for (uint256 i = 0; i < sponsorsArray.length; i++) {
@@ -66,7 +66,7 @@ contract DistributionFuzzTest is BaseFuzz {
 
     /**
      * SCENARIO: After a distribution sponsors modify their allocations.
-     *  Shares are updated considering the new allocations and the time until next epoch
+     *  Shares are updated considering the new allocations and the time until next cycle
      */
     function testFuzz_ModifyAllocations(
         uint256 buildersAmount_,
@@ -76,7 +76,7 @@ contract DistributionFuzzTest is BaseFuzz {
     )
         public
     {
-        allocationsTime_ = bound(allocationsTime_, 0, 2 * epochDuration);
+        allocationsTime_ = bound(allocationsTime_, 0, 2 * cycleDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
@@ -108,37 +108,37 @@ contract DistributionFuzzTest is BaseFuzz {
             _newTotalAllocations += gaugesArray[i].totalAllocation();
         }
 
-        // THEN totalPotentialReward is updated considering the new allocations and the time until next epoch
-        uint256 _expectedTotalPotentialReward = _totalAllocations * epochDuration;
+        // THEN totalPotentialReward is updated considering the new allocations and the time until next cycle
+        uint256 _expectedTotalPotentialReward = _totalAllocations * cycleDuration;
         if (_newTotalAllocations > _totalAllocations) {
             _expectedTotalPotentialReward +=
-                (_newTotalAllocations - _totalAllocations) * sponsorsManager.timeUntilNextEpoch(block.timestamp);
+                (_newTotalAllocations - _totalAllocations) * sponsorsManager.timeUntilNextCycle(block.timestamp);
         } else {
             _expectedTotalPotentialReward -=
-                (_totalAllocations - _newTotalAllocations) * sponsorsManager.timeUntilNextEpoch(block.timestamp);
+                (_totalAllocations - _newTotalAllocations) * sponsorsManager.timeUntilNextCycle(block.timestamp);
         }
         assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
-        // THEN rewardShares for each gauge is updated considering the new allocations and the time until next epoch
+        // THEN rewardShares for each gauge is updated considering the new allocations and the time until next cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            uint256 _expectedRewardShares = _gaugesAllocationsBefore[i] * epochDuration;
+            uint256 _expectedRewardShares = _gaugesAllocationsBefore[i] * cycleDuration;
             if (gaugesArray[i].totalAllocation() > _gaugesAllocationsBefore[i]) {
                 _expectedRewardShares += (gaugesArray[i].totalAllocation() - _gaugesAllocationsBefore[i])
-                    * sponsorsManager.timeUntilNextEpoch(block.timestamp);
+                    * sponsorsManager.timeUntilNextCycle(block.timestamp);
             } else {
                 _expectedRewardShares -= (_gaugesAllocationsBefore[i] - gaugesArray[i].totalAllocation())
-                    * sponsorsManager.timeUntilNextEpoch(block.timestamp);
+                    * sponsorsManager.timeUntilNextCycle(block.timestamp);
             }
             assertEq(gaugesArray[i].rewardShares(), _expectedRewardShares);
         }
 
         // AND there is a distribution of 10000 rewardToken and 1000 coinbase
         _distribute(10_000 ether, 1000 ether);
-        // THEN totalPotentialReward is the entire epoch
-        assertEq(sponsorsManager.totalPotentialReward(), _newTotalAllocations * epochDuration);
-        // THEN rewardShares for each gauge is the entire epoch
+        // THEN totalPotentialReward is the entire cycle
+        assertEq(sponsorsManager.totalPotentialReward(), _newTotalAllocations * cycleDuration);
+        // THEN rewardShares for each gauge is the entire cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * epochDuration);
+            assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * cycleDuration);
         }
     }
 }

@@ -8,7 +8,7 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     function _initialState() internal override(HaltedBuilderBehavior, ResumeBuilderBehavior) {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
 
         // AND builder is revoked
@@ -32,13 +32,13 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is revoked in the middle of an epoch having allocation.
-     *  builder receives all the rewards for the current epoch
+     * SCENARIO: builder is revoked in the middle of an cycle having allocation.
+     *  builder receives all the rewards for the current cycle
      */
     function test_BuildersReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is revoked
         _initialState();
 
@@ -57,13 +57,13 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is revoked in the middle of an epoch having allocation.
-     *  Builder doesn't receive those rewards on the next epoch
+     * SCENARIO: builder is revoked in the middle of an cycle having allocation.
+     *  Builder doesn't receive those rewards on the next cycle
      */
     function test_BuilderDoesNotReceiveNextRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is revoked
         _initialState();
         // AND 100 rewardToken and 10 coinbase are distributed
@@ -90,7 +90,7 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     function test_ResumedBuilderClaimsAll() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is revoked
         _initialState();
 
@@ -122,7 +122,7 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     function test_PermitBuilderBeforeCooldown() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is revoked
         _initialState();
 
@@ -131,7 +131,7 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
 
         // AND cooldown time didn't end
-        vm.warp(_cooldownEndTime - 12 days); // cannot skip an epoch, permit will revert
+        vm.warp(_cooldownEndTime - 12 days); // cannot skip an cycle, permit will revert
 
         // WHEN gauge is permitted with a new kickback of 80%
         vm.startPrank(builder);
@@ -159,7 +159,7 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     function test_PermitBuilderAfterCooldown() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         //    AND builder is revoked
         _initialState();
 

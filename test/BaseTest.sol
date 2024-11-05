@@ -36,8 +36,8 @@ contract BaseTest is Test {
     RewardDistributor public rewardDistributorImpl;
     RewardDistributor public rewardDistributor;
 
-    uint32 public epochDuration = 1 weeks;
-    uint24 public epochStartOffset = 0 days;
+    uint32 public cycleDuration = 1 weeks;
+    uint24 public cycleStartOffset = 0 days;
     uint128 public kickbackCooldown = 2 weeks;
 
     /* solhint-disable private-vars-leading-underscore */
@@ -70,8 +70,8 @@ contract BaseTest is Test {
             address(stakingToken),
             address(gaugeFactory),
             address(rewardDistributor),
-            epochDuration,
-            epochStartOffset,
+            cycleDuration,
+            cycleStartOffset,
             kickbackCooldown
         );
 
@@ -96,24 +96,24 @@ contract BaseTest is Test {
     /// @dev Implement this if you want a custom configured deployment
     function _setUp() internal virtual { }
 
-    function _skipAndStartNewEpoch() internal {
-        uint256 _currentEpochRemaining = sponsorsManager.epochNext(block.timestamp) - block.timestamp;
-        skip(_currentEpochRemaining);
+    function _skipAndStartNewCycle() internal {
+        uint256 _currentCycleRemaining = sponsorsManager.cycleNext(block.timestamp) - block.timestamp;
+        skip(_currentCycleRemaining);
     }
 
-    function _skipRemainingEpochFraction(uint256 fraction_) internal {
-        uint256 _currentEpochRemaining = sponsorsManager.epochNext(block.timestamp) - block.timestamp;
-        skip(_currentEpochRemaining / fraction_);
+    function _skipRemainingCycleFraction(uint256 fraction_) internal {
+        uint256 _currentCycleRemaining = sponsorsManager.cycleNext(block.timestamp) - block.timestamp;
+        skip(_currentCycleRemaining / fraction_);
     }
 
     function _skipToStartDistributionWindow() internal {
-        _skipAndStartNewEpoch();
+        _skipAndStartNewCycle();
     }
 
     function _skipToEndDistributionWindow() internal {
-        _skipAndStartNewEpoch();
-        uint256 _currentEpochRemaining = sponsorsManager.endDistributionWindow(block.timestamp) - block.timestamp;
-        skip(_currentEpochRemaining);
+        _skipAndStartNewCycle();
+        uint256 _currentCycleRemaining = sponsorsManager.endDistributionWindow(block.timestamp) - block.timestamp;
+        skip(_currentCycleRemaining);
     }
 
     function _whitelistBuilder(
@@ -157,8 +157,8 @@ contract BaseTest is Test {
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND half cycle pass
+        _skipRemainingCycleFraction(2);
     }
 
     /**

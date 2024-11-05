@@ -18,7 +18,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
     )
         public
     {
-        randomTime_ = bound(randomTime_, 0, 2 * epochDuration);
+        randomTime_ = bound(randomTime_, 0, 2 * cycleDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
@@ -56,8 +56,8 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             }
         }
 
-        // AND epoch finishes
-        _skipAndStartNewEpoch();
+        // AND cycle finishes
+        _skipAndStartNewCycle();
 
         // WHEN sponsors claim their rewards
         for (uint256 i = 0; i < sponsorsArray.length; i++) {
@@ -88,7 +88,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
     )
         public
     {
-        randomTime_ = bound(randomTime_, 0, 2 * epochDuration);
+        randomTime_ = bound(randomTime_, 0, 2 * cycleDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
@@ -129,8 +129,8 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             }
         }
 
-        // AND epoch finishes
-        _skipAndStartNewEpoch();
+        // AND cycle finishes
+        _skipAndStartNewCycle();
 
         // WHEN sponsors claim their rewards
         for (uint256 i = 0; i < sponsorsArray.length; i++) {

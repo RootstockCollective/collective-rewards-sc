@@ -78,7 +78,7 @@ contract RewardDistributorTest is BaseTest {
     }
 
     /**
-     * SCENARIO: sends rewards twice on one epoch and then on more time on the next one
+     * SCENARIO: sends rewards twice on one cycle and then on more time on the next one
      */
     function test_SendRewards() public {
         // GIVEN a RewardDistributor contract with 10 ether of reward token and 5 of coinbase
@@ -87,12 +87,12 @@ contract RewardDistributorTest is BaseTest {
         // WHEN foundation treasury calls sendRewards transferring 2 ethers of reward token and 1 of coinbase
         vm.startPrank(foundation);
         rewardDistributor.sendRewards(2 ether, 1 ether);
-        // AND half epoch pass
-        _skipRemainingEpochFraction(2);
+        // AND half cycle pass
+        _skipRemainingCycleFraction(2);
         // AND foundation treasury calls sendRewards transferring 1 ethers of reward token and 0.5 of coinbase
         rewardDistributor.sendRewards(1 ether, 0.5 ether);
-        // AND epoch finish
-        _skipAndStartNewEpoch();
+        // AND cycle finish
+        _skipAndStartNewCycle();
         // AND foundation treasury calls sendRewards transferring 4 ethers of reward token and 2 of coinbase
         rewardDistributor.sendRewards(4 ether, 2 ether);
 

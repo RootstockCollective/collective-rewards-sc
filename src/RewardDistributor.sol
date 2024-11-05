@@ -8,7 +8,7 @@ import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
 
 /**
  * @title RewardDistributor
- * @notice Accumulates all the rewards to be distributed for each epoch
+ * @notice Accumulates all the rewards to be distributed for each cycle
  */
 contract RewardDistributor is Upgradeable {
     // -----------------------------
@@ -35,10 +35,10 @@ contract RewardDistributor is Upgradeable {
     IERC20 public rewardToken;
     /// @notice SponsorsManager contract address
     SponsorsManager public sponsorsManager;
-    /// @notice tracks amount of reward tokens distributed per epoch
-    mapping(uint256 epochTimestampStart => uint256 amount) public rewardTokenAmountPerEpoch;
-    /// @notice tracks amount of coinbase distributed per epoch
-    mapping(uint256 epochTimestampStart => uint256 amount) public rewardCoinbaseAmountPerEpoch;
+    /// @notice tracks amount of reward tokens distributed per cycle
+    mapping(uint256 cycleTimestampStart => uint256 amount) public rewardTokenAmountPerCycle;
+    /// @notice tracks amount of coinbase distributed per cycle
+    mapping(uint256 cycleTimestampStart => uint256 amount) public rewardCoinbaseAmountPerCycle;
 
     // -----------------------------
     // ------- Initializer ---------

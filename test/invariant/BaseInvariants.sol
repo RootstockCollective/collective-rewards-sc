@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { BaseTest, Gauge } from "../BaseTest.sol";
 import { AllocateHandler } from "./handlers/AllocateHandler.sol";
 import { BuilderHandler } from "./handlers/BuilderHandler.sol";
-import { EpochHandler } from "./handlers/EpochHandler.sol";
+import { CycleHandler } from "./handlers/CycleHandler.sol";
 import { TimeManager } from "./handlers/TimeManager.sol";
 import { DistributionHandler } from "./handlers/DistributionHandler.sol";
 import { IncentivizeHandler } from "./handlers/IncentivizeHandler.sol";
@@ -13,7 +13,7 @@ contract BaseInvariants is BaseTest {
     TimeManager public timeManager;
     BuilderHandler public builderHandler;
     AllocateHandler public allocateHandler;
-    EpochHandler public epochHandler;
+    CycleHandler public cycleHandler;
     DistributionHandler public distributionHandler;
     IncentivizeHandler public incentivizeHandler;
 
@@ -26,13 +26,13 @@ contract BaseInvariants is BaseTest {
         timeManager = new TimeManager();
         allocateHandler = new AllocateHandler(BaseTest(payable(address(this))), timeManager);
         builderHandler = new BuilderHandler(BaseTest(payable(address(this))), timeManager);
-        epochHandler = new EpochHandler(BaseTest(payable(address(this))), timeManager);
+        cycleHandler = new CycleHandler(BaseTest(payable(address(this))), timeManager);
         distributionHandler = new DistributionHandler(BaseTest(payable(address(this))), timeManager);
         incentivizeHandler = new IncentivizeHandler(BaseTest(payable(address(this))), timeManager);
 
         targetContract(address(allocateHandler));
         targetContract(address(builderHandler));
-        targetContract(address(epochHandler));
+        targetContract(address(cycleHandler));
         targetContract(address(distributionHandler));
         targetContract(address(incentivizeHandler));
 
