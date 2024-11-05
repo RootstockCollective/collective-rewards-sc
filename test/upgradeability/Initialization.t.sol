@@ -51,10 +51,10 @@ contract InitializationTest is BaseTest {
     }
 
     /**
-     * SCENARIO: GovernanceManager cannot be initialized twice
+     * SCENARIO: GovernanceManagerRootstockCollective cannot be initialized twice
      */
-    function test_RevertGovernanceManagerInitialize() public {
-        // GIVEN a GovernanceManager initialized
+    function test_RevertGovernanceManagerRootstockCollectiveInitialize() public {
+        // GIVEN a GovernanceManagerRootstockCollective initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.prank(governor);

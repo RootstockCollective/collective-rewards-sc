@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { BaseTest, GaugeRootstockCollective } from "./BaseTest.sol";
 import { BuilderRegistry } from "../src/BuilderRegistry.sol";
-import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
+import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract BuilderRegistryTest is BaseTest {
     // -----------------------------
@@ -26,22 +26,22 @@ contract BuilderRegistryTest is BaseTest {
 
         // WHEN alice calls activateBuilder
         //  THEN tx reverts because caller is not the owner
-        vm.expectRevert(IGovernanceManager.NotKycApprover.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
         sponsorsManager.activateBuilder(builder, builder, 0);
 
         // WHEN alice calls revokeBuilderKYC
         //  THEN tx reverts because caller is not the owner
-        vm.expectRevert(IGovernanceManager.NotKycApprover.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
         sponsorsManager.revokeBuilderKYC(builder);
 
         // WHEN alice calls pauseBuilder
         //  THEN tx reverts because caller is not the owner
-        vm.expectRevert(IGovernanceManager.NotKycApprover.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
         sponsorsManager.pauseBuilder(builder, "paused");
 
         // WHEN alice calls unpauseBuilder
         //  THEN tx reverts because caller is not the owner
-        vm.expectRevert(IGovernanceManager.NotKycApprover.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
         sponsorsManager.unpauseBuilder(builder);
         vm.stopPrank();
     }
@@ -56,12 +56,12 @@ contract BuilderRegistryTest is BaseTest {
 
         // WHEN alice calls whitelistBuilder
         //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
         sponsorsManager.whitelistBuilder(builder);
 
         // WHEN alice calls dewhitelistBuilder
         //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
         sponsorsManager.dewhitelistBuilder(builder);
         vm.stopPrank();
     }

@@ -7,7 +7,7 @@ import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/int
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { GaugeRootstockCollective } from "./gauge/GaugeRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "./gauge/GaugeFactoryRootstockCollective.sol";
-import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
+import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
  * @title BuilderRegistry
@@ -128,7 +128,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      * @param rewardPercentageCooldown_ time that must elapse for a new reward percentage from a builder to be applied
      */
     function __BuilderRegistry_init(
-        IGovernanceManager governanceManager_,
+        IGovernanceManagerRootstockCollective governanceManager_,
         address gaugeFactory_,
         address rewardDistributor_,
         uint32 cycleDuration_,

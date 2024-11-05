@@ -4,9 +4,9 @@ pragma solidity 0.8.20;
 import { IChangeContractRootstockCollective } from "src/interfaces/IChangeContractRootstockCollective.sol";
 
 /**
- * @title IGovernanceManager
+ * @title IGovernanceManagerRootstockCollective
  */
-interface IGovernanceManager {
+interface IGovernanceManagerRootstockCollective {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------

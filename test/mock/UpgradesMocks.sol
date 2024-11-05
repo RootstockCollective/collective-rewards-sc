@@ -7,7 +7,7 @@ import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol
 import { ChangeExecutorRootstockCollective } from "src/mvp/ChangeExecutorRootstockCollective.sol";
 import { SimplifiedRewardDistributorRootstockCollective } from
     "src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
-import { GovernanceManager } from "src/governance/GovernanceManager.sol";
+import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 
 /**
  * @title UpgradeableMock
@@ -54,10 +54,10 @@ contract GaugeUpgradeMock is GaugeRootstockCollective, UpgradeableMock {
 }
 
 /**
- * @title GovernanceManagerUpgradeMock
- * @dev Only for upgradeability testing purposes. Extends GovernanceManager adding a new variable.
+ * @title GovernanceManagerRootstockCollectiveUpgradeMock
+ * @dev Only for upgradeability testing purposes. Extends GovernanceManagerRootstockCollective adding a new variable.
  */
-contract GovernanceManagerUpgradeMock is GovernanceManager, UpgradeableMock {
+contract GovernanceManagerRootstockCollectiveUpgradeMock is GovernanceManagerRootstockCollective, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
         return newVariable + uint256(uint160(governor));
     }

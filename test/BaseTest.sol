@@ -16,14 +16,15 @@ import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { Deploy as GovernanceManagerDeployer } from "script/governance/GovernanceManager.s.sol";
-import { GovernanceManager } from "src/governance/GovernanceManager.sol";
+import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
+    "script/governance/GovernanceManagerRootstockCollective.s.sol";
+import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 
 contract BaseTest is Test {
     StakingTokenMock public stakingToken;
     ERC20Mock public rewardToken;
 
-    GovernanceManager public governanceManager;
+    GovernanceManagerRootstockCollective public governanceManager;
     GaugeBeaconRootstockCollective public gaugeBeacon;
     GaugeFactoryRootstockCollective public gaugeFactory;
     address[] public builders;
@@ -53,7 +54,7 @@ contract BaseTest is Test {
     /* solhint-enable private-vars-leading-underscore */
 
     function setUp() public {
-        (governanceManager,) = new GovernanceManagerDeployer().run(governor, foundation, kycApprover);
+        (governanceManager,) = new GovernanceManagerRootstockCollectiveDeployer().run(governor, foundation, kycApprover);
 
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         MockStakingTokenDeployer _mockStakingTokenDeployer = new MockStakingTokenDeployer();

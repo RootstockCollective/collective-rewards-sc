@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { BaseTest } from "./BaseTest.sol";
 import { CycleTimeKeeper } from "../src/CycleTimeKeeper.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
-import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
+import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract SetCycleDurationTest is BaseTest {
     // -----------------------------
@@ -43,7 +43,7 @@ contract SetCycleDurationTest is BaseTest {
         //   THEN tx reverts because caller is not the Governor
 
         vm.prank(alice);
-        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
         sponsorsManager.setCycleDuration(3 weeks, 0 days);
     }
 

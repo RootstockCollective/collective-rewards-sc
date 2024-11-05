@@ -2,17 +2,17 @@
 pragma solidity 0.8.20;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
+import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 import { IChangeContractRootstockCollective } from "src/interfaces/IChangeContractRootstockCollective.sol";
 
 /**
- * @title GovernanceManager
+ * @title GovernanceManagerRootstockCollective
  * @notice This contract manages governance addresses.
  * @notice It also allows the governor to execute contracts that implement the IChangeContractRootstockCollective
  * interface.
  * @dev This contract is upgradeable via the UUPS proxy pattern.
  */
-contract GovernanceManager is UUPSUpgradeable, IGovernanceManager {
+contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceManagerRootstockCollective {
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------

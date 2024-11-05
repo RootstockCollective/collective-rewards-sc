@@ -3,10 +3,13 @@ pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { GovernanceManager } from "src/governance/GovernanceManager.sol";
+import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
-    function run() public returns (GovernanceManager proxy_, GovernanceManager implementation_) {
+    function run()
+        public
+        returns (GovernanceManagerRootstockCollective proxy_, GovernanceManagerRootstockCollective implementation_)
+    {
         address _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
         address _treasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
         address _kycApproverAddress = vm.envAddress("KYC_APPROVER_ADDRESS");
@@ -21,7 +24,7 @@ contract Deploy is Broadcaster {
     )
         public
         broadcast
-        returns (GovernanceManager proxy_, GovernanceManager implementation_)
+        returns (GovernanceManagerRootstockCollective proxy_, GovernanceManagerRootstockCollective implementation_)
     {
         require(governor_ != address(0), "Governor address cannot be empty");
         require(treasury_ != address(0), "Treasury address cannot be empty");
@@ -32,15 +35,15 @@ contract Deploy is Broadcaster {
         address _proxy;
         address _implementation;
         if (vm.envOr("NO_DD", false)) {
-            _implementation = address(new GovernanceManager());
+            _implementation = address(new GovernanceManagerRootstockCollective());
             _proxy = address(new ERC1967Proxy(_implementation, _initializerData));
 
-            return (GovernanceManager(_proxy), GovernanceManager(_implementation));
+            return (GovernanceManagerRootstockCollective(_proxy), GovernanceManagerRootstockCollective(_implementation));
         }
 
-        _implementation = address(new GovernanceManager{ salt: _salt }());
+        _implementation = address(new GovernanceManagerRootstockCollective{ salt: _salt }());
         _proxy = address(new ERC1967Proxy{ salt: _salt }(_implementation, _initializerData));
 
-        return (GovernanceManager(_proxy), GovernanceManager(_implementation));
+        return (GovernanceManagerRootstockCollective(_proxy), GovernanceManagerRootstockCollective(_implementation));
     }
 }

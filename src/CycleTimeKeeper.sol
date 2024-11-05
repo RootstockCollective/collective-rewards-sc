@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { Upgradeable } from "./governance/Upgradeable.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
-import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
+import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 abstract contract CycleTimeKeeper is Upgradeable {
     uint256 internal constant _DISTRIBUTION_WINDOW = 1 hours;
@@ -60,7 +60,7 @@ abstract contract CycleTimeKeeper is Upgradeable {
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
      */
     function __CycleTimeKeeper_init(
-        IGovernanceManager governanceManager_,
+        IGovernanceManagerRootstockCollective governanceManager_,
         uint32 cycleDuration_,
         uint24 cycleStartOffset_
     )

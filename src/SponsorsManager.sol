@@ -8,7 +8,7 @@ import { GaugeRootstockCollective } from "./gauge/GaugeRootstockCollective.sol";
 import { BuilderRegistry } from "./BuilderRegistry.sol";
 import { ICollectiveRewardsCheck } from "./interfaces/ICollectiveRewardsCheck.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
-import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
+import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
  * @title SponsorsManager
@@ -98,7 +98,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @param rewardPercentageCooldown_ time that must elapse for a new reward percentage from a builder to be applied
      */
     function initialize(
-        IGovernanceManager governanceManager_,
+        IGovernanceManagerRootstockCollective governanceManager_,
         address rewardToken_,
         address stakingToken_,
         address gaugeFactory_,
