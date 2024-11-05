@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { Upgradeable } from "./governance/Upgradeable.sol";
+import { UpgradeableRootstockCollective } from "./governance/UpgradeableRootstockCollective.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
-abstract contract CycleTimeKeeper is Upgradeable {
+abstract contract CycleTimeKeeper is UpgradeableRootstockCollective {
     uint256 internal constant _DISTRIBUTION_WINDOW = 1 hours;
 
     // -----------------------------
