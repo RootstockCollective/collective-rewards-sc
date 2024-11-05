@@ -5,13 +5,13 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
- * @title Upgradeable
+ * @title UpgradeableRootstockCollective
  * @notice Base contract to be inherited by governed contracts
  * @dev This contract is not usable on its own since it does not have any _productive useful_ behavior
  * The only purpose of this contract is to define some useful modifiers and functions to be used on the
  * governance aspect of the child contract
  */
-abstract contract Upgradeable is UUPSUpgradeable {
+abstract contract UpgradeableRootstockCollective is UUPSUpgradeable {
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { Upgradeable } from "./governance/Upgradeable.sol";
+import { UpgradeableRootstockCollective } from "./governance/UpgradeableRootstockCollective.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SponsorsManager } from "./SponsorsManager.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
@@ -10,7 +10,7 @@ import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceM
  * @title RewardDistributor
  * @notice Accumulates all the rewards to be distributed for each cycle
  */
-contract RewardDistributor is Upgradeable {
+contract RewardDistributor is UpgradeableRootstockCollective {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
