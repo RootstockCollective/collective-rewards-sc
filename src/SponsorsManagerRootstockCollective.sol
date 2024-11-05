@@ -6,7 +6,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeRootstockCollective } from "./gauge/GaugeRootstockCollective.sol";
 import { BuilderRegistryRootstockCollective } from "./BuilderRegistryRootstockCollective.sol";
-import { ICollectiveRewardsCheck } from "./interfaces/ICollectiveRewardsCheck.sol";
+import { ICollectiveRewardsCheckRootstockCollective } from "./interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
@@ -14,7 +14,10 @@ import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceM
  * @title SponsorsManagerRootstockCollective
  * @notice Creates gauges, manages sponsors votes and distribute rewards
  */
-contract SponsorsManagerRootstockCollective is ICollectiveRewardsCheck, BuilderRegistryRootstockCollective {
+contract SponsorsManagerRootstockCollective is
+    ICollectiveRewardsCheckRootstockCollective,
+    BuilderRegistryRootstockCollective
+{
     // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
     uint256 internal constant _MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
@@ -131,7 +134,8 @@ contract SponsorsManagerRootstockCollective is ICollectiveRewardsCheck, BuilderR
      * @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId_) public view override returns (bool) {
-        return interfaceId_ == type(ICollectiveRewardsCheck).interfaceId || super.supportsInterface(interfaceId_);
+        return interfaceId_ == type(ICollectiveRewardsCheckRootstockCollective).interfaceId
+            || super.supportsInterface(interfaceId_);
     }
 
     /**

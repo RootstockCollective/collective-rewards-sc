@@ -3,7 +3,8 @@ pragma solidity 0.8.20;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import { ICollectiveRewardsCheck } from "../../src/interfaces/ICollectiveRewardsCheck.sol";
+import { ICollectiveRewardsCheckRootstockCollective } from
+    "../../src/interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
 
 string constant DEFAULT_NAME = "ERC20Mock";
 string constant DEFAULT_SYMBOL = "E20M";
@@ -13,7 +14,7 @@ contract StakingTokenMock is ERC20 {
 
     error STRIFStakedInCollectiveRewardsCanWithdraw(bool canWithdraw);
     error STRIFSupportsERC165(bool _supports);
-    error STRIFSupportsICollectiveRewardsCheck(bool _supports);
+    error STRIFSupportsICollectiveRewardsCheckRootstockCollective(bool _supports);
     error STRIFUnexpectedCanWithdraw(address _checkAddress);
 
     /// @notice The address of the CollectiveRewards Contract
@@ -32,7 +33,9 @@ contract StakingTokenMock is ERC20 {
     //checks CollectiveRewards for stake
     modifier _checkCollectiveRewardsForStake(address staker, uint256 value) {
         if (collectiveRewardsCheck != address(0)) {
-            try ICollectiveRewardsCheck(collectiveRewardsCheck).canWithdraw(staker, value) returns (bool canWithdraw) {
+            try ICollectiveRewardsCheckRootstockCollective(collectiveRewardsCheck).canWithdraw(staker, value) returns (
+                bool canWithdraw
+            ) {
                 if (!canWithdraw) {
                     revert STRIFStakedInCollectiveRewardsCanWithdraw(false);
                 }
@@ -47,11 +50,13 @@ contract StakingTokenMock is ERC20 {
         if (!collectiveRewardsAddress.supportsERC165()) {
             revert STRIFSupportsERC165(false);
         }
-        if (!collectiveRewardsAddress.supportsInterface(type(ICollectiveRewardsCheck).interfaceId)) {
-            revert STRIFSupportsICollectiveRewardsCheck(false);
+        if (!collectiveRewardsAddress.supportsInterface(type(ICollectiveRewardsCheckRootstockCollective).interfaceId)) {
+            revert STRIFSupportsICollectiveRewardsCheckRootstockCollective(false);
         }
 
-        try ICollectiveRewardsCheck(collectiveRewardsAddress).canWithdraw(address(0), 1) returns (bool) {
+        try ICollectiveRewardsCheckRootstockCollective(collectiveRewardsAddress).canWithdraw(address(0), 1) returns (
+            bool
+        ) {
             collectiveRewardsCheck = collectiveRewardsAddress;
         } catch {
             revert STRIFUnexpectedCanWithdraw(collectiveRewardsAddress);
