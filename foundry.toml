@@ -31,7 +31,7 @@ fail_on_revert = true
 runs = 200
 
 [profile.ci]
-verbosity = 2
+verbosity = 1
 
 [fmt]
 bracket_spacing = true
