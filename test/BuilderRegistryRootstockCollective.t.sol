@@ -2,10 +2,10 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, GaugeRootstockCollective } from "./BaseTest.sol";
-import { BuilderRegistry } from "../src/BuilderRegistry.sol";
+import { BuilderRegistryRootstockCollective } from "../src/BuilderRegistryRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
-contract BuilderRegistryTest is BaseTest {
+contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
@@ -76,24 +76,24 @@ contract BuilderRegistryTest is BaseTest {
 
         // WHEN alice calls revokeBuilder
         //  THEN tx reverts because caller is not a builder
-        vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderDoesNotExist.selector);
         sponsorsManager.revokeBuilder();
 
         // WHEN alice calls permitBuilder
         //  THEN tx reverts because caller is not a builder
-        vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderDoesNotExist.selector);
         sponsorsManager.permitBuilder(1 ether);
         vm.stopPrank();
 
         // WHEN kycApprover calls approveBuilderKYC for alice
         //  THEN tx reverts because caller is not a builder
-        vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderDoesNotExist.selector);
         vm.prank(kycApprover);
         sponsorsManager.approveBuilderKYC(alice);
 
         // WHEN governor calls dewhitelistBuilder for alice
         //  THEN tx reverts because caller is not a builder
-        vm.expectRevert(BuilderRegistry.BuilderDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderDoesNotExist.selector);
         vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(alice);
     }
@@ -131,7 +131,7 @@ contract BuilderRegistryTest is BaseTest {
 
         // WHEN tries to approveBuilderKYC
         //  THEN tx reverts because is already kycApproved
-        vm.expectRevert(BuilderRegistry.AlreadyKYCApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyKYCApproved.selector);
         sponsorsManager.approveBuilderKYC(builder);
     }
 
@@ -145,7 +145,7 @@ contract BuilderRegistryTest is BaseTest {
 
         // WHEN tries to activateBuilder
         //  THEN tx reverts because is already activated
-        vm.expectRevert(BuilderRegistry.AlreadyActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyActivated.selector);
         sponsorsManager.activateBuilder(builder, builder, 0);
     }
 
@@ -162,7 +162,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN tries to approveBuilderKYC
         //  THEN tx reverts because is not activated
         vm.prank(kycApprover);
-        vm.expectRevert(BuilderRegistry.NotActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
         sponsorsManager.approveBuilderKYC(_newBuilder);
     }
 
@@ -177,7 +177,7 @@ contract BuilderRegistryTest is BaseTest {
 
         // WHEN tries to activateBuilder
         //  THEN tx reverts because is not a valid reward percentage
-        vm.expectRevert(BuilderRegistry.InvalidBuilderRewardPercentage.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBuilderRewardPercentage.selector);
         sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 2 ether);
     }
 
@@ -219,7 +219,7 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN a builder whitelisted
         //  WHEN tries to whitelistBuilder
         //   THEN tx reverts because is already whitelisted
-        vm.expectRevert(BuilderRegistry.AlreadyWhitelisted.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyWhitelisted.selector);
         vm.prank(governor);
         sponsorsManager.whitelistBuilder(builder);
     }
@@ -338,7 +338,7 @@ contract BuilderRegistryTest is BaseTest {
         vm.startPrank(builder);
         // WHEN tries to permitBuilder
         //  THEN tx reverts because is not revoked
-        vm.expectRevert(BuilderRegistry.NotRevoked.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotRevoked.selector);
         sponsorsManager.permitBuilder(1 ether);
         // AND the builder is paused but not revoked
         vm.startPrank(kycApprover);
@@ -346,7 +346,7 @@ contract BuilderRegistryTest is BaseTest {
         // WHEN tries to permitBuilder
         //  THEN tx reverts because is not revoked
         vm.startPrank(builder);
-        vm.expectRevert(BuilderRegistry.NotRevoked.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotRevoked.selector);
         sponsorsManager.permitBuilder(1 ether);
     }
 
@@ -359,7 +359,7 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.revokeBuilder();
         //  WHEN tries to permitBuilder with 200% of reward percentage
         //   THEN tx reverts because is not a valid reward percentage
-        vm.expectRevert(BuilderRegistry.InvalidBuilderRewardPercentage.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBuilderRewardPercentage.selector);
         sponsorsManager.permitBuilder(2 ether);
     }
 
@@ -400,7 +400,7 @@ contract BuilderRegistryTest is BaseTest {
         sponsorsManager.revokeBuilder();
         // WHEN tries to revokeBuilder again
         //  THEN tx reverts because is already revoked
-        vm.expectRevert(BuilderRegistry.AlreadyRevoked.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyRevoked.selector);
         sponsorsManager.revokeBuilder();
     }
 
@@ -414,7 +414,7 @@ contract BuilderRegistryTest is BaseTest {
 
         // WHEN kycApprover tries to activating it again
         //  THEN tx reverts because builder already exists
-        vm.expectRevert(BuilderRegistry.AlreadyActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyActivated.selector);
         sponsorsManager.activateBuilder(builder, builder, 0);
     }
 
@@ -491,7 +491,7 @@ contract BuilderRegistryTest is BaseTest {
         //  WHEN builders tries to revoke it
         //   THEN tx reverts because is not KYC approved
         vm.startPrank(builder);
-        vm.expectRevert(BuilderRegistry.NotKYCApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotKYCApproved.selector);
         sponsorsManager.revokeBuilder();
     }
 
@@ -509,7 +509,7 @@ contract BuilderRegistryTest is BaseTest {
         //  WHEN builders tries to permit it
         //   THEN tx reverts because is not KYC approved
         vm.startPrank(builder);
-        vm.expectRevert(BuilderRegistry.NotKYCApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotKYCApproved.selector);
         sponsorsManager.permitBuilder(0.1 ether);
     }
 
@@ -523,7 +523,7 @@ contract BuilderRegistryTest is BaseTest {
 
         //  WHEN kycApprover tries to revoke it again
         //   THEN tx reverts because is not KYC approved
-        vm.expectRevert(BuilderRegistry.NotKYCApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotKYCApproved.selector);
         sponsorsManager.revokeBuilderKYC(builder);
     }
 
@@ -712,7 +712,7 @@ contract BuilderRegistryTest is BaseTest {
 
         //  WHEN governor calls dewhitelistBuilder
         //   THEN tx reverts because is not whitelisted
-        vm.expectRevert(BuilderRegistry.NotWhitelisted.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotWhitelisted.selector);
         vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(builder);
     }
@@ -727,7 +727,7 @@ contract BuilderRegistryTest is BaseTest {
 
         //  WHEN governor calls whitelistBuilder
         //  THEN tx reverts because builder already exists
-        vm.expectRevert(BuilderRegistry.BuilderAlreadyExists.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderAlreadyExists.selector);
         vm.prank(governor);
         sponsorsManager.whitelistBuilder(builder);
     }
@@ -743,7 +743,7 @@ contract BuilderRegistryTest is BaseTest {
         //  WHEN builders tries to revoke itself
         //   THEN tx reverts because is not whitelisted
         vm.startPrank(builder);
-        vm.expectRevert(BuilderRegistry.NotWhitelisted.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotWhitelisted.selector);
         sponsorsManager.revokeBuilder();
     }
 
@@ -758,7 +758,7 @@ contract BuilderRegistryTest is BaseTest {
         //  WHEN builders tries to permit it
         //   THEN tx reverts because is not whitelisted
         vm.prank(builder);
-        vm.expectRevert(BuilderRegistry.NotWhitelisted.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotWhitelisted.selector);
         sponsorsManager.permitBuilder(0.1 ether);
     }
 
