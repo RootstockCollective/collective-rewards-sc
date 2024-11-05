@@ -5,7 +5,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeRootstockCollective } from "./gauge/GaugeRootstockCollective.sol";
-import { BuilderRegistry } from "./BuilderRegistry.sol";
+import { BuilderRegistryRootstockCollective } from "./BuilderRegistryRootstockCollective.sol";
 import { ICollectiveRewardsCheck } from "./interfaces/ICollectiveRewardsCheck.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
@@ -14,7 +14,7 @@ import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceM
  * @title SponsorsManagerRootstockCollective
  * @notice Creates gauges, manages sponsors votes and distribute rewards
  */
-contract SponsorsManagerRootstockCollective is ICollectiveRewardsCheck, BuilderRegistry {
+contract SponsorsManagerRootstockCollective is ICollectiveRewardsCheck, BuilderRegistryRootstockCollective {
     // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
     uint256 internal constant _MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
@@ -110,7 +110,7 @@ contract SponsorsManagerRootstockCollective is ICollectiveRewardsCheck, BuilderR
         external
         initializer
     {
-        __BuilderRegistry_init(
+        __BuilderRegistryRootstockCollective_init(
             governanceManager_,
             gaugeFactory_,
             rewardDistributor_,

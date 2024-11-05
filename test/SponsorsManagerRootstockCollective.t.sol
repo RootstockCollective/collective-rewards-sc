@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { stdStorage, StdStorage, stdError } from "forge-std/src/Test.sol";
 import { BaseTest, SponsorsManagerRootstockCollective, GaugeRootstockCollective } from "./BaseTest.sol";
-import { BuilderRegistry } from "../src/BuilderRegistry.sol";
+import { BuilderRegistryRootstockCollective } from "../src/BuilderRegistryRootstockCollective.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 
 contract SponsorsManagerRootstockCollectiveTest is BaseTest {
@@ -43,30 +43,30 @@ contract SponsorsManagerRootstockCollectiveTest is BaseTest {
         //  WHEN alice calls allocate using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistry.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
         sponsorsManager.allocate(_wrongGauge, 100 ether);
         //  WHEN alice calls allocateBatch using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistry.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
 
         //  WHEN alice calls claimSponsorRewards using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistry.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         //  WHEN alice calls claimSponsorRewards using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistry.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
         sponsorsManager.claimSponsorRewards(address(rewardToken), gaugesArray);
 
         //  WHEN alice calls claimSponsorRewards using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistry.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
         sponsorsManager.claimSponsorRewards(UtilsLib._COINBASE_ADDRESS, gaugesArray);
     }
 
@@ -85,18 +85,18 @@ contract SponsorsManagerRootstockCollectiveTest is BaseTest {
         //  WHEN alice calls allocate using the new gauge
         //   THEN tx reverts because NotActivated
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistry.NotActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
         sponsorsManager.allocate(_newGauge, 100 ether);
         //  WHEN alice calls allocateBatch using the new gauge
         //   THEN tx reverts because NotActivated
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistry.NotActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
 
         //  WHEN alice calls claimSponsorRewards using the new gauge
         //   THEN tx reverts because NotActivated
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistry.NotActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
         sponsorsManager.claimSponsorRewards(gaugesArray);
     }
 

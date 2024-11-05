@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseTest } from "./BaseTest.sol";
-import { BuilderRegistry } from "../src/BuilderRegistry.sol";
+import { BuilderRegistryRootstockCollective } from "../src/BuilderRegistryRootstockCollective.sol";
 
 contract setBuilderRewardPercentageTest is BaseTest {
     // -----------------------------
@@ -41,7 +41,7 @@ contract setBuilderRewardPercentageTest is BaseTest {
         // GIVEN a whitelisted builder
         //  WHEN calls setBuilderRewardPercentage
         //   THEN tx reverts because caller is not an operational builder
-        vm.expectRevert(BuilderRegistry.NotOperational.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
         sponsorsManager.setBuilderRewardPercentage(0.1 ether);
     }
 
@@ -94,7 +94,7 @@ contract setBuilderRewardPercentageTest is BaseTest {
         // WHEN tries to setBuilderRewardPercentage
         //  THEN tx reverts because is not operational
         vm.startPrank(builder);
-        vm.expectRevert(BuilderRegistry.NotOperational.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
         sponsorsManager.setBuilderRewardPercentage(0.1 ether);
     }
 
@@ -106,7 +106,7 @@ contract setBuilderRewardPercentageTest is BaseTest {
         //  WHEN tries to setBuilderRewardPercentage
         //   THEN tx reverts because is not a valid reward percentage
         vm.prank(builder);
-        vm.expectRevert(BuilderRegistry.InvalidBuilderRewardPercentage.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBuilderRewardPercentage.selector);
         sponsorsManager.setBuilderRewardPercentage(2 ether);
     }
 

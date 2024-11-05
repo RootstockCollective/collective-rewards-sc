@@ -10,10 +10,10 @@ import { GaugeFactoryRootstockCollective } from "./gauge/GaugeFactoryRootstockCo
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
- * @title BuilderRegistry
+ * @title BuilderRegistryRootstockCollective
  * @notice Keeps registers of the builders
  */
-abstract contract BuilderRegistry is CycleTimeKeeperRootstockCollective, ERC165Upgradeable {
+abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollective, ERC165Upgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_REWARD_PERCENTAGE = UtilsLib._PRECISION;
@@ -127,7 +127,7 @@ abstract contract BuilderRegistry is CycleTimeKeeperRootstockCollective, ERC165U
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
      * @param rewardPercentageCooldown_ time that must elapse for a new reward percentage from a builder to be applied
      */
-    function __BuilderRegistry_init(
+    function __BuilderRegistryRootstockCollective_init(
         IGovernanceManagerRootstockCollective governanceManager_,
         address gaugeFactory_,
         address rewardDistributor_,
