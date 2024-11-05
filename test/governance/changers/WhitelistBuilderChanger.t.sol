@@ -47,7 +47,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         governanceManager.executeChange(_changer);
         //  THEN the change is successfully executed
         GaugeRootstockCollective _newGauge = _changer.newGauge();
-        //  THEN gauge is added on SponsorsManager
+        //  THEN gauge is added on SponsorsManagerRootstockCollective
         assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
         //  THEN the new builder is whitelisted
         (,, bool _whitelisted,,,,) = sponsorsManager.builderState(_newBuilder);

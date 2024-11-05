@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { IChangeContractRootstockCollective } from "../../interfaces/IChangeContractRootstockCollective.sol";
-import { SponsorsManager } from "../../SponsorsManager.sol";
+import { SponsorsManagerRootstockCollective } from "../../SponsorsManagerRootstockCollective.sol";
 import { GaugeRootstockCollective } from "../../gauge/GaugeRootstockCollective.sol";
 
 /**
@@ -10,8 +10,8 @@ import { GaugeRootstockCollective } from "../../gauge/GaugeRootstockCollective.s
  *   @notice ChangeContract used to whitelist a builder and create its Gauger contract
  */
 contract WhitelistBuilderChangerTemplateRootstockCollective is IChangeContractRootstockCollective {
-    /// @notice SponsorsManager contract address
-    SponsorsManager public immutable sponsorsManager;
+    /// @notice SponsorsManagerRootstockCollective contract address
+    SponsorsManagerRootstockCollective public immutable sponsorsManager;
     /// @notice builder address to be whitelisted
     address public immutable builder;
     /// @notice new Gauge created;
@@ -22,7 +22,7 @@ contract WhitelistBuilderChangerTemplateRootstockCollective is IChangeContractRo
      * @param sponsorsManager_ Address of the SponsorsManger contract
      * @param builder_ Address of the builder
      */
-    constructor(SponsorsManager sponsorsManager_, address builder_) {
+    constructor(SponsorsManagerRootstockCollective sponsorsManager_, address builder_) {
         sponsorsManager = sponsorsManager_;
         builder = builder_;
     }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest, SponsorsManager } from "./BaseTest.sol";
+import { BaseTest, SponsorsManagerRootstockCollective } from "./BaseTest.sol";
 
 abstract contract HaltedBuilderBehavior is BaseTest {
     function _initialState() internal virtual { }
@@ -265,7 +265,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // WHEN alice adds allocations
         vm.startPrank(alice);
         // THEN tx reverts
-        vm.expectRevert(SponsorsManager.PositiveAllocationOnHaltedGauge.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.PositiveAllocationOnHaltedGauge.selector);
         sponsorsManager.allocate(gauge, 100 ether);
     }
 }

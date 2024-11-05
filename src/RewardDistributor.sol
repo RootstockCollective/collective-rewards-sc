@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { UpgradeableRootstockCollective } from "./governance/UpgradeableRootstockCollective.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SponsorsManager } from "./SponsorsManager.sol";
+import { SponsorsManagerRootstockCollective } from "./SponsorsManagerRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
@@ -33,8 +33,8 @@ contract RewardDistributor is UpgradeableRootstockCollective {
     address public foundationTreasury;
     /// @notice address of the token rewarded to builder and sponsors
     IERC20 public rewardToken;
-    /// @notice SponsorsManager contract address
-    SponsorsManager public sponsorsManager;
+    /// @notice SponsorsManagerRootstockCollective contract address
+    SponsorsManagerRootstockCollective public sponsorsManager;
     /// @notice tracks amount of reward tokens distributed per cycle
     mapping(uint256 cycleTimestampStart => uint256 amount) public rewardTokenAmountPerCycle;
     /// @notice tracks amount of coinbase distributed per cycle
@@ -62,12 +62,12 @@ contract RewardDistributor is UpgradeableRootstockCollective {
      * @notice CollectiveRewards addresses initializer
      * @dev used to solve circular dependency, sponsorsManager is initialized with this contract address
      *  it must be called ASAP after the initialize.
-     * @param sponsorsManager_ SponsorsManager contract address
+     * @param sponsorsManager_ SponsorsManagerRootstockCollective contract address
      */
     function initializeCollectiveRewardsAddresses(address sponsorsManager_) external {
         if (address(sponsorsManager) != address(0)) revert CollectiveRewardsAddressesAlreadyInitialized();
-        sponsorsManager = SponsorsManager(sponsorsManager_);
-        rewardToken = IERC20(SponsorsManager(sponsorsManager_).rewardToken());
+        sponsorsManager = SponsorsManagerRootstockCollective(sponsorsManager_);
+        rewardToken = IERC20(SponsorsManagerRootstockCollective(sponsorsManager_).rewardToken());
     }
 
     // -----------------------------

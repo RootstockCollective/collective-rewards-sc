@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { SponsorsManager } from "../../src/SponsorsManager.sol";
+import { SponsorsManagerRootstockCollective } from "../../src/SponsorsManagerRootstockCollective.sol";
 import { RewardDistributor } from "../../src/RewardDistributor.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { ChangeExecutorRootstockCollective } from "src/mvp/ChangeExecutorRootstockCollective.sol";
@@ -24,10 +24,10 @@ abstract contract UpgradeableMock {
 }
 
 /**
- * @title SponsorsManagerUpgradeMock
- * @dev Only for upgradeability testing purposes. Extends SponsorsManager adding a new variable.
+ * @title SponsorsManagerRootstockCollectiveUpgradeMock
+ * @dev Only for upgradeability testing purposes. Extends SponsorsManagerRootstockCollective adding a new variable.
  */
-contract SponsorsManagerUpgradeMock is SponsorsManager, UpgradeableMock {
+contract SponsorsManagerRootstockCollectiveUpgradeMock is SponsorsManagerRootstockCollective, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
         return newVariable + getGaugesLength();
     }

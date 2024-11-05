@@ -7,7 +7,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
-import { ISponsorsManager } from "../interfaces/ISponsorsManager.sol";
+import { ISponsorsManagerRootstockCollective } from "../interfaces/ISponsorsManagerRootstockCollective.sol";
 
 /**
  * @title GaugeRootstockCollective
@@ -66,8 +66,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /// @notice address of the token rewarded to builder and voters
     address public rewardToken;
-    /// @notice SponsorsManager contract address
-    ISponsorsManager public sponsorsManager;
+    /// @notice SponsorsManagerRootstockCollective contract address
+    ISponsorsManagerRootstockCollective public sponsorsManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
     /// @notice cycle rewards shares, optimistically tracking the time weighted votes allocations for this gauge
@@ -90,12 +90,12 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice contract initializer
      * @param rewardToken_ address of the token rewarded to builder and voters
-     * @param sponsorsManager_ address of the SponsorsManager contract
+     * @param sponsorsManager_ address of the SponsorsManagerRootstockCollective contract
      */
     function initialize(address rewardToken_, address sponsorsManager_) external initializer {
         __ReentrancyGuard_init();
         rewardToken = rewardToken_;
-        sponsorsManager = ISponsorsManager(sponsorsManager_);
+        sponsorsManager = ISponsorsManagerRootstockCollective(sponsorsManager_);
     }
 
     // -----------------------------

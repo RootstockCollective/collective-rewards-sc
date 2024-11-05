@@ -15,7 +15,7 @@ contract Deploy is Broadcaster {
 
         (proxy_, implementation_) = run(_governanceManager);
 
-        address _sponsorsManagerAddress = vm.envOr("SponsorsManager", address(0));
+        address _sponsorsManagerAddress = vm.envOr("SponsorsManagerRootstockCollective", address(0));
         if (_sponsorsManagerAddress == address(0)) {
             _sponsorsManagerAddress = vm.envAddress("SPONSORS_MANAGER_ADDRESS");
         }

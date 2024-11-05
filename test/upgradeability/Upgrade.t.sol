@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { BaseTest } from "../BaseTest.sol";
 import {
-    SponsorsManagerUpgradeMock,
+    SponsorsManagerRootstockCollectiveUpgradeMock,
     RewardDistributorUpgradeMock,
     GaugeUpgradeMock,
     GovernanceManagerRootstockCollectiveUpgradeMock
@@ -11,19 +11,20 @@ import {
 
 contract UpgradeTest is BaseTest {
     /**
-     * SCENARIO: SponsorsManager is upgraded
+     * SCENARIO: SponsorsManagerRootstockCollective is upgraded
      */
-    function test_UpgradeSponsorsManager() public {
-        // GIVEN a SponsorsManager proxy with an implementation
+    function test_UpgradeSponsorsManagerRootstockCollective() public {
+        // GIVEN a SponsorsManagerRootstockCollective proxy with an implementation
         // AND a new implementation
-        SponsorsManagerUpgradeMock _sponsorsManagerNewImpl = new SponsorsManagerUpgradeMock();
+        SponsorsManagerRootstockCollectiveUpgradeMock _sponsorsManagerNewImpl =
+            new SponsorsManagerRootstockCollectiveUpgradeMock();
         //WHEN the proxy is upgraded and initialized
         vm.prank(governor);
         sponsorsManager.upgradeToAndCall(
             address(_sponsorsManagerNewImpl), abi.encodeCall(_sponsorsManagerNewImpl.initializeMock, (42))
         );
         // THEN getCustomMockValue is 44 = 2 gaugeLength + 42 newVariable
-        assertEq(SponsorsManagerUpgradeMock(address(sponsorsManager)).getCustomMockValue(), 44);
+        assertEq(SponsorsManagerRootstockCollectiveUpgradeMock(address(sponsorsManager)).getCustomMockValue(), 44);
     }
 
     /**

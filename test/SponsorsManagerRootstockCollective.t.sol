@@ -2,11 +2,11 @@
 pragma solidity 0.8.20;
 
 import { stdStorage, StdStorage, stdError } from "forge-std/src/Test.sol";
-import { BaseTest, SponsorsManager, GaugeRootstockCollective } from "./BaseTest.sol";
+import { BaseTest, SponsorsManagerRootstockCollective, GaugeRootstockCollective } from "./BaseTest.sol";
 import { BuilderRegistry } from "../src/BuilderRegistry.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 
-contract SponsorsManagerTest is BaseTest {
+contract SponsorsManagerRootstockCollectiveTest is BaseTest {
     using stdStorage for StdStorage;
     // -----------------------------
     // ----------- Events ----------
@@ -27,7 +27,7 @@ contract SponsorsManagerTest is BaseTest {
         vm.startPrank(alice);
         allocationsArray.push(0);
         //   THEN tx reverts because UnequalLengths
-        vm.expectRevert(SponsorsManager.UnequalLengths.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.UnequalLengths.selector);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
     }
 
@@ -267,7 +267,7 @@ contract SponsorsManagerTest is BaseTest {
         allocationsArray[0] = 100_001 ether;
         allocationsArray[1] = 0 ether;
         // THEN tx reverts because NotEnoughStaking
-        vm.expectRevert(SponsorsManager.NotEnoughStaking.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.NotEnoughStaking.selector);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
     }
 
@@ -368,25 +368,25 @@ contract SponsorsManagerTest is BaseTest {
 
         // WHEN tries to allocate during the distribution period
         //  THEN tx reverts because NotInDistributionPeriod
-        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.NotInDistributionPeriod.selector);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         // WHEN tries to add more reward
         //  THEN tx reverts because NotInDistributionPeriod
-        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.NotInDistributionPeriod.selector);
         sponsorsManager.notifyRewardAmount(2 ether);
         // WHEN tries to start distribution again
         //  THEN tx reverts because NotInDistributionPeriod
-        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.NotInDistributionPeriod.selector);
         sponsorsManager.startDistribution();
         // WHEN tries to revoke a builder
         //  THEN tx reverts because NotInDistributionPeriod
         vm.prank(builder);
-        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.NotInDistributionPeriod.selector);
         sponsorsManager.revokeBuilder();
         // WHEN tries to permit a builder
         //  THEN tx reverts because NotInDistributionPeriod
         vm.prank(builder2);
-        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.NotInDistributionPeriod.selector);
         sponsorsManager.permitBuilder(0.1 ether);
     }
 
@@ -398,7 +398,7 @@ contract SponsorsManagerTest is BaseTest {
         // WHEN someone tries to distribute after the distribution window start
         _skipToEndDistributionWindow();
         //  THEN tx reverts because OnlyInDistributionWindow
-        vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.OnlyInDistributionWindow.selector);
         sponsorsManager.startDistribution();
     }
 
@@ -409,7 +409,7 @@ contract SponsorsManagerTest is BaseTest {
         // GIVEN a SponsorManager contract
         // WHEN someone tries to distribute before the distribution period start
         //  THEN tx reverts because DistributionPeriodDidNotStart
-        vm.expectRevert(SponsorsManager.DistributionPeriodDidNotStart.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.DistributionPeriodDidNotStart.selector);
         sponsorsManager.distribute();
     }
 
@@ -902,9 +902,9 @@ contract SponsorsManagerTest is BaseTest {
 
     /**
      * SCENARIO: distribution occurs on different transactions using pagination and attempts to incentivize
-     * SponsorsManager between both transactions should fail
+     * SponsorsManagerRootstockCollective between both transactions should fail
      */
-    function test_DistributeAndIncentivizeSponsorsManagerDuringPagination() public {
+    function test_DistributeAndIncentivizeSponsorsManagerRootstockCollectiveDuringPagination() public {
         // GIVEN a sponsor alice
         allocationsArray[0] = 1 ether;
         allocationsArray[1] = 1 ether;
@@ -928,7 +928,7 @@ contract SponsorsManagerTest is BaseTest {
 
         // WHEN there is an attempt to add 100 ether reward in the middle of the distribution
         //  THEN notifyRewardAmount reverts
-        vm.expectRevert(SponsorsManager.NotInDistributionPeriod.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.NotInDistributionPeriod.selector);
         sponsorsManager.notifyRewardAmount(100 ether);
 
         // AND distribute is executed again
@@ -1396,13 +1396,14 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: SponsorsManager is initialized with an offset of 7 weeks. First distribution starts
+     * SCENARIO: SponsorsManagerRootstockCollective is initialized with an offset of 7 weeks. First distribution starts
      *  8 weeks after the deploy
      */
     function test_InitializedWithAnCycleStartOffset() public {
-        // GIVEN a SponsorsManager contract initialized with 7 weeks of offset
+        // GIVEN a SponsorsManagerRootstockCollective contract initialized with 7 weeks of offset
 
-        // all the tests are running with the SponsorsManager already initialized with cycleStartOffset = 0
+        // all the tests are running with the SponsorsManagerRootstockCollective already initialized with
+        // cycleStartOffset = 0
         // to simplify the calcs. since, we cannot change that value after the initialization we need this function
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 7 weeks;
@@ -1464,13 +1465,14 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: SponsorsManager is initialized with an offset of 7 weeks.
+     * SCENARIO: SponsorsManagerRootstockCollective is initialized with an offset of 7 weeks.
      *  There is a notifyReward amount to incentive the gauge before the distribution
      */
     function test_IncentivizeWithCycleStartOffset() public {
-        // GIVEN a SponsorsManager contract initialized with 7 weeks of offset
+        // GIVEN a SponsorsManagerRootstockCollective contract initialized with 7 weeks of offset
 
-        // all the tests are running with the SponsorsManager already initialized with cycleStartOffset = 0
+        // all the tests are running with the SponsorsManagerRootstockCollective already initialized with
+        // cycleStartOffset = 0
         // to simplify the calcs. since, we cannot change that value after the initialization we need this function
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 7 weeks;
@@ -1514,12 +1516,13 @@ contract SponsorsManagerTest is BaseTest {
     }
 
     /**
-     * SCENARIO: After deployment SponsorsManager starts in a distribution window
+     * SCENARIO: After deployment SponsorsManagerRootstockCollective starts in a distribution window
      */
     function test_DeployStartsInDistributionWindow() public {
-        // GIVEN a SponsorsManager contract initialized with 3 days of offset
+        // GIVEN a SponsorsManagerRootstockCollective contract initialized with 3 days of offset
 
-        // all the tests are running with the SponsorsManager already initialized with cycleStartOffset = 0
+        // all the tests are running with the SponsorsManagerRootstockCollective already initialized with
+        // cycleStartOffset = 0
         // to simplify the calcs. since, we cannot change that value after the initialization we need this function
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 3 days;
@@ -1544,25 +1547,25 @@ contract SponsorsManagerTest is BaseTest {
         // AND distribution windows finishes
         vm.warp(_deployTimestamp + 1 hours + 1);
         // THEN reverts calling startDistribution
-        vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.OnlyInDistributionWindow.selector);
         sponsorsManager.startDistribution();
 
         // AND offset finishes
         vm.warp(_deployTimestamp + _newOffset + 1);
         // THEN reverts calling startDistribution
-        vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.OnlyInDistributionWindow.selector);
         sponsorsManager.startDistribution();
 
         // AND cycle duration finishes
         vm.warp(_deployTimestamp + cycleDuration + 1);
         // THEN reverts calling startDistribution
-        vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.OnlyInDistributionWindow.selector);
         sponsorsManager.startDistribution();
 
         // AND cycle duration + offset is close to finish
         vm.warp(_deployTimestamp + cycleDuration + _newOffset - 1);
         // THEN reverts calling startDistribution
-        vm.expectRevert(SponsorsManager.OnlyInDistributionWindow.selector);
+        vm.expectRevert(SponsorsManagerRootstockCollective.OnlyInDistributionWindow.selector);
         sponsorsManager.startDistribution();
 
         // AND cycle duration + offset finishes
@@ -1577,7 +1580,7 @@ contract SponsorsManagerTest is BaseTest {
      * SCENARIO: startDistribution reverts if there are no allocations
      */
     function test_RevertsStartDistributionWithoutAllocations() public {
-        // GIVEN a SponsorsManager without allocations
+        // GIVEN a SponsorsManagerRootstockCollective without allocations
         //  WHEN startDistribution is called
         // THEN reverts calling startDistribution because cannot calculate shares, totalAllocation is 0
         vm.expectRevert(stdError.divisionError);
