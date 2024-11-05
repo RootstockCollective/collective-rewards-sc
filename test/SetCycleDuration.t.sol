@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseTest } from "./BaseTest.sol";
-import { CycleTimeKeeper } from "../src/CycleTimeKeeper.sol";
+import { CycleTimeKeeperRootstockCollective } from "../src/CycleTimeKeeperRootstockCollective.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
@@ -55,7 +55,7 @@ contract SetCycleDurationTest is BaseTest {
         //  WHEN governor tries to setCycleDuration with 1.5 hours of duration
         //   THEN tx reverts because is too short
         vm.prank(governor);
-        vm.expectRevert(CycleTimeKeeper.CycleDurationTooShort.selector);
+        vm.expectRevert(CycleTimeKeeperRootstockCollective.CycleDurationTooShort.selector);
         sponsorsManager.setCycleDuration(1.5 hours, 0 days);
     }
 

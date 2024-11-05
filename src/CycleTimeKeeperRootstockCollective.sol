@@ -5,7 +5,7 @@ import { UpgradeableRootstockCollective } from "./governance/UpgradeableRootstoc
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
-abstract contract CycleTimeKeeper is UpgradeableRootstockCollective {
+abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockCollective {
     uint256 internal constant _DISTRIBUTION_WINDOW = 1 hours;
 
     // -----------------------------
@@ -59,7 +59,7 @@ abstract contract CycleTimeKeeper is UpgradeableRootstockCollective {
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
      */
-    function __CycleTimeKeeper_init(
+    function __CycleTimeKeeperRootstockCollective_init(
         IGovernanceManagerRootstockCollective governanceManager_,
         uint32 cycleDuration_,
         uint24 cycleStartOffset_
