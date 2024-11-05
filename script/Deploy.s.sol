@@ -9,8 +9,9 @@ import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCo
 import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/GaugeBeaconRootstockCollective.s.sol";
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
 import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
-import { RewardDistributor } from "src/RewardDistributor.sol";
-import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
+import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
+import { Deploy as RewardDistributorRootstockCollectiveDeployer } from
+    "script/RewardDistributorRootstockCollective.s.sol";
 import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
     "script/governance/GovernanceManagerRootstockCollective.s.sol";
 import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
@@ -52,9 +53,13 @@ contract Deploy is Broadcaster, OutputWriter {
             new GaugeFactoryRootstockCollectiveDeployer().run(address(_gaugeBeacon), _rewardTokenAddress);
         save("GaugeFactoryRootstockCollective", address(_gaugeFactory));
 
-        (RewardDistributor _rewardDistributorProxy, RewardDistributor _rewardDistributorImpl) =
-            new RewardDistributorDeployer().run(address(_governanceManagerProxy));
-        saveWithProxy("RewardDistributor", address(_rewardDistributorImpl), address(_rewardDistributorProxy));
+        (
+            RewardDistributorRootstockCollective _rewardDistributorProxy,
+            RewardDistributorRootstockCollective _rewardDistributorImpl
+        ) = new RewardDistributorRootstockCollectiveDeployer().run(address(_governanceManagerProxy));
+        saveWithProxy(
+            "RewardDistributorRootstockCollective", address(_rewardDistributorImpl), address(_rewardDistributorProxy)
+        );
 
         (
             SponsorsManagerRootstockCollective _sponsorManagerProxy,

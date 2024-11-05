@@ -7,14 +7,15 @@ import { Deploy as MockStakingTokenDeployer } from "script/test_mock/MockStaking
 import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/GaugeBeaconRootstockCollective.s.sol";
 import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
 import { Deploy as SponsorsManagerRootstockCollectiveDeployer } from "script/SponsorsManagerRootstockCollective.s.sol";
-import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
+import { Deploy as RewardDistributorRootstockCollectiveDeployer } from
+    "script/RewardDistributorRootstockCollective.s.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { StakingTokenMock } from "./mock/StakingTokenMock.sol";
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { SponsorsManagerRootstockCollective } from "src/SponsorsManagerRootstockCollective.sol";
-import { RewardDistributor } from "src/RewardDistributor.sol";
+import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
     "script/governance/GovernanceManagerRootstockCollective.s.sol";
@@ -34,8 +35,8 @@ contract BaseTest is Test {
     uint256[] public allocationsArray = [0, 0];
     SponsorsManagerRootstockCollective public sponsorsManagerImpl;
     SponsorsManagerRootstockCollective public sponsorsManager;
-    RewardDistributor public rewardDistributorImpl;
-    RewardDistributor public rewardDistributor;
+    RewardDistributorRootstockCollective public rewardDistributorImpl;
+    RewardDistributorRootstockCollective public rewardDistributor;
 
     uint32 public cycleDuration = 1 weeks;
     uint24 public cycleStartOffset = 0 days;
@@ -63,7 +64,8 @@ contract BaseTest is Test {
         gaugeBeacon = new GaugeBeaconRootstockCollectiveDeployer().run(address(governanceManager));
         gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(address(gaugeBeacon), address(rewardToken));
 
-        (rewardDistributor, rewardDistributorImpl) = new RewardDistributorDeployer().run(address(governanceManager));
+        (rewardDistributor, rewardDistributorImpl) =
+            new RewardDistributorRootstockCollectiveDeployer().run(address(governanceManager));
 
         (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerRootstockCollectiveDeployer().run(
             address(governanceManager),

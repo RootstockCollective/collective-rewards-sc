@@ -29,10 +29,10 @@ contract InitializationTest is BaseTest {
     }
 
     /**
-     * SCENARIO: RewardDistributor cannot be initialized twice
+     * SCENARIO: RewardDistributorRootstockCollective cannot be initialized twice
      */
-    function test_RevertRewardDistributorInitialize() public {
-        // GIVEN a RewardDistributor initialized
+    function test_RevertRewardDistributorRootstockCollectiveInitialize() public {
+        // GIVEN a RewardDistributorRootstockCollective initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);

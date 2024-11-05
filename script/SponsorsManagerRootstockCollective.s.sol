@@ -23,7 +23,7 @@ contract Deploy is Broadcaster {
         if (_gaugeFactoryAddress == address(0)) {
             _gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
-        address _rewardDistributorAddress = vm.envOr("RewardDistributor", address(0));
+        address _rewardDistributorAddress = vm.envOr("RewardDistributorRootstockCollective", address(0));
         if (_rewardDistributorAddress == address(0)) {
             _rewardDistributorAddress = vm.envAddress("REWARD_DISTRIBUTOR_ADDRESS");
         }

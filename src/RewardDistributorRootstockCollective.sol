@@ -7,10 +7,10 @@ import { SponsorsManagerRootstockCollective } from "./SponsorsManagerRootstockCo
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
- * @title RewardDistributor
+ * @title RewardDistributorRootstockCollective
  * @notice Accumulates all the rewards to be distributed for each cycle
  */
-contract RewardDistributor is UpgradeableRootstockCollective {
+contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
