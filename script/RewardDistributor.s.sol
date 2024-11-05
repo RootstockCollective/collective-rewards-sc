@@ -20,7 +20,7 @@ contract Deploy is Broadcaster {
             _sponsorsManagerAddress = vm.envAddress("SPONSORS_MANAGER_ADDRESS");
         }
 
-        proxy_.initializeBIMAddresses(address(_sponsorsManagerAddress));
+        proxy_.initializeCollectiveRewardsAddresses(address(_sponsorsManagerAddress));
     }
 
     function run(address governanceManager_) public broadcast returns (RewardDistributor, RewardDistributor) {

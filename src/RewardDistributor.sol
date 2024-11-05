@@ -15,7 +15,7 @@ contract RewardDistributor is Upgradeable {
     // ------- Custom Errors -------
     // -----------------------------
     error NotFoundationTreasury();
-    error BIMAddressesAlreadyInitialized();
+    error CollectiveRewardsAddressesAlreadyInitialized();
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -51,7 +51,7 @@ contract RewardDistributor is Upgradeable {
 
     /**
      * @notice contract initializer
-     * @dev initializeBIMAddresses() must be called ASAP after this initialization
+     * @dev initializeCollectiveRewardsAddresses() must be called ASAP after this initialization
      * @param governanceManager_ contract with permissioned roles
      */
     function initialize(IGovernanceManager governanceManager_) external initializer {
@@ -59,13 +59,13 @@ contract RewardDistributor is Upgradeable {
     }
 
     /**
-     * @notice BIM addresses initializer
+     * @notice CollectiveRewards addresses initializer
      * @dev used to solve circular dependency, sponsorsManager is initialized with this contract address
      *  it must be called ASAP after the initialize.
      * @param sponsorsManager_ SponsorsManager contract address
      */
-    function initializeBIMAddresses(address sponsorsManager_) external {
-        if (address(sponsorsManager) != address(0)) revert BIMAddressesAlreadyInitialized();
+    function initializeCollectiveRewardsAddresses(address sponsorsManager_) external {
+        if (address(sponsorsManager) != address(0)) revert CollectiveRewardsAddressesAlreadyInitialized();
         sponsorsManager = SponsorsManager(sponsorsManager_);
         rewardToken = IERC20(SponsorsManager(sponsorsManager_).rewardToken());
     }

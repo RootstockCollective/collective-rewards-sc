@@ -17,7 +17,7 @@ contract StakingTokenMock is ERC20 {
     error STRIFUnexpectedCanWithdraw(address _checkAddress);
 
     /// @notice The address of the CollectiveRewards Contract
-    address public bimCheck;
+    address public collectiveRewardsCheck;
 
     constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) { }
 
@@ -31,8 +31,8 @@ contract StakingTokenMock is ERC20 {
 
     //checks CollectiveRewards for stake
     modifier _checkCollectiveRewardsForStake(address staker, uint256 value) {
-        if (bimCheck != address(0)) {
-            try ICollectiveRewardsCheck(bimCheck).canWithdraw(staker, value) returns (bool canWithdraw) {
+        if (collectiveRewardsCheck != address(0)) {
+            try ICollectiveRewardsCheck(collectiveRewardsCheck).canWithdraw(staker, value) returns (bool canWithdraw) {
                 if (!canWithdraw) {
                     revert STRIFStakedInCollectiveRewardsCanWithdraw(false);
                 }
@@ -43,18 +43,18 @@ contract StakingTokenMock is ERC20 {
 
     // checks that received address has method which can successfully be called
     // before setting it to state
-    function setCollectiveRewardsAddress(address bimAddress) public {
-        if (!bimAddress.supportsERC165()) {
+    function setCollectiveRewardsAddress(address collectiveRewardsAddress) public {
+        if (!collectiveRewardsAddress.supportsERC165()) {
             revert STRIFSupportsERC165(false);
         }
-        if (!bimAddress.supportsInterface(type(ICollectiveRewardsCheck).interfaceId)) {
+        if (!collectiveRewardsAddress.supportsInterface(type(ICollectiveRewardsCheck).interfaceId)) {
             revert STRIFSupportsICollectiveRewardsCheck(false);
         }
 
-        try ICollectiveRewardsCheck(bimAddress).canWithdraw(address(0), 1) returns (bool) {
-            bimCheck = bimAddress;
+        try ICollectiveRewardsCheck(collectiveRewardsAddress).canWithdraw(address(0), 1) returns (bool) {
+            collectiveRewardsCheck = collectiveRewardsAddress;
         } catch {
-            revert STRIFUnexpectedCanWithdraw(bimAddress);
+            revert STRIFUnexpectedCanWithdraw(collectiveRewardsAddress);
         }
     }
 
