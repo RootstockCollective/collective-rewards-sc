@@ -1,6 +1,6 @@
 # Gauge
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/8bd29e5db4bf3fe742eaa77d7d0078590ca8f07f/src/gauge/Gauge.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/93d5161844768d71b8f7420d54b86b3a341b2a7b/src/gauge/Gauge.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable
 
