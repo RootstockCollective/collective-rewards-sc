@@ -31,7 +31,7 @@ contract ProtectedTest is BaseTest {
      * SCENARIO: Gauge upgrade should revert if is not called by the governor or an authorized changer
      */
     function test_RevertGaugeUpgradeNotGovernor() public {
-        // GIVEN a non-Governor tries to upgrade the GaugeBeacon
+        // GIVEN a non-Governor tries to upgrade the GaugeBeaconRootstockCollective
         vm.prank(alice);
         //  THEN tx reverts because NotGovernorOrAuthorizedChanger
         vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
