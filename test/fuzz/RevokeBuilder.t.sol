@@ -20,7 +20,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
      * SCENARIO: In a random time gauges are revoked and permitted again.
      *  There is a distribution, revoked gauges don't receive rewards
      */
-    function testFuzz_RevokeBuilderAndPermitWithNewKickback(
+    function testFuzz_RevokeBuilderAndPermitWithNewRewardPercentage(
         uint256 buildersAmount_,
         uint256 sponsorsAmount_,
         uint256 seed_,
@@ -33,12 +33,12 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         //  AND a random amount of sponsors voting the gauges
         _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
 
-        // use a low kickbackCooldown to let apply it
-        stdstore.target(address(sponsorsManager)).sig("kickbackCooldown()").checked_write(1 days);
+        // use a low rewardPercentageCooldown to let apply it
+        stdstore.target(address(sponsorsManager)).sig("rewardPercentageCooldown()").checked_write(1 days);
 
-        uint256[] memory _kickbackBefore = new uint256[](builders.length);
+        uint256[] memory _rewardPercentageBefore = new uint256[](builders.length);
         for (uint256 i = 0; i < builders.length; i++) {
-            _kickbackBefore[i] = sponsorsManager.getKickbackToApply(builders[i]);
+            _rewardPercentageBefore[i] = sponsorsManager.getRewardPercentageToApply(builders[i]);
         }
 
         /// AND a random time passes
@@ -54,15 +54,15 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // AND permit randomly
         _randomPermit(seed_, sponsorsManager.totalPotentialReward());
 
-        // AND permitted builders have the new kickback applied if cooldown time has passed
+        // AND permitted builders have the new reward percentage applied if cooldown time has passed
         for (uint256 i = 0; i < builders.length; i++) {
             if (
                 revokedBuilders[builders[i]] == RevokeState.permitted
-                    && block.timestamp - _revokeTimestamp >= sponsorsManager.kickbackCooldown()
+                    && block.timestamp - _revokeTimestamp >= sponsorsManager.rewardPercentageCooldown()
             ) {
-                assertEq(sponsorsManager.getKickbackToApply(builders[i]), 0.1 ether);
+                assertEq(sponsorsManager.getRewardPercentageToApply(builders[i]), 0.1 ether);
             } else {
-                assertEq(sponsorsManager.getKickbackToApply(builders[i]), _kickbackBefore[i]);
+                assertEq(sponsorsManager.getRewardPercentageToApply(builders[i]), _rewardPercentageBefore[i]);
             }
         }
 
@@ -306,7 +306,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             if (revokedBuilders[builders[i]] == RevokeState.revoked && _random % 10 > 2) {
                 expectedTotalPotentialReward_ += gaugesArray[i].rewardShares();
                 vm.prank(builders[i]);
-                sponsorsManager.permitBuilder(0.1 ether /*kickback*/ );
+                sponsorsManager.permitBuilder(0.1 ether /*reward percentage*/ );
                 revokedBuilders[builders[i]] = RevokeState.permitted;
             }
         }

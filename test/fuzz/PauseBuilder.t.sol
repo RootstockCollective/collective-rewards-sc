@@ -43,7 +43,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             if (!pausedBuilders[builders[i]]) {
                 vm.prank(builders[i]);
                 gaugesArray[i].claimBuilderReward();
-                // THEN they receive the rewards after deducting the kickback for the sponsors
+                // THEN they receive the rewards after deducting the sponsors reward percentage
                 assertApproxEqAbs(
                     rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT, i), 100
                 );
@@ -116,7 +116,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             if (!pausedBuilders[builders[i]]) {
                 vm.prank(builders[i]);
                 gaugesArray[i].claimBuilderReward();
-                // THEN they receive the rewards after deducting the kickback for the sponsors
+                // THEN they receive the rewards after deducting the sponsors reward percentage
                 assertApproxEqAbs(
                     rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 2, i), 100
                 );

@@ -61,7 +61,8 @@ contract IncentivizeFuzzTest is BaseFuzz {
         // WHEN all the builders claim their rewards
         _buildersClaim();
 
-        // THEN they receive the rewards after deducting the kickback for the sponsors, rewards added are not considered
+        // THEN they receive the rewards after deducting the sponsors reward percentage, rewards added are not
+        // considered
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             assertApproxEqAbs(
                 rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 2, i), 100

@@ -38,7 +38,7 @@ contract BaseTest is Test {
 
     uint32 public cycleDuration = 1 weeks;
     uint24 public cycleStartOffset = 0 days;
-    uint128 public kickbackCooldown = 2 weeks;
+    uint128 public rewardPercentageCooldown = 2 weeks;
 
     /* solhint-disable private-vars-leading-underscore */
     address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract
@@ -72,7 +72,7 @@ contract BaseTest is Test {
             address(rewardDistributor),
             cycleDuration,
             cycleStartOffset,
-            kickbackCooldown
+            rewardPercentageCooldown
         );
 
         rewardDistributor.initializeBIMAddresses(address(sponsorsManager));
@@ -119,27 +119,27 @@ contract BaseTest is Test {
     function _whitelistBuilder(
         address builder_,
         address rewardReceiver_,
-        uint64 kickbackPct_
+        uint64 rewardPercentage_
     )
         internal
         returns (Gauge newGauge_)
     {
         vm.prank(kycApprover);
-        sponsorsManager.activateBuilder(builder_, rewardReceiver_, kickbackPct_);
+        sponsorsManager.activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
         builders.push(builder_);
         vm.prank(governor);
         newGauge_ = sponsorsManager.whitelistBuilder(builder_);
         gaugesArray.push(newGauge_);
     }
 
-    function _createGauge(uint64 kickback_) internal {
+    function _createGauge(uint64 rewardPercentage_) internal {
         address _newBuilder = makeAddr(string(abi.encode(gaugesArray.length)));
-        _whitelistBuilder(_newBuilder, _newBuilder, kickback_);
+        _whitelistBuilder(_newBuilder, _newBuilder, rewardPercentage_);
     }
 
-    function _createGauges(uint256 amount_, uint64 kickback_) internal {
+    function _createGauges(uint256 amount_, uint64 rewardPercentage_) internal {
         for (uint256 i = 0; i < amount_; i++) {
-            _createGauge(kickback_);
+            _createGauge(rewardPercentage_);
         }
     }
 
