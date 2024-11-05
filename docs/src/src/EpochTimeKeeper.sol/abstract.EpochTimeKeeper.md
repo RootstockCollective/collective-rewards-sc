@@ -1,8 +1,8 @@
 # EpochTimeKeeper
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/93d5161844768d71b8f7420d54b86b3a341b2a7b/src/EpochTimeKeeper.sol)
+[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/6055db6ff187da599d0ad220410df3adfbe4a79d/src/EpochTimeKeeper.sol)
 
-**Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md)
+**Inherits:** [Upgradeable](/src/mvp/Upgradeable.sol/abstract.Upgradeable.md)
 
 ## State Variables
 
@@ -46,7 +46,7 @@ the desired period_
 
 ```solidity
 function __EpochTimeKeeper_init(
-    address changeExecutor_,
+    IGovernanceManager governanceManager_,
     uint32 epochDuration_,
     uint24 epochStartOffset_
 )
@@ -56,11 +56,11 @@ function __EpochTimeKeeper_init(
 
 **Parameters**
 
-| Name                | Type      | Description                                                                       |
-| ------------------- | --------- | --------------------------------------------------------------------------------- |
-| `changeExecutor_`   | `address` | See Governed doc                                                                  |
-| `epochDuration_`    | `uint32`  | epoch time duration                                                               |
-| `epochStartOffset_` | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs |
+| Name                 | Type                 | Description                                                                       |
+| -------------------- | -------------------- | --------------------------------------------------------------------------------- |
+| `governanceManager_` | `IGovernanceManager` | contract with permissioned roles                                                  |
+| `epochDuration_`     | `uint32`             | epoch time duration                                                               |
+| `epochStartOffset_`  | `uint24`             | offset to add to the first epoch, used to set an specific day to start the epochs |
 
 ### setEpochDuration
 
@@ -69,12 +69,7 @@ schedule a new epoch duration. It will be applied for the next epoch
 _reverts if is too short. It must be greater than 2 time the distribution window_
 
 ```solidity
-function setEpochDuration(
-    uint32 newEpochDuration_,
-    uint24 epochStartOffset_
-)
-    external
-    onlyGovernorOrAuthorizedChanger;
+function setEpochDuration(uint32 newEpochDuration_, uint24 epochStartOffset_) external onlyValidChanger;
 ```
 
 **Parameters**

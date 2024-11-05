@@ -1,6 +1,6 @@
 # SponsorsManager
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/93d5161844768d71b8f7420d54b86b3a341b2a7b/src/SponsorsManager.sol)
+[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/6055db6ff187da599d0ad220410df3adfbe4a79d/src/SponsorsManager.sol)
 
 **Inherits:** [BuilderRegistry](/src/BuilderRegistry.sol/abstract.BuilderRegistry.md)
 
@@ -129,8 +129,7 @@ contract initializer
 
 ```solidity
 function initialize(
-    address changeExecutor_,
-    address kycApprover_,
+    IGovernanceManager governanceManager_,
     address rewardToken_,
     address stakingToken_,
     address gaugeFactory_,
@@ -145,17 +144,16 @@ function initialize(
 
 **Parameters**
 
-| Name                 | Type      | Description                                                                       |
-| -------------------- | --------- | --------------------------------------------------------------------------------- |
-| `changeExecutor_`    | `address` | See Governed doc                                                                  |
-| `kycApprover_`       | `address` | See BuilderRegistry doc                                                           |
-| `rewardToken_`       | `address` | address of the token rewarded to builder and voters                               |
-| `stakingToken_`      | `address` | address of the staking token for builder and voters                               |
-| `gaugeFactory_`      | `address` | address of the GaugeFactory contract                                              |
-| `rewardDistributor_` | `address` | address of the rewardDistributor contract                                         |
-| `epochDuration_`     | `uint32`  | epoch time duration                                                               |
-| `epochStartOffset_`  | `uint24`  | offset to add to the first epoch, used to set an specific day to start the epochs |
-| `kickbackCooldown_`  | `uint128` | time that must elapse for a new kickback from a builder to be applied             |
+| Name                 | Type                 | Description                                                                       |
+| -------------------- | -------------------- | --------------------------------------------------------------------------------- |
+| `governanceManager_` | `IGovernanceManager` | contract with permissioned roles                                                  |
+| `rewardToken_`       | `address`            | address of the token rewarded to builder and voters                               |
+| `stakingToken_`      | `address`            | address of the staking token for builder and voters                               |
+| `gaugeFactory_`      | `address`            | address of the GaugeFactory contract                                              |
+| `rewardDistributor_` | `address`            | address of the rewardDistributor contract                                         |
+| `epochDuration_`     | `uint32`             | epoch time duration                                                               |
+| `epochStartOffset_`  | `uint24`             | offset to add to the first epoch, used to set an specific day to start the epochs |
+| `kickbackCooldown_`  | `uint128`            | time that must elapse for a new kickback from a builder to be applied             |
 
 ### allocate
 
@@ -247,6 +245,21 @@ function claimSponsorRewards(Gauge[] memory gauges_) external;
 | Name      | Type      | Description              |
 | --------- | --------- | ------------------------ |
 | `gauges_` | `Gauge[]` | array of gauges to claim |
+
+### claimSponsorRewards
+
+claims sponsor rewards from a batch of gauges
+
+```solidity
+function claimSponsorRewards(address rewardToken_, Gauge[] memory gauges_) external;
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `gauges_`      | `Gauge[]` | array of gauges to claim                                                                                            |
 
 ### periodFinish
 

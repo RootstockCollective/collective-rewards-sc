@@ -1,8 +1,8 @@
 # Upgradeable
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/93d5161844768d71b8f7420d54b86b3a341b2a7b/src/governance/Upgradeable.sol)
+[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/6055db6ff187da599d0ad220410df3adfbe4a79d/src/governance/Upgradeable.sol)
 
-**Inherits:** UUPSUpgradeable, [Governed](/src/governance/Governed.sol/abstract.Governed.md)
+**Inherits:** UUPSUpgradeable
 
 Base contract to be inherited by governed contracts
 
@@ -11,12 +11,10 @@ contract is to define some useful modifiers and functions to be used on the gove
 
 ## State Variables
 
-### \_governor
-
-governor contract address
+### governanceManager
 
 ```solidity
-address internal _governor;
+IGovernanceManager public governanceManager;
 ```
 
 ### \_\_gap
@@ -30,27 +28,25 @@ uint256[50] private __gap;
 
 ## Functions
 
+### onlyValidChanger
+
+```solidity
+modifier onlyValidChanger();
+```
+
 ### \_\_Upgradeable_init
 
 contract initializer
 
 ```solidity
-function __Upgradeable_init(address changeExecutor_) internal onlyInitializing;
+function __Upgradeable_init(IGovernanceManager governanceManager_) internal onlyInitializing;
 ```
 
 **Parameters**
 
-| Name              | Type      | Description                                        |
-| ----------------- | --------- | -------------------------------------------------- |
-| `changeExecutor_` | `address` | ChangeExecutorRootstockCollective contract address |
-
-### governor
-
-maintains Governed interface. Returns governed address
-
-```solidity
-function governor() public view override returns (address);
-```
+| Name                 | Type                 | Description                      |
+| -------------------- | -------------------- | -------------------------------- |
+| `governanceManager_` | `IGovernanceManager` | contract with permissioned roles |
 
 ### \_authorizeUpgrade
 
@@ -58,11 +54,5 @@ _checks that the changer that will do the upgrade is currently authorized by gov
 system_
 
 ```solidity
-function _authorizeUpgrade(address newImplementation_) internal override onlyGovernorOrAuthorizedChanger;
+function _authorizeUpgrade(address) internal override onlyValidChanger;
 ```
-
-**Parameters**
-
-| Name                 | Type      | Description                         |
-| -------------------- | --------- | ----------------------------------- |
-| `newImplementation_` | `address` | new implementation contract address |

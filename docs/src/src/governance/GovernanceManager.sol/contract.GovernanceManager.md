@@ -1,6 +1,6 @@
 # GovernanceManager
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/08262d3859b92bc5ef98f1d6cf55bac36a294db3/src/governance/GovernanceManager.sol)
+[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/6055db6ff187da599d0ad220410df3adfbe4a79d/src/governance/GovernanceManager.sol)
 
 **Inherits:** UUPSUpgradeable,
 [IGovernanceManager](/src/interfaces/IGovernanceManager.sol/interface.IGovernanceManager.md)
@@ -21,12 +21,12 @@ The address of the governor.
 address public governor;
 ```
 
-### changer
+### \_authorizedChanger
 
-The address of the changer.
+The address of the authorized changer.
 
 ```solidity
-address public changer;
+address internal _authorizedChanger;
 ```
 
 ### foundationTreasury
@@ -182,9 +182,9 @@ function validateGovernor(address account_) external view;
 
 ### validateChanger
 
-Validates if an account is authorized as the changer.
+Validates if an account is authorized to perform changes.
 
-_Reverts with `NotAuthorizedChanger` if the account is not the changer or governor._
+_Reverts with `NotAuthorizedChanger` if the account is not the authorized changer or governor._
 
 ```solidity
 function validateChanger(address account_) public view;
@@ -270,21 +270,21 @@ function _updateKYCApprover(address kycApprover_) private onlyValidAddress(kycAp
 | -------------- | --------- | ----------------------------- |
 | `kycApprover_` | `address` | The new KYC approver address. |
 
-### \_updateChanger
+### \_authorizeChanger
 
-Assigns a new changer.
+Assigns a new authorized changer.
 
-_Allows zero address to be set to remove the current changer_
+_Allows zero address to be set to remove the current authorized changer_
 
 ```solidity
-function _updateChanger(address changer_) internal;
+function _authorizeChanger(address authorizedChanger_) internal;
 ```
 
 **Parameters**
 
-| Name       | Type      | Description              |
-| ---------- | --------- | ------------------------ |
-| `changer_` | `address` | The new changer address. |
+| Name                 | Type      | Description                         |
+| -------------------- | --------- | ----------------------------------- |
+| `authorizedChanger_` | `address` | The new authorized changer address. |
 
 ### \_authorizeUpgrade
 

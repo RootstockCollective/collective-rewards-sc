@@ -1,8 +1,8 @@
 # SimplifiedRewardDistributorRootstockCollective
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/93d5161844768d71b8f7420d54b86b3a341b2a7b/src/mvp/SimplifiedRewardDistributorRootstockCollective.sol)
+[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/6055db6ff187da599d0ad220410df3adfbe4a79d/src/mvp/SimplifiedRewardDistributorRootstockCollective.sol)
 
-**Inherits:** [Upgradeable](/src/governance/Upgradeable.sol/abstract.Upgradeable.md), ReentrancyGuardUpgradeable
+**Inherits:** [Upgradeable](/src/mvp/Upgradeable.sol/abstract.Upgradeable.md), ReentrancyGuardUpgradeable
 
 Simplified version for the MVP. Accumulates all the rewards and distribute them equally to all the builders for each
 Collective Rewards cycle
