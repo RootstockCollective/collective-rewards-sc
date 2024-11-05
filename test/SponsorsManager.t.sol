@@ -65,6 +65,7 @@ contract SponsorsManagerTest is BaseTest {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         //  AND is whitelisted
+        vm.prank(governor);
         Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
 
         gaugesArray.push(_newGauge);

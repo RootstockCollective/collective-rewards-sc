@@ -156,11 +156,12 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         //  AND is whitelisted
+        vm.prank(governor);
         sponsorsManager.whitelistBuilder(_newBuilder);
 
         // WHEN tries to approveBuilderKYC
         //  THEN tx reverts because is not activated
-        vm.startPrank(kycApprover);
+        vm.prank(kycApprover);
         vm.expectRevert(BuilderRegistry.NotActivated.selector);
         sponsorsManager.approveBuilderKYC(_newBuilder);
     }
@@ -424,6 +425,7 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         //  AND is whitelisted
+        vm.prank(governor);
         Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
         // THEN new gauge is assigned to the new builder
         assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
@@ -456,6 +458,7 @@ contract BuilderRegistryTest is BaseTest {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         //  AND is whitelisted
+        vm.prank(governor);
         Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
         // THEN new gauge is assigned to the new builder
         assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
@@ -470,6 +473,7 @@ contract BuilderRegistryTest is BaseTest {
         assertEq(_kycApproved, false);
 
         // WHEN new builder is de-whitelisted
+        vm.prank(governor);
         sponsorsManager.dewhitelistBuilder(_newBuilder);
         (,, _whitelisted,,,,) = sponsorsManager.builderState(_newBuilder);
         // THEN builder is not whitelisted
