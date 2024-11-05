@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 import { BaseHandler, TimeManager } from "./BaseHandler.sol";
 import { BaseTest } from "../../BaseTest.sol";
-import { Gauge } from "src/gauge/Gauge.sol";
 
 contract EpochHandler is BaseHandler {
     constructor(BaseTest baseTest_, TimeManager timeManager_) BaseHandler(baseTest_, timeManager_) { }

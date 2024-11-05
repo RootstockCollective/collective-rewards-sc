@@ -4,7 +4,6 @@ pragma solidity 0.8.20;
 import { BaseHandler, TimeManager } from "./BaseHandler.sol";
 import { BaseTest } from "../../BaseTest.sol";
 import { ERC20Mock } from "test/mock/ERC20Mock.sol";
-import { RewardDistributor } from "src/RewardDistributor.sol";
 import { Gauge } from "src/gauge/Gauge.sol";
 
 contract IncentivizeHandler is BaseHandler {

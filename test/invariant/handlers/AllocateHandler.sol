@@ -53,6 +53,12 @@ contract AllocateHandler is BaseHandler {
 
         Gauge _gauge = baseTest.gaugesArray(gaugeIndex_);
         uint256 _allocationBefore = sponsorGaugeAllocation[msg.sender][_gauge];
+        if (sponsorsManager.isGaugeHalted(address(_gauge))) {
+            if (allocation_ > _allocationBefore) {
+                allocation_ = _allocationBefore;
+            }
+        }
+
         sponsorGaugeAllocation[msg.sender][_gauge] = allocation_;
 
         if (!sponsorExists[msg.sender]) {
