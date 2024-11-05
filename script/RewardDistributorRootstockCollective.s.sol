@@ -3,11 +3,14 @@ pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { RewardDistributor } from "src/RewardDistributor.sol";
+import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "../src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
-    function run() public returns (RewardDistributor proxy_, RewardDistributor implementation_) {
+    function run()
+        public
+        returns (RewardDistributorRootstockCollective proxy_, RewardDistributorRootstockCollective implementation_)
+    {
         address _governanceManager = vm.envOr("GovernanceManagerRootstockCollective", address(0));
         if (_governanceManager == address(0)) {
             _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
@@ -23,22 +26,33 @@ contract Deploy is Broadcaster {
         proxy_.initializeCollectiveRewardsAddresses(address(_sponsorsManagerAddress));
     }
 
-    function run(address governanceManager_) public broadcast returns (RewardDistributor, RewardDistributor) {
+    function run(address governanceManager_)
+        public
+        broadcast
+        returns (RewardDistributorRootstockCollective, RewardDistributorRootstockCollective)
+    {
         require(governanceManager_ != address(0), "Access control address cannot be empty");
 
-        bytes memory _initializerData =
-            abi.encodeCall(RewardDistributor.initialize, (IGovernanceManagerRootstockCollective(governanceManager_)));
+        bytes memory _initializerData = abi.encodeCall(
+            RewardDistributorRootstockCollective.initialize, (IGovernanceManagerRootstockCollective(governanceManager_))
+        );
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            _implementation = address(new RewardDistributor());
+            _implementation = address(new RewardDistributorRootstockCollective());
             _proxy = address(new ERC1967Proxy(_implementation, _initializerData));
 
-            return (RewardDistributor(payable(_proxy)), RewardDistributor(payable(_implementation)));
+            return (
+                RewardDistributorRootstockCollective(payable(_proxy)),
+                RewardDistributorRootstockCollective(payable(_implementation))
+            );
         }
-        _implementation = address(new RewardDistributor{ salt: _salt }());
+        _implementation = address(new RewardDistributorRootstockCollective{ salt: _salt }());
         _proxy = address(new ERC1967Proxy{ salt: _salt }(_implementation, _initializerData));
 
-        return (RewardDistributor(payable(_proxy)), RewardDistributor(payable(_implementation)));
+        return (
+            RewardDistributorRootstockCollective(payable(_proxy)),
+            RewardDistributorRootstockCollective(payable(_implementation))
+        );
     }
 }

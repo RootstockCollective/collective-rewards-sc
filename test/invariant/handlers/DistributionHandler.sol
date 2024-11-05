@@ -4,11 +4,11 @@ pragma solidity 0.8.20;
 import { BaseHandler, TimeManager } from "./BaseHandler.sol";
 import { BaseTest } from "../../BaseTest.sol";
 import { ERC20Mock } from "test/mock/ERC20Mock.sol";
-import { RewardDistributor } from "src/RewardDistributor.sol";
+import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 
 contract DistributionHandler is BaseHandler {
     ERC20Mock public rewardToken;
-    RewardDistributor public rewardDistributor;
+    RewardDistributorRootstockCollective public rewardDistributor;
 
     uint256 public totalAmountDistributed;
 

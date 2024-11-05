@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { BaseTest } from "../BaseTest.sol";
 import {
     SponsorsManagerRootstockCollectiveUpgradeMock,
-    RewardDistributorUpgradeMock,
+    RewardDistributorRootstockCollectiveUpgradeMock,
     GaugeUpgradeMock,
     GovernanceManagerRootstockCollectiveUpgradeMock
 } from "../mock/UpgradesMocks.sol";
@@ -28,19 +28,20 @@ contract UpgradeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: RewardDistributor is upgraded
+     * SCENARIO: RewardDistributorRootstockCollective is upgraded
      */
-    function test_UpgradeRewardDistributor() public {
-        // GIVEN a RewardDistributor proxy with an implementation
+    function test_UpgradeRewardDistributorRootstockCollective() public {
+        // GIVEN a RewardDistributorRootstockCollective proxy with an implementation
         // AND a new implementation
-        RewardDistributorUpgradeMock _rewardDistributorNewImpl = new RewardDistributorUpgradeMock();
+        RewardDistributorRootstockCollectiveUpgradeMock _rewardDistributorNewImpl =
+            new RewardDistributorRootstockCollectiveUpgradeMock();
         //WHEN the proxy is upgraded and initialized
         vm.prank(governor);
         rewardDistributor.upgradeToAndCall(
             address(_rewardDistributorNewImpl), abi.encodeCall(_rewardDistributorNewImpl.initializeMock, (43))
         );
-        uint256 _newVar = RewardDistributorUpgradeMock(payable(rewardDistributor)).getCustomMockValue()
-            - (uint256(uint160(foundation)));
+        uint256 _newVar = RewardDistributorRootstockCollectiveUpgradeMock(payable(rewardDistributor)).getCustomMockValue(
+        ) - (uint256(uint160(foundation)));
         // THEN getCustomMockValue is foundation address + 43 newVariable
         assertEq(_newVar, 43);
     }

@@ -6,7 +6,7 @@ import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
-contract RewardDistributorTest is BaseTest {
+contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function _setUp() internal override {
         // mint some rewardTokens to this contract for reward distribution
         rewardToken.mint(address(this), 100_000 ether);
@@ -20,7 +20,7 @@ contract RewardDistributorTest is BaseTest {
      *  called by foundation treasury address
      */
     function test_OnlyFoundationTreasury() public {
-        // GIVEN a RewardDistributor contract
+        // GIVEN a RewardDistributorRootstockCollective contract
         vm.startPrank(alice);
         // WHEN alice calls sendRewards
         //  THEN tx reverts because caller is not the foundation treasury address
@@ -37,7 +37,7 @@ contract RewardDistributorTest is BaseTest {
      * SCENARIO: sendRewards should revert trying to send more tokens than its balance
      */
     function test_InsufficientBalance() public {
-        // GIVEN a RewardDistributor contract with 1 ether of reward token
+        // GIVEN a RewardDistributorRootstockCollective contract with 1 ether of reward token
         rewardToken.transfer(address(rewardDistributor), 1 ether);
         vm.startPrank(foundation);
         // WHEN foundation treasury calls sendRewards trying to transfer 2 ethers
@@ -63,7 +63,7 @@ contract RewardDistributorTest is BaseTest {
      * SCENARIO: sendRewards should revert trying to send more Coinbase than its balance
      */
     function test_InsufficientCoinbaseBalance() public {
-        // GIVEN a RewardDistributor contract with 1 ether of coinbase
+        // GIVEN a RewardDistributorRootstockCollective contract with 1 ether of coinbase
         Address.sendValue(payable(address(rewardDistributor)), 1 ether);
         vm.startPrank(foundation);
         // WHEN foundation treasury calls sendRewards trying to transfer 2 ethers
@@ -81,7 +81,7 @@ contract RewardDistributorTest is BaseTest {
      * SCENARIO: sends rewards twice on one cycle and then on more time on the next one
      */
     function test_SendRewards() public {
-        // GIVEN a RewardDistributor contract with 10 ether of reward token and 5 of coinbase
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
         rewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
         // WHEN foundation treasury calls sendRewards transferring 2 ethers of reward token and 1 of coinbase
@@ -110,7 +110,7 @@ contract RewardDistributorTest is BaseTest {
      * SCENARIO: sends rewards and starts the distribution
      */
     function test_SendRewardsAndStartDistribution() public {
-        // GIVEN a RewardDistributor contract with 10 ether of reward token
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token
         rewardToken.transfer(address(rewardDistributor), 10 ether);
         // AND a foundation with 5 ether of coinbase
         Address.sendValue(payable(foundation), 5 ether);
