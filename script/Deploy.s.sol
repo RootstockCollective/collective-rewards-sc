@@ -5,8 +5,8 @@ import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
-import { GaugeBeacon } from "src/gauge/GaugeBeacon.sol";
-import { Deploy as GaugeBeaconDeployer } from "script/gauge/GaugeBeacon.s.sol";
+import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
+import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/GaugeBeaconRootstockCollective.s.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
@@ -39,8 +39,9 @@ contract Deploy is Broadcaster, OutputWriter {
             new GovernanceManagerDeployer().run();
         saveWithProxy("GovernanceManager", address(_governanceManagerImpl), address(_governanceManagerProxy));
 
-        GaugeBeacon _gaugeBeacon = new GaugeBeaconDeployer().run(address(_governanceManagerProxy));
-        save("GaugeBeacon", address(_gaugeBeacon));
+        GaugeBeaconRootstockCollective _gaugeBeacon =
+            new GaugeBeaconRootstockCollectiveDeployer().run(address(_governanceManagerProxy));
+        save("GaugeBeaconRootstockCollective", address(_gaugeBeacon));
 
         GaugeFactory _gaugeFactory = new GaugeFactoryDeployer().run(address(_gaugeBeacon), _rewardTokenAddress);
         save("GaugeFactory", address(_gaugeFactory));

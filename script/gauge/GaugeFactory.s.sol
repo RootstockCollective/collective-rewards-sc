@@ -6,7 +6,7 @@ import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
 
 contract Deploy is Broadcaster {
     function run() public returns (GaugeFactory) {
-        address _beaconAddress = vm.envOr("GaugeBeacon", address(0));
+        address _beaconAddress = vm.envOr("GaugeBeaconRootstockCollective", address(0));
         address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         if (_beaconAddress == address(0)) {
             _beaconAddress = vm.envAddress("BEACON_ADDRESS");

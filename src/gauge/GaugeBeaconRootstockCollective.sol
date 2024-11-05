@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
-contract GaugeBeacon is UpgradeableBeacon {
+contract GaugeBeaconRootstockCollective is UpgradeableBeacon {
     IGovernanceManager public governanceManager;
 
     /**
