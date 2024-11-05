@@ -6,14 +6,14 @@ import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
 import { Deploy as MockStakingTokenDeployer } from "script/test_mock/MockStakingToken.s.sol";
 import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/GaugeBeaconRootstockCollective.s.sol";
 import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
-import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
+import { Deploy as SponsorsManagerRootstockCollectiveDeployer } from "script/SponsorsManagerRootstockCollective.s.sol";
 import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { StakingTokenMock } from "./mock/StakingTokenMock.sol";
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
-import { SponsorsManager } from "src/SponsorsManager.sol";
+import { SponsorsManagerRootstockCollective } from "src/SponsorsManagerRootstockCollective.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
@@ -32,8 +32,8 @@ contract BaseTest is Test {
     GaugeRootstockCollective public gauge2;
     GaugeRootstockCollective[] public gaugesArray;
     uint256[] public allocationsArray = [0, 0];
-    SponsorsManager public sponsorsManagerImpl;
-    SponsorsManager public sponsorsManager;
+    SponsorsManagerRootstockCollective public sponsorsManagerImpl;
+    SponsorsManagerRootstockCollective public sponsorsManager;
     RewardDistributor public rewardDistributorImpl;
     RewardDistributor public rewardDistributor;
 
@@ -65,7 +65,7 @@ contract BaseTest is Test {
 
         (rewardDistributor, rewardDistributorImpl) = new RewardDistributorDeployer().run(address(governanceManager));
 
-        (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerDeployer().run(
+        (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerRootstockCollectiveDeployer().run(
             address(governanceManager),
             address(rewardToken),
             address(stakingToken),

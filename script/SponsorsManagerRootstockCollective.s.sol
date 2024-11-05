@@ -5,11 +5,14 @@ pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { SponsorsManager } from "src/SponsorsManager.sol";
+import { SponsorsManagerRootstockCollective } from "src/SponsorsManagerRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "../src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
-    function run() public returns (SponsorsManager proxy_, SponsorsManager implementation_) {
+    function run()
+        public
+        returns (SponsorsManagerRootstockCollective proxy_, SponsorsManagerRootstockCollective implementation_)
+    {
         address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         address _governanceManager = vm.envOr("GovernanceManagerRootstockCollective", address(0));
@@ -51,7 +54,7 @@ contract Deploy is Broadcaster {
     )
         public
         broadcast
-        returns (SponsorsManager, SponsorsManager)
+        returns (SponsorsManagerRootstockCollective, SponsorsManagerRootstockCollective)
     {
         require(governanceManager_ != address(0), "Access control address cannot be empty");
         require(rewardToken_ != address(0), "Reward token address cannot be empty");
@@ -60,7 +63,7 @@ contract Deploy is Broadcaster {
         require(rewardDistributor_ != address(0), "Reward Distributor address cannot be empty");
 
         bytes memory _initializerData = abi.encodeCall(
-            SponsorsManager.initialize,
+            SponsorsManagerRootstockCollective.initialize,
             (
                 IGovernanceManagerRootstockCollective(governanceManager_),
                 rewardToken_,
@@ -75,13 +78,13 @@ contract Deploy is Broadcaster {
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            _implementation = address(new SponsorsManager());
+            _implementation = address(new SponsorsManagerRootstockCollective());
             _proxy = address(new ERC1967Proxy(_implementation, _initializerData));
 
-            return (SponsorsManager(_proxy), SponsorsManager(_implementation));
+            return (SponsorsManagerRootstockCollective(_proxy), SponsorsManagerRootstockCollective(_implementation));
         }
-        _implementation = address(new SponsorsManager{ salt: _salt }());
+        _implementation = address(new SponsorsManagerRootstockCollective{ salt: _salt }());
         _proxy = address(new ERC1967Proxy{ salt: _salt }(_implementation, _initializerData));
-        return (SponsorsManager(_proxy), SponsorsManager(_implementation));
+        return (SponsorsManagerRootstockCollective(_proxy), SponsorsManagerRootstockCollective(_implementation));
     }
 }

@@ -34,31 +34,31 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: functions protected by OnlySponsorsManager should revert when are not
-     *  called by SponsorsManager contract
+     * SCENARIO: functions protected by onlySponsorsManager should revert when are not
+     *  called by SponsorsManagerRootstockCollective contract
      */
-    function test_OnlySponsorsManager() public {
+    function test_onlySponsorsManager() public {
         // GIVEN a sponsor alice
         vm.startPrank(alice);
         // WHEN alice calls allocate
-        //  THEN tx reverts because caller is not the SponsorsManager contract
+        //  THEN tx reverts because caller is not the SponsorsManagerRootstockCollective contract
         uint256 _timeUntilNextCycle = sponsorsManager.timeUntilNextCycle(block.timestamp);
         vm.expectRevert(GaugeRootstockCollective.NotSponsorsManager.selector);
         gauge.allocate(alice, 1 ether, _timeUntilNextCycle);
         // WHEN alice calls notifyRewardAmountAndUpdateShares
-        //  THEN tx reverts because caller is not the SponsorsManager contract
+        //  THEN tx reverts because caller is not the SponsorsManagerRootstockCollective contract
         (uint256 _cycleStart, uint256 _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
         vm.expectRevert(GaugeRootstockCollective.NotSponsorsManager.selector);
         gauge.notifyRewardAmountAndUpdateShares(1 ether, 1 ether, block.timestamp, _cycleStart, _cycleDuration);
         // WHEN alice calls moveBuilderUnclaimedRewards
-        //  THEN tx reverts because caller is not the SponsorsManager contract
+        //  THEN tx reverts because caller is not the SponsorsManagerRootstockCollective contract
         vm.expectRevert(GaugeRootstockCollective.NotSponsorsManager.selector);
         gauge.moveBuilderUnclaimedRewards(alice);
     }
 
     /**
      * SCENARIO: functions should revert by NotAuthorized error when are not called by
-     *  SponsorsManager or the actor involved
+     *  SponsorsManagerRootstockCollective or the actor involved
      */
     function test_NotAuthorized() public {
         // GIVEN a sponsor alice
@@ -85,7 +85,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: SponsorsManager allocates to alice with no rewards distributed
+     * SCENARIO: SponsorsManagerRootstockCollective allocates to alice with no rewards distributed
      */
     function test_Allocate() public {
         // GIVEN a new cycle
@@ -121,7 +121,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: SponsorsManager deallocates to alice with no rewards distributed
+     * SCENARIO: SponsorsManagerRootstockCollective deallocates to alice with no rewards distributed
      */
     function test_Deallocate() public {
         // GIVEN a new cycle
@@ -159,7 +159,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: SponsorsManager makes a partial deallocation to alice with no rewards distributed
+     * SCENARIO: SponsorsManagerRootstockCollective makes a partial deallocation to alice with no rewards distributed
      */
     function test_DeallocatePartial() public {
         // GIVEN a new cycle
@@ -286,9 +286,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables for rewardToken are updated by incentivizer that is not the SponsorsManager
+     * SCENARIO: rewards variables for rewardToken are updated by incentivizer that is not the
+     * SponsorsManagerRootstockCollective
      */
-    function test_IncentivizeWithRewardTokenNotFromSponsorsManager() public {
+    function test_IncentivizeWithRewardTokenNotFromSponsorsManagerRootstockCollective() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
@@ -427,9 +428,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManager using coinbase
+     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManagerRootstockCollective using
+     * coinbase
      */
-    function test_IncentivizeWithCoinbaseNotFromSponsorsManager() public {
+    function test_IncentivizeWithCoinbaseNotFromSponsorsManagerRootstockCollective() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
@@ -551,7 +553,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManager when there
+     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManagerRootstockCollective when
+     * there
      * are no initial allocations in previous cycle, allocations happen in following cycle and all
      * rewards are distributed and claimed by sponsors with no rewards lost
      */
@@ -638,7 +641,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManager when there
+     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManagerRootstockCollective when
+     * there
      * are no initial allocations in first cycle, allocations happen in third cycle, rewards are not locked
      */
     function test_IncentivizeWithNoAllocationsInTwoCycles() public {
@@ -727,10 +731,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManager and
+     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManagerRootstockCollective and
      * during distribution
      */
-    function test_IncentivizeWithIncentivizerAndSponsorsManager() public {
+    function test_IncentivizeWithIncentivizerAndSponsorsManagerRootstockCollective() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
         sponsorsManager.allocate(gauge, 1 ether);
@@ -1615,8 +1619,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * @notice sets periodFinish on SponsorsManager
-     *  Since we are impersonating SponsorsManager instead of allocating and distributing from real use cases,
+     * @notice sets periodFinish on SponsorsManagerRootstockCollective
+     *  Since we are impersonating SponsorsManagerRootstockCollective instead of allocating and distributing from real
+     * use cases,
      *  we need to update the periodFinish var every time gauge.notifyRewardAmountAndUpdateShares is called
      *  at the beginning of an cycle to simulate a distribution
      */

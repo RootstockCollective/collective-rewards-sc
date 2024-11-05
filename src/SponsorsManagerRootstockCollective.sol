@@ -11,10 +11,10 @@ import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
- * @title SponsorsManager
+ * @title SponsorsManagerRootstockCollective
  * @notice Creates gauges, manages sponsors votes and distribute rewards
  */
-contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
+contract SponsorsManagerRootstockCollective is ICollectiveRewardsCheck, BuilderRegistry {
     // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
     uint256 internal constant _MAX_DISTRIBUTIONS_PER_BATCH = 20;
 

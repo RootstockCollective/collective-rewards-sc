@@ -4,12 +4,12 @@ pragma solidity 0.8.20;
 import { Test } from "forge-std/src/Test.sol";
 import { BaseTest } from "../../BaseTest.sol";
 import { TimeManager } from "./TimeManager.sol";
-import { SponsorsManager } from "src/SponsorsManager.sol";
+import { SponsorsManagerRootstockCollective } from "src/SponsorsManagerRootstockCollective.sol";
 
 contract BaseHandler is Test {
     BaseTest public baseTest;
     TimeManager public timeManager;
-    SponsorsManager public sponsorsManager;
+    SponsorsManagerRootstockCollective public sponsorsManager;
 
     constructor(BaseTest baseTest_, TimeManager timeManager_) {
         baseTest = baseTest_;

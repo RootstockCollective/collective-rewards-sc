@@ -6,7 +6,7 @@ import { BaseInvariants } from "./BaseInvariants.sol";
 contract RewardInvariants is BaseInvariants {
     /**
      * SCENARIO: all the rewards are distributed to sponsors and builder
-     * Gauges and SponsorsManager only keep with dust because rounding errors
+     * Gauges and SponsorsManagerRootstockCollective only keep with dust because rounding errors
      */
     function invariant_Rewards() public useTime {
         uint256 _totalBuilderBalances;

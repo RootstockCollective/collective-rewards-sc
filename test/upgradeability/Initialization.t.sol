@@ -6,10 +6,10 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 
 contract InitializationTest is BaseTest {
     /**
-     * SCENARIO: SponsorsManager cannot be initialized twice
+     * SCENARIO: SponsorsManagerRootstockCollective cannot be initialized twice
      */
-    function test_RevertSponsorsManagerInitialize() public {
-        // GIVEN a SponsorsManager initialized
+    function test_RevertSponsorsManagerRootstockCollectiveInitialize() public {
+        // GIVEN a SponsorsManagerRootstockCollective initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         uint32 _cycleDuration = 1 weeks;
