@@ -36,7 +36,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         _skipAndStartNewEpoch();
 
         // WHEN alice claim rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN alice rewardToken balance is 50 = (200 * 8 / 16) * 0.5
@@ -45,7 +45,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         assertApproxEqAbs(alice.balance, 5 ether, 100);
 
         // WHEN bob claim rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN bob rewardToken balance is 50 = (200 * 8 / 16) * 0.5
@@ -93,7 +93,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         _skipAndStartNewEpoch();
 
         // WHEN alice claim rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN alice rewardToken balance is:
@@ -110,7 +110,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         assertEq(alice.balance, 9_285_714_285_714_285_688);
 
         // WHEN bob claim rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN bob rewardToken balance is:
@@ -155,7 +155,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         _initialState();
 
         // WHEN alice removes allocations from revoked builder
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 0);
 
         // AND 100 rewardToken and 10 coinbase are distributed
@@ -175,7 +175,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         _skipAndStartNewEpoch();
 
         // WHEN alice claim rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN alice rewardToken balance is:
@@ -190,7 +190,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         assertEq(alice.balance, 7_142_857_142_857_142_834);
 
         // WHEN bob claim rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN bob rewardToken balance is:
@@ -225,7 +225,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         _initialState();
 
         // WHEN alice adds allocations to halted builder
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 4 ether);
         // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 1_814_400 ether);

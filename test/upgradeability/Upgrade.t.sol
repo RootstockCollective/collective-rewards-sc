@@ -6,7 +6,7 @@ import {
     SponsorsManagerUpgradeMock,
     RewardDistributorUpgradeMock,
     GaugeUpgradeMock,
-    ChangeExecutorUpgradeMock
+    GovernanceManagerUpgradeMock
 } from "../mock/UpgradesMocks.sol";
 
 contract UpgradeTest is BaseTest {
@@ -18,6 +18,7 @@ contract UpgradeTest is BaseTest {
         // AND a new implementation
         SponsorsManagerUpgradeMock _sponsorsManagerNewImpl = new SponsorsManagerUpgradeMock();
         //WHEN the proxy is upgraded and initialized
+        vm.prank(governor);
         sponsorsManager.upgradeToAndCall(
             address(_sponsorsManagerNewImpl), abi.encodeCall(_sponsorsManagerNewImpl.initializeMock, (42))
         );
@@ -33,6 +34,7 @@ contract UpgradeTest is BaseTest {
         // AND a new implementation
         RewardDistributorUpgradeMock _rewardDistributorNewImpl = new RewardDistributorUpgradeMock();
         //WHEN the proxy is upgraded and initialized
+        vm.prank(governor);
         rewardDistributor.upgradeToAndCall(
             address(_rewardDistributorNewImpl), abi.encodeCall(_rewardDistributorNewImpl.initializeMock, (43))
         );
@@ -43,19 +45,19 @@ contract UpgradeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: ChangeExecutorRootstockCollective is upgraded
+     * SCENARIO: GovernanceManager is upgraded
      */
-    function test_UpgradeChangeExecutor() public {
-        // GIVEN a ChangeExecutorRootstockCollective proxy with an implementation
+    function test_UpgradeGovernanceManager() public {
+        // GIVEN a GovernanceManager proxy with an implementation
         // AND a new implementation
-        ChangeExecutorUpgradeMock _changeExecutorNewImpl = new ChangeExecutorUpgradeMock();
+        GovernanceManagerUpgradeMock _governanceManagerNewImpl = new GovernanceManagerUpgradeMock();
         //WHEN the proxy is upgraded and initialized
         vm.prank(governor);
-        changeExecutorMock.upgradeToAndCall(
-            address(_changeExecutorNewImpl), abi.encodeCall(_changeExecutorNewImpl.initializeMock, (45))
+        governanceManager.upgradeToAndCall(
+            address(_governanceManagerNewImpl), abi.encodeCall(_governanceManagerNewImpl.initializeMock, (45))
         );
         uint256 _newVar =
-            ChangeExecutorUpgradeMock(address(changeExecutorMock)).getCustomMockValue() - (uint256(uint160(governor)));
+            GovernanceManagerUpgradeMock(address(governanceManager)).getCustomMockValue() - (uint256(uint160(governor)));
         // THEN getCustomMockValue is governor address + 45 newVariable
         assertEq(_newVar, 45);
     }

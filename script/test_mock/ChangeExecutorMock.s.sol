@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ChangeExecutorMock } from "test/mock/ChangeExecutorMock.sol";
-import { ChangeExecutorRootstockCollective } from "src/governance/ChangeExecutorRootstockCollective.sol";
+import { ChangeExecutorRootstockCollective } from "src/mvp/ChangeExecutorRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
     function run() public returns (ChangeExecutorMock proxy_, ChangeExecutorMock implementation_) {

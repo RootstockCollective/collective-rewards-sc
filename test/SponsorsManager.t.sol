@@ -65,6 +65,7 @@ contract SponsorsManagerTest is BaseTest {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         //  AND is whitelisted
+        vm.prank(governor);
         Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
 
         gaugesArray.push(_newGauge);
@@ -179,13 +180,13 @@ contract SponsorsManagerTest is BaseTest {
      */
     function test_AllocateBatchOverride() public {
         // GIVEN a SponsorManager contract
-        vm.startPrank(alice);
         // AND a new epoch
         _skipAndStartNewEpoch();
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
 
         // WHEN alice allocates to [gauge, gauge2] = [2, 6]
+        vm.prank(alice);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
 
         address _builder3 = makeAddr("_builder3");
@@ -193,7 +194,7 @@ contract SponsorsManagerTest is BaseTest {
         allocationsArray.push(10 ether);
 
         // AND alice allocates again to [gauge, gauge2, gauge3] = [2, 6, 10]
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
 
         // THEN previous allocation didn't change
@@ -1049,17 +1050,15 @@ contract SponsorsManagerTest is BaseTest {
      */
     function test_GaugeLosesAllocationForOneEpoch() public {
         // GIVEN alice allocates to gauge and gauge2
-        vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
+        vm.prank(alice);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
         // AND bob allocates to gauge2
-        vm.startPrank(bob);
         allocationsArray[0] = 0 ether;
         allocationsArray[1] = 8 ether;
+        vm.prank(bob);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -1067,14 +1066,14 @@ contract SponsorsManagerTest is BaseTest {
         _skipRemainingEpochFraction(2);
 
         // WHEN alice removes allocations from gauge
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 0);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
 
         // AND alice adds allocations again
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 2 ether);
 
         // AND 100 rewardToken and 10 coinbase are distributed
@@ -1084,7 +1083,7 @@ contract SponsorsManagerTest is BaseTest {
         _skipAndStartNewEpoch();
 
         // WHEN alice claim rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN alice rewardToken balance is:
@@ -1099,7 +1098,7 @@ contract SponsorsManagerTest is BaseTest {
         assertEq(alice.balance, 7_333_333_333_333_333_314);
 
         // WHEN bob claim rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN bob rewardToken balance is:
@@ -1150,17 +1149,15 @@ contract SponsorsManagerTest is BaseTest {
      */
     function test_GaugeLosesAllocationForTwoEpochs() public {
         // GIVEN alice allocates to gauge and gauge2
-        vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
+        vm.prank(alice);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
         // AND bob allocates to gauge2
-        vm.startPrank(bob);
         allocationsArray[0] = 0 ether;
         allocationsArray[1] = 8 ether;
+        vm.prank(bob);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -1168,7 +1165,7 @@ contract SponsorsManagerTest is BaseTest {
         _skipRemainingEpochFraction(2);
 
         // WHEN alice removes allocations from gauge
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 0);
 
         // AND 100 rewardToken and 10 coinbase are distributed
@@ -1177,7 +1174,7 @@ contract SponsorsManagerTest is BaseTest {
         _distribute(100 ether, 10 ether);
 
         // AND alice adds allocations again
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.allocate(gauge, 2 ether);
 
         // AND 100 rewardToken and 10 coinbase are distributed
@@ -1187,7 +1184,7 @@ contract SponsorsManagerTest is BaseTest {
         _skipAndStartNewEpoch();
 
         // WHEN alice claim rewards
-        vm.startPrank(alice);
+        vm.prank(alice);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN alice rewardToken balance is:
@@ -1204,7 +1201,7 @@ contract SponsorsManagerTest is BaseTest {
         assertEq(alice.balance, 9_476_190_476_190_476_166);
 
         // WHEN bob claim rewards
-        vm.startPrank(bob);
+        vm.prank(bob);
         sponsorsManager.claimSponsorRewards(gaugesArray);
 
         // THEN bob rewardToken balance is:

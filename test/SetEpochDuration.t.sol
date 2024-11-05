@@ -2,9 +2,9 @@
 pragma solidity 0.8.20;
 
 import { BaseTest } from "./BaseTest.sol";
-import { Governed } from "../src/governance/Governed.sol";
 import { EpochTimeKeeper } from "../src/EpochTimeKeeper.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
+import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 contract SetEpochDurationTest is BaseTest {
     // -----------------------------
@@ -39,14 +39,11 @@ contract SetEpochDurationTest is BaseTest {
      */
     function test_OnlyGovernor() public {
         // GIVEN a sponsor alice
-        vm.startPrank(alice);
+        //  WHEN alice calls setEpochDuration
+        //   THEN tx reverts because caller is not the Governor
 
-        // GIVEN mock authorized is false
-        changeExecutorMock.setIsAuthorized(false);
-
-        // WHEN alice calls setEpochDuration
-        //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
+        vm.prank(alice);
+        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
         sponsorsManager.setEpochDuration(3 weeks, 0 days);
     }
 
@@ -55,8 +52,9 @@ contract SetEpochDurationTest is BaseTest {
      */
     function test_RevertEpochDurationTooShort() public {
         // GIVEN a distribution window of 1 hour
-        //  WHEN tries to setEpochDuration with 1.5 hours of duration
+        //  WHEN governor tries to setEpochDuration with 1.5 hours of duration
         //   THEN tx reverts because is too short
+        vm.prank(governor);
         vm.expectRevert(EpochTimeKeeper.EpochDurationTooShort.selector);
         sponsorsManager.setEpochDuration(1.5 hours, 0 days);
     }
@@ -71,6 +69,7 @@ contract SetEpochDurationTest is BaseTest {
         (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart,) =
             sponsorsManager.epochData();
         uint256 _nextEpoch = UtilsLib._calcEpochNext(_previousStart, 1 weeks, block.timestamp);
+        vm.prank(governor);
         vm.expectEmit();
         emit NewEpochDurationScheduled(3 weeks, _nextEpoch);
         sponsorsManager.setEpochDuration(3 weeks, 0 days);
@@ -106,6 +105,7 @@ contract SetEpochDurationTest is BaseTest {
         assertEq(_nextStart, block.timestamp);
 
         // AND governor sets a new epoch duration of 6 weeks
+        vm.prank(governor);
         sponsorsManager.setEpochDuration(6 weeks, 0 days);
         (_previousDuration, _nextDuration, _previousStart, _nextStart,) = sponsorsManager.epochData();
         // THEN previous epoch duration is 3 week
@@ -132,7 +132,7 @@ contract SetEpochDurationTest is BaseTest {
     function test_SetEpochDurationSameValue() public {
         // GIVEN an epoch duration of 1 week
         //  WHEN calls setEpochDuration again with 1 week
-        vm.prank(builder);
+        vm.prank(governor);
         sponsorsManager.setEpochDuration(1 weeks, 0 days);
 
         (uint32 _previousDuration, uint32 _nextDuration,,,) = sponsorsManager.epochData();
@@ -148,6 +148,7 @@ contract SetEpochDurationTest is BaseTest {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
         // AND governor sets a new epoch duration of 3 weeks
+        vm.prank(governor);
         sponsorsManager.setEpochDuration(3 weeks, 0 days);
 
         (uint32 _previousDuration, uint32 _nextDuration,, uint64 _nextStart,) = sponsorsManager.epochData();
@@ -155,6 +156,7 @@ contract SetEpochDurationTest is BaseTest {
         vm.warp(block.timestamp + 1 weeks - 1);
 
         // AND governor sets a new epoch duration of 4 weeks
+        vm.prank(governor);
         sponsorsManager.setEpochDuration(4 weeks, 0 days);
         (_previousDuration, _nextDuration,, _nextStart,) = sponsorsManager.epochData();
         // THEN previous epoch duration is 1 week
@@ -189,6 +191,7 @@ contract SetEpochDurationTest is BaseTest {
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
         // AND governor sets a new epoch duration of 3 weeks
+        vm.prank(governor);
         sponsorsManager.setEpochDuration(3 weeks, 0 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
@@ -257,6 +260,7 @@ contract SetEpochDurationTest is BaseTest {
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
         // AND governor sets a new epoch duration of 0.5 weeks
+        vm.prank(governor);
         sponsorsManager.setEpochDuration(0.5 weeks, 0 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
@@ -325,6 +329,7 @@ contract SetEpochDurationTest is BaseTest {
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
         // AND governor sets a same epoch duration of 1 weeks adding an offset of 3 days
+        vm.prank(governor);
         sponsorsManager.setEpochDuration(1 weeks, 3 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
@@ -379,6 +384,7 @@ contract SetEpochDurationTest is BaseTest {
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
         // AND governor sets a longer epoch duration of 1.5 weeks adding an offset of 3 days
+        vm.prank(governor);
         sponsorsManager.setEpochDuration(1.5 weeks, 3 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
@@ -433,6 +439,7 @@ contract SetEpochDurationTest is BaseTest {
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
         // AND governor sets a shorter epoch duration of 0.75 weeks adding an offset of 3 days
+        vm.prank(governor);
         sponsorsManager.setEpochDuration(0.75 weeks, 3 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed

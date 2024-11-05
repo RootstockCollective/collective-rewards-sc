@@ -2,28 +2,28 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, Gauge } from "../../BaseTest.sol";
-import { Governed } from "../../../src/governance/Governed.sol";
 import { WhitelistBuilderChangerTemplate } from
     "../../../src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol";
+import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
 contract WhitelistBuilderChangerTest is BaseTest {
     WhitelistBuilderChangerTemplate internal _changer;
     address internal _newBuilder = makeAddr("newBuilder");
 
     function _setUp() internal override {
-        // GIVEN the ChangeExecutorRootstockCollective without isAuthorized mock
-        changeExecutorMock.setIsAuthorized(false);
-        // AND a WhitelistBuilderChanger deployed for a new builder
+        // GIVEN WhitelistBuilderChanger deployed for a new builder
         _changer = new WhitelistBuilderChangerTemplate(sponsorsManager, _newBuilder);
     }
 
     /**
      * SCENARIO: execute on the changer should revert if is not called by the ChangerExecutor
+     * ??? TODO: Does this test make sense, if we cannot enforce code on the changer contract?
      */
     function test_RevertWhenIsNotAuthorized() public {
         //  WHEN tries to directly execute the changer
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
-        vm.expectRevert(Governed.NotGovernorOrAuthorizedChanger.selector);
+        vm.prank(alice);
+        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
         _changer.execute();
     }
 
@@ -33,8 +33,9 @@ contract WhitelistBuilderChangerTest is BaseTest {
     function test_RevertWhenIsNotCalledByGovernor() public {
         //  WHEN tries no governor tries to execute the changer
         //   THEN tx reverts because NotGovernor
-        vm.expectRevert(Governed.NotGovernor.selector);
-        changeExecutorMock.executeChange(_changer);
+        vm.prank(alice);
+        vm.expectRevert(IGovernanceManager.NotGovernor.selector);
+        governanceManager.executeChange(_changer);
     }
 
     /**
@@ -43,7 +44,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
     function test_ExecuteChange() public {
         //  WHEN governor executes the changer
         vm.prank(governor);
-        changeExecutorMock.executeChange(_changer);
+        governanceManager.executeChange(_changer);
         //  THEN the change is successfully executed
         Gauge _newGauge = _changer.newGauge();
         //  THEN gauge is added on SponsorsManager

@@ -3,12 +3,10 @@ pragma solidity 0.8.20;
 
 import { Test } from "forge-std/src/Test.sol";
 import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
-import { Deploy as ChangeExecutorMockDeployer } from "script/test_mock/ChangeExecutorMock.s.sol";
 import { Deploy as GaugeBeaconDeployer } from "script/gauge/GaugeBeacon.s.sol";
 import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
 import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
-import { ChangeExecutorMock } from "./mock/ChangeExecutorMock.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { GaugeBeacon } from "src/gauge/GaugeBeacon.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
@@ -16,13 +14,14 @@ import { Gauge } from "src/gauge/Gauge.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { Deploy as GovernanceManagerDeployer } from "script/governance/GovernanceManager.s.sol";
+import { GovernanceManager } from "src/governance/GovernanceManager.sol";
 
 contract BaseTest is Test {
-    ChangeExecutorMock public changeExecutorMockImpl;
-    ChangeExecutorMock public changeExecutorMock;
     ERC20Mock public stakingToken;
     ERC20Mock public rewardToken;
 
+    GovernanceManager public governanceManager;
     GaugeBeacon public gaugeBeacon;
     GaugeFactory public gaugeFactory;
     address[] public builders;
@@ -52,19 +51,18 @@ contract BaseTest is Test {
     /* solhint-enable private-vars-leading-underscore */
 
     function setUp() public {
-        (changeExecutorMock, changeExecutorMockImpl) = new ChangeExecutorMockDeployer().run(governor);
+        (governanceManager,) = new GovernanceManagerDeployer().run(governor, foundation, kycApprover);
+
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         stakingToken = _mockTokenDeployer.run(0);
         rewardToken = _mockTokenDeployer.run(1);
-        gaugeBeacon = new GaugeBeaconDeployer().run(address(changeExecutorMock));
+        gaugeBeacon = new GaugeBeaconDeployer().run(address(governanceManager));
         gaugeFactory = new GaugeFactoryDeployer().run(address(gaugeBeacon), address(rewardToken));
 
-        (rewardDistributor, rewardDistributorImpl) =
-            new RewardDistributorDeployer().run(address(changeExecutorMock), foundation);
+        (rewardDistributor, rewardDistributorImpl) = new RewardDistributorDeployer().run(address(governanceManager));
 
         (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerDeployer().run(
-            address(changeExecutorMock),
-            kycApprover,
+            address(governanceManager),
             address(rewardToken),
             address(stakingToken),
             address(gaugeFactory),
@@ -77,7 +75,6 @@ contract BaseTest is Test {
         rewardDistributor.initializeBIMAddresses(address(sponsorsManager));
 
         // allow to execute all the functions protected by governance
-        changeExecutorMock.setIsAuthorized(true);
 
         gauge = _whitelistBuilder(builder, builder, 0.5 ether);
         gauge2 = _whitelistBuilder(builder2, builder2Receiver, 0.5 ether);
@@ -124,13 +121,12 @@ contract BaseTest is Test {
         internal
         returns (Gauge newGauge_)
     {
-        vm.startPrank(kycApprover);
+        vm.prank(kycApprover);
         sponsorsManager.activateBuilder(builder_, rewardReceiver_, kickbackPct_);
         builders.push(builder_);
-        vm.startPrank(governor);
+        vm.prank(governor);
         newGauge_ = sponsorsManager.whitelistBuilder(builder_);
         gaugesArray.push(newGauge_);
-        vm.stopPrank();
     }
 
     function _createGauge(uint64 kickback_) internal {
@@ -146,16 +142,15 @@ contract BaseTest is Test {
 
     function _initialDistribution() internal {
         // GIVEN alice allocates to builder and builder2
-        vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
+        vm.prank(alice);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
         // AND bob allocates to builder2
-        vm.startPrank(bob);
         allocationsArray[0] = 0 ether;
         allocationsArray[1] = 8 ether;
+        vm.prank(bob);
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
-        vm.stopPrank();
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -178,10 +173,9 @@ contract BaseTest is Test {
     function _buildersClaim() internal {
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             address _builder = sponsorsManager.gaugeToBuilder(gaugesArray[i]);
-            vm.startPrank(_builder);
+            vm.prank(_builder);
             gaugesArray[i].claimBuilderReward();
         }
-        vm.stopPrank();
     }
 
     /**
@@ -190,9 +184,8 @@ contract BaseTest is Test {
      */
     function _clearERC20Balance(address address_) internal returns (uint256 balance_) {
         balance_ = rewardToken.balanceOf(address_);
-        vm.startPrank(address_);
+        vm.prank(address_);
         rewardToken.transfer(address(this), balance_);
-        vm.stopPrank();
     }
 
     /**
@@ -201,9 +194,8 @@ contract BaseTest is Test {
      */
     function _clearCoinbaseBalance(address address_) internal returns (uint256 balance_) {
         balance_ = address_.balance;
-        vm.startPrank(address_);
+        vm.prank(address_);
         Address.sendValue(payable(address(this)), balance_);
-        vm.stopPrank();
     }
 
     function gaugesArrayLength() public view returns (uint256) {

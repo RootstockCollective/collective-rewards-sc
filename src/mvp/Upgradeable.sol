@@ -1,30 +1,24 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
+import { Governed } from "./Governed.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
+import { IChangeExecutorRootstockCollective } from "../mvp/IChangeExecutorRootstockCollective.sol";
 
 /**
- * @title Upgradeable
+ * @title Governed
  * @notice Base contract to be inherited by governed contracts
  * @dev This contract is not usable on its own since it does not have any _productive useful_ behavior
  * The only purpose of this contract is to define some useful modifiers and functions to be used on the
  * governance aspect of the child contract
  */
-abstract contract Upgradeable is UUPSUpgradeable {
-    // -----------------------------
-    // --------- Modifiers ---------
-    // -----------------------------
-    modifier onlyValidChanger() {
-        governanceManager.validateChanger(msg.sender);
-        _;
-    }
-
+abstract contract Upgradeable is UUPSUpgradeable, Governed {
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
 
-    IGovernanceManager public governanceManager;
+    /// @notice governor contract address
+    address internal _governor;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -32,12 +26,23 @@ abstract contract Upgradeable is UUPSUpgradeable {
 
     /**
      * @notice contract initializer
-     * @param governanceManager_ contract with permissioned roles
+     * @param changeExecutor_ ChangeExecutor contract address
      */
-    /* solhint-disable-next-line func-name-mixedcase */
-    function __Upgradeable_init(IGovernanceManager governanceManager_) internal onlyInitializing {
+    function __Upgradeable_init(address changeExecutor_) internal onlyInitializing {
         __UUPSUpgradeable_init();
-        governanceManager = governanceManager_;
+        changeExecutor = IChangeExecutorRootstockCollective(changeExecutor_);
+        _governor = IChangeExecutorRootstockCollective(changeExecutor_).governor();
+    }
+
+    // -----------------------------
+    // ---- External Functions -----
+    // -----------------------------
+
+    /**
+     * @notice maintains Governed interface. Returns governed address
+     */
+    function governor() public view override returns (address) {
+        return _governor;
     }
 
     // -----------------------------
@@ -48,8 +53,10 @@ abstract contract Upgradeable is UUPSUpgradeable {
      * @inheritdoc UUPSUpgradeable
      * @dev checks that the changer that will do the upgrade is currently authorized by governance to makes
      * changes within the system
+     * @param newImplementation_ new implementation contract address
      */
-    function _authorizeUpgrade(address) internal override onlyValidChanger { }
+    /* solhint-disable-next-line no-empty-blocks */
+    function _authorizeUpgrade(address newImplementation_) internal override onlyGovernorOrAuthorizedChanger { }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

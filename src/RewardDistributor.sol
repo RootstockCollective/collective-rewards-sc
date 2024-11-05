@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import { Upgradeable } from "./governance/Upgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SponsorsManager } from "./SponsorsManager.sol";
+import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
 
 /**
  * @title RewardDistributor
@@ -20,7 +21,7 @@ contract RewardDistributor is Upgradeable {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyFoundationTreasury() {
-        if (msg.sender != foundationTreasury) revert NotFoundationTreasury();
+        governanceManager.validateFoundationTreasury(msg.sender);
         _;
     }
 
@@ -51,12 +52,10 @@ contract RewardDistributor is Upgradeable {
     /**
      * @notice contract initializer
      * @dev initializeBIMAddresses() must be called ASAP after this initialization
-     * @param changeExecutor_ See Governed doc
-     * @param foundationTreasury_ foundation treasury address
+     * @param governanceManager_ contract with permissioned roles
      */
-    function initialize(address changeExecutor_, address foundationTreasury_) external initializer {
-        __Upgradeable_init(changeExecutor_);
-        foundationTreasury = foundationTreasury_;
+    function initialize(IGovernanceManager governanceManager_) external initializer {
+        __Upgradeable_init(governanceManager_);
     }
 
     /**

@@ -1,18 +1,18 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { ChangeExecutorRootstockCollective } from "src/governance/ChangeExecutorRootstockCollective.sol";
+import { ChangeExecutorRootstockCollective } from "src/mvp/ChangeExecutorRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
     function run()
         public
         returns (ChangeExecutorRootstockCollective proxy_, ChangeExecutorRootstockCollective implementation_)
     {
-        address _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
+        address _governor = vm.envAddress("GOVERNOR_ADDRESS");
 
-        (proxy_, implementation_) = run(_governorAddress);
+        (proxy_, implementation_) = run(_governor);
     }
 
     function run(address governor_)
@@ -20,7 +20,7 @@ contract Deploy is Broadcaster {
         broadcast
         returns (ChangeExecutorRootstockCollective, ChangeExecutorRootstockCollective)
     {
-        require(governor_ != address(0), "Governor address cannot be empty");
+        require(governor_ != address(0), "Access control address cannot be empty");
 
         bytes memory _initializerData = abi.encodeCall(ChangeExecutorRootstockCollective.initialize, (governor_));
         address _implementation;

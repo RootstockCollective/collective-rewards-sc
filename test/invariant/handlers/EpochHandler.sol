@@ -18,6 +18,7 @@ contract EpochHandler is BaseHandler {
     {
         newEpochDuration_ = uint32(bound(newEpochDuration_, 2 hours, 365 days));
         epochStartOffset_ = uint24(bound(epochStartOffset_, 0, 20 weeks));
+        vm.prank(baseTest.governanceManager().governor());
         sponsorsManager.setEpochDuration(newEpochDuration_, epochStartOffset_);
     }
 }

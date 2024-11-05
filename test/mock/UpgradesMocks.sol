@@ -4,9 +4,10 @@ pragma solidity 0.8.20;
 import { SponsorsManager } from "../../src/SponsorsManager.sol";
 import { RewardDistributor } from "../../src/RewardDistributor.sol";
 import { Gauge } from "../../src/gauge/Gauge.sol";
-import { ChangeExecutorRootstockCollective } from "../../src/governance/ChangeExecutorRootstockCollective.sol";
+import { ChangeExecutorRootstockCollective } from "src/mvp/ChangeExecutorRootstockCollective.sol";
 import { SimplifiedRewardDistributorRootstockCollective } from
-    "../../src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
+    "src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
+import { GovernanceManager } from "src/governance/GovernanceManager.sol";
 
 /**
  * @title UpgradeableMock
@@ -38,7 +39,7 @@ contract SponsorsManagerUpgradeMock is SponsorsManager, UpgradeableMock {
  */
 contract RewardDistributorUpgradeMock is RewardDistributor, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
-        return newVariable + uint256(uint160(foundationTreasury));
+        return newVariable + uint256(uint160(governanceManager.foundationTreasury()));
     }
 }
 
@@ -53,12 +54,22 @@ contract GaugeUpgradeMock is Gauge, UpgradeableMock {
 }
 
 /**
+ * @title GovernanceManagerUpgradeMock
+ * @dev Only for upgradeability testing purposes. Extends GovernanceManager adding a new variable.
+ */
+contract GovernanceManagerUpgradeMock is GovernanceManager, UpgradeableMock {
+    function getCustomMockValue() external view override returns (uint256) {
+        return newVariable + uint256(uint160(governor));
+    }
+}
+
+/**
  * @title ChangeExecutorUpgradeMock
  * @dev Only for upgradeability testing purposes. Extends ChangeExecutorRootstockCollective adding a new variable.
  */
 contract ChangeExecutorUpgradeMock is ChangeExecutorRootstockCollective, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
-        return newVariable + uint256(uint160(governor()));
+        return newVariable + uint256(uint160(_governor));
     }
 }
 
