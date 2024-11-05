@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { Gauge } from "./gauge/Gauge.sol";
+import { GaugeRootstockCollective } from "./gauge/GaugeRootstockCollective.sol";
 import { BuilderRegistry } from "./BuilderRegistry.sol";
 import { ICollectiveRewardsCheck } from "./interfaces/ICollectiveRewardsCheck.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
@@ -153,7 +153,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @param gauge_ address of the gauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
      */
-    function allocate(Gauge gauge_, uint256 allocation_) external notInDistributionPeriod {
+    function allocate(GaugeRootstockCollective gauge_, uint256 allocation_) external notInDistributionPeriod {
         (uint256 _newSponsorTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
             gauge_,
             allocation_,
@@ -173,7 +173,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @param allocations_ array of amount of votes to allocate
      */
     function allocateBatch(
-        Gauge[] calldata gauges_,
+        GaugeRootstockCollective[] calldata gauges_,
         uint256[] calldata allocations_
     )
         external
@@ -241,7 +241,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @notice claims sponsor rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
      */
-    function claimSponsorRewards(Gauge[] memory gauges_) external {
+    function claimSponsorRewards(GaugeRootstockCollective[] memory gauges_) external {
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             // reverts if builder was not activated or approved by the community
@@ -257,7 +257,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function claimSponsorRewards(address rewardToken_, Gauge[] memory gauges_) external {
+    function claimSponsorRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external {
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             if (gaugeToBuilder[gauges_[i]] == address(0)) revert GaugeDoesNotExist();
@@ -272,7 +272,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      *  are not updated on the distribution anymore
      */
     function periodFinish() external view returns (uint256) {
-        if (isGaugeHalted(msg.sender)) return haltedGaugeLastPeriodFinish[Gauge(msg.sender)];
+        if (isGaugeHalted(msg.sender)) return haltedGaugeLastPeriodFinish[GaugeRootstockCollective(msg.sender)];
         return _periodFinish;
     }
 
@@ -291,7 +291,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @return newTotalPotentialReward_ total potential reward  after the new allocation
      */
     function _allocate(
-        Gauge gauge_,
+        GaugeRootstockCollective gauge_,
         uint256 allocation_,
         uint256 sponsorTotalAllocation_,
         uint256 totalPotentialReward_,
@@ -369,7 +369,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
             _newTotalPotentialReward += _gaugeDistribute(
-                Gauge(getGaugeAt(_gaugeIndex)),
+                GaugeRootstockCollective(getGaugeAt(_gaugeIndex)),
                 _rewardsERC20,
                 _rewardsCoinbase,
                 _totalPotentialReward,
@@ -409,7 +409,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
     function _gaugeDistribute(
-        Gauge gauge_,
+        GaugeRootstockCollective gauge_,
         uint256 rewardsERC20_,
         uint256 rewardsCoinbase_,
         uint256 totalPotentialReward_,
@@ -447,7 +447,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * produce a miscalculation of rewards
      * @param gauge_ gauge contract to be halted
      */
-    function _haltGaugeShares(Gauge gauge_) internal override notInDistributionPeriod {
+    function _haltGaugeShares(GaugeRootstockCollective gauge_) internal override notInDistributionPeriod {
         // allocations are not considered for the reward's distribution
         totalPotentialReward -= gauge_.rewardShares();
         haltedGaugeLastPeriodFinish[gauge_] = _periodFinish;
@@ -459,7 +459,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * produce a miscalculation of rewards
      * @param gauge_ gauge contract to be resumed
      */
-    function _resumeGaugeShares(Gauge gauge_) internal override notInDistributionPeriod {
+    function _resumeGaugeShares(GaugeRootstockCollective gauge_) internal override notInDistributionPeriod {
         // gauges cannot be resumed before the distribution,
         // incentives can stay in the gauge because lastUpdateTime > lastTimeRewardApplicable
         if (_periodFinish <= block.timestamp) revert BeforeDistribution();

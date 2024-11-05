@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest, Gauge } from "../../BaseTest.sol";
+import { BaseTest, GaugeRootstockCollective } from "../../BaseTest.sol";
 import { WhitelistBuilderChangerTemplate } from
     "../../../src/governance/changerTemplates/WhitelistBuilderChangerTemplate.sol";
 import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
@@ -46,7 +46,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
         vm.prank(governor);
         governanceManager.executeChange(_changer);
         //  THEN the change is successfully executed
-        Gauge _newGauge = _changer.newGauge();
+        GaugeRootstockCollective _newGauge = _changer.newGauge();
         //  THEN gauge is added on SponsorsManager
         assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
         //  THEN the new builder is whitelisted

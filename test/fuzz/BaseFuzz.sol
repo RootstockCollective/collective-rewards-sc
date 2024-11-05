@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest, Gauge } from "../BaseTest.sol";
+import { BaseTest, GaugeRootstockCollective } from "../BaseTest.sol";
 
 contract BaseFuzz is BaseTest {
     uint256 public constant MAX_BUILDERS = 50;
@@ -11,7 +11,7 @@ contract BaseFuzz is BaseTest {
     uint256 public constant CB_DISTRIBUTION_AMOUNT = 1000 ether;
 
     address[] public sponsorsArray;
-    Gauge[][] public sponsorsGauges;
+    GaugeRootstockCollective[][] public sponsorsGauges;
     uint256[][] public sponsorsAllocations;
 
     function _setUp() internal override {

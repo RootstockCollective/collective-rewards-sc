@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
-import { Gauge } from "src/gauge/Gauge.sol";
+import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { GaugeBeacon } from "src/gauge/GaugeBeacon.sol";
 import { IGovernanceManager } from "../../src/interfaces/IGovernanceManager.sol";
 
@@ -17,7 +17,7 @@ contract Deploy is Broadcaster {
 
     function run(address governanceManager_) public broadcast returns (GaugeBeacon) {
         require(governanceManager_ != address(0), "Change executor address cannot be empty");
-        address _gaugeImplementation = address(new Gauge());
+        address _gaugeImplementation = address(new GaugeRootstockCollective());
         if (vm.envOr("NO_DD", false)) {
             return new GaugeBeacon(IGovernanceManager(governanceManager_), _gaugeImplementation);
         }

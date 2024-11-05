@@ -4,12 +4,12 @@ pragma solidity 0.8.20;
 import { BaseHandler, TimeManager } from "./BaseHandler.sol";
 import { BaseTest } from "../../BaseTest.sol";
 import { ERC20Mock } from "test/mock/ERC20Mock.sol";
-import { Gauge } from "src/gauge/Gauge.sol";
+import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 
 contract IncentivizeHandler is BaseHandler {
     ERC20Mock public rewardToken;
 
-    mapping(Gauge gauge => uint256 amount) public rewardTokenIncentives;
+    mapping(GaugeRootstockCollective gauge => uint256 amount) public rewardTokenIncentives;
 
     constructor(BaseTest baseTest_, TimeManager timeManager_) BaseHandler(baseTest_, timeManager_) {
         rewardToken = baseTest_.rewardToken();
@@ -29,7 +29,7 @@ contract IncentivizeHandler is BaseHandler {
         amountERC20_ = bound(amountERC20_, 0, type(uint64).max);
         amountCoinbase_ = bound(amountCoinbase_, 0, type(uint64).max);
 
-        Gauge _gauge = baseTest.gaugesArray(gaugeIndex_);
+        GaugeRootstockCollective _gauge = baseTest.gaugesArray(gaugeIndex_);
         if (sponsorsManager.isGaugeHalted(address(_gauge))) return;
 
         rewardTokenIncentives[_gauge] += amountERC20_;

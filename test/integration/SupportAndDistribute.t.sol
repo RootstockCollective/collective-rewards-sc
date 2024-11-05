@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest, Gauge } from "../BaseTest.sol";
+import { BaseTest, GaugeRootstockCollective } from "../BaseTest.sol";
 
 contract SupportAndDistributeTest is BaseTest {
-    Gauge[] public aliceGauges;
+    GaugeRootstockCollective[] public aliceGauges;
     uint256[] public aliceVotes;
 
-    Gauge[] public bobGauges;
+    GaugeRootstockCollective[] public bobGauges;
     uint256[] public bobVotes;
 
     function _setUp() internal override {

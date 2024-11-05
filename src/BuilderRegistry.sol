@@ -5,7 +5,7 @@ import { CycleTimeKeeper } from "./CycleTimeKeeper.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { Gauge } from "./gauge/Gauge.sol";
+import { GaugeRootstockCollective } from "./gauge/GaugeRootstockCollective.sol";
 import { GaugeFactory } from "./gauge/GaugeFactory.sol";
 import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
 
@@ -106,11 +106,11 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     /// @notice gauge factory contract address
     GaugeFactory public gaugeFactory;
     /// @notice gauge contract for a builder
-    mapping(address builder => Gauge gauge) public builderToGauge;
+    mapping(address builder => GaugeRootstockCollective gauge) public builderToGauge;
     /// @notice builder address for a gauge contract
-    mapping(Gauge gauge => address builder) public gaugeToBuilder;
+    mapping(GaugeRootstockCollective gauge => address builder) public gaugeToBuilder;
     /// @notice map of last period finish for halted gauges
-    mapping(Gauge gauge => uint256 lastPeriodFinish) public haltedGaugeLastPeriodFinish;
+    mapping(GaugeRootstockCollective gauge => uint256 lastPeriodFinish) public haltedGaugeLastPeriodFinish;
     /// @notice time that must elapse for a new reward percentage from a builder to be applied
     uint128 public rewardPercentageCooldown;
 
@@ -197,7 +197,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      * @param builder_ address of the builder
      */
     function approveBuilderKYC(address builder_) external onlyKycApprover {
-        Gauge _gauge = builderToGauge[builder_];
+        GaugeRootstockCollective _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[builder_].activated) revert NotActivated();
         if (builderState[builder_].kycApproved) revert AlreadyKYCApproved();
@@ -220,7 +220,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
 
         builderState[builder_].kycApproved = false;
 
-        Gauge _gauge = builderToGauge[builder_];
+        GaugeRootstockCollective _gauge = builderToGauge[builder_];
         // if builder is whitelisted, it has a gauge associated
         if (address(_gauge) != address(0)) {
             _haltGauge(_gauge);
@@ -238,7 +238,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      * @param builder_ address of the builder
      * @return gauge_ gauge contract
      */
-    function whitelistBuilder(address builder_) external onlyValidChanger returns (Gauge gauge_) {
+    function whitelistBuilder(address builder_) external onlyValidChanger returns (GaugeRootstockCollective gauge_) {
         if (builderState[builder_].whitelisted) revert AlreadyWhitelisted();
         if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
 
@@ -258,7 +258,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      * @param builder_ address of the builder
      */
     function dewhitelistBuilder(address builder_) external onlyValidChanger {
-        Gauge _gauge = builderToGauge[builder_];
+        GaugeRootstockCollective _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[builder_].whitelisted) revert NotWhitelisted();
 
@@ -310,7 +310,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      */
     // function permitBuilder(uint64 rewardPercentage_) external {
     function permitBuilder(uint64 rewardPercentage_) external {
-        Gauge _gauge = builderToGauge[msg.sender];
+        GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
         if (!builderState[msg.sender].whitelisted) revert NotWhitelisted();
@@ -347,7 +347,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      * miscalculation of rewards
      */
     function revokeBuilder() external {
-        Gauge _gauge = builderToGauge[msg.sender];
+        GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
         if (!builderState[msg.sender].whitelisted) revert NotWhitelisted();
@@ -428,7 +428,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      *  whitelisted == true &&
      *  paused == false
      */
-    function isGaugeOperational(Gauge gauge_) public view returns (bool) {
+    function isGaugeOperational(GaugeRootstockCollective gauge_) public view returns (bool) {
         return isBuilderOperational(gaugeToBuilder[gauge_]);
     }
 
@@ -483,7 +483,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      * @param builder_ builder address who can claim the rewards
      * @return gauge_ gauge contract
      */
-    function _createGauge(address builder_) internal returns (Gauge gauge_) {
+    function _createGauge(address builder_) internal returns (GaugeRootstockCollective gauge_) {
         gauge_ = gaugeFactory.createGauge();
         builderToGauge[builder_] = gauge_;
         gaugeToBuilder[gauge_] = builder_;
@@ -494,7 +494,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     /**
      * @notice reverts if builder was not activated or approved by the community
      */
-    function _validateGauge(Gauge gauge_) internal view {
+    function _validateGauge(GaugeRootstockCollective gauge_) internal view {
         address _builder = gaugeToBuilder[gauge_];
         if (_builder == address(0)) revert GaugeDoesNotExist();
         if (!builderState[_builder].activated) revert NotActivated();
@@ -504,7 +504,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      * @notice halts a gauge moving it from the active array to the halted one
      * @param gauge_ gauge contract to be halted
      */
-    function _haltGauge(Gauge gauge_) internal {
+    function _haltGauge(GaugeRootstockCollective gauge_) internal {
         if (!isGaugeHalted(address(gauge_))) {
             _haltedGauges.add(address(gauge_));
             _gauges.remove(address(gauge_));
@@ -517,7 +517,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      * @dev SponsorsManager override this function to restore its shares
      * @param gauge_ gauge contract to be resumed
      */
-    function _resumeGauge(Gauge gauge_) internal {
+    function _resumeGauge(GaugeRootstockCollective gauge_) internal {
         if (_canBeResumed(gauge_)) {
             _gauges.add(address(gauge_));
             _haltedGauges.remove(address(gauge_));
@@ -532,7 +532,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      *  revoked == false
      * @param gauge_ gauge contract to be resumed
      */
-    function _canBeResumed(Gauge gauge_) internal view returns (bool) {
+    function _canBeResumed(GaugeRootstockCollective gauge_) internal view returns (bool) {
         BuilderState memory _builderState = builderState[gaugeToBuilder[gauge_]];
         return _builderState.kycApproved && _builderState.whitelisted && !_builderState.revoked;
     }
@@ -547,13 +547,13 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      * @notice SponsorsManager override this function to remove its shares
      * @param gauge_ gauge contract to be halted
      */
-    function _haltGaugeShares(Gauge gauge_) internal virtual { }
+    function _haltGaugeShares(GaugeRootstockCollective gauge_) internal virtual { }
 
     /**
      * @notice SponsorsManager override this function to restore its shares
      * @param gauge_ gauge contract to be resumed
      */
-    function _resumeGaugeShares(Gauge gauge_) internal virtual { }
+    function _resumeGaugeShares(GaugeRootstockCollective gauge_) internal virtual { }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

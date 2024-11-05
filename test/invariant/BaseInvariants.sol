@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import { BaseTest, Gauge } from "../BaseTest.sol";
+import { BaseTest } from "../BaseTest.sol";
 import { AllocateHandler } from "./handlers/AllocateHandler.sol";
 import { BuilderHandler } from "./handlers/BuilderHandler.sol";
 import { CycleHandler } from "./handlers/CycleHandler.sol";

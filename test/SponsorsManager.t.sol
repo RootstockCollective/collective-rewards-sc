@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { stdStorage, StdStorage, stdError } from "forge-std/src/Test.sol";
-import { BaseTest, SponsorsManager, Gauge } from "./BaseTest.sol";
+import { BaseTest, SponsorsManager, GaugeRootstockCollective } from "./BaseTest.sol";
 import { BuilderRegistry } from "../src/BuilderRegistry.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 
@@ -37,7 +37,7 @@ contract SponsorsManagerTest is BaseTest {
     function test_RevertGaugeDoesNotExist() public {
         // GIVEN a SponsorManager contract
         // AND a new gauge created by the factor
-        Gauge _wrongGauge = gaugeFactory.createGauge();
+        GaugeRootstockCollective _wrongGauge = gaugeFactory.createGauge();
         gaugesArray.push(_wrongGauge);
         allocationsArray.push(100 ether);
         //  WHEN alice calls allocate using the wrong gauge
@@ -78,7 +78,7 @@ contract SponsorsManagerTest is BaseTest {
         address _newBuilder = makeAddr("newBuilder");
         //  AND is whitelisted
         vm.prank(governor);
-        Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
+        GaugeRootstockCollective _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
 
         gaugesArray.push(_newGauge);
         allocationsArray.push(100 ether);
@@ -202,7 +202,7 @@ contract SponsorsManagerTest is BaseTest {
         sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
 
         address _builder3 = makeAddr("_builder3");
-        Gauge _gauge3 = _whitelistBuilder(_builder3, _builder3, 0.5 ether);
+        GaugeRootstockCollective _gauge3 = _whitelistBuilder(_builder3, _builder3, 0.5 ether);
         allocationsArray.push(10 ether);
 
         // AND alice allocates again to [gauge, gauge2, gauge3] = [2, 6, 10]
@@ -344,7 +344,8 @@ contract SponsorsManagerTest is BaseTest {
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
-            Gauge _newGauge = _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
+            GaugeRootstockCollective _newGauge =
+                _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
             allocationsArray.push(1 ether);
 
             // THEN gauges length increase
@@ -848,7 +849,7 @@ contract SponsorsManagerTest is BaseTest {
         // with rewardToken
         //  THEN notifyRewardAmount reverts with BeforeDistribution error
         vm.startPrank(incentivizer);
-        vm.expectRevert(Gauge.BeforeDistribution.selector);
+        vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
         gauge.incentivizeWithRewardToken(100 ether);
         vm.stopPrank();
 
@@ -857,7 +858,7 @@ contract SponsorsManagerTest is BaseTest {
         //  THEN notifyRewardAmount reverts with BeforeDistribution error
         vm.startPrank(incentivizer);
         vm.deal(address(incentivizer), 100 ether);
-        vm.expectRevert(Gauge.BeforeDistribution.selector);
+        vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
         gauge.incentivizeWithCoinbase{ value: 100 ether }();
         vm.stopPrank();
 
@@ -873,7 +874,7 @@ contract SponsorsManagerTest is BaseTest {
         // WHEN there is an attempt to incentivize a gauge directly before distribution ends
         //  THEN notifyRewardAmount reverts
         vm.startPrank(incentivizer);
-        vm.expectRevert(Gauge.BeforeDistribution.selector);
+        vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
         gauge.incentivizeWithRewardToken(100 ether);
         vm.stopPrank();
 
@@ -881,7 +882,7 @@ contract SponsorsManagerTest is BaseTest {
         // with coinbase
         //  THEN notifyRewardAmount reverts
         vm.startPrank(incentivizer);
-        vm.expectRevert(Gauge.BeforeDistribution.selector);
+        vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
         gauge.incentivizeWithCoinbase{ value: 100 ether }();
         vm.stopPrank();
 
