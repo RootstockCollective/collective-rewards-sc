@@ -16,7 +16,7 @@ import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
 abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    uint256 internal constant _MAX_KICKBACK = UtilsLib._PRECISION;
+    uint256 internal constant _MAX_REWARD_PERCENTAGE = UtilsLib._PRECISION;
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
@@ -33,7 +33,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     error IsRevoked();
     error CannotRevoke();
     error NotOperational();
-    error InvalidBuilderKickback();
+    error InvalidBuilderRewardPercentage();
     error BuilderAlreadyExists();
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
@@ -41,7 +41,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event BuilderActivated(address indexed builder_, address rewardReceiver_, uint64 kickback_);
+    event BuilderActivated(address indexed builder_, address rewardReceiver_, uint64 rewardPercentage_);
     event KYCApproved(address indexed builder_);
     event KYCRevoked(address indexed builder_);
     event Whitelisted(address indexed builder_);
@@ -49,8 +49,10 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
     event Revoked(address indexed builder_);
-    event Permitted(address indexed builder_, uint256 kickback_, uint256 cooldown_);
-    event BuilderKickbackUpdateScheduled(address indexed builder_, uint256 kickback_, uint256 cooldown_);
+    event Permitted(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
+    event BuilderRewardPercentageUpdateScheduled(
+        address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_
+    );
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
     // -----------------------------
@@ -77,12 +79,12 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     // -----------------------------
     // ---------- Structs ----------
     // -----------------------------
-    struct KickbackData {
-        // previous kickback
+    struct RewardPercentageData {
+        // previous reward percentage
         uint64 previous;
-        // next kickback
+        // next reward percentage
         uint64 next;
-        // kickback cooldown end time. After this time, new kickback will be applied
+        // reward percentage cooldown end time. After this time, new reward percentage will be applied
         uint128 cooldownEndTime;
     }
 
@@ -95,8 +97,8 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     mapping(address builder => BuilderState state) public builderState;
     /// @notice map of builders reward receiver
     mapping(address builder => address rewardReceiver) public builderRewardReceiver;
-    /// @notice map of builders kickback data
-    mapping(address builder => KickbackData kickbackData) public builderKickback;
+    /// @notice map of builders reward percentage data
+    mapping(address builder => RewardPercentageData rewardPercentageData) public builderRewardPercentage;
     /// @notice array of all the operational gauges
     EnumerableSet.AddressSet internal _gauges;
     /// @notice array of all the halted gauges
@@ -109,8 +111,8 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     mapping(Gauge gauge => address builder) public gaugeToBuilder;
     /// @notice map of last period finish for halted gauges
     mapping(Gauge gauge => uint256 lastPeriodFinish) public haltedGaugeLastPeriodFinish;
-    /// @notice time that must elapse for a new kickback from a builder to be applied
-    uint128 public kickbackCooldown;
+    /// @notice time that must elapse for a new reward percentage from a builder to be applied
+    uint128 public rewardPercentageCooldown;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -123,7 +125,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      * @param rewardDistributor_ address of the rewardDistributor contract
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
-     * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
+     * @param rewardPercentageCooldown_ time that must elapse for a new reward percentage from a builder to be applied
      */
     function __BuilderRegistry_init(
         IGovernanceManager governanceManager_,
@@ -131,7 +133,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
         address rewardDistributor_,
         uint32 cycleDuration_,
         uint24 cycleStartOffset_,
-        uint128 kickbackCooldown_
+        uint128 rewardPercentageCooldown_
     )
         internal
         onlyInitializing
@@ -140,7 +142,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
         __ERC165_init();
         gaugeFactory = GaugeFactory(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
-        kickbackCooldown = kickbackCooldown_;
+        rewardPercentageCooldown = rewardPercentageCooldown_;
     }
 
     // -----------------------------
@@ -148,35 +150,42 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     // -----------------------------
 
     /**
-     * @notice activates builder for the first time, setting the reward receiver and the kickback
+     * @notice activates builder for the first time, setting the reward receiver and the reward percentage
      *  Sets activate flag to true. It cannot be switched to false anymore
      * @dev reverts if it is not called by the owner address
      * reverts if it is already activated
      * @param builder_ address of the builder
      * @param rewardReceiver_ address of the builder reward receiver
-     * @param kickback_ kickback(100% == 1 ether)
+     * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
-    function activateBuilder(address builder_, address rewardReceiver_, uint64 kickback_) external onlyKycApprover {
+    function activateBuilder(
+        address builder_,
+        address rewardReceiver_,
+        uint64 rewardPercentage_
+    )
+        external
+        onlyKycApprover
+    {
         if (builderState[builder_].activated) revert AlreadyActivated();
         builderState[builder_].activated = true;
         builderState[builder_].kycApproved = true;
         builderRewardReceiver[builder_] = rewardReceiver_;
         // TODO: should we have a minimal amount?
-        if (kickback_ > _MAX_KICKBACK) {
-            revert InvalidBuilderKickback();
+        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
+            revert InvalidBuilderRewardPercentage();
         }
 
         // read from storage
-        KickbackData memory _kickbackData = builderKickback[builder_];
+        RewardPercentageData memory _rewardPercentageData = builderRewardPercentage[builder_];
 
-        _kickbackData.previous = kickback_;
-        _kickbackData.next = kickback_;
-        _kickbackData.cooldownEndTime = uint128(block.timestamp);
+        _rewardPercentageData.previous = rewardPercentage_;
+        _rewardPercentageData.next = rewardPercentage_;
+        _rewardPercentageData.cooldownEndTime = uint128(block.timestamp);
 
         // write to storage
-        builderKickback[builder_] = _kickbackData;
+        builderRewardPercentage[builder_] = _rewardPercentageData;
 
-        emit BuilderActivated(builder_, rewardReceiver_, kickback_);
+        emit BuilderActivated(builder_, rewardReceiver_, rewardPercentage_);
     }
 
     /**
@@ -297,10 +306,10 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
      *  reverts if it is not revoked
      *  reverts if it is executed in distribution period because changing the totalPotentialReward produce a
      * miscalculation of rewards
-     * @param kickback_ kickback(100% == 1 ether)
+     * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
-    // function permitBuilder(uint64 kickback_) external {
-    function permitBuilder(uint64 kickback_) external {
+    // function permitBuilder(uint64 rewardPercentage_) external {
+    function permitBuilder(uint64 rewardPercentage_) external {
         Gauge _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
@@ -308,24 +317,24 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
         if (!builderState[msg.sender].revoked) revert NotRevoked();
 
         // TODO: should we have a minimal amount?
-        if (kickback_ > _MAX_KICKBACK) {
-            revert InvalidBuilderKickback();
+        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
+            revert InvalidBuilderRewardPercentage();
         }
 
         builderState[msg.sender].revoked = false;
 
         // read from storage
-        KickbackData memory _kickbackData = builderKickback[msg.sender];
+        RewardPercentageData memory _rewardPercentageData = builderRewardPercentage[msg.sender];
 
-        _kickbackData.previous = getKickbackToApply(msg.sender);
-        _kickbackData.next = kickback_;
+        _rewardPercentageData.previous = getRewardPercentageToApply(msg.sender);
+        _rewardPercentageData.next = rewardPercentage_;
 
         // write to storage
-        builderKickback[msg.sender] = _kickbackData;
+        builderRewardPercentage[msg.sender] = _rewardPercentageData;
 
         _resumeGauge(_gauge);
 
-        emit Permitted(msg.sender, kickback_, _kickbackData.cooldownEndTime);
+        emit Permitted(msg.sender, rewardPercentage_, _rewardPercentageData.cooldownEndTime);
     }
 
     /**
@@ -345,8 +354,9 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
         if (builderState[msg.sender].revoked) revert AlreadyRevoked();
 
         builderState[msg.sender].revoked = true;
-        // when revoked builder wants to come back, it can set a new kickback. So, the cooldown time starts here
-        builderKickback[msg.sender].cooldownEndTime = uint128(block.timestamp + kickbackCooldown);
+        // when revoked builder wants to come back, it can set a new reward percentage. So, the cooldown time starts
+        // here
+        builderRewardPercentage[msg.sender].cooldownEndTime = uint128(block.timestamp + rewardPercentageCooldown);
 
         _haltGauge(_gauge);
 
@@ -354,42 +364,44 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     }
 
     /**
-     * @notice set a builder kickback
+     * @notice set a builder reward percentage
      * @dev reverts if builder is not operational
-     * @param kickback_ kickback(100% == 1 ether)
+     * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
-    function setBuilderKickback(uint64 kickback_) external {
+    function setBuilderRewardPercentage(uint64 rewardPercentage_) external {
         if (!isBuilderOperational(msg.sender)) revert NotOperational();
 
         // TODO: should we have a minimal amount?
-        if (kickback_ > _MAX_KICKBACK) {
-            revert InvalidBuilderKickback();
+        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
+            revert InvalidBuilderRewardPercentage();
         }
 
         // read from storage
-        KickbackData memory _kickbackData = builderKickback[msg.sender];
+        RewardPercentageData memory _rewardPercentageData = builderRewardPercentage[msg.sender];
 
-        _kickbackData.previous = getKickbackToApply(msg.sender);
-        _kickbackData.next = kickback_;
-        _kickbackData.cooldownEndTime = uint128(block.timestamp) + kickbackCooldown;
+        _rewardPercentageData.previous = getRewardPercentageToApply(msg.sender);
+        _rewardPercentageData.next = rewardPercentage_;
+        _rewardPercentageData.cooldownEndTime = uint128(block.timestamp) + rewardPercentageCooldown;
 
-        emit BuilderKickbackUpdateScheduled(msg.sender, kickback_, _kickbackData.cooldownEndTime);
+        emit BuilderRewardPercentageUpdateScheduled(
+            msg.sender, rewardPercentage_, _rewardPercentageData.cooldownEndTime
+        );
 
         // write to storage
-        builderKickback[msg.sender] = _kickbackData;
+        builderRewardPercentage[msg.sender] = _rewardPercentageData;
     }
 
     /**
-     * @notice returns kickback to apply.
+     * @notice returns reward percentage to apply.
      *  If there is a new one and cooldown time has expired, apply that one; otherwise, apply the previous one
      * @param builder_ address of the builder
      */
-    function getKickbackToApply(address builder_) public view returns (uint64) {
-        KickbackData memory _kickbackData = builderKickback[builder_];
-        if (block.timestamp >= _kickbackData.cooldownEndTime) {
-            return _kickbackData.next;
+    function getRewardPercentageToApply(address builder_) public view returns (uint64) {
+        RewardPercentageData memory _rewardPercentageData = builderRewardPercentage[builder_];
+        if (block.timestamp >= _rewardPercentageData.cooldownEndTime) {
+            return _rewardPercentageData.next;
         }
-        return _kickbackData.previous;
+        return _rewardPercentageData.previous;
     }
 
     /**

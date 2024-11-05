@@ -9,7 +9,7 @@ contract BuilderRegistryTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event BuilderActivated(address indexed builder_, address rewardReceiver_, uint64 kickback_);
+    event BuilderActivated(address indexed builder_, address rewardReceiver_, uint64 rewardPercentage_);
     event KYCApproved(address indexed builder_);
     event KYCRevoked(address indexed builder_);
     event Whitelisted(address indexed builder_);
@@ -17,7 +17,7 @@ contract BuilderRegistryTest is BaseTest {
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
     event Revoked(address indexed builder_);
-    event Permitted(address indexed builder_, uint256 kickback_, uint256 cooldown_);
+    event Permitted(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
     function test_OnlyKycApprover() public {
@@ -167,17 +167,17 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: activateBuilder should revert if kickback is higher than 100
+     * SCENARIO: activateBuilder should revert if reward percentage is higher than 100
      */
-    function test_ActivateBuilderInvalidBuilderKickback() public {
+    function test_ActivateBuilderInvalidBuilderRewardPercentage() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         // AND a kycApprover
         vm.prank(kycApprover);
 
         // WHEN tries to activateBuilder
-        //  THEN tx reverts because is not a valid kickback
-        vm.expectRevert(BuilderRegistry.InvalidBuilderKickback.selector);
+        //  THEN tx reverts because is not a valid reward percentage
+        vm.expectRevert(BuilderRegistry.InvalidBuilderRewardPercentage.selector);
         sponsorsManager.activateBuilder(_newBuilder, _newBuilder, 2 ether);
     }
 
@@ -351,15 +351,15 @@ contract BuilderRegistryTest is BaseTest {
     }
 
     /**
-     * SCENARIO: permitBuilder should revert if kickback is higher than 100
+     * SCENARIO: permitBuilder should revert if reward percentage is higher than 100
      */
-    function test_PermitBuilderInvalidBuilderKickback() public {
+    function test_PermitBuilderInvalidBuilderRewardPercentage() public {
         // GIVEN a revoked builder
         vm.startPrank(builder);
         sponsorsManager.revokeBuilder();
-        //  WHEN tries to permitBuilder with 200% of kickback
-        //   THEN tx reverts because is not a valid kickback
-        vm.expectRevert(BuilderRegistry.InvalidBuilderKickback.selector);
+        //  WHEN tries to permitBuilder with 200% of reward percentage
+        //   THEN tx reverts because is not a valid reward percentage
+        vm.expectRevert(BuilderRegistry.InvalidBuilderRewardPercentage.selector);
         sponsorsManager.permitBuilder(2 ether);
     }
 

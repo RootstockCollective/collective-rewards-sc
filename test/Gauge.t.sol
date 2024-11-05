@@ -186,10 +186,10 @@ contract GaugeTest is BaseTest {
      * rewards variables are updated in the middle and at the end of the cycle
      */
     function test_NotifyRewardAmountWithStrategy() public {
-        // GIVEN a builder with 70% of kickback
+        // GIVEN a builder with 70% of reward percentage
         vm.startPrank(builder);
-        sponsorsManager.setBuilderKickback(0.7 ether);
-        skip(kickbackCooldown);
+        sponsorsManager.setBuilderRewardPercentage(0.7 ether);
+        skip(rewardPercentageCooldown);
 
         // AND 6 ether are allocated to alice
         vm.startPrank(alice);
@@ -854,13 +854,13 @@ contract GaugeTest is BaseTest {
      * SCENARIO: builder claim his rewards in another gauge
      */
     function test_ClaimBuilderWrongGauge() public {
-        // GIVEN a builder with 30% of kickback
+        // GIVEN a builder with 30% of reward percentage
         vm.startPrank(builder);
-        sponsorsManager.setBuilderKickback(0.3 ether);
-        // GIVEN a builder2 with 15% of kickback
+        sponsorsManager.setBuilderRewardPercentage(0.3 ether);
+        // GIVEN a builder2 with 15% of reward percentage
         vm.startPrank(builder2);
-        sponsorsManager.setBuilderKickback(0.15 ether);
-        skip(kickbackCooldown);
+        sponsorsManager.setBuilderRewardPercentage(0.15 ether);
+        skip(rewardPercentageCooldown);
         // AND alice allocates to gauge and gauge2
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
@@ -894,10 +894,10 @@ contract GaugeTest is BaseTest {
      * SCENARIO: builder claims his rewards at any time during the cycle receiving the total amount of rewards.
      */
     function test_ClaimBuilderRewardsBuilder() public {
-        // GIVEN a builder with 30% of kickback
+        // GIVEN a builder with 30% of reward percentage
         vm.startPrank(builder);
-        sponsorsManager.setBuilderKickback(0.3 ether);
-        skip(kickbackCooldown);
+        sponsorsManager.setBuilderRewardPercentage(0.3 ether);
+        skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 2 ether);
@@ -927,10 +927,10 @@ contract GaugeTest is BaseTest {
      * SCENARIO: reward receiver claims his rewards at any time during the cycle receiving the total amount of rewards.
      */
     function test_ClaimBuilderRewardsRewardReceiver() public {
-        // GIVEN a builder2 with 30% of kickback
+        // GIVEN a builder2 with 30% of reward percentage
         vm.startPrank(builder2);
-        sponsorsManager.setBuilderKickback(0.3 ether);
-        skip(kickbackCooldown);
+        sponsorsManager.setBuilderRewardPercentage(0.3 ether);
+        skip(rewardPercentageCooldown);
         // AND alice allocates to gauge2
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge2, 2 ether);
@@ -971,10 +971,10 @@ contract GaugeTest is BaseTest {
      * SCENARIO: there are 2 distributions in the same distribution window, builder claimS the rewards
      */
     function test_ClaimBuilderRewards2Distributions() public {
-        // GIVEN a builder with 30% of kickback
+        // GIVEN a builder with 30% of reward percentage
         vm.startPrank(builder);
-        sponsorsManager.setBuilderKickback(0.3 ether);
-        skip(kickbackCooldown);
+        sponsorsManager.setBuilderRewardPercentage(0.3 ether);
+        skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 2 ether);
@@ -1016,10 +1016,10 @@ contract GaugeTest is BaseTest {
      * SCENARIO: there are 2 cycles, builder claims the rewards
      */
     function test_ClaimBuilderRewards2Cycles() public {
-        // GIVEN a builder with 30% of kickback
+        // GIVEN a builder with 30% of reward percentage
         vm.startPrank(builder);
-        sponsorsManager.setBuilderKickback(0.3 ether);
-        skip(kickbackCooldown);
+        sponsorsManager.setBuilderRewardPercentage(0.3 ether);
+        skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
         sponsorsManager.allocate(gauge, 2 ether);
@@ -1559,7 +1559,7 @@ contract GaugeTest is BaseTest {
         vm.startPrank(bob);
         sponsorsManager.allocate(gauge, 5 ether);
 
-        // AND 200 ether with 50% kickback are distributed for sponsors
+        // AND 200 ether with 50% reward percentage are distributed for sponsors
         _distribute(200 ether, 0);
 
         // AND cycle finishes

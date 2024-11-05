@@ -36,9 +36,9 @@ contract BaseInvariants is BaseTest {
         targetContract(address(distributionHandler));
         targetContract(address(incentivizeHandler));
 
-        // creates 15 gauges with 40% of kickback
-        uint64 _kickback = 0.4 ether; // 40%
-        _createGauges(15, _kickback);
+        // creates 15 gauges with 40% of reward percentage
+        uint64 _rewardPercentage = 0.4 ether; // 40%
+        _createGauges(15, _rewardPercentage);
     }
 
     modifier useTime() {

@@ -946,7 +946,7 @@ contract SponsorsManagerTest is BaseTest {
      * SCENARIO: alice claims all the rewards in a single tx
      */
     function test_ClaimSponsorRewards() public {
-        // GIVEN builder and builder2 which kickback percentage is 50%
+        // GIVEN builder and builder2 which reward percentage is 50%
         //  AND a sponsor alice
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
@@ -979,7 +979,7 @@ contract SponsorsManagerTest is BaseTest {
      * incentivized gauge with rewardToken
      */
     function test_ClaimSponsorRewardsWithIncentivizerInRewardToken() public {
-        // GIVEN builder and builder2 and kickback percentage of 50%
+        // GIVEN builder and builder2 and reward percentage of 50%
         //  AND a sponsor alice
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
@@ -1021,7 +1021,7 @@ contract SponsorsManagerTest is BaseTest {
      * incentivized gauge in coinbase
      */
     function test_ClaimSponsorRewardsWithIncentivizerInCoinbase() public {
-        // GIVEN builder and builder2 and kickback percentage of 50%
+        // GIVEN builder and builder2 and reward percentage of 50%
         //  AND a sponsor alice
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
@@ -1061,7 +1061,7 @@ contract SponsorsManagerTest is BaseTest {
      * SCENARIO: alice claims all the ERC20 rewards in a single tx
      */
     function test_ClaimSponsorERC20Rewards() public {
-        // GIVEN builder and builder2 which kickback percentage is 50%
+        // GIVEN builder and builder2 which reward percentage is 50%
         //  AND a sponsor alice
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
@@ -1096,7 +1096,7 @@ contract SponsorsManagerTest is BaseTest {
      * SCENARIO: alice claims all the coinbase rewards in a single tx
      */
     function test_ClaimSponsorCoinbaseRewards() public {
-        // GIVEN builder and builder2 which kickback percentage is 50%
+        // GIVEN builder and builder2 which reward percentage is 50%
         //  AND a sponsor alice
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;

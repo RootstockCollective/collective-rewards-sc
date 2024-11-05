@@ -11,9 +11,9 @@ contract SupportAndDistributeTest is BaseTest {
     uint256[] public bobVotes;
 
     function _setUp() internal override {
-        // creates 10 gauges with 40% of kickback
-        uint64 _kickback = 0.4 ether; // 40%
-        _createGauges(10, _kickback);
+        // creates 10 gauges with 40% of reward percentage
+        uint64 _rewardPercentage = 0.4 ether; // 40%
+        _createGauges(10, _rewardPercentage);
 
         // start from a new cycle
         _skipAndStartNewCycle();
@@ -21,10 +21,10 @@ contract SupportAndDistributeTest is BaseTest {
     /**
      * SCENARIO: All the votes occurs at the beginning of the distribution and are not re-allocated
      *  Therefore, votes and rewards are always fully considered
-     *  -   10 gauges are created with 40% of kickback
+     *  -   10 gauges are created with 40% of reward percentage
      *  -   alice votes to gauge 4, 5 and 6. 100 ethers are distributed
      *  -   bob votes to gauge 6, 8 and 10. 100 ethers are distributed
-     *  -   40 gauges are created with 20% of kickback
+     *  -   40 gauges are created with 20% of reward percentage
      *  -   100 ethers are distributed. Alice, bob and current builders receive the same
      *          because new gauges were not voted
      *  -   alice votes gauge 15 and 20. 100 ethers are distributed
@@ -35,7 +35,7 @@ contract SupportAndDistributeTest is BaseTest {
     function test_integration_SupportAndDistribute() public {
         // TODO: add incentives to gauges before the distribution
 
-        // GIVEN 10 gauges with 40% of kickback
+        // GIVEN 10 gauges with 40% of reward percentage
         //  WHEN alice votes to gauges 4, 5 and 6
         aliceGauges.push(gaugesArray[4]);
         aliceVotes.push(1 ether);
@@ -138,9 +138,9 @@ contract SupportAndDistributeTest is BaseTest {
         // THEN builder 5 receives coinbase 3.603 = 6 * 200 / 333
         assertApproxEqAbs(_clearCoinbaseBalance(builders[10]), 3_603_603_603_603_603_606, 100);
 
-        // AND creates 40 gauges with 20% of kickback
-        uint64 _kickback = 0.2 ether; // 20%
-        _createGauges(40, _kickback);
+        // AND creates 40 gauges with 20% of reward percentage
+        uint64 _rewardPercentage = 0.2 ether; // 20%
+        _createGauges(40, _rewardPercentage);
 
         // TODO: add incentives to new gauges before the distribution
 

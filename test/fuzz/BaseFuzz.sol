@@ -27,9 +27,9 @@ contract BaseFuzz is BaseTest {
 
         // GIVEN a random amount of builders
         for (uint256 i = 0; i < buildersAmount_; i++) {
-            // random kickback pct for each gauge between 0 and 100%
-            uint64 _randomKickback = uint64(uint256(keccak256(abi.encodePacked(seed_, i))) % 1 ether);
-            _createGauge(_randomKickback);
+            // random reward percentage pct for each gauge between 0 and 100%
+            uint64 _randomRewardPercentage = uint64(uint256(keccak256(abi.encodePacked(seed_, i))) % 1 ether);
+            _createGauge(_randomRewardPercentage);
         }
         // THEN all the gauges and builders were created
         assertEq(gaugesArray.length, buildersAmount_);
@@ -73,8 +73,8 @@ contract BaseFuzz is BaseTest {
     }
 
     function _calcBuilderReward(uint256 amount_, uint256 gaugeIndex_) internal view returns (uint256) {
-        uint256 _kickback = 10 ** 18 - sponsorsManager.getKickbackToApply(builders[gaugeIndex_]);
-        return (_calcGaugeReward(amount_, gaugeIndex_) * _kickback) / 10 ** 18;
+        uint256 _rewardPercentage = 10 ** 18 - sponsorsManager.getRewardPercentageToApply(builders[gaugeIndex_]);
+        return (_calcGaugeReward(amount_, gaugeIndex_) * _rewardPercentage) / 10 ** 18;
     }
 
     function _calcSponsorReward(uint256 amount_, uint256 sponsorIndex_) internal view virtual returns (uint256) {

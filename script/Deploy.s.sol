@@ -21,7 +21,7 @@ contract Deploy is Broadcaster, OutputWriter {
     address private _foundationTreasuryAddress;
     uint32 private _cycleDuration;
     uint24 private _cycleStartOffset;
-    uint128 private _kickbackCooldown;
+    uint128 private _rewardPercentageCooldown;
 
     function setUp() public {
         _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
@@ -29,7 +29,7 @@ contract Deploy is Broadcaster, OutputWriter {
         _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
         _cycleDuration = uint32(vm.envUint("CYCLE_DURATION"));
         _cycleStartOffset = uint24(vm.envUint("CYCLE_START_OFFSET"));
-        _kickbackCooldown = uint128(vm.envUint("KICKBACK_COOLDOWN"));
+        _rewardPercentageCooldown = uint128(vm.envUint("REWARD_PERCENTAGE_COOLDOWN"));
 
         outputWriterSetup();
     }
@@ -57,7 +57,7 @@ contract Deploy is Broadcaster, OutputWriter {
             address(_rewardDistributorProxy),
             _cycleDuration,
             _cycleStartOffset,
-            _kickbackCooldown
+            _rewardPercentageCooldown
         );
         saveWithProxy("SponsorsManager", address(_sponsorManagerImpl), address(_sponsorManagerProxy));
 

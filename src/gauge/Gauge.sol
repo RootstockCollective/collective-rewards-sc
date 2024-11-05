@@ -384,7 +384,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
      * @notice called on the reward distribution. Transfers reward tokens from sponsorManger to this contract
      * @dev reverts if caller is not the sponsorsManager contract
      * @param amountERC20_ amount of ERC20 rewards
-     * @param builderKickback_  builder kickback percentage
+     * @param builderRewardPercentage_  builder reward percentage percentage
      * @param periodFinish_ timestamp end of current rewards period
      * @param cycleStart_ Collective Rewards cycle start timestamp
      * @param cycleDuration_ Collective Rewards cycle time duration
@@ -392,7 +392,7 @@ contract Gauge is ReentrancyGuardUpgradeable {
      */
     function notifyRewardAmountAndUpdateShares(
         uint256 amountERC20_,
-        uint256 builderKickback_,
+        uint256 builderRewardPercentage_,
         uint256 periodFinish_,
         uint256 cycleStart_,
         uint256 cycleDuration_
@@ -402,8 +402,8 @@ contract Gauge is ReentrancyGuardUpgradeable {
         onlySponsorsManager
         returns (uint256 newGaugeRewardShares_)
     {
-        uint256 _sponsorAmountERC20 = UtilsLib._mulPrec(builderKickback_, amountERC20_);
-        uint256 _sponsorAmountCoinbase = UtilsLib._mulPrec(builderKickback_, msg.value);
+        uint256 _sponsorAmountERC20 = UtilsLib._mulPrec(builderRewardPercentage_, amountERC20_);
+        uint256 _sponsorAmountCoinbase = UtilsLib._mulPrec(builderRewardPercentage_, msg.value);
         uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
         _notifyRewardAmount(
             rewardToken, amountERC20_ - _sponsorAmountERC20, _sponsorAmountERC20, periodFinish_, _timeUntilNextCycle

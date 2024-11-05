@@ -95,7 +95,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @param rewardDistributor_ address of the rewardDistributor contract
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
-     * @param kickbackCooldown_ time that must elapse for a new kickback from a builder to be applied
+     * @param rewardPercentageCooldown_ time that must elapse for a new reward percentage from a builder to be applied
      */
     function initialize(
         IGovernanceManager governanceManager_,
@@ -105,13 +105,18 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
         address rewardDistributor_,
         uint32 cycleDuration_,
         uint24 cycleStartOffset_,
-        uint128 kickbackCooldown_
+        uint128 rewardPercentageCooldown_
     )
         external
         initializer
     {
         __BuilderRegistry_init(
-            governanceManager_, gaugeFactory_, rewardDistributor_, cycleDuration_, cycleStartOffset_, kickbackCooldown_
+            governanceManager_,
+            gaugeFactory_,
+            rewardDistributor_,
+            cycleDuration_,
+            cycleStartOffset_,
+            rewardPercentageCooldown_
         );
         rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
@@ -420,9 +425,9 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
         uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
         // [N] = [N] * [N] / [N]
         uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
-        uint256 _builderKickback = getKickbackToApply(gaugeToBuilder[gauge_]);
+        uint256 _builderRewardPercentage = getRewardPercentageToApply(gaugeToBuilder[gauge_]);
         return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
-            _amountERC20, _builderKickback, periodFinish_, cycleStart_, cycleDuration_
+            _amountERC20, _builderRewardPercentage, periodFinish_, cycleStart_, cycleDuration_
         );
     }
 
