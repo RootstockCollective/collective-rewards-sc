@@ -5,13 +5,13 @@ import { Test } from "forge-std/src/Test.sol";
 import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
 import { Deploy as MockStakingTokenDeployer } from "script/test_mock/MockStakingToken.s.sol";
 import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/GaugeBeaconRootstockCollective.s.sol";
-import { Deploy as GaugeFactoryDeployer } from "script/gauge/GaugeFactory.s.sol";
+import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
 import { Deploy as SponsorsManagerDeployer } from "script/SponsorsManager.s.sol";
 import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { StakingTokenMock } from "./mock/StakingTokenMock.sol";
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
-import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
+import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
@@ -25,7 +25,7 @@ contract BaseTest is Test {
 
     GovernanceManager public governanceManager;
     GaugeBeaconRootstockCollective public gaugeBeacon;
-    GaugeFactory public gaugeFactory;
+    GaugeFactoryRootstockCollective public gaugeFactory;
     address[] public builders;
     GaugeRootstockCollective public gauge;
     GaugeRootstockCollective public gauge2;
@@ -60,7 +60,7 @@ contract BaseTest is Test {
         stakingToken = _mockStakingTokenDeployer.run(0);
         rewardToken = _mockTokenDeployer.run(1);
         gaugeBeacon = new GaugeBeaconRootstockCollectiveDeployer().run(address(governanceManager));
-        gaugeFactory = new GaugeFactoryDeployer().run(address(gaugeBeacon), address(rewardToken));
+        gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(address(gaugeBeacon), address(rewardToken));
 
         (rewardDistributor, rewardDistributorImpl) = new RewardDistributorDeployer().run(address(governanceManager));
 

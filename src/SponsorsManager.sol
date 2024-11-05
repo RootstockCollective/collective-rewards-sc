@@ -91,7 +91,7 @@ contract SponsorsManager is ICollectiveRewardsCheck, BuilderRegistry {
      * @param governanceManager_ contract with permissioned roles
      * @param rewardToken_ address of the token rewarded to builder and voters
      * @param stakingToken_ address of the staking token for builder and voters
-     * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param gaugeFactory_ address of the GaugeFactoryRootstockCollective contract
      * @param rewardDistributor_ address of the rewardDistributor contract
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
