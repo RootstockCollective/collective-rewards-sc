@@ -10,7 +10,7 @@ contract BuilderInvariants is BaseInvariants {
     function invariant_HaltedGauge() public useTime {
         for (uint256 i = 0; i < builders.length; i++) {
             address _builder = builders[i];
-            (bool _kycApproved, bool _whitelisted,, bool _revoked,,) = sponsorsManager.builderState(_builder);
+            (, bool _kycApproved, bool _whitelisted,, bool _revoked,,) = sponsorsManager.builderState(_builder);
             address _gauge = address(sponsorsManager.builderToGauge(_builder));
 
             bool _expectedIsHalted = !_kycApproved || !_whitelisted || _revoked;

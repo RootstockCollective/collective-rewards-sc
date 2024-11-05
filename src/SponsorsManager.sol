@@ -24,7 +24,6 @@ contract SponsorsManager is BuilderRegistry {
     error OnlyInDistributionWindow();
     error NotInDistributionPeriod();
     error DistributionPeriodDidNotStart();
-    error GaugeDoesNotExist();
     error BeforeDistribution();
 
     // -----------------------------
@@ -226,7 +225,9 @@ contract SponsorsManager is BuilderRegistry {
     function claimSponsorRewards(Gauge[] memory gauges_) external {
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-            if (gaugeToBuilder[gauges_[i]] == address(0)) revert GaugeDoesNotExist();
+            // reverts if builder was not activated or approved by the community
+            _validateGauge(gauges_[i]);
+
             gauges_[i].claimSponsorReward(msg.sender);
         }
     }
@@ -266,7 +267,9 @@ contract SponsorsManager is BuilderRegistry {
         internal
         returns (uint256 newSponsorTotalAllocation_, uint256 newTotalPotentialReward_)
     {
-        if (gaugeToBuilder[gauge_] == address(0)) revert GaugeDoesNotExist();
+        // reverts if builder was not activated or approved by the community
+        _validateGauge(gauge_);
+
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
             gauge_.allocate(msg.sender, allocation_, timeUntilNextEpoch_);
 
