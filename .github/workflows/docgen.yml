@@ -2,8 +2,6 @@ name: Docgen
 
 on:
   workflow_dispatch:
-  pull_request_review:
-    types: [submitted]
 
 jobs:
   docgen:
@@ -12,12 +10,11 @@ jobs:
     permissions:
       contents: write
 
-    if: github.event_name == 'workflow_dispatch' || github.event.review.state == 'approved'
     steps:
       - name: "Check out the repo"
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Install Foundry"
@@ -46,4 +43,4 @@ jobs:
         run: |
           git add .
           git commit -m "docs: automated docgen by GitHub Action" || echo "No changes to commit"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          git push origin HEAD:${{ github.ref }}
