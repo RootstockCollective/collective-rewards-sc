@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { CycleTimeKeeper } from "./CycleTimeKeeper.sol";
+import { CycleTimeKeeperRootstockCollective } from "./CycleTimeKeeperRootstockCollective.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -13,7 +13,7 @@ import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceM
  * @title BuilderRegistry
  * @notice Keeps registers of the builders
  */
-abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
+abstract contract BuilderRegistry is CycleTimeKeeperRootstockCollective, ERC165Upgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_REWARD_PERCENTAGE = UtilsLib._PRECISION;
@@ -138,7 +138,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
         internal
         onlyInitializing
     {
-        __CycleTimeKeeper_init(governanceManager_, cycleDuration_, cycleStartOffset_);
+        __CycleTimeKeeperRootstockCollective_init(governanceManager_, cycleDuration_, cycleStartOffset_);
         __ERC165_init();
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
