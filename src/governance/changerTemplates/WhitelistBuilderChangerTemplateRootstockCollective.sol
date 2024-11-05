@@ -6,10 +6,10 @@ import { SponsorsManager } from "../../SponsorsManager.sol";
 import { GaugeRootstockCollective } from "../../gauge/GaugeRootstockCollective.sol";
 
 /**
- * @title WhitelistBuilderChangerTemplate
+ * @title WhitelistBuilderChangerTemplateRootstockCollective
  *   @notice ChangeContract used to whitelist a builder and create its Gauger contract
  */
-contract WhitelistBuilderChangerTemplate is IChangeContractRootstockCollective {
+contract WhitelistBuilderChangerTemplateRootstockCollective is IChangeContractRootstockCollective {
     /// @notice SponsorsManager contract address
     SponsorsManager public immutable sponsorsManager;
     /// @notice builder address to be whitelisted
