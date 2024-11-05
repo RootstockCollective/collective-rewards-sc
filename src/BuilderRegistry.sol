@@ -6,7 +6,7 @@ import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { GaugeRootstockCollective } from "./gauge/GaugeRootstockCollective.sol";
-import { GaugeFactory } from "./gauge/GaugeFactory.sol";
+import { GaugeFactoryRootstockCollective } from "./gauge/GaugeFactoryRootstockCollective.sol";
 import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
 
 /**
@@ -104,7 +104,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     /// @notice array of all the halted gauges
     EnumerableSet.AddressSet internal _haltedGauges;
     /// @notice gauge factory contract address
-    GaugeFactory public gaugeFactory;
+    GaugeFactoryRootstockCollective public gaugeFactory;
     /// @notice gauge contract for a builder
     mapping(address builder => GaugeRootstockCollective gauge) public builderToGauge;
     /// @notice builder address for a gauge contract
@@ -121,7 +121,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     /**
      * @notice contract initializer
      * @param governanceManager_ contract with permissioned roles
-     * @param gaugeFactory_ address of the GaugeFactory contract
+     * @param gaugeFactory_ address of the GaugeFactoryRootstockCollective contract
      * @param rewardDistributor_ address of the rewardDistributor contract
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
@@ -140,7 +140,7 @@ abstract contract BuilderRegistry is CycleTimeKeeper, ERC165Upgradeable {
     {
         __CycleTimeKeeper_init(governanceManager_, cycleDuration_, cycleStartOffset_);
         __ERC165_init();
-        gaugeFactory = GaugeFactory(gaugeFactory_);
+        gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
         rewardPercentageCooldown = rewardPercentageCooldown_;
     }

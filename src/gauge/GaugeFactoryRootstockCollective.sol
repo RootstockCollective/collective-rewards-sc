@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import { GaugeRootstockCollective } from "./GaugeRootstockCollective.sol";
 
-contract GaugeFactory {
+contract GaugeFactoryRootstockCollective {
     /// @notice address of beacon contract who stores gauge implementation address which is where gauge proxies will
     /// delegate all function calls
     address public immutable beacon;

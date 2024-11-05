@@ -16,7 +16,7 @@ contract Deploy is Broadcaster {
         if (_governanceManager == address(0)) {
             _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
         }
-        address _gaugeFactoryAddress = vm.envOr("GaugeFactory", address(0));
+        address _gaugeFactoryAddress = vm.envOr("GaugeFactoryRootstockCollective", address(0));
         if (_gaugeFactoryAddress == address(0)) {
             _gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
