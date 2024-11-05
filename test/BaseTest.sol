@@ -75,7 +75,7 @@ contract BaseTest is Test {
             rewardPercentageCooldown
         );
 
-        rewardDistributor.initializeBIMAddresses(address(sponsorsManager));
+        rewardDistributor.initializeCollectiveRewardsAddresses(address(sponsorsManager));
 
         // allow to execute all the functions protected by governance
 

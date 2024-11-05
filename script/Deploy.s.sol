@@ -61,6 +61,6 @@ contract Deploy is Broadcaster, OutputWriter {
         );
         saveWithProxy("SponsorsManager", address(_sponsorManagerImpl), address(_sponsorManagerProxy));
 
-        _rewardDistributorProxy.initializeBIMAddresses(address(_sponsorManagerProxy));
+        _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_sponsorManagerProxy));
     }
 }
