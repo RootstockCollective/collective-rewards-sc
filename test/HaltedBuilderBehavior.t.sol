@@ -85,7 +85,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
     /**
      * SCENARIO: builder is halted in the middle of an epoch having allocation.
-     *  Alice modifies reduce its allocation but the total reward shares don't change
+     *  Alice reduce its allocation but the total reward shares don't change
      *  and the sponsorTotalAllocation is updated
      */
     function test_NegativeAllocationOnHaltedGauge() public {
@@ -251,7 +251,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
     /**
      * SCENARIO: builder is halted in the middle of an epoch having allocation.
-     *  If the builder increase allocations tx fails
+     *  If the builder increases allocations tx fails
      */
     function test_HaltedGaugeCannotIncreaseAllocations() public {
         // GIVEN alice and bob allocate to builder and builder2
