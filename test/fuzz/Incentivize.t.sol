@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseFuzz, Gauge } from "./BaseFuzz.sol";
+import { BaseFuzz, GaugeRootstockCollective } from "./BaseFuzz.sol";
 import { UtilsLib } from "../../src/libraries/UtilsLib.sol";
 
 contract IncentivizeFuzzTest is BaseFuzz {
     uint256 public constant MAX_INCENTIVES = 10;
     uint256 public constant MAX_INCENTIVE_AMOUNT = 100 ether;
-    mapping(Gauge gauge_ => uint256 newRewards_) public rewardsAdded;
+    mapping(GaugeRootstockCollective gauge_ => uint256 newRewards_) public rewardsAdded;
 
     /**
      * SCENARIO: After a distribution, in a random part of the cycle gauges are incentivize.

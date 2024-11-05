@@ -2,10 +2,10 @@
 pragma solidity 0.8.20;
 
 import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
-import { BaseTest, Gauge } from "./BaseTest.sol";
+import { BaseTest, GaugeRootstockCollective } from "./BaseTest.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 
-contract GaugeTest is BaseTest {
+contract GaugeRootstockCollectiveTest is BaseTest {
     using stdStorage for StdStorage;
     // -----------------------------
     // ----------- Events ----------
@@ -43,16 +43,16 @@ contract GaugeTest is BaseTest {
         // WHEN alice calls allocate
         //  THEN tx reverts because caller is not the SponsorsManager contract
         uint256 _timeUntilNextCycle = sponsorsManager.timeUntilNextCycle(block.timestamp);
-        vm.expectRevert(Gauge.NotSponsorsManager.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotSponsorsManager.selector);
         gauge.allocate(alice, 1 ether, _timeUntilNextCycle);
         // WHEN alice calls notifyRewardAmountAndUpdateShares
         //  THEN tx reverts because caller is not the SponsorsManager contract
         (uint256 _cycleStart, uint256 _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
-        vm.expectRevert(Gauge.NotSponsorsManager.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotSponsorsManager.selector);
         gauge.notifyRewardAmountAndUpdateShares(1 ether, 1 ether, block.timestamp, _cycleStart, _cycleDuration);
         // WHEN alice calls moveBuilderUnclaimedRewards
         //  THEN tx reverts because caller is not the SponsorsManager contract
-        vm.expectRevert(Gauge.NotSponsorsManager.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotSponsorsManager.selector);
         gauge.moveBuilderUnclaimedRewards(alice);
     }
 
@@ -65,22 +65,22 @@ contract GaugeTest is BaseTest {
         vm.startPrank(alice);
         // WHEN alice calls claimSponsorReward using bob address
         //  THEN tx reverts because caller is not authorized
-        vm.expectRevert(Gauge.NotAuthorized.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         gauge.claimSponsorReward(address(rewardToken), bob);
 
         // WHEN alice calls claimSponsorReward using bob address
         //  THEN tx reverts because caller is not authorized
-        vm.expectRevert(Gauge.NotAuthorized.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         gauge.claimSponsorReward(bob);
 
         // WHEN alice calls claimBuilderReward using builder address
         //  THEN tx reverts because caller is not authorized
-        vm.expectRevert(Gauge.NotAuthorized.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         gauge.claimBuilderReward(address(rewardToken));
 
         // WHEN alice calls claimBuilderReward using builder address
         //  THEN tx reverts because caller is not authorized
-        vm.expectRevert(Gauge.NotAuthorized.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         gauge.claimBuilderReward();
     }
 
@@ -816,12 +816,12 @@ contract GaugeTest is BaseTest {
 
         // WHEN there is an attempt to distribute 100 ether in rewardToken by Incentivizer
         //  THEN it reverts since distribution has not finished yet
-        vm.expectRevert(Gauge.BeforeDistribution.selector);
+        vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
         gauge.incentivizeWithRewardToken(100 ether);
 
         // WHEN there is an attempt to distribute 100 ether in coinbase by Incentivizer
         //  THEN it reverts since distribution has not finished yet
-        vm.expectRevert(Gauge.BeforeDistribution.selector);
+        vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
         gauge.incentivizeWithCoinbase{ value: 100 ether }();
 
         // AND distribution finishes with 100 ether being distributed
@@ -877,7 +877,7 @@ contract GaugeTest is BaseTest {
         assertEq(rewardToken.balanceOf(builder), 70 ether);
         // WHEN builder claims rewards on gauge2
         //  THEN tx reverts because caller is not authorized
-        vm.expectRevert(Gauge.NotAuthorized.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         vm.startPrank(builder);
         gauge2.claimBuilderReward();
         // THEN builder rewardToken balance is still 70 ether

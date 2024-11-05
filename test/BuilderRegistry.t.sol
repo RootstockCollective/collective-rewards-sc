@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest, Gauge } from "./BaseTest.sol";
+import { BaseTest, GaugeRootstockCollective } from "./BaseTest.sol";
 import { BuilderRegistry } from "../src/BuilderRegistry.sol";
 import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
 
@@ -201,7 +201,7 @@ contract BuilderRegistryTest is BaseTest {
         emit Whitelisted(_newBuilder);
 
         vm.prank(governor);
-        Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
+        GaugeRootstockCollective _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
 
         // THEN new gauge is assigned to the new builder
         assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
@@ -426,7 +426,7 @@ contract BuilderRegistryTest is BaseTest {
         address _newBuilder = makeAddr("newBuilder");
         //  AND is whitelisted
         vm.prank(governor);
-        Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
+        GaugeRootstockCollective _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
         // THEN new gauge is assigned to the new builder
         assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
         // THEN new builder is assigned to the new gauge
@@ -459,7 +459,7 @@ contract BuilderRegistryTest is BaseTest {
         address _newBuilder = makeAddr("newBuilder");
         //  AND is whitelisted
         vm.prank(governor);
-        Gauge _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
+        GaugeRootstockCollective _newGauge = sponsorsManager.whitelistBuilder(_newBuilder);
         // THEN new gauge is assigned to the new builder
         assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
         // THEN new builder is assigned to the new gauge

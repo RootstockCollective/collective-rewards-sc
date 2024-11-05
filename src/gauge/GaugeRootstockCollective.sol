@@ -10,11 +10,11 @@ import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { ISponsorsManager } from "../interfaces/ISponsorsManager.sol";
 
 /**
- * @title Gauge
+ * @title GaugeRootstockCollective
  * @notice For each project proposal a Gauge contract will be deployed.
  *  It receives all the rewards obtained for that project and allows the builder and voters to claim them.
  */
-contract Gauge is ReentrancyGuardUpgradeable {
+contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------

@@ -12,7 +12,7 @@ import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { StakingTokenMock } from "./mock/StakingTokenMock.sol";
 import { GaugeBeacon } from "src/gauge/GaugeBeacon.sol";
 import { GaugeFactory } from "src/gauge/GaugeFactory.sol";
-import { Gauge } from "src/gauge/Gauge.sol";
+import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
@@ -27,9 +27,9 @@ contract BaseTest is Test {
     GaugeBeacon public gaugeBeacon;
     GaugeFactory public gaugeFactory;
     address[] public builders;
-    Gauge public gauge;
-    Gauge public gauge2;
-    Gauge[] public gaugesArray;
+    GaugeRootstockCollective public gauge;
+    GaugeRootstockCollective public gauge2;
+    GaugeRootstockCollective[] public gaugesArray;
     uint256[] public allocationsArray = [0, 0];
     SponsorsManager public sponsorsManagerImpl;
     SponsorsManager public sponsorsManager;
@@ -122,7 +122,7 @@ contract BaseTest is Test {
         uint64 rewardPercentage_
     )
         internal
-        returns (Gauge newGauge_)
+        returns (GaugeRootstockCollective newGauge_)
     {
         vm.prank(kycApprover);
         sponsorsManager.activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
@@ -219,7 +219,7 @@ contract BaseTest is Test {
         return gaugesArray.length;
     }
 
-    function addGauge(Gauge gauge_) public {
+    function addGauge(GaugeRootstockCollective gauge_) public {
         gaugesArray.push(gauge_);
     }
 
