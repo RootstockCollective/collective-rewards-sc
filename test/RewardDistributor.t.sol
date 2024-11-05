@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { BaseTest } from "./BaseTest.sol";
 import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
+import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract RewardDistributorTest is BaseTest {
     function _setUp() internal override {
@@ -24,12 +24,12 @@ contract RewardDistributorTest is BaseTest {
         vm.startPrank(alice);
         // WHEN alice calls sendRewards
         //  THEN tx reverts because caller is not the foundation treasury address
-        vm.expectRevert(IGovernanceManager.NotFoundationTreasury.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotFoundationTreasury.selector);
         rewardDistributor.sendRewards(1 ether, 1 ether);
         // WHEN alice calls sendRewardsAndStartDistribution
         //  THEN tx reverts because caller is not the foundation treasury address
 
-        vm.expectRevert(IGovernanceManager.NotFoundationTreasury.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotFoundationTreasury.selector);
         rewardDistributor.sendRewardsAndStartDistribution(1 ether, 1 ether);
     }
 

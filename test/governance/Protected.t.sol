@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, SponsorsManager } from "../BaseTest.sol";
-import { IGovernanceManager } from "src/interfaces/IGovernanceManager.sol";
+import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract ProtectedTest is BaseTest {
     /**
@@ -22,7 +22,7 @@ contract ProtectedTest is BaseTest {
         vm.prank(alice);
         //  WHEN tries to upgrade the SponsorsManager
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
-        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
         address _newImplementation = makeAddr("newImplementation");
         sponsorsManager.upgradeToAndCall(_newImplementation, "0x0");
     }
@@ -34,19 +34,19 @@ contract ProtectedTest is BaseTest {
         // GIVEN a non-Governor tries to upgrade the GaugeBeaconRootstockCollective
         vm.prank(alice);
         //  THEN tx reverts because NotGovernorOrAuthorizedChanger
-        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
         address _newImplementation = makeAddr("newImplementation");
         gaugeBeacon.upgradeTo(_newImplementation);
     }
 
     /**
-     * SCENARIO: GovernanceManager upgrade should revert if is not called by the governor
+     * SCENARIO: GovernanceManagerRootstockCollective upgrade should revert if is not called by the governor
      */
-    function test_RevertGovernanceManagerUpgradeNotAuthorizedChanger() public {
-        // GIVEN a non-Governor tries to upgrade the GovernanceManager
+    function test_RevertGovernanceManagerRootstockCollectiveUpgradeNotAuthorizedChanger() public {
+        // GIVEN a non-Governor tries to upgrade the GovernanceManagerRootstockCollective
         vm.prank(alice);
         //  THEN tx reverts because NotGovernor
-        vm.expectRevert(IGovernanceManager.NotAuthorizedChanger.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
         address _newImplementation = makeAddr("newImplementation");
         governanceManager.upgradeToAndCall(_newImplementation, "0x0");
     }

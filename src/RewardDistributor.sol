@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { Upgradeable } from "./governance/Upgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SponsorsManager } from "./SponsorsManager.sol";
-import { IGovernanceManager } from "./interfaces/IGovernanceManager.sol";
+import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
  * @title RewardDistributor
@@ -54,7 +54,7 @@ contract RewardDistributor is Upgradeable {
      * @dev initializeCollectiveRewardsAddresses() must be called ASAP after this initialization
      * @param governanceManager_ contract with permissioned roles
      */
-    function initialize(IGovernanceManager governanceManager_) external initializer {
+    function initialize(IGovernanceManagerRootstockCollective governanceManager_) external initializer {
         __Upgradeable_init(governanceManager_);
     }
 

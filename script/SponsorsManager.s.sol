@@ -6,13 +6,13 @@ pragma solidity 0.8.20;
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { SponsorsManager } from "src/SponsorsManager.sol";
-import { IGovernanceManager } from "../src/interfaces/IGovernanceManager.sol";
+import { IGovernanceManagerRootstockCollective } from "../src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
     function run() public returns (SponsorsManager proxy_, SponsorsManager implementation_) {
         address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
-        address _governanceManager = vm.envOr("GovernanceManager", address(0));
+        address _governanceManager = vm.envOr("GovernanceManagerRootstockCollective", address(0));
         if (_governanceManager == address(0)) {
             _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
         }
@@ -62,7 +62,7 @@ contract Deploy is Broadcaster {
         bytes memory _initializerData = abi.encodeCall(
             SponsorsManager.initialize,
             (
-                IGovernanceManager(governanceManager_),
+                IGovernanceManagerRootstockCollective(governanceManager_),
                 rewardToken_,
                 stakingToken_,
                 gaugeFactory_,

@@ -6,7 +6,7 @@ import {
     SponsorsManagerUpgradeMock,
     RewardDistributorUpgradeMock,
     GaugeUpgradeMock,
-    GovernanceManagerUpgradeMock
+    GovernanceManagerRootstockCollectiveUpgradeMock
 } from "../mock/UpgradesMocks.sol";
 
 contract UpgradeTest is BaseTest {
@@ -45,19 +45,20 @@ contract UpgradeTest is BaseTest {
     }
 
     /**
-     * SCENARIO: GovernanceManager is upgraded
+     * SCENARIO: GovernanceManagerRootstockCollective is upgraded
      */
-    function test_UpgradeGovernanceManager() public {
-        // GIVEN a GovernanceManager proxy with an implementation
+    function test_UpgradeGovernanceManagerRootstockCollective() public {
+        // GIVEN a GovernanceManagerRootstockCollective proxy with an implementation
         // AND a new implementation
-        GovernanceManagerUpgradeMock _governanceManagerNewImpl = new GovernanceManagerUpgradeMock();
+        GovernanceManagerRootstockCollectiveUpgradeMock _governanceManagerNewImpl =
+            new GovernanceManagerRootstockCollectiveUpgradeMock();
         //WHEN the proxy is upgraded and initialized
         vm.prank(governor);
         governanceManager.upgradeToAndCall(
             address(_governanceManagerNewImpl), abi.encodeCall(_governanceManagerNewImpl.initializeMock, (45))
         );
-        uint256 _newVar =
-            GovernanceManagerUpgradeMock(address(governanceManager)).getCustomMockValue() - (uint256(uint160(governor)));
+        uint256 _newVar = GovernanceManagerRootstockCollectiveUpgradeMock(address(governanceManager)).getCustomMockValue(
+        ) - (uint256(uint160(governor)));
         // THEN getCustomMockValue is governor address + 45 newVariable
         assertEq(_newVar, 45);
     }

@@ -11,8 +11,9 @@ import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstock
 import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
 import { Deploy as RewardDistributorDeployer } from "script/RewardDistributor.s.sol";
-import { Deploy as GovernanceManagerDeployer } from "script/governance/GovernanceManager.s.sol";
-import { GovernanceManager } from "src/governance/GovernanceManager.sol";
+import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
+    "script/governance/GovernanceManagerRootstockCollective.s.sol";
+import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster, OutputWriter {
     address private _rewardTokenAddress;
@@ -35,9 +36,13 @@ contract Deploy is Broadcaster, OutputWriter {
     }
 
     function run() public {
-        (GovernanceManager _governanceManagerProxy, GovernanceManager _governanceManagerImpl) =
-            new GovernanceManagerDeployer().run();
-        saveWithProxy("GovernanceManager", address(_governanceManagerImpl), address(_governanceManagerProxy));
+        (
+            GovernanceManagerRootstockCollective _governanceManagerProxy,
+            GovernanceManagerRootstockCollective _governanceManagerImpl
+        ) = new GovernanceManagerRootstockCollectiveDeployer().run();
+        saveWithProxy(
+            "GovernanceManagerRootstockCollective", address(_governanceManagerImpl), address(_governanceManagerProxy)
+        );
 
         GaugeBeaconRootstockCollective _gaugeBeacon =
             new GaugeBeaconRootstockCollectiveDeployer().run(address(_governanceManagerProxy));

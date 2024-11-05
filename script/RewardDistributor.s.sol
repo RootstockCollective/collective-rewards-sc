@@ -4,11 +4,11 @@ pragma solidity 0.8.20;
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { RewardDistributor } from "src/RewardDistributor.sol";
-import { IGovernanceManager } from "../src/interfaces/IGovernanceManager.sol";
+import { IGovernanceManagerRootstockCollective } from "../src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
     function run() public returns (RewardDistributor proxy_, RewardDistributor implementation_) {
-        address _governanceManager = vm.envOr("GovernanceManager", address(0));
+        address _governanceManager = vm.envOr("GovernanceManagerRootstockCollective", address(0));
         if (_governanceManager == address(0)) {
             _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
         }
@@ -27,7 +27,7 @@ contract Deploy is Broadcaster {
         require(governanceManager_ != address(0), "Access control address cannot be empty");
 
         bytes memory _initializerData =
-            abi.encodeCall(RewardDistributor.initialize, (IGovernanceManager(governanceManager_)));
+            abi.encodeCall(RewardDistributor.initialize, (IGovernanceManagerRootstockCollective(governanceManager_)));
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {
