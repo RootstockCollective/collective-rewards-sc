@@ -12,7 +12,7 @@ contract WhitelistBuilderChangerTest is BaseTest {
 
     function _setUp() internal override {
         // GIVEN WhitelistBuilderChanger deployed for a new builder
-        _changer = new WhitelistBuilderChangerTemplateRootstockCollective(sponsorsManager, _newBuilder);
+        _changer = new WhitelistBuilderChangerTemplateRootstockCollective(backersManager, _newBuilder);
     }
 
     /**
@@ -47,10 +47,10 @@ contract WhitelistBuilderChangerTest is BaseTest {
         governanceManager.executeChange(_changer);
         //  THEN the change is successfully executed
         GaugeRootstockCollective _newGauge = _changer.newGauge();
-        //  THEN gauge is added on SponsorsManagerRootstockCollective
-        assertEq(address(sponsorsManager.builderToGauge(_newBuilder)), address(_newGauge));
+        //  THEN gauge is added on BackersManagerRootstockCollective
+        assertEq(address(backersManager.builderToGauge(_newBuilder)), address(_newGauge));
         //  THEN the new builder is whitelisted
-        (,, bool _whitelisted,,,,) = sponsorsManager.builderState(_newBuilder);
+        (,, bool _whitelisted,,,,) = backersManager.builderState(_newBuilder);
         assertEq(_whitelisted, true);
     }
 }

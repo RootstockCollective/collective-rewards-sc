@@ -18,12 +18,12 @@ contract Deploy is Broadcaster {
 
         (proxy_, implementation_) = run(_governanceManager);
 
-        address _sponsorsManagerAddress = vm.envOr("SponsorsManagerRootstockCollective", address(0));
-        if (_sponsorsManagerAddress == address(0)) {
-            _sponsorsManagerAddress = vm.envAddress("SPONSORS_MANAGER_ADDRESS");
+        address _backersManagerAddress = vm.envOr("BackersManagerRootstockCollective", address(0));
+        if (_backersManagerAddress == address(0)) {
+            _backersManagerAddress = vm.envAddress("BACKERS_MANAGER_ADDRESS");
         }
 
-        proxy_.initializeCollectiveRewardsAddresses(address(_sponsorsManagerAddress));
+        proxy_.initializeCollectiveRewardsAddresses(address(_backersManagerAddress));
     }
 
     function run(address governanceManager_)

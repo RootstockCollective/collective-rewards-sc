@@ -11,9 +11,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     // ----------- Events ----------
     // -----------------------------
 
-    event SponsorRewardsClaimed(address indexed sponsor_, uint256 amount_);
-    event NewAllocation(address indexed sponsor_, uint256 allocation_);
-    event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 sponsorsAmount_);
+    event BackerRewardsClaimed(address indexed backer_, uint256 amount_);
+    event NewAllocation(address indexed backer_, uint256 allocation_);
+    event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 backersAmount_);
 
     function _setUp() internal override {
         // mint some rewardTokens and deal to incentivizer
@@ -24,54 +24,54 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.prank(address(incentivizer));
         rewardToken.approve(address(gauge2), 100_000 ether);
 
-        // mint some rewardTokens and deal to sponsorsManager
-        rewardToken.mint(address(sponsorsManager), 100_000 ether);
-        vm.deal(address(sponsorsManager), 100_000 ether);
-        vm.prank(address(sponsorsManager));
+        // mint some rewardTokens and deal to backersManager
+        rewardToken.mint(address(backersManager), 100_000 ether);
+        vm.deal(address(backersManager), 100_000 ether);
+        vm.prank(address(backersManager));
         rewardToken.approve(address(gauge), 100_000 ether);
-        vm.prank(address(sponsorsManager));
+        vm.prank(address(backersManager));
         rewardToken.approve(address(gauge2), 100_000 ether);
     }
 
     /**
-     * SCENARIO: functions protected by onlySponsorsManager should revert when are not
-     *  called by SponsorsManagerRootstockCollective contract
+     * SCENARIO: functions protected by onlyBackersManager should revert when are not
+     *  called by BackersManagerRootstockCollective contract
      */
-    function test_onlySponsorsManager() public {
-        // GIVEN a sponsor alice
+    function test_onlyBackersManager() public {
+        // GIVEN a backer alice
         vm.startPrank(alice);
         // WHEN alice calls allocate
-        //  THEN tx reverts because caller is not the SponsorsManagerRootstockCollective contract
-        uint256 _timeUntilNextCycle = sponsorsManager.timeUntilNextCycle(block.timestamp);
-        vm.expectRevert(GaugeRootstockCollective.NotSponsorsManager.selector);
+        //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
+        uint256 _timeUntilNextCycle = backersManager.timeUntilNextCycle(block.timestamp);
+        vm.expectRevert(GaugeRootstockCollective.NotBackersManager.selector);
         gauge.allocate(alice, 1 ether, _timeUntilNextCycle);
         // WHEN alice calls notifyRewardAmountAndUpdateShares
-        //  THEN tx reverts because caller is not the SponsorsManagerRootstockCollective contract
-        (uint256 _cycleStart, uint256 _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
-        vm.expectRevert(GaugeRootstockCollective.NotSponsorsManager.selector);
+        //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        vm.expectRevert(GaugeRootstockCollective.NotBackersManager.selector);
         gauge.notifyRewardAmountAndUpdateShares(1 ether, 1 ether, block.timestamp, _cycleStart, _cycleDuration);
         // WHEN alice calls moveBuilderUnclaimedRewards
-        //  THEN tx reverts because caller is not the SponsorsManagerRootstockCollective contract
-        vm.expectRevert(GaugeRootstockCollective.NotSponsorsManager.selector);
+        //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
+        vm.expectRevert(GaugeRootstockCollective.NotBackersManager.selector);
         gauge.moveBuilderUnclaimedRewards(alice);
     }
 
     /**
      * SCENARIO: functions should revert by NotAuthorized error when are not called by
-     *  SponsorsManagerRootstockCollective or the actor involved
+     *  BackersManagerRootstockCollective or the actor involved
      */
     function test_NotAuthorized() public {
-        // GIVEN a sponsor alice
+        // GIVEN a backer alice
         vm.startPrank(alice);
-        // WHEN alice calls claimSponsorReward using bob address
+        // WHEN alice calls claimBackerReward using bob address
         //  THEN tx reverts because caller is not authorized
         vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
-        gauge.claimSponsorReward(address(rewardToken), bob);
+        gauge.claimBackerReward(address(rewardToken), bob);
 
-        // WHEN alice calls claimSponsorReward using bob address
+        // WHEN alice calls claimBackerReward using bob address
         //  THEN tx reverts because caller is not authorized
         vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
 
         // WHEN alice calls claimBuilderReward using builder address
         //  THEN tx reverts because caller is not authorized
@@ -85,7 +85,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: SponsorsManagerRootstockCollective allocates to alice with no rewards distributed
+     * SCENARIO: BackersManagerRootstockCollective allocates to alice with no rewards distributed
      */
     function test_Allocate() public {
         // GIVEN a new cycle
@@ -98,7 +98,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         vm.expectEmit();
         emit NewAllocation(alice, 1 ether);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
 
         // THEN alice allocation is 1 ether
         assertEq(gauge.allocationOf(alice), 1 ether);
@@ -114,21 +114,21 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);
         // THEN alice reward is 0 because there are no rewards distributed
         assertEq(gauge.rewards(address(rewardToken), alice), 0);
-        // THEN alice sponsorRewardPerTokenPaid is 0 because there are no rewards distributed
-        assertEq(gauge.sponsorRewardPerTokenPaid(address(rewardToken), alice), 0);
+        // THEN alice backerRewardPerTokenPaid is 0 because there are no rewards distributed
+        assertEq(gauge.backerRewardPerTokenPaid(address(rewardToken), alice), 0);
         // THEN lastUpdateTime is cycle start since there are no rewards distributed
-        assertEq(gauge.lastUpdateTime(address(rewardToken)), sponsorsManager.cycleStart(block.timestamp));
+        assertEq(gauge.lastUpdateTime(address(rewardToken)), backersManager.cycleStart(block.timestamp));
     }
 
     /**
-     * SCENARIO: SponsorsManagerRootstockCollective deallocates to alice with no rewards distributed
+     * SCENARIO: BackersManagerRootstockCollective deallocates to alice with no rewards distributed
      */
     function test_Deallocate() public {
         // GIVEN a new cycle
         _skipAndStartNewCycle();
         // AND alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
 
         // WHEN half cycle passes
         _skipRemainingCycleFraction(2);
@@ -136,7 +136,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         //  THEN Allocated event is emitted
         vm.expectEmit();
         emit NewAllocation(alice, 0 ether);
-        sponsorsManager.allocate(gauge, 0 ether);
+        backersManager.allocate(gauge, 0 ether);
 
         // THEN alice allocation is 0
         assertEq(gauge.allocationOf(alice), 0);
@@ -152,26 +152,26 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);
         // THEN alice reward is 0 because there are no rewards distributed
         assertEq(gauge.rewards(address(rewardToken), alice), 0);
-        // THEN alice sponsorRewardPerTokenPaid is 0 because there are no rewards distributed
-        assertEq(gauge.sponsorRewardPerTokenPaid(address(rewardToken), alice), 0);
+        // THEN alice backerRewardPerTokenPaid is 0 because there are no rewards distributed
+        assertEq(gauge.backerRewardPerTokenPaid(address(rewardToken), alice), 0);
         // THEN lastUpdateTime is cycle start since there are no rewards distributed
-        assertEq(gauge.lastUpdateTime(address(rewardToken)), sponsorsManager.cycleStart(block.timestamp));
+        assertEq(gauge.lastUpdateTime(address(rewardToken)), backersManager.cycleStart(block.timestamp));
     }
 
     /**
-     * SCENARIO: SponsorsManagerRootstockCollective makes a partial deallocation to alice with no rewards distributed
+     * SCENARIO: BackersManagerRootstockCollective makes a partial deallocation to alice with no rewards distributed
      */
     function test_DeallocatePartial() public {
         // GIVEN a new cycle
         _skipAndStartNewCycle();
         // AND alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
 
         // WHEN half cycle passes
         _skipRemainingCycleFraction(2);
         // AND alice deallocates 0.25 ether
-        sponsorsManager.allocate(gauge, 0.75 ether);
+        backersManager.allocate(gauge, 0.75 ether);
 
         // THEN alice allocation is 0.75 ether
         assertEq(gauge.allocationOf(alice), 0.75 ether);
@@ -188,12 +188,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_NotifyRewardAmountWithStrategy() public {
         // GIVEN a builder with 70% of reward percentage
         vm.startPrank(builder);
-        sponsorsManager.setBuilderRewardPercentage(0.7 ether);
+        backersManager.setBuilderRewardPercentage(0.7 ether);
         skip(rewardPercentageCooldown);
 
         // AND 6 ether are allocated to alice
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 6 ether);
+        backersManager.allocate(gauge, 6 ether);
 
         // AND 100 rewardToken are distributed
         //  THEN notifyRewardAmount event is emitted
@@ -213,9 +213,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN lastUpdateTime is the current one
         assertEq(gauge.lastUpdateTime(address(rewardToken)), block.timestamp);
         // THEN periodFinish is updated with the timestamp when the cycle finish
-        assertEq(sponsorsManager.periodFinish(), sponsorsManager.cycleNext(block.timestamp));
+        assertEq(backersManager.periodFinish(), backersManager.cycleNext(block.timestamp));
         // THEN time until next cycle is 1 week
-        assertEq(sponsorsManager.periodFinish() - block.timestamp, 1 weeks);
+        assertEq(backersManager.periodFinish() - block.timestamp, 1 weeks);
         // THEN rewardRate is 0.000115740740740740 = 70 ether / 604800 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 115_740_740_740_740);
         // THEN builderRewards is 30% of 100 ether
@@ -242,10 +242,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_IncentivizeWithRewardToken() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.startPrank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // AND 1 days pass
         skip(1 days);
@@ -266,9 +266,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN lastUpdateTime is the current one
         assertEq(gauge.lastUpdateTime(address(rewardToken)), block.timestamp);
         // THEN periodFinish is updated with the timestamp when the cycle finish
-        assertEq(sponsorsManager.periodFinish(), sponsorsManager.cycleNext(block.timestamp));
+        assertEq(backersManager.periodFinish(), backersManager.cycleNext(block.timestamp));
         // THEN time until next cycle is 518400
-        assertEq(sponsorsManager.periodFinish() - block.timestamp, 518_400);
+        assertEq(backersManager.periodFinish() - block.timestamp, 518_400);
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
 
@@ -287,15 +287,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
     /**
      * SCENARIO: rewards variables for rewardToken are updated by incentivizer that is not the
-     * SponsorsManagerRootstockCollective
+     * BackersManagerRootstockCollective
      */
-    function test_IncentivizeWithRewardTokenNotFromSponsorsManagerRootstockCollective() public {
+    function test_IncentivizeWithRewardTokenNotFromBackersManagerRootstockCollective() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.startPrank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // WHEN an Incentivizer has rewardToken
         vm.startPrank(incentivizer);
@@ -330,10 +330,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_IncentivizeWithZeroAmount() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.startPrank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // WHEN 0 ether are distributed by Incentivizer in rewardToken
         vm.startPrank(incentivizer);
@@ -382,10 +382,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_IncentivizeTwiceInSameCycle() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.startPrank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // WHEN an Incentivizer has rewardToken
         vm.startPrank(incentivizer);
@@ -428,16 +428,16 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManagerRootstockCollective using
+     * SCENARIO: rewards variables are updated by incentivizer that is not the BackersManagerRootstockCollective using
      * coinbase
      */
-    function test_IncentivizeWithCoinbaseNotFromSponsorsManagerRootstockCollective() public {
+    function test_IncentivizeWithCoinbaseNotFromBackersManagerRootstockCollective() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.startPrank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // AND 1 day passes
         skip(1 days);
@@ -498,10 +498,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.startPrank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // THEN rewardMissing is 49999999999999999999 = 518400 / 2 *  0.000192901234567901
         assertEq(gauge.rewardMissing(address(rewardToken)) / 10 ** 18, 49_999_999_999_999_999_999);
@@ -553,10 +553,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManagerRootstockCollective when
+     * SCENARIO: rewards variables are updated by incentivizer that is not the BackersManagerRootstockCollective when
      * there
      * are no initial allocations in previous cycle, allocations happen in following cycle and all
-     * rewards are distributed and claimed by sponsors with no rewards lost
+     * rewards are distributed and claimed by backers with no rewards lost
      */
     function test_IncentivizeWithNoAllocationsInPreviousCycle() public {
         // GIVEN no allocations to gauge
@@ -579,13 +579,13 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN rewardMissing is 0 since there were no allocations
         assertEq(gauge.rewardMissing(address(rewardToken)), 0);
 
-        // AND 0 ether are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
-        (uint256 _cycleStart, uint256 _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
+        // AND 0 ether are distributed for backers
+        vm.startPrank(address(backersManager));
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // rewardMissing are updated with all the existing rewards (since there were no allocations), included in the
         // rewardRate for new cycle and set back to 0 in this method
         gauge.notifyRewardAmountAndUpdateShares(
-            0 ether, 1 ether, sponsorsManager.periodFinish(), _cycleStart, _cycleDuration
+            0 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -601,10 +601,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.startPrank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -625,7 +625,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance is 1 * rewardPerToken
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
         // THEN alice has 0 rewards to claim
@@ -633,7 +633,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
         // THEN bob rewardToken balance is 5 * rewardPerToken
         assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
         // THEN bob has 0 rewards to claim
@@ -641,7 +641,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManagerRootstockCollective when
+     * SCENARIO: rewards variables are updated by incentivizer that is not the BackersManagerRootstockCollective when
      * there
      * are no initial allocations in first cycle, allocations happen in third cycle, rewards are not locked
      */
@@ -667,11 +667,11 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN rewardMissing is 0 - there were no allocations
         assertEq(gauge.rewardMissing(address(rewardToken)), 0);
 
-        // AND 0 ether are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
-        (uint256 _cycleStart, uint256 _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
+        // AND 0 ether are distributed for backers
+        vm.startPrank(address(backersManager));
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
-            0 ether, 1 ether, sponsorsManager.periodFinish(), _cycleStart, _cycleDuration
+            0 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -689,21 +689,21 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN rewardMissing is 0 - there were no allocations
         assertEq(gauge.rewardMissing(address(rewardToken)), 0);
 
-        // AND 0 ether are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
-        (_cycleStart, _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
+        // AND 0 ether are distributed for backers
+        vm.startPrank(address(backersManager));
+        (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
-            0 ether, 1 ether, sponsorsManager.periodFinish(), _cycleStart, _cycleDuration
+            0 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
 
         // AND alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.startPrank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // AND half cycle passes
         _skipAndStartNewCycle();
@@ -715,7 +715,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance is 1 * rewardPerToken
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
         // THEN alice has 0 rewards to claim
@@ -723,7 +723,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
         // THEN bob rewardToken balance is 5 * rewardPerToken
         assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
         // THEN bob has 0 rewards to claim
@@ -731,16 +731,16 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables are updated by incentivizer that is not the SponsorsManagerRootstockCollective and
+     * SCENARIO: rewards variables are updated by incentivizer that is not the BackersManagerRootstockCollective and
      * during distribution
      */
-    function test_IncentivizeWithIncentivizerAndSponsorsManagerRootstockCollective() public {
+    function test_IncentivizeWithIncentivizerAndBackersManagerRootstockCollective() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.prank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // AND 1 day passes
         skip(1 days);
@@ -760,11 +760,11 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND cycle finishes
         _skipAndStartNewCycle();
-        // AND 100 ether are distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
-        (uint256 _cycleStart, uint256 _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
+        // AND 100 ether are distributed for backers
+        vm.startPrank(address(backersManager));
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
-            100 ether, 1 ether, sponsorsManager.periodFinish(), _cycleStart, _cycleDuration
+            100 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -801,10 +801,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_NotifyRewardAmountIncentivizeInDistributionWindow() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.startPrank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // WHEN an Incentivizer has rewardToken and coinbase
         vm.startPrank(incentivizer);
@@ -829,10 +829,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         gauge.incentivizeWithCoinbase{ value: 100 ether }();
 
         // AND distribution finishes with 100 ether being distributed
-        vm.startPrank(address(sponsorsManager));
-        (uint256 _cycleStart, uint256 _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
+        vm.startPrank(address(backersManager));
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
-            100 ether, 1 ether, sponsorsManager.periodFinish(), _cycleStart, _cycleDuration
+            100 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -860,16 +860,16 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderWrongGauge() public {
         // GIVEN a builder with 30% of reward percentage
         vm.startPrank(builder);
-        sponsorsManager.setBuilderRewardPercentage(0.3 ether);
+        backersManager.setBuilderRewardPercentage(0.3 ether);
         // GIVEN a builder2 with 15% of reward percentage
         vm.startPrank(builder2);
-        sponsorsManager.setBuilderRewardPercentage(0.15 ether);
+        backersManager.setBuilderRewardPercentage(0.15 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge and gauge2
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 4 ether;
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         // AND 300 rewardToken are distributed
         _distribute(300 ether, 0 ether);
@@ -900,11 +900,11 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsBuilder() public {
         // GIVEN a builder with 30% of reward percentage
         vm.startPrank(builder);
-        sponsorsManager.setBuilderRewardPercentage(0.3 ether);
+        backersManager.setBuilderRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 2 ether);
+        backersManager.allocate(gauge, 2 ether);
 
         // AND 100 rewardToken and 100 coinbase are distributed
         _distribute(100 ether, 100 ether);
@@ -933,11 +933,11 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsRewardReceiver() public {
         // GIVEN a builder2 with 30% of reward percentage
         vm.startPrank(builder2);
-        sponsorsManager.setBuilderRewardPercentage(0.3 ether);
+        backersManager.setBuilderRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge2
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge2, 2 ether);
+        backersManager.allocate(gauge2, 2 ether);
 
         // AND 100 rewardToken and 100 coinbase are distributed
         _distribute(100 ether, 100 ether);
@@ -977,17 +977,17 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewards2Distributions() public {
         // GIVEN a builder with 30% of reward percentage
         vm.startPrank(builder);
-        sponsorsManager.setBuilderRewardPercentage(0.3 ether);
+        backersManager.setBuilderRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 2 ether);
+        backersManager.allocate(gauge, 2 ether);
 
         // AND 100 rewardToken and 100 coinbase are distributed
         _distribute(100 ether, 100 ether);
 
         // AND 100 rewardToken and 100 coinbase are distributed in the same distribution window
-        vm.warp(sponsorsManager.endDistributionWindow(block.timestamp) - 1);
+        vm.warp(backersManager.endDistributionWindow(block.timestamp) - 1);
         rewardToken.mint(address(rewardDistributor), 100 ether);
         vm.deal(address(rewardDistributor), 100 ether);
         vm.startPrank(foundation);
@@ -1022,11 +1022,11 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewards2Cycles() public {
         // GIVEN a builder with 30% of reward percentage
         vm.startPrank(builder);
-        sponsorsManager.setBuilderRewardPercentage(0.3 ether);
+        backersManager.setBuilderRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 2 ether);
+        backersManager.allocate(gauge, 2 ether);
 
         // AND 100 rewardToken and 100 coinbase are distributed
         _distribute(100 ether, 100 ether);
@@ -1060,15 +1060,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: alice and bob claim their rewards at the end of the cycle receiving the total amount of rewards.
      */
-    function test_ClaimSponsorRewards() public {
+    function test_ClaimBackerRewards() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.prank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
-        // AND 100 ether distributed for sponsors
+        // AND 100 ether distributed for backers
         vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
 
@@ -1085,29 +1085,29 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
         // THEN bob rewardToken balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
     }
 
     /**
-     * SCENARIO: alice claims sponsors rewards on a wrong gauge
+     * SCENARIO: alice claims backers rewards on a wrong gauge
      */
-    function test_ClaimSponsorRewardsWrongGauge() public {
+    function test_ClaimBackerRewardsWrongGauge() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.prank(bob);
-        sponsorsManager.allocate(gauge2, 5 ether);
+        backersManager.allocate(gauge2, 5 ether);
 
-        // AND 100 ether distributed for sponsors on both gauges
+        // AND 100 ether distributed for backers on both gauges
         vm.startPrank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
         gauge2.incentivizeWithRewardToken(100 ether);
@@ -1121,25 +1121,25 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards on gauge2
         vm.prank(alice);
-        gauge2.claimSponsorReward(alice);
+        gauge2.claimBackerReward(alice);
         // THEN alice rewardToken balance is 0
         assertEq(rewardToken.balanceOf(alice), 0);
 
         // WHEN alice claims rewards on gauge
         vm.prank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance is 100
         assertApproxEqAbs(rewardToken.balanceOf(alice), 100 ether, 10);
 
         // WHEN bob claims rewards on gauge
         vm.prank(bob);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
         // THEN bob rewardToken balance is 0
         assertEq(rewardToken.balanceOf(bob), 0);
 
         // WHEN bob claims rewards on gauge2
         vm.prank(bob);
-        gauge2.claimSponsorReward(bob);
+        gauge2.claimBackerReward(bob);
         // THEN bob rewardToken balance is 100
         assertApproxEqAbs(rewardToken.balanceOf(bob), 100 ether, 10);
     }
@@ -1147,15 +1147,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: alice and bob claim their rewards in the middle of the cycle receiving partial rewards.
      */
-    function test_ClaimSponsorRewardsPartial() public {
+    function test_ClaimBackerRewardsPartial() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.prank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
-        // AND 100 ether are distributed for sponsors
+        // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
 
@@ -1172,13 +1172,13 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance is 5.555555555555555555 = 1 * 5.555555555555555555
         assertEq(rewardToken.balanceOf(alice), 5_555_555_555_555_555_555);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
         // THEN bob rewardToken balance is 27.777777777777777775 = 5 * 5.555555555555555555
         assertEq(rewardToken.balanceOf(bob), 27_777_777_777_777_777_775);
     }
@@ -1187,15 +1187,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
      * SCENARIO: alice and bob don't claim on cycle 1 but claim on cycle 2
      *  receiving the 2 reward distributions accumulated
      */
-    function test_ClaimSponsorRewardsAccumulative() public {
+    function test_ClaimBackerRewardsAccumulative() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.prank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
-        // AND 100 ether distributed for sponsors
+        // AND 100 ether distributed for backers
         vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
 
@@ -1205,7 +1205,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 0 rewardToken are distributed
         _distribute(0, 0);
 
-        // AND 200 ether more are distributed for sponsors
+        // AND 200 ether more are distributed for backers
         vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(200 ether);
 
@@ -1231,13 +1231,13 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance is 49.999999999999999999 = 1 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_999);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
         // THEN bob rewardToken balance is 249.999999999999999995 = 5 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(bob), 249_999_999_999_999_999_995);
     }
@@ -1245,25 +1245,25 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: there are 2 distributions on the same cycle, alice and bob claim them
      */
-    function test_ClaimSponsorRewards2DistributionOnSameCycle() public {
+    function test_ClaimBackerRewards2DistributionOnSameCycle() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.prank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // AND 1 days pass
         skip(1 days);
 
-        // AND 100 ether distributed for sponsors
+        // AND 100 ether distributed for backers
         vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
-        // AND 200 ether more are distributed for sponsors
+        // AND 200 ether more are distributed for backers
         vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(200 ether);
         // simulates a distribution setting the periodFinish
@@ -1279,7 +1279,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND cycle finishes
         _skipAndStartNewCycle();
-        // AND 0 ether are distributed for sponsors
+        // AND 0 ether are distributed for backers
         _distribute(0, 0);
 
         // THEN rewardPerToken is
@@ -1291,13 +1291,13 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance is 49.999999999999999999 = 1 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_999);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
         // THEN bob rewardToken balance is 249.999999999999999995 = 5 * 49.999999999999999999
         assertEq(rewardToken.balanceOf(bob), 249_999_999_999_999_999_995);
     }
@@ -1305,17 +1305,17 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: alice quits before the cycle finishes, so she receives less rewards and bob more
      */
-    function test_ClaimSponsorRewardsAliceQuit() public {
+    function test_ClaimBackerRewardsAliceQuit() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.prank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
-        // AND 100 ether are distributed for sponsors
+        // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
-        // AND 100 ether distributed for sponsors
+        // AND 100 ether distributed for backers
         gauge.incentivizeWithRewardToken(100 ether);
 
         // AND half cycle passes
@@ -1323,14 +1323,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice deallocates all
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 0 ether);
+        backersManager.allocate(gauge, 0 ether);
 
         // time until next cycle is 518400
         // rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         // THEN rewardPerToken is 8.333333333333333333 = 518400 / 2 * 0.000192901234567901 / 6 ether
         assertEq(gauge.rewardPerToken(address(rewardToken)), 8_333_333_333_333_333_333);
 
-        // AND 0 ether are distributed for sponsors
+        // AND 0 ether are distributed for backers
         _distribute(0, 0);
 
         // THEN rewardPerToken is
@@ -1339,13 +1339,13 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance is 8.333333333333333333 = 1 * 8.333333333333333333
         assertEq(rewardToken.balanceOf(alice), 8_333_333_333_333_333_333);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
         // THEN bob rewardToken balance is 91.666666666666666660 = 5 * 18.333333333333333332
         assertEq(rewardToken.balanceOf(bob), 91_666_666_666_666_666_660);
     }
@@ -1353,17 +1353,17 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: alice allocates more before the cycle finishes, so she receives more rewards and bob less
      */
-    function test_ClaimSponsorRewardsAliceAllocatesAgain() public {
+    function test_ClaimBackerRewardsAliceAllocatesAgain() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.prank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
-        // AND 100 ether are distributed for sponsors
+        // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
-        // AND 100 ether distributed for sponsors
+        // AND 100 ether distributed for backers
         gauge.incentivizeWithRewardToken(100 ether);
 
         // AND half cycle passes
@@ -1371,14 +1371,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice allocates 1 ether more
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 2 ether);
+        backersManager.allocate(gauge, 2 ether);
 
         // time until next cycle is 518400
         // rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         // THEN rewardPerToken is 8.333333333333333333 = 518400 / 2 * 0.000192901234567901 / 6 ether
         assertEq(gauge.rewardPerToken(address(rewardToken)), 8_333_333_333_333_333_333);
 
-        // AND 0 ether are distributed for sponsors
+        // AND 0 ether are distributed for backers
         _distribute(0, 0);
 
         // THEN rewardPerToken is
@@ -1387,14 +1387,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance is
         //  22.619047619047619047 = 1 * 8.333333333333333333 + 2 * (15.476190476190476190 - 8.333333333333333333)
         assertEq(rewardToken.balanceOf(alice), 22_619_047_619_047_619_047);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
         // THEN bob rewardToken balance is 91.666666666666666660 = 5 * 15.476190476190476190
         assertEq(rewardToken.balanceOf(bob), 77_380_952_380_952_380_950);
     }
@@ -1404,17 +1404,17 @@ contract GaugeRootstockCollectiveTest is BaseTest {
      * alice and bob allocate again on the next cycle and receive the missing
      * rewards from the previous one
      */
-    function test_ClaimMissingSponsorRewardsOnNextCycle() public {
+    function test_ClaimMissingBackerRewardsOnNextCycle() public {
         // GIVEN alice allocates 2 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 2 ether);
+        backersManager.allocate(gauge, 2 ether);
 
         // AND 1 days pass
         skip(1 days);
 
-        // AND 100 ether are distributed for sponsors
+        // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
-        // AND 100 ether distributed for sponsors
+        // AND 100 ether distributed for backers
         gauge.incentivizeWithRewardToken(100 ether);
 
         // AND half cycle pass
@@ -1422,7 +1422,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND alice deallocates all
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 0 ether);
+        backersManager.allocate(gauge, 0 ether);
 
         // time until next cycle is 518400
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
@@ -1432,28 +1432,28 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN rewardPerToken is 24.999999999999999999 = 24999999999999999999 + 0
         assertEq(gauge.rewardPerToken(address(rewardToken)), 24_999_999_999_999_999_999);
 
-        // AND 0 ether are distributed for sponsors
+        // AND 0 ether are distributed for backers
         _distribute(0, 0);
 
         // AND alice allocates 1 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.prank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
         // THEN lastUpdateTime is cycle start
-        assertEq(gauge.lastUpdateTime(address(rewardToken)), sponsorsManager.cycleStart(block.timestamp));
+        assertEq(gauge.lastUpdateTime(address(rewardToken)), backersManager.cycleStart(block.timestamp));
         // THEN rewardRate is 0.000082671957671957 = (100 ether / 2) / 604800 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 82_671_957_671_957);
         // THEN rewardMissing is 49.999999999999999999 = 518400 / 2 * 0.000192901234567901
         assertEq(gauge.rewardMissing(address(rewardToken)) / 10 ** 18, 0);
 
-        // AND 100 ether are distributed for sponsors
+        // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
 
-        // AND 0 ether are distributed for sponsors
+        // AND 0 ether are distributed for backers
         _distribute(0, 0);
 
         // THEN rewardRate is 0
@@ -1464,14 +1464,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance is
         //  74.999999999999999997 = 2 * 24.999999999999999999 + 1 * (49.999999999999999998 - 24.999999999999999999)
         assertEq(rewardToken.balanceOf(alice), 74_999_999_999_999_999_997);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
         // THEN bob rewardToken balance is 124.999999999999999995 = 5 * (49.999999999999999998 - 24.999999999999999999)
         assertEq(rewardToken.balanceOf(bob), 124_999_999_999_999_999_995);
     }
@@ -1482,12 +1482,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimERC20Rewards() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.prank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
-        // AND 100 ether are distributed for sponsors
+        // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
         gauge.incentivizeWithRewardToken(100 ether);
 
@@ -1501,13 +1501,13 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimSponsorReward(address(rewardToken), alice);
+        gauge.claimBackerReward(address(rewardToken), alice);
         // THEN alice rewardToken balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimSponsorReward(address(rewardToken), bob);
+        gauge.claimBackerReward(address(rewardToken), bob);
         // THEN bob rewardToken balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
     }
@@ -1518,12 +1518,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimCoinbaseRewards() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.prank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
-        // AND 100 ether are distributed for sponsors
+        // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
         gauge.incentivizeWithCoinbase{ value: 100 ether }();
 
@@ -1537,13 +1537,13 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimSponsorReward(UtilsLib._COINBASE_ADDRESS, alice);
+        gauge.claimBackerReward(UtilsLib._COINBASE_ADDRESS, alice);
         // THEN alice coinbase balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(alice.balance, 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimSponsorReward(UtilsLib._COINBASE_ADDRESS, bob);
+        gauge.claimBackerReward(UtilsLib._COINBASE_ADDRESS, bob);
         // THEN bob coinbase balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(bob.balance, 83_333_333_333_333_333_330);
     }
@@ -1555,15 +1555,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
      *  If they claim again without a new reward distribution they don't receive rewardTokens again and rewardRate
      *  should be 0.
      */
-    function test_ClaimSponsorRewardsAfterNoRewards() public {
+    function test_ClaimBackerRewardsAfterNoRewards() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
         // AND bob allocates 5 ether
         vm.startPrank(bob);
-        sponsorsManager.allocate(gauge, 5 ether);
+        backersManager.allocate(gauge, 5 ether);
 
-        // AND 200 ether with 50% reward percentage are distributed for sponsors
+        // AND 200 ether with 50% reward percentage are distributed for backers
         _distribute(200 ether, 0);
 
         // AND cycle finishes
@@ -1576,27 +1576,27 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
-        gauge.claimSponsorReward(bob);
+        gauge.claimBackerReward(bob);
         // THEN bob rewardToken balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
 
         // AND alice and bob deallocate all
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 0 ether);
+        backersManager.allocate(gauge, 0 ether);
         vm.startPrank(bob);
-        sponsorsManager.allocate(gauge, 0 ether);
+        backersManager.allocate(gauge, 0 ether);
 
-        // AND 0 ether distributed for sponsors
-        vm.startPrank(address(sponsorsManager));
-        (uint256 _cycleStart, uint256 _cycleDuration) = sponsorsManager.getCycleStartAndDuration();
-        gauge.notifyRewardAmountAndUpdateShares(0, 1 ether, sponsorsManager.periodFinish(), _cycleStart, _cycleDuration);
+        // AND 0 ether distributed for backers
+        vm.startPrank(address(backersManager));
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        gauge.notifyRewardAmountAndUpdateShares(0, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND half cycle pass
@@ -1604,14 +1604,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 1 ether allocated to alice
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 1 ether);
+        backersManager.allocate(gauge, 1 ether);
 
         // AND cycle finish
         _skipAndStartNewCycle();
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
-        gauge.claimSponsorReward(alice);
+        gauge.claimBackerReward(alice);
         // THEN alice rewardToken balance did not change
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
         // THEN rewardRate is 0
@@ -1619,15 +1619,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * @notice sets periodFinish on SponsorsManagerRootstockCollective
-     *  Since we are impersonating SponsorsManagerRootstockCollective instead of allocating and distributing from real
+     * @notice sets periodFinish on BackersManagerRootstockCollective
+     *  Since we are impersonating BackersManagerRootstockCollective instead of allocating and distributing from real
      * use cases,
      *  we need to update the periodFinish var every time gauge.notifyRewardAmountAndUpdateShares is called
      *  at the beginning of an cycle to simulate a distribution
      */
     function _setPeriodFinish() internal {
-        stdstore.target(address(sponsorsManager)).sig("periodFinish()").checked_write(
-            sponsorsManager.cycleNext(block.timestamp)
+        stdstore.target(address(backersManager)).sig("periodFinish()").checked_write(
+            backersManager.cycleNext(block.timestamp)
         );
     }
 }

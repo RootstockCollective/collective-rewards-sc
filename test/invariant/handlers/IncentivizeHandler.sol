@@ -24,13 +24,13 @@ contract IncentivizeHandler is BaseHandler {
         external
         skipTime(timeToSkip_)
     {
-        if (sponsorsManager.periodFinish() <= block.timestamp) return;
+        if (backersManager.periodFinish() <= block.timestamp) return;
         gaugeIndex_ = bound(gaugeIndex_, 0, baseTest.gaugesArrayLength() - 1);
         amountERC20_ = bound(amountERC20_, 0, type(uint64).max);
         amountCoinbase_ = bound(amountCoinbase_, 0, type(uint64).max);
 
         GaugeRootstockCollective _gauge = baseTest.gaugesArray(gaugeIndex_);
-        if (sponsorsManager.isGaugeHalted(address(_gauge))) return;
+        if (backersManager.isGaugeHalted(address(_gauge))) return;
 
         rewardTokenIncentives[_gauge] += amountERC20_;
 

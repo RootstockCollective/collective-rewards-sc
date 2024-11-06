@@ -11,10 +11,10 @@ import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
- * @title SponsorsManagerRootstockCollective
- * @notice Creates gauges, manages sponsors votes and distribute rewards
+ * @title BackersManagerRootstockCollective
+ * @notice Creates gauges, manages backers votes and distribute rewards
  */
-contract SponsorsManagerRootstockCollective is
+contract BackersManagerRootstockCollective is
     ICollectiveRewardsCheckRootstockCollective,
     BuilderRegistryRootstockCollective
 {
@@ -35,7 +35,7 @@ contract SponsorsManagerRootstockCollective is
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event NewAllocation(address indexed sponsor_, address indexed gauge_, uint256 allocation_);
+    event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_);
     event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
     event RewardDistributionStarted(address indexed sender_);
     event RewardDistributed(address indexed sender_);
@@ -77,8 +77,8 @@ contract SponsorsManagerRootstockCollective is
     /// @notice true if distribution period started. Allocations remain blocked until it finishes
     bool public onDistributionPeriod;
 
-    /// @notice total amount of stakingToken allocated by a sponsor
-    mapping(address sponsor => uint256 allocation) public sponsorTotalAllocation;
+    /// @notice total amount of stakingToken allocated by a backer
+    mapping(address backer => uint256 allocation) public backerTotalAllocation;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -144,7 +144,7 @@ contract SponsorsManagerRootstockCollective is
      * @param value_ amount of stakingToken to withdraw
      */
     function canWithdraw(address targetAddress_, uint256 value_) external view returns (bool) {
-        uint256 _allocation = sponsorTotalAllocation[targetAddress_];
+        uint256 _allocation = backerTotalAllocation[targetAddress_];
         if (_allocation == 0) return true;
 
         return stakingToken.balanceOf(targetAddress_) >= _allocation + value_;
@@ -158,15 +158,15 @@ contract SponsorsManagerRootstockCollective is
      * @param allocation_ amount of votes to allocate
      */
     function allocate(GaugeRootstockCollective gauge_, uint256 allocation_) external notInDistributionPeriod {
-        (uint256 _newSponsorTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
+        (uint256 _newbackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
             gauge_,
             allocation_,
-            sponsorTotalAllocation[msg.sender],
+            backerTotalAllocation[msg.sender],
             totalPotentialReward,
             timeUntilNextCycle(block.timestamp)
         );
 
-        _updateAllocation(msg.sender, _newSponsorTotalAllocation, _newTotalPotentialReward);
+        _updateAllocation(msg.sender, _newbackerTotalAllocation, _newTotalPotentialReward);
     }
 
     /**
@@ -186,17 +186,17 @@ contract SponsorsManagerRootstockCollective is
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
         // TODO: check length < MAX or let revert by out of gas?
-        uint256 _sponsorTotalAllocation = sponsorTotalAllocation[msg.sender];
+        uint256 _backerTotalAllocation = backerTotalAllocation[msg.sender];
         uint256 _totalPotentialReward = totalPotentialReward;
         uint256 _timeUntilNextCycle = timeUntilNextCycle(block.timestamp);
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-            (uint256 _newSponsorTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
-                gauges_[i], allocations_[i], _sponsorTotalAllocation, _totalPotentialReward, _timeUntilNextCycle
+            (uint256 _newbackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
+                gauges_[i], allocations_[i], _backerTotalAllocation, _totalPotentialReward, _timeUntilNextCycle
             );
-            _sponsorTotalAllocation = _newSponsorTotalAllocation;
+            _backerTotalAllocation = _newbackerTotalAllocation;
             _totalPotentialReward = _newTotalPotentialReward;
         }
-        _updateAllocation(msg.sender, _sponsorTotalAllocation, _totalPotentialReward);
+        _updateAllocation(msg.sender, _backerTotalAllocation, _totalPotentialReward);
     }
 
     /**
@@ -242,30 +242,30 @@ contract SponsorsManagerRootstockCollective is
     }
 
     /**
-     * @notice claims sponsor rewards from a batch of gauges
+     * @notice claims backer rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
      */
-    function claimSponsorRewards(GaugeRootstockCollective[] memory gauges_) external {
+    function claimBackerRewards(GaugeRootstockCollective[] memory gauges_) external {
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             // reverts if builder was not activated or approved by the community
             _validateGauge(gauges_[i]);
 
-            gauges_[i].claimSponsorReward(msg.sender);
+            gauges_[i].claimBackerReward(msg.sender);
         }
     }
 
     /**
-     * @notice claims sponsor rewards from a batch of gauges
+     * @notice claims backer rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function claimSponsorRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external {
+    function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external {
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             if (gaugeToBuilder[gauges_[i]] == address(0)) revert GaugeDoesNotExist();
-            gauges_[i].claimSponsorReward(rewardToken_, msg.sender);
+            gauges_[i].claimBackerReward(rewardToken_, msg.sender);
         }
     }
 
@@ -288,21 +288,21 @@ contract SponsorsManagerRootstockCollective is
      * @notice internal function used to allocate votes for a gauge or a batch of gauges
      * @param gauge_ address of the gauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
-     * @param sponsorTotalAllocation_ current sponsor total allocation
+     * @param backerTotalAllocation_ current backer total allocation
      * @param totalPotentialReward_ current total potential reward
      * @param timeUntilNextCycle_ time until next cycle
-     * @return newSponsorTotalAllocation_ sponsor total allocation after new the allocation
+     * @return newbackerTotalAllocation_ backer total allocation after new the allocation
      * @return newTotalPotentialReward_ total potential reward  after the new allocation
      */
     function _allocate(
         GaugeRootstockCollective gauge_,
         uint256 allocation_,
-        uint256 sponsorTotalAllocation_,
+        uint256 backerTotalAllocation_,
         uint256 totalPotentialReward_,
         uint256 timeUntilNextCycle_
     )
         internal
-        returns (uint256 newSponsorTotalAllocation_, uint256 newTotalPotentialReward_)
+        returns (uint256 newbackerTotalAllocation_, uint256 newTotalPotentialReward_)
     {
         // reverts if builder was not activated or approved by the community
         _validateGauge(gauge_);
@@ -315,40 +315,40 @@ contract SponsorsManagerRootstockCollective is
             if (!_isNegative) {
                 revert PositiveAllocationOnHaltedGauge();
             }
-            newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
-            return (newSponsorTotalAllocation_, totalPotentialReward_);
+            newbackerTotalAllocation_ = backerTotalAllocation_ - _allocationDeviation;
+            return (newbackerTotalAllocation_, totalPotentialReward_);
         }
 
         if (_isNegative) {
-            newSponsorTotalAllocation_ = sponsorTotalAllocation_ - _allocationDeviation;
+            newbackerTotalAllocation_ = backerTotalAllocation_ - _allocationDeviation;
             newTotalPotentialReward_ = totalPotentialReward_ - _rewardSharesDeviation;
         } else {
-            newSponsorTotalAllocation_ = sponsorTotalAllocation_ + _allocationDeviation;
+            newbackerTotalAllocation_ = backerTotalAllocation_ + _allocationDeviation;
             newTotalPotentialReward_ = totalPotentialReward_ + _rewardSharesDeviation;
         }
 
         emit NewAllocation(msg.sender, address(gauge_), allocation_);
-        return (newSponsorTotalAllocation_, newTotalPotentialReward_);
+        return (newbackerTotalAllocation_, newTotalPotentialReward_);
     }
 
     /**
      * @notice internal function used to update allocation variables
-     * @dev reverts if sponsor doesn't have enough staking token balance
-     * @param sponsor_ address of the sponsor who allocates
-     * @param newSponsorTotalAllocation_ sponsor total allocation after new the allocation
+     * @dev reverts if backer doesn't have enough staking token balance
+     * @param backer_ address of the backer who allocates
+     * @param newbackerTotalAllocation_ backer total allocation after new the allocation
      * @param newTotalPotentialReward_ total potential reward after the new allocation
      */
     function _updateAllocation(
-        address sponsor_,
-        uint256 newSponsorTotalAllocation_,
+        address backer_,
+        uint256 newbackerTotalAllocation_,
         uint256 newTotalPotentialReward_
     )
         internal
     {
-        sponsorTotalAllocation[sponsor_] = newSponsorTotalAllocation_;
+        backerTotalAllocation[backer_] = newbackerTotalAllocation_;
         totalPotentialReward = newTotalPotentialReward_;
 
-        if (newSponsorTotalAllocation_ > stakingToken.balanceOf(sponsor_)) revert NotEnoughStaking();
+        if (newbackerTotalAllocation_ > stakingToken.balanceOf(backer_)) revert NotEnoughStaking();
     }
 
     /**

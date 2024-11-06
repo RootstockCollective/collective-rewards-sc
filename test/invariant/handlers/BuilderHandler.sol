@@ -10,21 +10,21 @@ contract BuilderHandler is BaseHandler {
     function revokeBuilder(uint256 builderIndex_, uint256 timeToSkip_) external skipTime(timeToSkip_) {
         builderIndex_ = bound(builderIndex_, 0, baseTest.buildersArrayLength() - 1);
         address _builder = baseTest.builders(builderIndex_);
-        (, bool _kycApproved, bool _whitelisted,, bool _revoked,,) = sponsorsManager.builderState(_builder);
+        (, bool _kycApproved, bool _whitelisted,, bool _revoked,,) = backersManager.builderState(_builder);
         if (_kycApproved && _whitelisted && !_revoked) {
             vm.prank(_builder);
-            sponsorsManager.revokeBuilder();
+            backersManager.revokeBuilder();
         }
     }
 
     function permitBuilder(uint256 builderIndex_, uint256 timeToSkip_) external skipTime(timeToSkip_) {
-        if (block.timestamp >= sponsorsManager.periodFinish()) return;
+        if (block.timestamp >= backersManager.periodFinish()) return;
         builderIndex_ = bound(builderIndex_, 0, baseTest.buildersArrayLength() - 1);
         address _builder = baseTest.builders(builderIndex_);
-        (, bool _kycApproved, bool _whitelisted,, bool _revoked,,) = sponsorsManager.builderState(_builder);
+        (, bool _kycApproved, bool _whitelisted,, bool _revoked,,) = backersManager.builderState(_builder);
         if (_kycApproved && _whitelisted && _revoked) {
             vm.prank(_builder);
-            sponsorsManager.permitBuilder(0.4 ether);
+            backersManager.permitBuilder(0.4 ether);
         }
     }
 }

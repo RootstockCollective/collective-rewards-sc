@@ -5,13 +5,13 @@ pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { SponsorsManagerRootstockCollective } from "src/SponsorsManagerRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "src/BackersManagerRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "../src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
     function run()
         public
-        returns (SponsorsManagerRootstockCollective proxy_, SponsorsManagerRootstockCollective implementation_)
+        returns (BackersManagerRootstockCollective proxy_, BackersManagerRootstockCollective implementation_)
     {
         address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
@@ -54,7 +54,7 @@ contract Deploy is Broadcaster {
     )
         public
         broadcast
-        returns (SponsorsManagerRootstockCollective, SponsorsManagerRootstockCollective)
+        returns (BackersManagerRootstockCollective, BackersManagerRootstockCollective)
     {
         require(governanceManager_ != address(0), "Access control address cannot be empty");
         require(rewardToken_ != address(0), "Reward token address cannot be empty");
@@ -63,7 +63,7 @@ contract Deploy is Broadcaster {
         require(rewardDistributor_ != address(0), "Reward Distributor address cannot be empty");
 
         bytes memory _initializerData = abi.encodeCall(
-            SponsorsManagerRootstockCollective.initialize,
+            BackersManagerRootstockCollective.initialize,
             (
                 IGovernanceManagerRootstockCollective(governanceManager_),
                 rewardToken_,
@@ -78,13 +78,13 @@ contract Deploy is Broadcaster {
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {
-            _implementation = address(new SponsorsManagerRootstockCollective());
+            _implementation = address(new BackersManagerRootstockCollective());
             _proxy = address(new ERC1967Proxy(_implementation, _initializerData));
 
-            return (SponsorsManagerRootstockCollective(_proxy), SponsorsManagerRootstockCollective(_implementation));
+            return (BackersManagerRootstockCollective(_proxy), BackersManagerRootstockCollective(_implementation));
         }
-        _implementation = address(new SponsorsManagerRootstockCollective{ salt: _salt }());
+        _implementation = address(new BackersManagerRootstockCollective{ salt: _salt }());
         _proxy = address(new ERC1967Proxy{ salt: _salt }(_implementation, _initializerData));
-        return (SponsorsManagerRootstockCollective(_proxy), SponsorsManagerRootstockCollective(_implementation));
+        return (BackersManagerRootstockCollective(_proxy), BackersManagerRootstockCollective(_implementation));
     }
 }

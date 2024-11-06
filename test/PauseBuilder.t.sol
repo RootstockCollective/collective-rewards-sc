@@ -13,15 +13,15 @@ contract PauseBuilderTest is BaseTest {
 
         // AND builder is paused
         vm.startPrank(kycApprover);
-        sponsorsManager.pauseBuilder(builder, "paused");
+        backersManager.pauseBuilder(builder, "paused");
         vm.stopPrank();
     }
 
     /**
      * SCENARIO: builder is paused in the middle of an cycle having allocation.
-     *  Sponsors claim all the rewards
+     *  Backers claim all the rewards
      */
-    function test_PausedGaugeSponsorsReceiveRewards() public {
+    function test_PausedGaugeBackersReceiveRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
@@ -32,7 +32,7 @@ contract PauseBuilderTest is BaseTest {
 
         // WHEN alice claim rewards
         vm.startPrank(alice);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
+        backersManager.claimBackerRewards(gaugesArray);
 
         // THEN alice rewardToken balance is 25 = (100 * 8 / 16) * 0.5
         assertApproxEqAbs(rewardToken.balanceOf(alice), 25 ether, 100);
@@ -41,7 +41,7 @@ contract PauseBuilderTest is BaseTest {
 
         // WHEN bob claim rewards
         vm.startPrank(bob);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
+        backersManager.claimBackerRewards(gaugesArray);
 
         // THEN bob rewardToken balance is 25 = (100 * 8 / 16) * 0.5
         assertApproxEqAbs(rewardToken.balanceOf(bob), 25 ether, 100);
@@ -100,19 +100,19 @@ contract PauseBuilderTest is BaseTest {
 
         // WHEN alice removes allocations from paused builder
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 0);
+        backersManager.allocate(gauge, 0);
         // THEN gauge rewardShares is 604800 ether = 2 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 604_800 ether);
         // THEN total allocation is 9072000 ether = 2 * 1/2 WEEK + 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 9_072_000 ether);
+        assertEq(backersManager.totalPotentialReward(), 9_072_000 ether);
 
         // WHEN alice adds allocations to paused builder
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 4 ether);
+        backersManager.allocate(gauge, 4 ether);
         // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 1_814_400 ether);
         // THEN total allocation is 10281600 ether =  2 * 1/2 WEEK + 4 * 1/2 WEEK + 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 10_281_600 ether);
+        assertEq(backersManager.totalPotentialReward(), 10_281_600 ether);
     }
 
     /**
@@ -131,7 +131,7 @@ contract PauseBuilderTest is BaseTest {
 
         // WHEN gauge is unpaused
         vm.startPrank(kycApprover);
-        sponsorsManager.unpauseBuilder(builder);
+        backersManager.unpauseBuilder(builder);
 
         // WHEN builder claim rewards
         vm.startPrank(builder);
@@ -165,7 +165,7 @@ contract PauseBuilderTest is BaseTest {
 
         // WHEN gauge is unpaused
         vm.startPrank(kycApprover);
-        sponsorsManager.unpauseBuilder(builder);
+        backersManager.unpauseBuilder(builder);
 
         // WHEN builder claim rewards
         vm.startPrank(builder);
@@ -192,10 +192,10 @@ contract PauseBuilderTest is BaseTest {
         _initialDistribution();
         // AND builder is revoked
         vm.startPrank(builder);
-        sponsorsManager.revokeBuilder();
+        backersManager.revokeBuilder();
         // AND builder is paused
         vm.startPrank(kycApprover);
-        sponsorsManager.pauseBuilder(builder, "paused");
+        backersManager.pauseBuilder(builder, "paused");
 
         // WHEN builder claim rewards
         vm.startPrank(builder);

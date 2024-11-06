@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest, SponsorsManagerRootstockCollective } from "../BaseTest.sol";
+import { BaseTest, BackersManagerRootstockCollective } from "../BaseTest.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract ProtectedTest is BaseTest {
@@ -11,7 +11,7 @@ contract ProtectedTest is BaseTest {
     function test_GovernorHasPermissions() public {
         //  WHEN Governor calls a function protected by the modifier onlyGovernorOrAuthorizedChanger
         vm.startPrank(governor);
-        sponsorsManager.upgradeToAndCall(address(new SponsorsManagerRootstockCollective()), "");
+        backersManager.upgradeToAndCall(address(new BackersManagerRootstockCollective()), "");
     }
 
     /**
@@ -20,11 +20,11 @@ contract ProtectedTest is BaseTest {
     function test_RevertUpgrade() public {
         // GIVEN the Governor has not authorized the change
         vm.prank(alice);
-        //  WHEN tries to upgrade the SponsorsManagerRootstockCollective
+        //  WHEN tries to upgrade the BackersManagerRootstockCollective
         //   THEN tx reverts because NotGovernorOrAuthorizedChanger
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
         address _newImplementation = makeAddr("newImplementation");
-        sponsorsManager.upgradeToAndCall(_newImplementation, "0x0");
+        backersManager.upgradeToAndCall(_newImplementation, "0x0");
     }
 
     /**

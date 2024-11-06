@@ -514,7 +514,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
 
     /**
      * @notice resumes a gauge moving it from the halted array to the active one
-     * @dev SponsorsManagerRootstockCollective override this function to restore its shares
+     * @dev BackersManagerRootstockCollective override this function to restore its shares
      * @param gauge_ gauge contract to be resumed
      */
     function _resumeGauge(GaugeRootstockCollective gauge_) internal {
@@ -538,19 +538,19 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     }
 
     /**
-     * @notice SponsorsManagerRootstockCollective override this function to modify gauge rewardToken allowance
+     * @notice BackersManagerRootstockCollective override this function to modify gauge rewardToken allowance
      * @param gauge_ gauge contract to approve rewardTokens
      * @param value_ amount of rewardTokens to approve
      */
     function _rewardTokenApprove(address gauge_, uint256 value_) internal virtual { }
     /**
-     * @notice SponsorsManagerRootstockCollective override this function to remove its shares
+     * @notice BackersManagerRootstockCollective override this function to remove its shares
      * @param gauge_ gauge contract to be halted
      */
     function _haltGaugeShares(GaugeRootstockCollective gauge_) internal virtual { }
 
     /**
-     * @notice SponsorsManagerRootstockCollective override this function to restore its shares
+     * @notice BackersManagerRootstockCollective override this function to restore its shares
      * @param gauge_ gauge contract to be resumed
      */
     function _resumeGaugeShares(GaugeRootstockCollective gauge_) internal virtual { }

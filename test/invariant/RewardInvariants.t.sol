@@ -5,28 +5,28 @@ import { BaseInvariants } from "./BaseInvariants.sol";
 
 contract RewardInvariants is BaseInvariants {
     /**
-     * SCENARIO: all the rewards are distributed to sponsors and builder
-     * Gauges and SponsorsManagerRootstockCollective only keep with dust because rounding errors
+     * SCENARIO: all the rewards are distributed to backers and builder
+     * Gauges and BackersManagerRootstockCollective only keep with dust because rounding errors
      */
     function invariant_Rewards() public useTime {
         uint256 _totalBuilderBalances;
-        uint256 _totalSponsorsBalances;
+        uint256 _totalBackersBalances;
         uint256 _totalGaugesBalances;
         uint256 _totalIncentives;
 
-        timeManager.increaseTimestamp(sponsorsManager.cycleNext(block.timestamp) - block.timestamp);
+        timeManager.increaseTimestamp(backersManager.cycleNext(block.timestamp) - block.timestamp);
 
         _buildersClaim();
 
-        for (uint256 i = 0; i < allocateHandler.sponsorsLength(); i++) {
-            vm.prank(allocateHandler.sponsors(i));
-            sponsorsManager.claimSponsorRewards(gaugesArray);
-            _totalSponsorsBalances += rewardToken.balanceOf(allocateHandler.sponsors(i));
+        for (uint256 i = 0; i < allocateHandler.backersLength(); i++) {
+            vm.prank(allocateHandler.backers(i));
+            backersManager.claimBackerRewards(gaugesArray);
+            _totalBackersBalances += rewardToken.balanceOf(allocateHandler.backers(i));
         }
 
         for (uint256 i = 0; i < builders.length; i++) {
-            // if builder is also an sponsors is not considered here to do not add its balance twice
-            if (!allocateHandler.sponsorExists(builders[i])) {
+            // if builder is also an backers is not considered here to do not add its balance twice
+            if (!allocateHandler.backerExists(builders[i])) {
                 _totalBuilderBalances += rewardToken.balanceOf(builders[i]);
             }
         }
@@ -36,14 +36,14 @@ contract RewardInvariants is BaseInvariants {
             _totalIncentives += incentivizeHandler.rewardTokenIncentives(gaugesArray[i]);
         }
 
-        uint256 _sponsorsManagerBalance = rewardToken.balanceOf(address(sponsorsManager));
+        uint256 _backersManagerBalance = rewardToken.balanceOf(address(backersManager));
 
         assertEq(
             distributionHandler.totalAmountDistributed() + _totalIncentives,
-            _totalGaugesBalances + _sponsorsManagerBalance + _totalBuilderBalances + _totalSponsorsBalances
+            _totalGaugesBalances + _backersManagerBalance + _totalBuilderBalances + _totalBackersBalances
         );
 
-        assertLe(_sponsorsManagerBalance, 10_000);
+        assertLe(_backersManagerBalance, 10_000);
 
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (gaugesArray[i].totalAllocation() > 0) {
