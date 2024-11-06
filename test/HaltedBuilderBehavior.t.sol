@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest, SponsorsManagerRootstockCollective } from "./BaseTest.sol";
+import { BaseTest, BackersManagerRootstockCollective } from "./BaseTest.sol";
 
 abstract contract HaltedBuilderBehavior is BaseTest {
     function _initialState() internal virtual { }
@@ -10,7 +10,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
     /**
      * SCENARIO: builder is halted in the middle of an cycle having allocation.
-     *  Sponsors receive all the rewards for the current cycle
+     *  Backers receive all the rewards for the current cycle
      */
     function test_HaltedGaugeReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
@@ -22,11 +22,11 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         _skipAndStartNewCycle();
 
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
 
         // WHEN alice claim rewards
         vm.startPrank(alice);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
+        backersManager.claimBackerRewards(gaugesArray);
 
         // THEN alice rewardToken balance is 25 = (100 * 8 / 16) * 0.5
         assertApproxEqAbs(rewardToken.balanceOf(alice), 25 ether, 100);
@@ -35,7 +35,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // WHEN bob claim rewards
         vm.startPrank(bob);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
+        backersManager.claimBackerRewards(gaugesArray);
 
         // THEN bob rewardToken balance is 25 = (100 * 8 / 16) * 0.5
         assertApproxEqAbs(rewardToken.balanceOf(bob), 25 ether, 100);
@@ -57,14 +57,14 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
 
         // AND cycle finish
         _skipAndStartNewCycle();
 
         // WHEN alice claim rewards
         vm.startPrank(alice);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
+        backersManager.claimBackerRewards(gaugesArray);
 
         // THEN alice rewardToken balance is 25 + increment of 21.42 = (100 * 6 / 14) * 0.5
         // builder allocations are not considered anymore. Alice lose those rewards
@@ -75,7 +75,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // WHEN bob claim rewards
         vm.startPrank(bob);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
+        backersManager.claimBackerRewards(gaugesArray);
 
         // THEN bob rewardToken balance is 25 + increment of 28.57 = (100 * 8 / 14) * 0.5
         assertEq(rewardToken.balanceOf(bob), 53_571_428_571_428_571_416);
@@ -86,7 +86,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
     /**
      * SCENARIO: builder is halted in the middle of an cycle having allocation.
      *  Alice reduce its allocation but the total reward shares don't change
-     *  and the sponsorTotalAllocation is updated
+     *  and the backerTotalAllocation is updated
      */
     function test_NegativeAllocationOnHaltedGauge() public {
         // GIVEN alice and bob allocate to builder and builder2
@@ -97,13 +97,13 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // WHEN alice removes allocations from revoked builder
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 0);
+        backersManager.allocate(gauge, 0);
         // THEN gauge rewardShares is 604800 ether = 2 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 604_800 ether);
         // THEN alice total allocation is 6
-        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 6 ether);
+        assertEq(backersManager.backerTotalAllocation(alice), 6 ether);
         // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
     }
 
     /**
@@ -130,7 +130,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // WHEN alice claim rewards
         vm.startPrank(alice);
-        sponsorsManager.claimSponsorRewards(gaugesArray);
+        backersManager.claimBackerRewards(gaugesArray);
 
         // THEN alice rewardToken balance is 25 = (100 * 8 / 16) * 0.5
         assertApproxEqAbs(rewardToken.balanceOf(alice), 25 ether, 100);
@@ -158,7 +158,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // WHEN alice removes allocations from halted gauge
         vm.startPrank(alice);
-        sponsorsManager.allocate(gauge, 0);
+        backersManager.allocate(gauge, 0);
     }
 
     /**
@@ -173,7 +173,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // AND alice adds allocations
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 100 ether);
+        backersManager.allocate(gauge, 100 ether);
 
         // WHEN builder is halted
         _haltGauge();
@@ -181,9 +181,9 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // THEN gauge rewardShares is 30844800 ether = 2 * 1/2 WEEK + 100 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 30_844_800 ether);
         // THEN alice total allocation is 106
-        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 106 ether);
+        assertEq(backersManager.backerTotalAllocation(alice), 106 ether);
         // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
     }
 
     /**
@@ -197,14 +197,14 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // AND cycle finish
         _skipAndStartNewCycle();
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 100 ether);
+        backersManager.allocate(gauge, 100 ether);
 
         // AND cycle finish
         _skipAndStartNewCycle();
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
         // AND alice removes allocations
-        sponsorsManager.allocate(gauge, 0 ether);
+        backersManager.allocate(gauge, 0 ether);
 
         // WHEN builder is halted
         _haltGauge();
@@ -212,9 +212,9 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // // THEN gauge rewardShares is 30240000 ether = 100 * 1/2 WEEK
         // assertEq(gauge.rewardShares(), 30_240_000 ether);
         // // THEN alice total allocation is 6
-        // assertEq(sponsorsManager.sponsorTotalAllocation(alice), 6 ether);
+        // assertEq(backersManager.backerTotalAllocation(alice), 6 ether);
         // // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
-        // assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+        // assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
     }
 
     /**
@@ -229,7 +229,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // AND alice adds allocations
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 100 ether);
+        backersManager.allocate(gauge, 100 ether);
 
         // AND a quarter cycle pass
         _skipRemainingCycleFraction(2);
@@ -239,14 +239,14 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // AND alice removes allocations
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 0 ether);
+        backersManager.allocate(gauge, 0 ether);
 
         // THEN gauge rewardShares is 15724800 ether = 2 * 1/2 WEEK + 100 * 1/4 WEEK
         assertEq(gauge.rewardShares(), 15_724_800 ether);
         // THEN alice total allocation is 6
-        assertEq(sponsorsManager.sponsorTotalAllocation(alice), 6 ether);
+        assertEq(backersManager.backerTotalAllocation(alice), 6 ether);
         // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
     }
 
     /**
@@ -265,7 +265,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // WHEN alice adds allocations
         vm.startPrank(alice);
         // THEN tx reverts
-        vm.expectRevert(SponsorsManagerRootstockCollective.PositiveAllocationOnHaltedGauge.selector);
-        sponsorsManager.allocate(gauge, 100 ether);
+        vm.expectRevert(BackersManagerRootstockCollective.PositiveAllocationOnHaltedGauge.selector);
+        backersManager.allocate(gauge, 100 ether);
     }
 }

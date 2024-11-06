@@ -29,7 +29,7 @@ contract SupportAndDistributeTest is BaseTest {
      *          because new gauges were not voted
      *  -   alice votes gauge 15 and 20. 100 ethers are distributed
      *  -   bob votes gauge 25 and 40. 100 ethers are distributed
-     *  -   All the rewards for sponsors and builders are distributed correctly
+     *  -   All the rewards for backers and builders are distributed correctly
      */
 
     function test_integration_SupportAndDistribute() public {
@@ -47,7 +47,7 @@ contract SupportAndDistributeTest is BaseTest {
         aliceVotes.push(100 ether);
 
         vm.prank(alice);
-        sponsorsManager.allocateBatch(aliceGauges, aliceVotes);
+        backersManager.allocateBatch(aliceGauges, aliceVotes);
 
         // AND 100 rewardTokens and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -55,7 +55,7 @@ contract SupportAndDistributeTest is BaseTest {
 
         vm.prank(alice);
         // WHEN alice claims the rewards
-        sponsorsManager.claimSponsorRewards(aliceGauges);
+        backersManager.claimBackerRewards(aliceGauges);
         // THEN alice receives 40 rewardTokens
         assertApproxEqAbs(_clearERC20Balance(alice), 40 ether, 100);
         // THEN alice receives 4 coinbase
@@ -89,7 +89,7 @@ contract SupportAndDistributeTest is BaseTest {
         bobVotes.push(200 ether);
 
         vm.prank(bob);
-        sponsorsManager.allocateBatch(bobGauges, bobVotes);
+        backersManager.allocateBatch(bobGauges, bobVotes);
 
         // AND 100 rewardTokens and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -97,7 +97,7 @@ contract SupportAndDistributeTest is BaseTest {
 
         // WHEN alice claims the rewards
         vm.prank(alice);
-        sponsorsManager.claimSponsorRewards(aliceGauges);
+        backersManager.claimBackerRewards(aliceGauges);
         // THEN alice receives 13.33 rewardToken = 40 * 111 / 333
         assertApproxEqAbs(_clearERC20Balance(alice), 13_333_333_333_333_333_333, 100);
         // THEN alice receives 1.333 coinbase = 4 * 111 / 333
@@ -105,7 +105,7 @@ contract SupportAndDistributeTest is BaseTest {
 
         // WHEN bob claims the rewards
         vm.prank(bob);
-        sponsorsManager.claimSponsorRewards(bobGauges);
+        backersManager.claimBackerRewards(bobGauges);
         // THEN bob receives 26.66 rewardToken = 40 * 222 / 333
         assertApproxEqAbs(_clearERC20Balance(bob), 26_666_666_666_666_666_666, 100);
         // THEN bob receives 2.666 coinbase = 4 * 222 / 333
@@ -150,7 +150,7 @@ contract SupportAndDistributeTest is BaseTest {
 
         // WHEN alice claims the rewards
         vm.prank(alice);
-        sponsorsManager.claimSponsorRewards(aliceGauges);
+        backersManager.claimBackerRewards(aliceGauges);
         // THEN alice receives 13.33 rewardToken = 40 * 111 / 333
         assertApproxEqAbs(_clearERC20Balance(alice), 13_333_333_333_333_333_333, 100);
         // THEN alice receives 1.333 coinbase = 4 * 111 / 333
@@ -158,7 +158,7 @@ contract SupportAndDistributeTest is BaseTest {
 
         // WHEN bob claims the rewards
         vm.prank(bob);
-        sponsorsManager.claimSponsorRewards(bobGauges);
+        backersManager.claimBackerRewards(bobGauges);
         // THEN bob receives 26.66 rewardToken = 40 * 222 / 333
         assertApproxEqAbs(_clearERC20Balance(bob), 26_666_666_666_666_666_666, 100);
         // THEN bob receives 2.666 coinbase = 4 * 222 / 333
@@ -199,7 +199,7 @@ contract SupportAndDistributeTest is BaseTest {
         aliceVotes.push(10 ether);
 
         vm.prank(alice);
-        sponsorsManager.allocateBatch(aliceGauges, aliceVotes);
+        backersManager.allocateBatch(aliceGauges, aliceVotes);
 
         // AND bob votes to gauges 25 and 40
         bobGauges.push(gaugesArray[25]);
@@ -209,7 +209,7 @@ contract SupportAndDistributeTest is BaseTest {
         bobVotes.push(20 ether);
 
         vm.prank(bob);
-        sponsorsManager.allocateBatch(bobGauges, bobVotes);
+        backersManager.allocateBatch(bobGauges, bobVotes);
 
         // AND 100 rewardTokens and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -217,7 +217,7 @@ contract SupportAndDistributeTest is BaseTest {
 
         // WHEN alice claims the rewards
         vm.prank(alice);
-        sponsorsManager.claimSponsorRewards(aliceGauges);
+        backersManager.claimBackerRewards(aliceGauges);
         // THEN alice receives 12.13 rewardToken = 40 * 111 / 366
         // AND alice receives 0.60 rewardToken = 20 * 11 / 366
         assertEq(_clearERC20Balance(alice), 12_732_240_437_158_469_843);
@@ -227,7 +227,7 @@ contract SupportAndDistributeTest is BaseTest {
 
         // WHEN bob claims the rewards
         vm.prank(bob);
-        sponsorsManager.claimSponsorRewards(bobGauges);
+        backersManager.claimBackerRewards(bobGauges);
         // THEN bob receives 24.26 rewardToken = 40 * 222 / 366
         // AND bob receives 1.20 rewardToken = 20 * 22 / 366
         assertEq(_clearERC20Balance(bob), 25_464_480_874_316_939_690);

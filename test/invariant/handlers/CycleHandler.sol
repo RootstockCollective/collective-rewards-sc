@@ -18,6 +18,6 @@ contract CycleHandler is BaseHandler {
         newCycleDuration_ = uint32(bound(newCycleDuration_, 2 hours, 365 days));
         cycleStartOffset_ = uint24(bound(cycleStartOffset_, 0, 20 weeks));
         vm.prank(baseTest.governanceManager().governor());
-        sponsorsManager.setCycleDuration(newCycleDuration_, cycleStartOffset_);
+        backersManager.setCycleDuration(newCycleDuration_, cycleStartOffset_);
     }
 }

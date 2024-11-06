@@ -6,7 +6,7 @@ import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";
 import { Deploy as MockStakingTokenDeployer } from "script/test_mock/MockStakingToken.s.sol";
 import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/GaugeBeaconRootstockCollective.s.sol";
 import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
-import { Deploy as SponsorsManagerRootstockCollectiveDeployer } from "script/SponsorsManagerRootstockCollective.s.sol";
+import { Deploy as BackersManagerRootstockCollectiveDeployer } from "script/BackersManagerRootstockCollective.s.sol";
 import { Deploy as RewardDistributorRootstockCollectiveDeployer } from
     "script/RewardDistributorRootstockCollective.s.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
@@ -14,7 +14,7 @@ import { StakingTokenMock } from "./mock/StakingTokenMock.sol";
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
-import { SponsorsManagerRootstockCollective } from "src/SponsorsManagerRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "src/BackersManagerRootstockCollective.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
@@ -33,8 +33,8 @@ contract BaseTest is Test {
     GaugeRootstockCollective public gauge2;
     GaugeRootstockCollective[] public gaugesArray;
     uint256[] public allocationsArray = [0, 0];
-    SponsorsManagerRootstockCollective public sponsorsManagerImpl;
-    SponsorsManagerRootstockCollective public sponsorsManager;
+    BackersManagerRootstockCollective public backersManagerImpl;
+    BackersManagerRootstockCollective public backersManager;
     RewardDistributorRootstockCollective public rewardDistributorImpl;
     RewardDistributorRootstockCollective public rewardDistributor;
 
@@ -67,7 +67,7 @@ contract BaseTest is Test {
         (rewardDistributor, rewardDistributorImpl) =
             new RewardDistributorRootstockCollectiveDeployer().run(address(governanceManager));
 
-        (sponsorsManager, sponsorsManagerImpl) = new SponsorsManagerRootstockCollectiveDeployer().run(
+        (backersManager, backersManagerImpl) = new BackersManagerRootstockCollectiveDeployer().run(
             address(governanceManager),
             address(rewardToken),
             address(stakingToken),
@@ -78,7 +78,7 @@ contract BaseTest is Test {
             rewardPercentageCooldown
         );
 
-        rewardDistributor.initializeCollectiveRewardsAddresses(address(sponsorsManager));
+        rewardDistributor.initializeCollectiveRewardsAddresses(address(backersManager));
 
         // allow to execute all the functions protected by governance
 
@@ -91,7 +91,7 @@ contract BaseTest is Test {
 
         // mint some rewardTokens to this contract for reward distribution
         rewardToken.mint(address(this), 100_000 ether);
-        rewardToken.approve(address(sponsorsManager), 100_000 ether);
+        rewardToken.approve(address(backersManager), 100_000 ether);
 
         _setUp();
     }
@@ -100,12 +100,12 @@ contract BaseTest is Test {
     function _setUp() internal virtual { }
 
     function _skipAndStartNewCycle() internal {
-        uint256 _currentCycleRemaining = sponsorsManager.cycleNext(block.timestamp) - block.timestamp;
+        uint256 _currentCycleRemaining = backersManager.cycleNext(block.timestamp) - block.timestamp;
         skip(_currentCycleRemaining);
     }
 
     function _skipRemainingCycleFraction(uint256 fraction_) internal {
-        uint256 _currentCycleRemaining = sponsorsManager.cycleNext(block.timestamp) - block.timestamp;
+        uint256 _currentCycleRemaining = backersManager.cycleNext(block.timestamp) - block.timestamp;
         skip(_currentCycleRemaining / fraction_);
     }
 
@@ -115,7 +115,7 @@ contract BaseTest is Test {
 
     function _skipToEndDistributionWindow() internal {
         _skipAndStartNewCycle();
-        uint256 _currentCycleRemaining = sponsorsManager.endDistributionWindow(block.timestamp) - block.timestamp;
+        uint256 _currentCycleRemaining = backersManager.endDistributionWindow(block.timestamp) - block.timestamp;
         skip(_currentCycleRemaining);
     }
 
@@ -128,10 +128,10 @@ contract BaseTest is Test {
         returns (GaugeRootstockCollective newGauge_)
     {
         vm.prank(kycApprover);
-        sponsorsManager.activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
+        backersManager.activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
         builders.push(builder_);
         vm.prank(governor);
-        newGauge_ = sponsorsManager.whitelistBuilder(builder_);
+        newGauge_ = backersManager.whitelistBuilder(builder_);
         gaugesArray.push(newGauge_);
     }
 
@@ -151,12 +151,12 @@ contract BaseTest is Test {
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
         vm.prank(alice);
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
         // AND bob allocates to builder2
         allocationsArray[0] = 0 ether;
         allocationsArray[1] = 8 ether;
         vm.prank(bob);
-        sponsorsManager.allocateBatch(gaugesArray, allocationsArray);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -173,8 +173,8 @@ contract BaseTest is Test {
         vm.deal(address(rewardDistributor), amountCoinbase_ + address(rewardDistributor).balance);
         vm.startPrank(foundation);
         rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountCoinbase_);
-        while (sponsorsManager.onDistributionPeriod()) {
-            sponsorsManager.distribute();
+        while (backersManager.onDistributionPeriod()) {
+            backersManager.distribute();
         }
         vm.stopPrank();
     }
@@ -192,7 +192,7 @@ contract BaseTest is Test {
 
     function _buildersClaim() internal {
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            address _builder = sponsorsManager.gaugeToBuilder(gaugesArray[i]);
+            address _builder = backersManager.gaugeToBuilder(gaugesArray[i]);
             vm.prank(_builder);
             gaugesArray[i].claimBuilderReward();
         }

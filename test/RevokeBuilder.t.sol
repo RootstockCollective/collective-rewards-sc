@@ -13,21 +13,21 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // AND builder is revoked
         vm.startPrank(builder);
-        sponsorsManager.revokeBuilder();
+        backersManager.revokeBuilder();
         vm.stopPrank();
     }
 
     function _haltGauge() internal override {
         // AND builder is revoked
         vm.startPrank(builder);
-        sponsorsManager.revokeBuilder();
+        backersManager.revokeBuilder();
         vm.stopPrank();
     }
 
     function _resumeGauge() internal override {
         // AND builder is permitted
         vm.startPrank(builder);
-        sponsorsManager.permitBuilder(0.5 ether);
+        backersManager.permitBuilder(0.5 ether);
         vm.stopPrank();
     }
 
@@ -96,7 +96,7 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // AND builder is permitted
         vm.startPrank(builder);
-        sponsorsManager.permitBuilder(0.5 ether);
+        backersManager.permitBuilder(0.5 ether);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -126,7 +126,7 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         //    AND builder is revoked
         _initialState();
 
-        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = sponsorsManager.builderRewardPercentage(builder);
+        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = backersManager.builderRewardPercentage(builder);
         // THEN builder reward percentage cooldown end time is 2 weeks from now
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
 
@@ -135,8 +135,8 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // WHEN gauge is permitted with a new reward percentage of 80%
         vm.startPrank(builder);
-        sponsorsManager.permitBuilder(0.8 ether);
-        (_previous, _next, _cooldownEndTime) = sponsorsManager.builderRewardPercentage(builder);
+        backersManager.permitBuilder(0.8 ether);
+        (_previous, _next, _cooldownEndTime) = backersManager.builderRewardPercentage(builder);
         // THEN previous builder reward percentage is 50%
         assertEq(_previous, 0.5 ether);
         // THEN next builder reward percentage is 80%
@@ -144,12 +144,12 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN builder reward percentage cooldown didn't finish
         assertGe(_cooldownEndTime, block.timestamp);
         // THEN builder reward percentage to apply is 50%
-        assertEq(sponsorsManager.getRewardPercentageToApply(builder), 0.5 ether);
+        assertEq(backersManager.getRewardPercentageToApply(builder), 0.5 ether);
 
         // THEN cooldown time ends
         skip(12 days);
         // THEN builder reward percentage to apply is 80%
-        assertEq(sponsorsManager.getRewardPercentageToApply(builder), 0.8 ether);
+        assertEq(backersManager.getRewardPercentageToApply(builder), 0.8 ether);
     }
 
     /**
@@ -163,7 +163,7 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         //    AND builder is revoked
         _initialState();
 
-        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = sponsorsManager.builderRewardPercentage(builder);
+        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = backersManager.builderRewardPercentage(builder);
         // THEN builder reward percentage cooldown end time is 2 weeks from now
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
 
@@ -175,8 +175,8 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // WHEN gauge is permitted with a new reward percentage of 80%
         vm.startPrank(builder);
-        sponsorsManager.permitBuilder(0.8 ether);
-        (_previous, _next, _cooldownEndTime) = sponsorsManager.builderRewardPercentage(builder);
+        backersManager.permitBuilder(0.8 ether);
+        (_previous, _next, _cooldownEndTime) = backersManager.builderRewardPercentage(builder);
         // THEN previous builder reward percentage is 50%
         assertEq(_previous, 0.5 ether);
         // THEN next builder reward percentage is 80%
@@ -184,6 +184,6 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN builder reward percentage cooldown finished
         assertLe(_cooldownEndTime, block.timestamp);
         // THEN builder reward percentage to apply is 80%
-        assertEq(sponsorsManager.getRewardPercentageToApply(builder), 0.8 ether);
+        assertEq(backersManager.getRewardPercentageToApply(builder), 0.8 ether);
     }
 }

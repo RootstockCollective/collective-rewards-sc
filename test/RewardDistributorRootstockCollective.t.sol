@@ -12,7 +12,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         rewardToken.mint(address(this), 100_000 ether);
         // add some allocations to don't revert by zero division on the notifyRewardAmount
         vm.prank(alice);
-        sponsorsManager.allocate(gauge, 0.1 ether);
+        backersManager.allocate(gauge, 0.1 ether);
     }
 
     /**
@@ -98,12 +98,12 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
 
         // THEN reward token balance of rewardDistributor is 3 ether
         assertEq(rewardToken.balanceOf(address(rewardDistributor)), 3 ether);
-        // THEN reward token balance of sponsorsManager is 7 ether
-        assertEq(rewardToken.balanceOf(address(sponsorsManager)), 7 ether);
+        // THEN reward token balance of backersManager is 7 ether
+        assertEq(rewardToken.balanceOf(address(backersManager)), 7 ether);
         // THEN coinbase balance of rewardDistributor is 1.5 ether
         assertEq(address(rewardDistributor).balance, 1.5 ether);
-        // THEN coinbase balance of sponsorsManager is 3.5 ether
-        assertEq(address(sponsorsManager).balance, 3.5 ether);
+        // THEN coinbase balance of backersManager is 3.5 ether
+        assertEq(address(backersManager).balance, 3.5 ether);
     }
 
     /**

@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { UpgradeableRootstockCollective } from "./governance/UpgradeableRootstockCollective.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SponsorsManagerRootstockCollective } from "./SponsorsManagerRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "./BackersManagerRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
@@ -31,10 +31,10 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
 
     /// @notice foundation treasury address
     address public foundationTreasury;
-    /// @notice address of the token rewarded to builder and sponsors
+    /// @notice address of the token rewarded to builder and backers
     IERC20 public rewardToken;
-    /// @notice SponsorsManagerRootstockCollective contract address
-    SponsorsManagerRootstockCollective public sponsorsManager;
+    /// @notice BackersManagerRootstockCollective contract address
+    BackersManagerRootstockCollective public backersManager;
     /// @notice tracks amount of reward tokens distributed per cycle
     mapping(uint256 cycleTimestampStart => uint256 amount) public rewardTokenAmountPerCycle;
     /// @notice tracks amount of coinbase distributed per cycle
@@ -60,14 +60,14 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
 
     /**
      * @notice CollectiveRewards addresses initializer
-     * @dev used to solve circular dependency, sponsorsManager is initialized with this contract address
+     * @dev used to solve circular dependency, backersManager is initialized with this contract address
      *  it must be called ASAP after the initialize.
-     * @param sponsorsManager_ SponsorsManagerRootstockCollective contract address
+     * @param backersManager_ BackersManagerRootstockCollective contract address
      */
-    function initializeCollectiveRewardsAddresses(address sponsorsManager_) external {
-        if (address(sponsorsManager) != address(0)) revert CollectiveRewardsAddressesAlreadyInitialized();
-        sponsorsManager = SponsorsManagerRootstockCollective(sponsorsManager_);
-        rewardToken = IERC20(SponsorsManagerRootstockCollective(sponsorsManager_).rewardToken());
+    function initializeCollectiveRewardsAddresses(address backersManager_) external {
+        if (address(backersManager) != address(0)) revert CollectiveRewardsAddressesAlreadyInitialized();
+        backersManager = BackersManagerRootstockCollective(backersManager_);
+        rewardToken = IERC20(BackersManagerRootstockCollective(backersManager_).rewardToken());
     }
 
     // -----------------------------
@@ -75,7 +75,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     // -----------------------------
 
     /**
-     * @notice sends rewards to sponsorsManager contract to be distributed to the gauges
+     * @notice sends rewards to backersManager contract to be distributed to the gauges
      * @dev reverts if is not called by foundation treasury address
      *  reverts if rewards balance is insufficient
      * @param amountERC20_ amount of ERC20 reward token to send
@@ -86,7 +86,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     }
 
     /**
-     * @notice sends rewards to sponsorsManager contract and starts the distribution to the gauges
+     * @notice sends rewards to backersManager contract and starts the distribution to the gauges
      * @dev reverts if is not called by foundation treasury address
      *  reverts if rewards balance is insufficient
      *  reverts if is not in the distribution window
@@ -102,7 +102,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         onlyFoundationTreasury
     {
         _sendRewards(amountERC20_, amountCoinbase_);
-        sponsorsManager.startDistribution();
+        backersManager.startDistribution();
     }
 
     // -----------------------------
@@ -110,13 +110,13 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     // -----------------------------
 
     /**
-     * @notice internal function to send rewards to sponsorsManager contract
+     * @notice internal function to send rewards to backersManager contract
      * @param amountERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
     function _sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) internal {
-        rewardToken.approve(address(sponsorsManager), amountERC20_);
-        sponsorsManager.notifyRewardAmount{ value: amountCoinbase_ }(amountERC20_);
+        rewardToken.approve(address(backersManager), amountERC20_);
+        backersManager.notifyRewardAmount{ value: amountCoinbase_ }(amountERC20_);
     }
 
     /**

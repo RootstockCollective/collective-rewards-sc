@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { BaseTest } from "../BaseTest.sol";
 import {
-    SponsorsManagerRootstockCollectiveUpgradeMock,
+    BackersManagerRootstockCollectiveUpgradeMock,
     RewardDistributorRootstockCollectiveUpgradeMock,
     GaugeUpgradeMock,
     GovernanceManagerRootstockCollectiveUpgradeMock
@@ -11,20 +11,20 @@ import {
 
 contract UpgradeTest is BaseTest {
     /**
-     * SCENARIO: SponsorsManagerRootstockCollective is upgraded
+     * SCENARIO: BackersManagerRootstockCollective is upgraded
      */
-    function test_UpgradeSponsorsManagerRootstockCollective() public {
-        // GIVEN a SponsorsManagerRootstockCollective proxy with an implementation
+    function test_UpgradeBackersManagerRootstockCollective() public {
+        // GIVEN a BackersManagerRootstockCollective proxy with an implementation
         // AND a new implementation
-        SponsorsManagerRootstockCollectiveUpgradeMock _sponsorsManagerNewImpl =
-            new SponsorsManagerRootstockCollectiveUpgradeMock();
+        BackersManagerRootstockCollectiveUpgradeMock _backersManagerNewImpl =
+            new BackersManagerRootstockCollectiveUpgradeMock();
         //WHEN the proxy is upgraded and initialized
         vm.prank(governor);
-        sponsorsManager.upgradeToAndCall(
-            address(_sponsorsManagerNewImpl), abi.encodeCall(_sponsorsManagerNewImpl.initializeMock, (42))
+        backersManager.upgradeToAndCall(
+            address(_backersManagerNewImpl), abi.encodeCall(_backersManagerNewImpl.initializeMock, (42))
         );
         // THEN getCustomMockValue is 44 = 2 gaugeLength + 42 newVariable
-        assertEq(SponsorsManagerRootstockCollectiveUpgradeMock(address(sponsorsManager)).getCustomMockValue(), 44);
+        assertEq(BackersManagerRootstockCollectiveUpgradeMock(address(backersManager)).getCustomMockValue(), 44);
     }
 
     /**
@@ -78,14 +78,14 @@ contract UpgradeTest is BaseTest {
         // AND gauge initialized
         GaugeUpgradeMock(address(gauge)).initializeMock(46);
         uint256 _newVar =
-            GaugeUpgradeMock(address(gauge)).getCustomMockValue() - (uint256(uint160(address(sponsorsManager))));
-        // THEN getCustomMockValue is sponsorsManager address + 46 newVariable
+            GaugeUpgradeMock(address(gauge)).getCustomMockValue() - (uint256(uint160(address(backersManager))));
+        // THEN getCustomMockValue is backersManager address + 46 newVariable
         assertEq(_newVar, 46);
         // AND gauge2 initialized
         GaugeUpgradeMock(address(gauge2)).initializeMock(47);
         uint256 _newVar2 =
-            GaugeUpgradeMock(address(gauge2)).getCustomMockValue() - (uint256(uint160(address(sponsorsManager))));
-        // THEN getCustomMockValue is sponsorsManager address + 47 newVariable
+            GaugeUpgradeMock(address(gauge2)).getCustomMockValue() - (uint256(uint160(address(backersManager))));
+        // THEN getCustomMockValue is backersManager address + 47 newVariable
         assertEq(_newVar2, 47);
 
         // WHEN new gauge is created through the factory
@@ -94,8 +94,8 @@ contract UpgradeTest is BaseTest {
         // AND gauge3 initialized
         GaugeUpgradeMock(_newGauge).initializeMock(48);
         uint256 _newVar3 =
-            GaugeUpgradeMock(_newGauge).getCustomMockValue() - (uint256(uint160(address(sponsorsManager))));
-        // THEN getCustomMockValue is sponsorsManager address + 48 newVariable
+            GaugeUpgradeMock(_newGauge).getCustomMockValue() - (uint256(uint160(address(backersManager))));
+        // THEN getCustomMockValue is backersManager address + 48 newVariable
         assertEq(_newVar3, 48);
     }
 }

@@ -10,9 +10,9 @@ contract AllocateInvariants is BaseInvariants {
      */
     function invariant_TotalPotentialRewards() public useTime {
         uint256 _expectedTotalPotentialReward;
-        for (uint256 i = 0; i < sponsorsManager.getGaugesLength(); i++) {
-            _expectedTotalPotentialReward += GaugeRootstockCollective(sponsorsManager.getGaugeAt(i)).rewardShares();
+        for (uint256 i = 0; i < backersManager.getGaugesLength(); i++) {
+            _expectedTotalPotentialReward += GaugeRootstockCollective(backersManager.getGaugeAt(i)).rewardShares();
         }
-        assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
     }
 }

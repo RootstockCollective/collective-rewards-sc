@@ -7,12 +7,12 @@ contract DistributionFuzzTest is BaseFuzz {
     /* solhint-disable code-complexity */
 
     /**
-     * SCENARIO: After 3 consecutive distributions all the sponsors and builders claim their rewards
+     * SCENARIO: After 3 consecutive distributions all the backers and builders claim their rewards
      */
-    function testFuzz_Distribution(uint256 buildersAmount_, uint256 sponsorsAmount_, uint256 seed_) public {
+    function testFuzz_Distribution(uint256 buildersAmount_, uint256 backersAmount_, uint256 seed_) public {
         // GIVEN a random amount of builders
-        //  AND a random amount of sponsors voting the gauges
-        _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
+        //  AND a random amount of backers voting the gauges
+        _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         // AND there are 3 distributions
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
@@ -30,7 +30,7 @@ contract DistributionFuzzTest is BaseFuzz {
         // WHEN all the builders claim their rewards
         _buildersClaim();
 
-        // THEN they receive the rewards after deducting the sponsors reward percentage
+        // THEN they receive the rewards after deducting the backers reward percentage
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             assertApproxEqAbs(
                 rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 3, i), 100
@@ -41,19 +41,19 @@ contract DistributionFuzzTest is BaseFuzz {
         // AND cycle finishes
         _skipAndStartNewCycle();
 
-        // WHEN sponsors claim their rewards
-        for (uint256 i = 0; i < sponsorsArray.length; i++) {
-            vm.prank(sponsorsArray[i]);
-            sponsorsManager.claimSponsorRewards(sponsorsGauges[i]);
+        // WHEN backers claim their rewards
+        for (uint256 i = 0; i < backersArray.length; i++) {
+            vm.prank(backersArray[i]);
+            backersManager.claimBackerRewards(backersGauges[i]);
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rewardToken.balanceOf(sponsorsArray[i]),
-                _calcSponsorReward(RT_DISTRIBUTION_AMOUNT * 3, i),
+                rewardToken.balanceOf(backersArray[i]),
+                _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 3, i),
                 0.000000001 ether
             );
             assertApproxEqAbs(
-                sponsorsArray[i].balance, _calcSponsorReward(CB_DISTRIBUTION_AMOUNT * 3, i), 0.000000001 ether
+                backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 3, i), 0.000000001 ether
             );
         }
 
@@ -65,12 +65,12 @@ contract DistributionFuzzTest is BaseFuzz {
     }
 
     /**
-     * SCENARIO: After a distribution sponsors modify their allocations.
+     * SCENARIO: After a distribution backers modify their allocations.
      *  Shares are updated considering the new allocations and the time until next cycle
      */
     function testFuzz_ModifyAllocations(
         uint256 buildersAmount_,
-        uint256 sponsorsAmount_,
+        uint256 backersAmount_,
         uint256 seed_,
         uint256 allocationsTime_
     )
@@ -78,8 +78,8 @@ contract DistributionFuzzTest is BaseFuzz {
     {
         allocationsTime_ = bound(allocationsTime_, 0, 2 * cycleDuration);
         // GIVEN a random amount of builders
-        //  AND a random amount of sponsors voting the gauges
-        _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
+        //  AND a random amount of backers voting the gauges
+        _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         // AND there is a distribution of 10000 rewardToken and 1000 coinbase
         _distribute(10_000 ether, 1000 ether);
@@ -94,13 +94,13 @@ contract DistributionFuzzTest is BaseFuzz {
             _totalAllocations += gaugesArray[i].totalAllocation();
         }
 
-        // AND sponsors randomly modify their allocations
-        for (uint256 i = 0; i < sponsorsArray.length; i++) {
-            for (uint256 j = 0; j < sponsorsGauges[i].length; j++) {
-                sponsorsAllocations[i][j] = uint256(keccak256(abi.encodePacked(block.timestamp, i, j))) % MAX_VOTE;
+        // AND backers randomly modify their allocations
+        for (uint256 i = 0; i < backersArray.length; i++) {
+            for (uint256 j = 0; j < backersGauges[i].length; j++) {
+                backersAllocations[i][j] = uint256(keccak256(abi.encodePacked(block.timestamp, i, j))) % MAX_VOTE;
             }
-            vm.prank(sponsorsArray[i]);
-            sponsorsManager.allocateBatch(sponsorsGauges[i], sponsorsAllocations[i]);
+            vm.prank(backersArray[i]);
+            backersManager.allocateBatch(backersGauges[i], backersAllocations[i]);
         }
 
         uint256 _newTotalAllocations;
@@ -112,22 +112,22 @@ contract DistributionFuzzTest is BaseFuzz {
         uint256 _expectedTotalPotentialReward = _totalAllocations * cycleDuration;
         if (_newTotalAllocations > _totalAllocations) {
             _expectedTotalPotentialReward +=
-                (_newTotalAllocations - _totalAllocations) * sponsorsManager.timeUntilNextCycle(block.timestamp);
+                (_newTotalAllocations - _totalAllocations) * backersManager.timeUntilNextCycle(block.timestamp);
         } else {
             _expectedTotalPotentialReward -=
-                (_totalAllocations - _newTotalAllocations) * sponsorsManager.timeUntilNextCycle(block.timestamp);
+                (_totalAllocations - _newTotalAllocations) * backersManager.timeUntilNextCycle(block.timestamp);
         }
-        assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // THEN rewardShares for each gauge is updated considering the new allocations and the time until next cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             uint256 _expectedRewardShares = _gaugesAllocationsBefore[i] * cycleDuration;
             if (gaugesArray[i].totalAllocation() > _gaugesAllocationsBefore[i]) {
                 _expectedRewardShares += (gaugesArray[i].totalAllocation() - _gaugesAllocationsBefore[i])
-                    * sponsorsManager.timeUntilNextCycle(block.timestamp);
+                    * backersManager.timeUntilNextCycle(block.timestamp);
             } else {
                 _expectedRewardShares -= (_gaugesAllocationsBefore[i] - gaugesArray[i].totalAllocation())
-                    * sponsorsManager.timeUntilNextCycle(block.timestamp);
+                    * backersManager.timeUntilNextCycle(block.timestamp);
             }
             assertEq(gaugesArray[i].rewardShares(), _expectedRewardShares);
         }
@@ -135,7 +135,7 @@ contract DistributionFuzzTest is BaseFuzz {
         // AND there is a distribution of 10000 rewardToken and 1000 coinbase
         _distribute(10_000 ether, 1000 ether);
         // THEN totalPotentialReward is the entire cycle
-        assertEq(sponsorsManager.totalPotentialReward(), _newTotalAllocations * cycleDuration);
+        assertEq(backersManager.totalPotentialReward(), _newTotalAllocations * cycleDuration);
         // THEN rewardShares for each gauge is the entire cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * cycleDuration);

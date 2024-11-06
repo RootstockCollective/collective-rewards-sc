@@ -9,11 +9,11 @@ import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol
 contract AllocateHandler is BaseHandler {
     StakingTokenMock public stakingToken;
 
-    address[] public sponsors;
-    mapping(address sponsor => bool exists) public sponsorExists;
-    mapping(address sponsor => mapping(GaugeRootstockCollective gauge => uint256 allocation)) public
-        sponsorGaugeAllocation;
-    uint256 public sponsorsLength;
+    address[] public backers;
+    mapping(address backer => bool exists) public backerExists;
+    mapping(address backer => mapping(GaugeRootstockCollective gauge => uint256 allocation)) public
+        backerGaugeAllocation;
+    uint256 public backersLength;
 
     constructor(BaseTest baseTest_, TimeManager timeManager_) BaseHandler(baseTest_, timeManager_) {
         stakingToken = baseTest_.stakingToken();
@@ -23,7 +23,7 @@ contract AllocateHandler is BaseHandler {
         if (msg.sender.code.length != 0) return;
         (GaugeRootstockCollective _gauge, uint256 _allocation) = _allocate(gaugeIndex_, allocation_);
         vm.prank(msg.sender);
-        sponsorsManager.allocate(_gauge, _allocation);
+        backersManager.allocate(_gauge, _allocation);
     }
 
     function allocateBatch(
@@ -45,7 +45,7 @@ contract AllocateHandler is BaseHandler {
         }
 
         vm.prank(msg.sender);
-        sponsorsManager.allocateBatch(_gauges, _allocations);
+        backersManager.allocateBatch(_gauges, _allocations);
     }
 
     function _allocate(uint256 gaugeIndex_, uint256 allocation_) internal returns (GaugeRootstockCollective, uint256) {
@@ -53,19 +53,19 @@ contract AllocateHandler is BaseHandler {
         allocation_ = bound(allocation_, 0, type(uint64).max);
 
         GaugeRootstockCollective _gauge = baseTest.gaugesArray(gaugeIndex_);
-        uint256 _allocationBefore = sponsorGaugeAllocation[msg.sender][_gauge];
-        if (sponsorsManager.isGaugeHalted(address(_gauge))) {
+        uint256 _allocationBefore = backerGaugeAllocation[msg.sender][_gauge];
+        if (backersManager.isGaugeHalted(address(_gauge))) {
             if (allocation_ > _allocationBefore) {
                 allocation_ = _allocationBefore;
             }
         }
 
-        sponsorGaugeAllocation[msg.sender][_gauge] = allocation_;
+        backerGaugeAllocation[msg.sender][_gauge] = allocation_;
 
-        if (!sponsorExists[msg.sender]) {
-            sponsors.push(msg.sender);
-            sponsorsLength = sponsors.length;
-            sponsorExists[msg.sender] = true;
+        if (!backerExists[msg.sender]) {
+            backers.push(msg.sender);
+            backersLength = backers.length;
+            backerExists[msg.sender] = true;
         }
 
         stakingToken.burn(msg.sender, _allocationBefore);

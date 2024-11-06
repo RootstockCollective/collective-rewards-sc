@@ -2,9 +2,9 @@
 pragma solidity 0.8.20;
 
 /**
- * @title ISponsorsManagerRootstockCollective
+ * @title IBackersManagerRootstockCollective
  */
-interface ISponsorsManagerRootstockCollective {
+interface IBackersManagerRootstockCollective {
     /**
      * @notice returns timestamp end of current rewards period
      */

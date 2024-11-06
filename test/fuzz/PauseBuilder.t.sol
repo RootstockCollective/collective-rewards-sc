@@ -12,7 +12,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
      */
     function testFuzz_PauseBuilder(
         uint256 buildersAmount_,
-        uint256 sponsorsAmount_,
+        uint256 backersAmount_,
         uint256 seed_,
         uint256 randomTime_
     )
@@ -20,8 +20,8 @@ contract PauseBuilderFuzzTest is BaseFuzz {
     {
         randomTime_ = bound(randomTime_, 0, 2 * cycleDuration);
         // GIVEN a random amount of builders
-        //  AND a random amount of sponsors voting the gauges
-        _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
+        //  AND a random amount of backers voting the gauges
+        _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         /// AND a random time passes
         skip(randomTime_);
@@ -43,7 +43,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             if (!pausedBuilders[builders[i]]) {
                 vm.prank(builders[i]);
                 gaugesArray[i].claimBuilderReward();
-                // THEN they receive the rewards after deducting the sponsors reward percentage
+                // THEN they receive the rewards after deducting the backers reward percentage
                 assertApproxEqAbs(
                     rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT, i), 100
                 );
@@ -59,20 +59,16 @@ contract PauseBuilderFuzzTest is BaseFuzz {
         // AND cycle finishes
         _skipAndStartNewCycle();
 
-        // WHEN sponsors claim their rewards
-        for (uint256 i = 0; i < sponsorsArray.length; i++) {
-            vm.prank(sponsorsArray[i]);
-            sponsorsManager.claimSponsorRewards(sponsorsGauges[i]);
+        // WHEN backers claim their rewards
+        for (uint256 i = 0; i < backersArray.length; i++) {
+            vm.prank(backersArray[i]);
+            backersManager.claimBackerRewards(backersGauges[i]);
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rewardToken.balanceOf(sponsorsArray[i]),
-                _calcSponsorReward(RT_DISTRIBUTION_AMOUNT, i),
-                0.000000001 ether
+                rewardToken.balanceOf(backersArray[i]), _calcBackerReward(RT_DISTRIBUTION_AMOUNT, i), 0.000000001 ether
             );
-            assertApproxEqAbs(
-                sponsorsArray[i].balance, _calcSponsorReward(CB_DISTRIBUTION_AMOUNT, i), 0.000000001 ether
-            );
+            assertApproxEqAbs(backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT, i), 0.000000001 ether);
         }
     }
 
@@ -82,7 +78,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
      */
     function testFuzz_PauseBuilderWitDistribution(
         uint256 buildersAmount_,
-        uint256 sponsorsAmount_,
+        uint256 backersAmount_,
         uint256 seed_,
         uint256 randomTime_
     )
@@ -90,8 +86,8 @@ contract PauseBuilderFuzzTest is BaseFuzz {
     {
         randomTime_ = bound(randomTime_, 0, 2 * cycleDuration);
         // GIVEN a random amount of builders
-        //  AND a random amount of sponsors voting the gauges
-        _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
+        //  AND a random amount of backers voting the gauges
+        _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         /// AND a random time passes
         skip(randomTime_);
@@ -116,7 +112,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             if (!pausedBuilders[builders[i]]) {
                 vm.prank(builders[i]);
                 gaugesArray[i].claimBuilderReward();
-                // THEN they receive the rewards after deducting the sponsors reward percentage
+                // THEN they receive the rewards after deducting the backers reward percentage
                 assertApproxEqAbs(
                     rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 2, i), 100
                 );
@@ -132,19 +128,19 @@ contract PauseBuilderFuzzTest is BaseFuzz {
         // AND cycle finishes
         _skipAndStartNewCycle();
 
-        // WHEN sponsors claim their rewards
-        for (uint256 i = 0; i < sponsorsArray.length; i++) {
-            vm.prank(sponsorsArray[i]);
-            sponsorsManager.claimSponsorRewards(sponsorsGauges[i]);
+        // WHEN backers claim their rewards
+        for (uint256 i = 0; i < backersArray.length; i++) {
+            vm.prank(backersArray[i]);
+            backersManager.claimBackerRewards(backersGauges[i]);
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rewardToken.balanceOf(sponsorsArray[i]),
-                _calcSponsorReward(RT_DISTRIBUTION_AMOUNT * 2, i),
+                rewardToken.balanceOf(backersArray[i]),
+                _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 2, i),
                 0.000000001 ether
             );
             assertApproxEqAbs(
-                sponsorsArray[i].balance, _calcSponsorReward(CB_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether
+                backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether
             );
         }
     }
@@ -155,7 +151,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             // 70% chance to pause
             if (_random % 10 > 2) {
                 vm.prank(kycApprover);
-                sponsorsManager.pauseBuilder(builders[i], "pause");
+                backersManager.pauseBuilder(builders[i], "pause");
                 pausedBuilders[builders[i]] = true;
             }
         }
@@ -167,7 +163,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             // 70% chance to unpause
             if (pausedBuilders[builders[i]] && _random % 10 > 2) {
                 vm.prank(kycApprover);
-                sponsorsManager.unpauseBuilder(builders[i]);
+                backersManager.unpauseBuilder(builders[i]);
                 pausedBuilders[builders[i]] = false;
             }
         }

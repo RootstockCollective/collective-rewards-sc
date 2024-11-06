@@ -22,7 +22,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
      */
     function testFuzz_RevokeBuilderAndPermitWithNewRewardPercentage(
         uint256 buildersAmount_,
-        uint256 sponsorsAmount_,
+        uint256 backersAmount_,
         uint256 seed_,
         uint256 randomTime_
     )
@@ -30,39 +30,39 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
     {
         randomTime_ = bound(randomTime_, 0, cycleDuration);
         // GIVEN a random amount of builders
-        //  AND a random amount of sponsors voting the gauges
-        _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
+        //  AND a random amount of backers voting the gauges
+        _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         // use a low rewardPercentageCooldown to let apply it
-        stdstore.target(address(sponsorsManager)).sig("rewardPercentageCooldown()").checked_write(1 days);
+        stdstore.target(address(backersManager)).sig("rewardPercentageCooldown()").checked_write(1 days);
 
         uint256[] memory _rewardPercentageBefore = new uint256[](builders.length);
         for (uint256 i = 0; i < builders.length; i++) {
-            _rewardPercentageBefore[i] = sponsorsManager.getRewardPercentageToApply(builders[i]);
+            _rewardPercentageBefore[i] = backersManager.getRewardPercentageToApply(builders[i]);
         }
 
         /// AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
-        _randomRevoke(seed_, sponsorsManager.totalPotentialReward());
+        _randomRevoke(seed_, backersManager.totalPotentialReward());
         uint256 _revokeTimestamp = block.timestamp;
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
         // AND permit randomly
-        _randomPermit(seed_, sponsorsManager.totalPotentialReward());
+        _randomPermit(seed_, backersManager.totalPotentialReward());
 
         // AND permitted builders have the new reward percentage applied if cooldown time has passed
         for (uint256 i = 0; i < builders.length; i++) {
             if (
                 revokedBuilders[builders[i]] == RevokeState.permitted
-                    && block.timestamp - _revokeTimestamp >= sponsorsManager.rewardPercentageCooldown()
+                    && block.timestamp - _revokeTimestamp >= backersManager.rewardPercentageCooldown()
             ) {
-                assertEq(sponsorsManager.getRewardPercentageToApply(builders[i]), 0.1 ether);
+                assertEq(backersManager.getRewardPercentageToApply(builders[i]), 0.1 ether);
             } else {
-                assertEq(sponsorsManager.getRewardPercentageToApply(builders[i]), _rewardPercentageBefore[i]);
+                assertEq(backersManager.getRewardPercentageToApply(builders[i]), _rewardPercentageBefore[i]);
             }
         }
 
@@ -90,7 +90,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
      */
     function testFuzz_RevokeBuilderAndPermitWithNewAllocations(
         uint256 buildersAmount_,
-        uint256 sponsorsAmount_,
+        uint256 backersAmount_,
         uint256 seed_,
         uint256 randomTime_
     )
@@ -98,47 +98,47 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
     {
         randomTime_ = bound(randomTime_, 0, cycleDuration);
         // GIVEN a random amount of builders
-        //  AND a random amount of sponsors voting the gauges
-        _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
+        //  AND a random amount of backers voting the gauges
+        _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
-        uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, sponsorsManager.totalPotentialReward());
+        uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, backersManager.totalPotentialReward());
 
         // THEN totalPotentialReward does not consider the revoked gauges
-        assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
-        // AND sponsors randomly modify their allocations
-        for (uint256 i = 0; i < sponsorsArray.length; i++) {
-            for (uint256 j = 0; j < sponsorsGauges[i].length; j++) {
-                uint256 _allocationBefore = sponsorsAllocations[i][j];
-                sponsorsAllocations[i][j] = uint256(keccak256(abi.encodePacked(block.timestamp, i, j))) % MAX_VOTE;
+        // AND backers randomly modify their allocations
+        for (uint256 i = 0; i < backersArray.length; i++) {
+            for (uint256 j = 0; j < backersGauges[i].length; j++) {
+                uint256 _allocationBefore = backersAllocations[i][j];
+                backersAllocations[i][j] = uint256(keccak256(abi.encodePacked(block.timestamp, i, j))) % MAX_VOTE;
                 // revoked gauges don't modify the totalPotentialReward
-                if (!sponsorsManager.isGaugeHalted(address(sponsorsGauges[i][j]))) {
-                    if (sponsorsAllocations[i][j] > _allocationBefore) {
-                        _expectedTotalPotentialReward += (sponsorsAllocations[i][j] - _allocationBefore)
-                            * sponsorsManager.timeUntilNextCycle(block.timestamp);
+                if (!backersManager.isGaugeHalted(address(backersGauges[i][j]))) {
+                    if (backersAllocations[i][j] > _allocationBefore) {
+                        _expectedTotalPotentialReward += (backersAllocations[i][j] - _allocationBefore)
+                            * backersManager.timeUntilNextCycle(block.timestamp);
                     } else {
-                        _expectedTotalPotentialReward -= (_allocationBefore - sponsorsAllocations[i][j])
-                            * sponsorsManager.timeUntilNextCycle(block.timestamp);
+                        _expectedTotalPotentialReward -= (_allocationBefore - backersAllocations[i][j])
+                            * backersManager.timeUntilNextCycle(block.timestamp);
                     }
                 } else {
-                    if (sponsorsAllocations[i][j] > _allocationBefore) {
-                        sponsorsAllocations[i][j] = _allocationBefore;
+                    if (backersAllocations[i][j] > _allocationBefore) {
+                        backersAllocations[i][j] = _allocationBefore;
                     }
                 }
             }
-            vm.prank(sponsorsArray[i]);
-            sponsorsManager.allocateBatch(sponsorsGauges[i], sponsorsAllocations[i]);
+            vm.prank(backersArray[i]);
+            backersManager.allocateBatch(backersGauges[i], backersAllocations[i]);
         }
 
         // THEN totalPotentialReward does not consider the revoked gauges
-        assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
@@ -147,7 +147,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _expectedTotalPotentialReward = _randomPermit(seed_, _expectedTotalPotentialReward);
 
         // THEN totalPotentialReward increase by permitted gauges
-        assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
@@ -161,7 +161,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             }
         }
         // THEN totalPotentialReward is the entire cycle of non revoked gauges
-        assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
     }
 
     /**
@@ -171,7 +171,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
      */
     function testFuzz_RevokeBuilderAndPermitWithNewCycleDuration(
         uint256 buildersAmount_,
-        uint256 sponsorsAmount_,
+        uint256 backersAmount_,
         uint256 seed_,
         uint256 randomTime_,
         uint32 newCycleDuration_
@@ -181,24 +181,24 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         randomTime_ = bound(randomTime_, 0, cycleDuration);
         newCycleDuration_ = uint32(bound(newCycleDuration_, 2 hours, MAX_CYCLE_DURATION));
         // GIVEN a random amount of builders
-        //  AND a random amount of sponsors voting the gauges
-        _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
+        //  AND a random amount of backers voting the gauges
+        _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
-        uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, sponsorsManager.totalPotentialReward());
+        uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, backersManager.totalPotentialReward());
 
         // THEN totalPotentialReward does not consider the revoked gauges
-        assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
         // AND governor sets a random cycle duration
         vm.prank(governor);
-        sponsorsManager.setCycleDuration(newCycleDuration_, 0);
+        backersManager.setCycleDuration(newCycleDuration_, 0);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
@@ -207,7 +207,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _expectedTotalPotentialReward = _randomPermit(seed_, _expectedTotalPotentialReward);
 
         // THEN totalPotentialReward increase by permitted gauges
-        assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
@@ -221,7 +221,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             }
         }
         // THEN totalPotentialReward is the entire cycle of non revoked gauges
-        assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
     }
 
     /**
@@ -230,7 +230,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
      */
     function testFuzz_RevokeBuilderAndPermitWithDistribution(
         uint256 buildersAmount_,
-        uint256 sponsorsAmount_,
+        uint256 backersAmount_,
         uint256 seed_,
         uint256 randomTime_
     )
@@ -238,14 +238,14 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
     {
         randomTime_ = bound(randomTime_, 0, cycleDuration);
         // GIVEN a random amount of builders
-        //  AND a random amount of sponsors voting the gauges
-        _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
+        //  AND a random amount of backers voting the gauges
+        _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
-        _randomRevoke(seed_, sponsorsManager.totalPotentialReward());
+        _randomRevoke(seed_, backersManager.totalPotentialReward());
 
         // AND a random time passes
         skip(randomTime_);
@@ -257,7 +257,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _skipLimitPeriodFinish(randomTime_);
 
         // AND permit randomly
-        _randomPermit(seed_, sponsorsManager.totalPotentialReward());
+        _randomPermit(seed_, backersManager.totalPotentialReward());
 
         uint256 _expectedTotalPotentialReward;
         // THEN rewardShares for each non revoked gauge is the entire cycle
@@ -268,7 +268,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             }
         }
         // THEN totalPotentialReward is the entire cycle of non revoked gauges
-        assertEq(sponsorsManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
     }
 
     /**
@@ -277,7 +277,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
      * @param randomTime_ time to skip
      */
     function _skipLimitPeriodFinish(uint256 randomTime_) internal {
-        skip(randomTime_ % (sponsorsManager.periodFinish() - block.timestamp - 1));
+        skip(randomTime_ % (backersManager.periodFinish() - block.timestamp - 1));
     }
 
     function _randomRevoke(uint256 seed_, uint256 expectedTotalPotentialReward_) internal returns (uint256) {
@@ -291,7 +291,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             // 70% chance to revoke
             else if (_random % 10 > 2) {
                 vm.prank(builders[i]);
-                sponsorsManager.revokeBuilder();
+                backersManager.revokeBuilder();
                 revokedBuilders[builders[i]] = RevokeState.revoked;
                 expectedTotalPotentialReward_ -= gaugesArray[i].rewardShares();
             }
@@ -306,7 +306,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             if (revokedBuilders[builders[i]] == RevokeState.revoked && _random % 10 > 2) {
                 expectedTotalPotentialReward_ += gaugesArray[i].rewardShares();
                 vm.prank(builders[i]);
-                sponsorsManager.permitBuilder(0.1 ether /*reward percentage*/ );
+                backersManager.permitBuilder(0.1 ether /*reward percentage*/ );
                 revokedBuilders[builders[i]] = RevokeState.permitted;
             }
         }

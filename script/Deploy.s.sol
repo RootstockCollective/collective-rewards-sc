@@ -3,8 +3,8 @@ pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
-import { SponsorsManagerRootstockCollective } from "src/SponsorsManagerRootstockCollective.sol";
-import { Deploy as SponsorsManagerRootstockCollectiveDeployer } from "script/SponsorsManagerRootstockCollective.s.sol";
+import { BackersManagerRootstockCollective } from "src/BackersManagerRootstockCollective.sol";
+import { Deploy as BackersManagerRootstockCollectiveDeployer } from "script/BackersManagerRootstockCollective.s.sol";
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
 import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/GaugeBeaconRootstockCollective.s.sol";
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
@@ -61,10 +61,8 @@ contract Deploy is Broadcaster, OutputWriter {
             "RewardDistributorRootstockCollective", address(_rewardDistributorImpl), address(_rewardDistributorProxy)
         );
 
-        (
-            SponsorsManagerRootstockCollective _sponsorManagerProxy,
-            SponsorsManagerRootstockCollective _sponsorManagerImpl
-        ) = new SponsorsManagerRootstockCollectiveDeployer().run(
+        (BackersManagerRootstockCollective _backersManagerProxy, BackersManagerRootstockCollective _backersManagerImpl)
+        = new BackersManagerRootstockCollectiveDeployer().run(
             address(_governanceManagerProxy),
             _rewardTokenAddress,
             _stakingTokenAddress,
@@ -74,8 +72,8 @@ contract Deploy is Broadcaster, OutputWriter {
             _cycleStartOffset,
             _rewardPercentageCooldown
         );
-        saveWithProxy("SponsorsManagerRootstockCollective", address(_sponsorManagerImpl), address(_sponsorManagerProxy));
+        saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
 
-        _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_sponsorManagerProxy));
+        _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
     }
 }

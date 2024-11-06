@@ -13,21 +13,21 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // AND builder is KYC revoked
         vm.startPrank(kycApprover);
-        sponsorsManager.revokeBuilderKYC(builder);
+        backersManager.revokeBuilderKYC(builder);
         vm.stopPrank();
     }
 
     function _haltGauge() internal override {
         // AND builder is KYC revoked
         vm.startPrank(kycApprover);
-        sponsorsManager.revokeBuilderKYC(builder);
+        backersManager.revokeBuilderKYC(builder);
         vm.stopPrank();
     }
 
     function _resumeGauge() internal override {
         // AND builder is KYC approved again
         vm.startPrank(kycApprover);
-        sponsorsManager.approveBuilderKYC(builder);
+        backersManager.approveBuilderKYC(builder);
         vm.stopPrank();
     }
 
@@ -87,7 +87,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // AND builder is KYC approved again
         vm.startPrank(kycApprover);
-        sponsorsManager.approveBuilderKYC(builder);
+        backersManager.approveBuilderKYC(builder);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -122,10 +122,10 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         _initialDistribution();
         // AND builder is paused
         vm.startPrank(kycApprover);
-        sponsorsManager.pauseBuilder(builder, "paused");
+        backersManager.pauseBuilder(builder, "paused");
         // AND builder is KYC revoked
         vm.startPrank(kycApprover);
-        sponsorsManager.revokeBuilderKYC(builder);
+        backersManager.revokeBuilderKYC(builder);
 
         // THEN rewardDistributor rewardToken balance is 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rewardToken.balanceOf(address(rewardDistributor)), 6.25 ether);
@@ -162,10 +162,10 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         _initialDistribution();
         // AND builder is revoked
         vm.startPrank(builder);
-        sponsorsManager.revokeBuilder();
+        backersManager.revokeBuilder();
         // AND builder is KYC revoked
         vm.startPrank(kycApprover);
-        sponsorsManager.revokeBuilderKYC(builder);
+        backersManager.revokeBuilderKYC(builder);
 
         // THEN rewardDistributor rewardToken balance is 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rewardToken.balanceOf(address(rewardDistributor)), 6.25 ether);
@@ -202,36 +202,36 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         _initialDistribution();
         // AND builder is revoked
         vm.startPrank(builder);
-        sponsorsManager.revokeBuilder();
+        backersManager.revokeBuilder();
         // AND builder is KYC revoked
         vm.startPrank(kycApprover);
-        sponsorsManager.revokeBuilderKYC(builder);
+        backersManager.revokeBuilderKYC(builder);
 
         // THEN gauge rewardShares is 1209600 ether = 2 * 1 WEEK
         assertEq(gauge.rewardShares(), 1_209_600 ether);
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
 
         // AND builder is KYC approved again
         vm.startPrank(kycApprover);
-        sponsorsManager.approveBuilderKYC(builder);
+        backersManager.approveBuilderKYC(builder);
 
         // THEN gauge is still halted
-        assertEq(sponsorsManager.isGaugeHalted(address(gauge)), true);
+        assertEq(backersManager.isGaugeHalted(address(gauge)), true);
         // THEN gauge rewardShares is 1209600 ether = 2 * 1 WEEK
         assertEq(gauge.rewardShares(), 1_209_600 ether);
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 8_467_200 ether);
+        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
 
         // AND builder is permitted again
         vm.startPrank(builder);
-        sponsorsManager.permitBuilder(0.1 ether);
+        backersManager.permitBuilder(0.1 ether);
 
         // THEN gauge is not halted anymore
-        assertEq(sponsorsManager.isGaugeHalted(address(gauge)), false);
+        assertEq(backersManager.isGaugeHalted(address(gauge)), false);
         // THEN gauge rewardShares is 1209600 ether = 2 * 1 WEEK
         assertEq(gauge.rewardShares(), 1_209_600 ether);
         // THEN total allocation is 8467200 ether = 16 * 1 WEEK
-        assertEq(sponsorsManager.totalPotentialReward(), 9_676_800 ether);
+        assertEq(backersManager.totalPotentialReward(), 9_676_800 ether);
     }
 }

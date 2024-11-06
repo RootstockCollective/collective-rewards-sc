@@ -6,17 +6,17 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 
 contract InitializationTest is BaseTest {
     /**
-     * SCENARIO: SponsorsManagerRootstockCollective cannot be initialized twice
+     * SCENARIO: BackersManagerRootstockCollective cannot be initialized twice
      */
-    function test_RevertSponsorsManagerRootstockCollectiveInitialize() public {
-        // GIVEN a SponsorsManagerRootstockCollective initialized
+    function test_RevertBackersManagerRootstockCollectiveInitialize() public {
+        // GIVEN a BackersManagerRootstockCollective initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         uint32 _cycleDuration = 1 weeks;
         uint24 _cycleStartOffset = 1 days;
         uint128 _rewardPercentageCooldown = 2 weeks;
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        sponsorsManager.initialize(
+        backersManager.initialize(
             governanceManager,
             address(rewardToken),
             address(stakingToken),
@@ -47,7 +47,7 @@ contract InitializationTest is BaseTest {
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        gauge.initialize(address(rewardToken), address(sponsorsManager));
+        gauge.initialize(address(rewardToken), address(backersManager));
     }
 
     /**

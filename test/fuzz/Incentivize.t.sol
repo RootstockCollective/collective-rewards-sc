@@ -12,11 +12,11 @@ contract IncentivizeFuzzTest is BaseFuzz {
     /**
      * SCENARIO: After a distribution, in a random part of the cycle gauges are incentivize.
      *  There is another distribution, builder receive only the rewards for the distributions.
-     *  Sponsors receive the rewards for the distributions plus the incentives
+     *  Backers receive the rewards for the distributions plus the incentives
      */
     function testFuzz_Incentivize(
         uint256 buildersAmount_,
-        uint256 sponsorsAmount_,
+        uint256 backersAmount_,
         uint256 seed_,
         uint256 incentiveAmount_,
         uint256 incentiveTime_
@@ -28,8 +28,8 @@ contract IncentivizeFuzzTest is BaseFuzz {
         // cannot incentivize in a new cycle and without a distribution, it will revert by BeforeDistribution()
         incentiveTime_ = bound(incentiveTime_, 0, cycleDuration - 1);
         // GIVEN a random amount of builders
-        //  AND a random amount of sponsors voting the gauges
-        _initialFuzzAllocation(buildersAmount_, sponsorsAmount_, seed_);
+        //  AND a random amount of backers voting the gauges
+        _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
@@ -61,7 +61,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
         // WHEN all the builders claim their rewards
         _buildersClaim();
 
-        // THEN they receive the rewards after deducting the sponsors reward percentage, rewards added are not
+        // THEN they receive the rewards after deducting the backers reward percentage, rewards added are not
         // considered
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             assertApproxEqAbs(
@@ -73,23 +73,23 @@ contract IncentivizeFuzzTest is BaseFuzz {
         // AND cycle finishes
         _skipAndStartNewCycle();
 
-        // WHEN sponsors claim their rewards
-        for (uint256 i = 0; i < sponsorsArray.length; i++) {
-            vm.prank(sponsorsArray[i]);
-            sponsorsManager.claimSponsorRewards(sponsorsGauges[i]);
+        // WHEN backers claim their rewards
+        for (uint256 i = 0; i < backersArray.length; i++) {
+            vm.prank(backersArray[i]);
+            backersManager.claimBackerRewards(backersGauges[i]);
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rewardToken.balanceOf(sponsorsArray[i]),
-                _calcSponsorReward(RT_DISTRIBUTION_AMOUNT * 2, i),
+                rewardToken.balanceOf(backersArray[i]),
+                _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 2, i),
                 0.000000001 ether
             );
             assertApproxEqAbs(
-                sponsorsArray[i].balance, _calcSponsorReward(CB_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether
+                backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether
             );
         }
 
-        // THEN gauges balances are empty if the rewards added are allocated to at least one sponsor.
+        // THEN gauges balances are empty if the rewards added are allocated to at least one backer.
         //  otherwise, they are considered in the rewardRate for following allocations(aka rewardMissing)
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (gaugesArray[i].totalAllocation() > 0) {
@@ -110,13 +110,13 @@ contract IncentivizeFuzzTest is BaseFuzz {
         }
     }
 
-    function _calcSponsorReward(uint256 amount_, uint256 sponsorIndex_) internal view override returns (uint256) {
+    function _calcBackerReward(uint256 amount_, uint256 backerIndex_) internal view override returns (uint256) {
         uint256 _rewards;
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (gaugesArray[i].totalAllocation() > 0) {
                 _rewards += (
                     rewardsAdded[gaugesArray[i]] + _calcGaugeReward(amount_, i) - _calcBuilderReward(amount_, i)
-                ) * gaugesArray[i].allocationOf(sponsorsArray[sponsorIndex_]) / gaugesArray[i].totalAllocation();
+                ) * gaugesArray[i].allocationOf(backersArray[backerIndex_]) / gaugesArray[i].totalAllocation();
             }
         }
         return _rewards;
