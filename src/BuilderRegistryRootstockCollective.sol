@@ -54,6 +54,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_
     );
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
+    event BuilderMigrated(address indexed builder_, address indexed migrator_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -361,6 +362,27 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
 
         // write to storage
         builderRewardPercentage[msg.sender] = _rewardPercentageData;
+    }
+
+    /**
+     * @notice migrate v1 builder to the new builder registry
+     * @param builder_ address of the builder whitelisted on the V1's SimplifiedRewardDistributor contract
+     * @param rewardAddress_ address of the builder reward receiver whitelisted on the V1's SimplifiedRewardDistributor
+     * contract
+     * @param rewardPercentage_ reward percentage(100% == 1 ether)
+     */
+    function migrateBuilder(
+        address builder_,
+        address rewardAddress_,
+        uint64 rewardPercentage_
+    )
+        public
+        onlyKycApprover
+    {
+        _whitelistBuilder(builder_);
+        _activateBuilder(builder_, rewardAddress_, rewardPercentage_);
+
+        emit BuilderMigrated(builder_, msg.sender);
     }
 
     /**
