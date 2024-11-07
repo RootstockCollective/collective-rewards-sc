@@ -1,6 +1,6 @@
 # Upgradeable
 
-[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/ae40e66d2b99b4caf83133f94d38374097b51ea3/src/mvp/Upgradeable.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/0c4368dc418c200f21d2a798619d1dd68234c5c1/src/mvp/Upgradeable.sol)
 
 **Inherits:** UUPSUpgradeable, [Governed](/src/mvp/Governed.sol/abstract.Governed.md)
 

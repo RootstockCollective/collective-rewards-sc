@@ -1,5 +1,5 @@
 # Contents
 
-- [Gauge](Gauge.sol/contract.Gauge.md)
-- [GaugeBeacon](GaugeBeacon.sol/contract.GaugeBeacon.md)
-- [GaugeFactory](GaugeFactory.sol/contract.GaugeFactory.md)
+- [GaugeBeaconRootstockCollective](GaugeBeaconRootstockCollective.sol/contract.GaugeBeaconRootstockCollective.md)
+- [GaugeFactoryRootstockCollective](GaugeFactoryRootstockCollective.sol/contract.GaugeFactoryRootstockCollective.md)
+- [GaugeRootstockCollective](GaugeRootstockCollective.sol/contract.GaugeRootstockCollective.md)

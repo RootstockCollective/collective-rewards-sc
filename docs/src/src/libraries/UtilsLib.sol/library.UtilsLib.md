@@ -1,6 +1,6 @@
 # UtilsLib
 
-[Git Source](https://github.com/rsksmart/collective-rewards-sc/blob/ae40e66d2b99b4caf83133f94d38374097b51ea3/src/libraries/UtilsLib.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/0c4368dc418c200f21d2a798619d1dd68234c5c1/src/libraries/UtilsLib.sol)
 
 ## State Variables
 
@@ -66,14 +66,14 @@ function _mulPrec(uint256 a_, uint256 b_) internal pure returns (uint256);
 | -------- | --------- | ------------------------ |
 | `<none>` | `uint256` | `a_` \* `b_` / PRECISION |
 
-### \_calcEpochNext
+### \_calcCycleNext
 
-calculates when an epoch ends or the next one starts based on given `epochDuration_` and a `timestamp_`
+calculates when an cycle ends or the next one starts based on given `cycleDuration_` and a `timestamp_`
 
 ```solidity
-function _calcEpochNext(
-    uint256 epochStart_,
-    uint256 epochDuration_,
+function _calcCycleNext(
+    uint256 cycleStart_,
+    uint256 cycleDuration_,
     uint256 timestamp_
 )
     internal
@@ -83,26 +83,26 @@ function _calcEpochNext(
 
 **Parameters**
 
-| Name             | Type      | Description            |
-| ---------------- | --------- | ---------------------- |
-| `epochStart_`    | `uint256` | epoch start timestamp  |
-| `epochDuration_` | `uint256` | epoch time duration    |
-| `timestamp_`     | `uint256` | timestamp to calculate |
+| Name             | Type      | Description                              |
+| ---------------- | --------- | ---------------------------------------- |
+| `cycleStart_`    | `uint256` | Collective Rewards cycle start timestamp |
+| `cycleDuration_` | `uint256` | Collective Rewards cycle time duration   |
+| `timestamp_`     | `uint256` | timestamp to calculate                   |
 
 **Returns**
 
 | Name     | Type      | Description                                                |
 | -------- | --------- | ---------------------------------------------------------- |
-| `<none>` | `uint256` | epochNext timestamp when the epoch ends or the next starts |
+| `<none>` | `uint256` | cycleNext timestamp when the cycle ends or the next starts |
 
-### \_calcTimeUntilNextEpoch
+### \_calcTimeUntilNextCycle
 
-calculates the time left until the next epoch based on given `epochDuration_` and a `timestamp_`
+calculates the time left until the next cycle based on given `cycleDuration_` and a `timestamp_`
 
 ```solidity
-function _calcTimeUntilNextEpoch(
-    uint256 epochStart_,
-    uint256 epochDuration_,
+function _calcTimeUntilNextCycle(
+    uint256 cycleStart_,
+    uint256 cycleDuration_,
     uint256 timestamp_
 )
     internal
@@ -112,14 +112,14 @@ function _calcTimeUntilNextEpoch(
 
 **Parameters**
 
-| Name             | Type      | Description            |
-| ---------------- | --------- | ---------------------- |
-| `epochStart_`    | `uint256` | epoch start timestamp  |
-| `epochDuration_` | `uint256` | epoch time duration    |
-| `timestamp_`     | `uint256` | timestamp to calculate |
+| Name             | Type      | Description                              |
+| ---------------- | --------- | ---------------------------------------- |
+| `cycleStart_`    | `uint256` | Collective Rewards cycle start timestamp |
+| `cycleDuration_` | `uint256` | Collective Rewards cycle time duration   |
+| `timestamp_`     | `uint256` | timestamp to calculate                   |
 
 **Returns**
 
 | Name     | Type      | Description                                        |
 | -------- | --------- | -------------------------------------------------- |
-| `<none>` | `uint256` | timeUntilNextEpoch amount of time until next epoch |
+| `<none>` | `uint256` | timeUntilNextCycle amount of time until next cycle |
