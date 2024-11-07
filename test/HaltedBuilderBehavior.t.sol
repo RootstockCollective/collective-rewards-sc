@@ -250,13 +250,13 @@ abstract contract HaltedBuilderBehavior is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is halted in the middle of an epoch having allocation.
+     * SCENARIO: builder is halted in the middle of an cycle having allocation.
      *  If the builder increases allocations tx fails
      */
     function test_HaltedGaugeCannotIncreaseAllocations() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
 
         // WHEN builder is halted

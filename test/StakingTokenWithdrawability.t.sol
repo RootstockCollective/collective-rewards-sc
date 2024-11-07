@@ -8,7 +8,7 @@ contract StakingTokenWithdrawabilityTest is BaseTest {
         stakingToken.setCollectiveRewardsAddress(address(backersManager));
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
-        //   AND half epoch pass
+        //   AND half cycle pass
         _initialDistribution();
 
         assertEq(stakingToken.balanceOf(alice), 100_000 ether);
