@@ -165,7 +165,7 @@ contract BaseTest is Test {
     }
 
     /**
-     * @notice skips to new epoch and executes a distribution.
+     * @notice skips to new cycle and executes a distribution.
      */
     function _distribute(uint256 amountERC20_, uint256 amountCoinbase_) internal {
         _skipToStartDistributionWindow();
@@ -179,7 +179,7 @@ contract BaseTest is Test {
         vm.stopPrank();
     }
 
-    function _incentivize(Gauge gauge_, uint256 amountERC20_, uint256 amountCoinbase_) internal {
+    function _incentivize(GaugeRootstockCollective gauge_, uint256 amountERC20_, uint256 amountCoinbase_) internal {
         vm.deal(incentivizer, amountCoinbase_);
         gauge_.incentivizeWithCoinbase{ value: amountCoinbase_ }();
 
