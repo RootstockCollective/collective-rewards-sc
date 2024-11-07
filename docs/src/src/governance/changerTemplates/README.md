@@ -1,3 +1,3 @@
 # Contents
 
-- [WhitelistBuilderChangerTemplate](WhitelistBuilderChangerTemplate.sol/contract.WhitelistBuilderChangerTemplate.md)
+- [WhitelistBuilderChangerTemplateRootstockCollective](WhitelistBuilderChangerTemplateRootstockCollective.sol/contract.WhitelistBuilderChangerTemplateRootstockCollective.md)
