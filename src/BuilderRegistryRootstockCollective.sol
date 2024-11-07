@@ -166,26 +166,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         external
         onlyKycApprover
     {
-        if (builderState[builder_].activated) revert AlreadyActivated();
-        builderState[builder_].activated = true;
-        builderState[builder_].kycApproved = true;
-        builderRewardReceiver[builder_] = rewardReceiver_;
-        // TODO: should we have a minimal amount?
-        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
-            revert InvalidBuilderRewardPercentage();
-        }
-
-        // read from storage
-        RewardPercentageData memory _rewardPercentageData = builderRewardPercentage[builder_];
-
-        _rewardPercentageData.previous = rewardPercentage_;
-        _rewardPercentageData.next = rewardPercentage_;
-        _rewardPercentageData.cooldownEndTime = uint128(block.timestamp);
-
-        // write to storage
-        builderRewardPercentage[builder_] = _rewardPercentageData;
-
-        emit BuilderActivated(builder_, rewardReceiver_, rewardPercentage_);
+        _activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
     }
 
     /**
@@ -239,15 +220,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @return gauge_ gauge contract
      */
     function whitelistBuilder(address builder_) external onlyValidChanger returns (GaugeRootstockCollective gauge_) {
-        if (builderState[builder_].whitelisted) revert AlreadyWhitelisted();
-        if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
-
-        builderState[builder_].whitelisted = true;
-        gauge_ = _createGauge(builder_);
-
-        _rewardTokenApprove(address(gauge_), type(uint256).max);
-
-        emit Whitelisted(builder_);
+        return _whitelistBuilder(builder_);
     }
 
     /**
@@ -308,7 +281,6 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * miscalculation of rewards
      * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
-    // function permitBuilder(uint64 rewardPercentage_) external {
     function permitBuilder(uint64 rewardPercentage_) external {
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
@@ -535,6 +507,50 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     function _canBeResumed(GaugeRootstockCollective gauge_) internal view returns (bool) {
         BuilderState memory _builderState = builderState[gaugeToBuilder[gauge_]];
         return _builderState.kycApproved && _builderState.whitelisted && !_builderState.revoked;
+    }
+
+    /**
+     * @dev activates builder for the first time, setting the reward receiver and the reward percentage
+     *  Sets activate flag to true. It cannot be switched to false anymore
+     *  See {activateBuilder} for details.
+     */
+    function _activateBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
+        if (builderState[builder_].activated) revert AlreadyActivated();
+        builderState[builder_].activated = true;
+        builderState[builder_].kycApproved = true;
+        builderRewardReceiver[builder_] = rewardReceiver_;
+        // TODO: should we have a minimal amount?
+        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
+            revert InvalidBuilderRewardPercentage();
+        }
+
+        // read from storage
+        RewardPercentageData memory _rewardPercentageData = builderRewardPercentage[builder_];
+
+        _rewardPercentageData.previous = rewardPercentage_;
+        _rewardPercentageData.next = rewardPercentage_;
+        _rewardPercentageData.cooldownEndTime = uint128(block.timestamp);
+
+        // write to storage
+        builderRewardPercentage[builder_] = _rewardPercentageData;
+
+        emit BuilderActivated(builder_, rewardReceiver_, rewardPercentage_);
+    }
+
+    /**
+     * @dev Internal function to whitelist builder and create its gauge
+     *  See {whitelistBuilder} for details.
+     */
+    function _whitelistBuilder(address builder_) private returns (GaugeRootstockCollective gauge_) {
+        if (builderState[builder_].whitelisted) revert AlreadyWhitelisted();
+        if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
+
+        builderState[builder_].whitelisted = true;
+        gauge_ = _createGauge(builder_);
+
+        _rewardTokenApprove(address(gauge_), type(uint256).max);
+
+        emit Whitelisted(builder_);
     }
 
     /**
