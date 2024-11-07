@@ -54,12 +54,18 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_
     );
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
+    event BuilderMigrated(address indexed builder_, address indexed migrator_);
 
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyKycApprover() {
         governanceManager.validateKycApprover(msg.sender);
+        _;
+    }
+
+    modifier onlyFoundationTreasury() {
+        governanceManager.validateFoundationTreasury(msg.sender);
         _;
     }
 
@@ -361,6 +367,27 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
 
         // write to storage
         builderRewardPercentage[msg.sender] = _rewardPercentageData;
+    }
+
+    /**
+     * @notice migrate mvp builder to the new builder registry
+     * @dev reverts if builder is not whitelisted in the simplifiedRewardDistributor
+     * @param builder_ address of the builder
+     * @param rewardAddress_ address of the builder reward receiver
+     * @param rewardPercentage_ reward percentage(100% == 1 ether)
+     */
+    function migrateBuilder(
+        address builder_,
+        address rewardAddress_,
+        uint64 rewardPercentage_
+    )
+        public
+        onlyFoundationTreasury
+    {
+        _whitelistBuilder(builder_);
+        _activateBuilder(builder_, rewardAddress_, rewardPercentage_);
+
+        emit BuilderMigrated(builder_, msg.sender);
     }
 
     /**
