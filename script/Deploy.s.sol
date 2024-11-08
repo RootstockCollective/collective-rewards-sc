@@ -22,7 +22,6 @@ contract Deploy is Broadcaster, OutputWriter {
     address private _kycApproverAddress;
     address private _governorAddress;
     address private _foundationTreasuryAddress;
-    address private _kycApproverAddress;
     uint32 private _cycleDuration;
     uint24 private _cycleStartOffset;
     uint128 private _rewardPercentageCooldown;
