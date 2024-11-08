@@ -32,6 +32,8 @@ contract StakingTokenMock is ERC20 {
 
     //checks CollectiveRewards for stake
     modifier _checkCollectiveRewardsForStake(address staker, uint256 value) {
+        _;
+        // The check is applied after the fnc modified, so that if there is any revert there, it takes priority
         if (collectiveRewardsCheck != address(0)) {
             try ICollectiveRewardsCheckRootstockCollective(collectiveRewardsCheck).canWithdraw(staker, value) returns (
                 bool canWithdraw
@@ -41,7 +43,6 @@ contract StakingTokenMock is ERC20 {
                 }
             } catch { }
         }
-        _;
     }
 
     // checks that received address has method which can successfully be called
