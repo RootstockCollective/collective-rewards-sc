@@ -36,24 +36,6 @@ contract BaseInvariants is BaseTest {
         targetContract(address(distributionHandler));
         targetContract(address(incentivizeHandler));
 
-        // Exclude BaseTest contracts
-        excludeSender(address(governanceManager));
-        excludeSender(address(gaugeBeacon));
-        excludeSender(address(gaugeFactory));
-        excludeSender(address(gauge));
-        excludeSender(address(gauge2));
-        excludeSender(address(backersManagerImpl));
-        excludeSender(address(backersManager));
-        excludeSender(address(rewardDistributorImpl));
-        excludeSender(address(rewardDistributor));
-
-        // Exclude Handler contracts
-        excludeSender(address(allocateHandler));
-        excludeSender(address(builderHandler));
-        excludeSender(address(cycleHandler));
-        excludeSender(address(distributionHandler));
-        excludeSender(address(incentivizeHandler));
-
         // creates 15 gauges with 40% of reward percentage
         uint64 _rewardPercentage = 0.4 ether; // 40%
         _createGauges(15, _rewardPercentage);

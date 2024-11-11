@@ -132,9 +132,6 @@ contract BaseTest is Test {
         builders.push(builder_);
         vm.prank(governor);
         newGauge_ = backersManager.whitelistBuilder(builder_);
-        // Remove form senders in invariant tests TODO: move to BaseInvariants (convenient here but maybe not the right
-        // place)
-        excludeSender(address(newGauge_));
         gaugesArray.push(newGauge_);
     }
 

@@ -24,6 +24,7 @@ contract IncentivizeHandler is BaseHandler {
         external
         skipTime(timeToSkip_)
     {
+        if (msg.sender.code.length != 0) return;
         if (backersManager.periodFinish() <= block.timestamp) return;
         gaugeIndex_ = bound(gaugeIndex_, 0, baseTest.gaugesArrayLength() - 1);
         amountERC20_ = bound(amountERC20_, 0, type(uint64).max);
