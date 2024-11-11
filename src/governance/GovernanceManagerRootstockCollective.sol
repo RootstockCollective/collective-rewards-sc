@@ -33,6 +33,11 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _;
     }
 
+    modifier onlyValidUpgrader() {
+        validateUpgrader(msg.sender);
+        _;
+    }
+
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
@@ -45,6 +50,8 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
     address public foundationTreasury;
     /// @notice The address of the KYC approver.
     address public kycApprover;
+    /// @notice The upgrader address with contract upgradeability permissions
+    address public upgrader;
 
     /**
      * @dev Disables initializers for the contract. This ensures the contract is upgradeable.
@@ -54,12 +61,21 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _disableInitializers();
     }
 
-    function initialize(address governor_, address foundationTreasury_, address kycApprover_) public initializer {
+    function initialize(
+        address governor_,
+        address foundationTreasury_,
+        address kycApprover_,
+        address upgrader_
+    )
+        public
+        initializer
+    {
         __UUPSUpgradeable_init();
 
         _updateGovernor(governor_);
         _updateFoundationTreasury(foundationTreasury_);
         _updateKYCApprover(kycApprover_);
+        _updateUpgrader(upgrader_);
     }
 
     // -----------------------------
@@ -70,6 +86,8 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _authorizeChanger(address(changeContract_));
         changeContract_.execute();
         _authorizeChanger(address(0));
+
+        emit ChangeExecuted(changeContract_, msg.sender);
     }
 
     function updateGovernor(address governor_) public onlyValidChanger {
@@ -84,12 +102,22 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _updateKYCApprover(kycApprover_);
     }
 
+    function updateUpgrader(address upgrader_) public onlyValidChanger {
+        _updateUpgrader(upgrader_);
+    }
+
     function validateGovernor(address account_) external view {
         if (account_ != governor) revert NotGovernor();
     }
 
     function validateChanger(address account_) public view {
         if (account_ != _authorizedChanger && account_ != governor) revert NotAuthorizedChanger();
+    }
+
+    function validateUpgrader(address account_) public view {
+        if (account_ != _authorizedChanger && account_ != governor && account_ != upgrader) {
+            revert NotAuthorizedUpgrader();
+        }
     }
 
     function validateKycApprover(address account_) external view {
@@ -106,21 +134,29 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
 
     function _updateGovernor(address governor_) private onlyValidAddress(governor_) {
         governor = governor_;
+        emit GovernorUpdated(governor_, msg.sender);
     }
 
     function _updateFoundationTreasury(address foundationTreasury_) private onlyValidAddress(foundationTreasury_) {
         foundationTreasury = foundationTreasury_;
+        emit FoundationTreasuryUpdated(foundationTreasury_, msg.sender);
     }
 
     function _updateKYCApprover(address kycApprover_) private onlyValidAddress(kycApprover_) {
         kycApprover = kycApprover_;
+        emit KycApproverUpdated(kycApprover_, msg.sender);
+    }
+
+    function _updateUpgrader(address upgrader_) private {
+        upgrader = upgrader_;
+        emit UpgraderUpdated(upgrader_, msg.sender);
     }
 
     function _authorizeChanger(address authorizedChanger_) internal {
         _authorizedChanger = authorizedChanger_;
     }
 
-    function _authorizeUpgrade(address newImplementation_) internal override onlyValidChanger { }
+    function _authorizeUpgrade(address newImplementation_) internal override onlyValidUpgrader { }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
