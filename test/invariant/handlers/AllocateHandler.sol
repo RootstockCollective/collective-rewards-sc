@@ -20,6 +20,7 @@ contract AllocateHandler is BaseHandler {
     }
 
     function allocate(uint256 gaugeIndex_, uint256 allocation_, uint256 timeToSkip_) external skipTime(timeToSkip_) {
+        if (msg.sender.code.length != 0) return;
         (GaugeRootstockCollective _gauge, uint256 _allocation) = _allocate(gaugeIndex_, allocation_);
         vm.prank(msg.sender);
         backersManager.allocate(_gauge, _allocation);
@@ -33,6 +34,7 @@ contract AllocateHandler is BaseHandler {
         external
         skipTime(timeToSkip_)
     {
+        if (msg.sender.code.length != 0) return;
         if (gaugesIndex_.length != allocations_.length) allocations_ = gaugesIndex_;
         GaugeRootstockCollective[] memory _gauges = new GaugeRootstockCollective[](gaugesIndex_.length);
         uint256[] memory _allocations = new uint256[](allocations_.length);
