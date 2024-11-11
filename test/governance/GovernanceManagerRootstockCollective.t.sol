@@ -178,6 +178,37 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedUpgrader.selector);
         governanceManager.validateUpgrader(alice);
     }
+
+    /**
+     * SCENARIO: Governor can execute a change contract
+     */
+    function test_ExecuteChange() public {
+        // GIVEN a sample change contract
+        SampleChangeContract _changeContract = new SampleChangeContract();
+
+        // WHEN the governor executes the change contract
+        vm.prank(governor);
+        vm.expectEmit();
+        emit ChangeExecuted(_changeContract, governor);
+        governanceManager.executeChange(_changeContract);
+
+        // THEN the change contract is executed
+        vm.assertTrue(_changeContract.executed());
+    }
+
+    /**
+     * SCENARIO: Unauthorized account cannot execute a change contract
+     */
+    function test_FailExecuteChangeByNotGovernor() public {
+        // GIVEN a sample change contract
+        SampleChangeContract _changeContract = new SampleChangeContract();
+
+        // WHEN an unauthorized account attempts to execute the change contract
+        vm.prank(alice);
+        // THEN tx reverts because NotGovernor
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotGovernor.selector);
+        governanceManager.executeChange(_changeContract);
+    }
 }
 
 /**
