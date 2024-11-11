@@ -125,4 +125,56 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         // THEN coinbase balance of gauge is 3 ether
         assertEq(address(gauge).balance, 3 ether);
     }
+
+    /**
+     * SCENARIO: sends rewards and starts the distribution with default amounts
+     */
+    function test_SendRewardsWithDefaultAmount() public {
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
+        rewardToken.transfer(address(rewardDistributor), 10 ether);
+        Address.sendValue(payable(address(rewardDistributor)), 5 ether);
+        // WHEN foundation treasury calls sendRewardsWithDefaultAmount
+        // setting as default values 2 ethers of reward token and 1 of coinbase
+        vm.startPrank(foundation);
+        rewardDistributor.setDefaultRewardAmount(2 ether, 1 ether);
+        rewardDistributor.sendRewardsWithDefaultAmount();
+        // AND half cycle pass
+        _skipRemainingCycleFraction(2);
+        // AND foundation treasury calls sendRewards transferring 1 ethers of reward token and 0.5 of coinbase
+        rewardDistributor.sendRewards(1 ether, 0.5 ether);
+        // AND cycle finish
+        _skipAndStartNewCycle();
+        // AND foundation treasury calls sendRewards transferring 4 ethers of reward token and 2 of coinbase
+        rewardDistributor.sendRewards(4 ether, 2 ether);
+
+        // THEN reward token balance of rewardDistributor is 3 ether
+        assertEq(rewardToken.balanceOf(address(rewardDistributor)), 3 ether);
+        // THEN reward token balance of backersManager is 7 ether
+        assertEq(rewardToken.balanceOf(address(backersManager)), 7 ether);
+        // THEN coinbase balance of rewardDistributor is 1.5 ether
+        assertEq(address(rewardDistributor).balance, 1.5 ether);
+        // THEN coinbase balance of backersManager is 3.5 ether
+        assertEq(address(backersManager).balance, 3.5 ether);
+    }
+
+    /**
+     * SCENARIO: sends rewards and starts the distribution with default amounts
+     */
+    function test_SendRewardsAndStartDistributionWithDefaultAmount() public {
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token
+        rewardToken.transfer(address(rewardDistributor), 10 ether);
+        // AND a foundation with 5 ether of coinbase
+        Address.sendValue(payable(foundation), 5 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+        // WHEN foundation treasury calls sendRewardsAndStartDistribution transferring 2 ethers of reward token and
+        // 3 of coinbase
+        vm.startPrank(foundation);
+        rewardDistributor.setDefaultRewardAmount(2 ether, 3 ether);
+        rewardDistributor.sendRewardsAndStartDistributionWithDefaultAmount{ value: 3 ether }();
+        // THEN reward token balance of gauge is 2 ether
+        assertEq(rewardToken.balanceOf(address(gauge)), 2 ether);
+        // THEN coinbase balance of gauge is 3 ether
+        assertEq(address(gauge).balance, 3 ether);
+    }
 }
