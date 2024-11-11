@@ -14,6 +14,7 @@ interface IGovernanceManagerRootstockCollective {
     event FoundationTreasuryUpdated(address foundationTreasury_, address updatedBy_);
     event KycApproverUpdated(address kycApprover_, address updatedBy_);
     event UpgraderUpdated(address upgrader_, address updatedBy_);
+    event ChangeExecuted(IChangeContractRootstockCollective changeContract_, address executor_);
 
     // -----------------------------
     // ------- Custom Errors -------
@@ -44,6 +45,11 @@ interface IGovernanceManagerRootstockCollective {
      */
     error NotKycApprover();
 
+    /**
+     * @notice Thrown when the caller is not authorized to upgrade the contracts
+     */
+    error NotAuthorizedUpgrader();
+
     // -----------------------------
     // --------- Functions ---------
     // -----------------------------
@@ -53,8 +59,15 @@ interface IGovernanceManagerRootstockCollective {
      * @param governor_ The initial governor address.
      * @param foundationTreasury_ The initial foundation treasury address.
      * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
+     * @param upgrader_ The initial upgrader address.
      */
-    function initialize(address governor_, address foundationTreasury_, address kycApprover_) external;
+    function initialize(
+        address governor_,
+        address foundationTreasury_,
+        address kycApprover_,
+        address upgrader_
+    )
+        external;
 
     /**
      * @notice Function to be called to execute the changes in changeContract
@@ -114,6 +127,7 @@ interface IGovernanceManagerRootstockCollective {
      * @param account_ The address to be validated.
      * @dev Reverts with `NotAuthorizedUpgrader` if the account is not the upgrader.
      */
+    function validateUpgrader(address account_) external view;
 
     /**
      * @notice Updates the governor address
@@ -138,4 +152,11 @@ interface IGovernanceManagerRootstockCollective {
      * @dev Reverts if the new address is zero.
      */
     function updateKYCApprover(address kycApprover_) external;
+
+    /**
+     * @dev Updates the account authorized to upgrade the contracts
+     * @param upgrader_ The new upgrader address.
+     * @dev Reverts if caller is not a valid changer.
+     */
+    function updateUpgrader(address upgrader_) external;
 }

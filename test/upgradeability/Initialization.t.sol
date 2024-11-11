@@ -59,6 +59,6 @@ contract InitializationTest is BaseTest {
         //   THEN tx reverts because InvalidInitialization
         vm.prank(governor);
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        governanceManager.initialize(governor, foundation, kycApprover);
+        governanceManager.initialize(governor, foundation, kycApprover, upgrader);
     }
 }

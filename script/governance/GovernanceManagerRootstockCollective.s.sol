@@ -11,27 +11,31 @@ contract Deploy is Broadcaster {
         returns (GovernanceManagerRootstockCollective proxy_, GovernanceManagerRootstockCollective implementation_)
     {
         address _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
-        address _treasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
+        address _foundationAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
         address _kycApproverAddress = vm.envAddress("KYC_APPROVER_ADDRESS");
+        address _upgrader = vm.envAddress("UPGRADER_ADDRESS");
 
-        (proxy_, implementation_) = run(_governorAddress, _treasuryAddress, _kycApproverAddress);
+        (proxy_, implementation_) = run(_governorAddress, _foundationAddress, _kycApproverAddress, _upgrader);
     }
 
     function run(
         address governor_,
-        address treasury_,
-        address kycApprover_
+        address foundation_,
+        address kycApprover_,
+        address upgrader_
     )
         public
         broadcast
         returns (GovernanceManagerRootstockCollective proxy_, GovernanceManagerRootstockCollective implementation_)
     {
         require(governor_ != address(0), "Governor address cannot be empty");
-        require(treasury_ != address(0), "Treasury address cannot be empty");
+        require(foundation_ != address(0), "Foundation address cannot be empty");
         require(kycApprover_ != address(0), "KYC approver address cannot be empty");
+        require(upgrader_ != address(0), "Upgrader address cannot be empty");
 
-        bytes memory _initializerData =
-            abi.encodeWithSignature("initialize(address,address,address)", governor_, treasury_, kycApprover_);
+        bytes memory _initializerData = abi.encodeWithSignature(
+            "initialize(address,address,address,address)", governor_, foundation_, kycApprover_, upgrader_
+        );
         address _proxy;
         address _implementation;
         if (vm.envOr("NO_DD", false)) {
