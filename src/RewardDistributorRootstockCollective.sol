@@ -128,8 +128,8 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         payable
         onlyFoundationTreasury
     {
-        defaultRewardTokenAmount = tokenAmount;
-        defaultRewardCoinbaseAmount = coinbaseAmount;
+        defaultRewardTokenAmount = tokenAmount_;
+        defaultRewardCoinbaseAmount = coinbaseAmount_;
     }
 
     /**
