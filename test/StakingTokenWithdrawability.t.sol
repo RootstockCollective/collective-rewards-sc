@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, StakingTokenMock } from "./BaseTest.sol";
+import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
 contract StakingTokenWithdrawabilityTest is BaseTest {
     function _setUp() internal override {
@@ -20,31 +21,19 @@ contract StakingTokenWithdrawabilityTest is BaseTest {
     /**
      * SCENARIO: canWithdraw should return true if staker has no allocations
      */
-    function test_NoBackerCanWithdrawAlwaysTrue() public view {
+    function test_NoBackerCanWithdrawAlwaysTrue(uint256 value_) public view {
         // GIVEN alice and bob have 100000 stakingToken and 8 allocated
         //  THEN addresses with no allocation can withdraw anything
-        assertEq(backersManager.canWithdraw(address(0), 1_000_000 ether), true);
-        assertEq(backersManager.canWithdraw(address(1), 1_000_000 ether), true);
+        assertEq(backersManager.canWithdraw(address(0), value_), true);
+        assertEq(backersManager.canWithdraw(address(1), value_), true);
     }
 
     /**
-     * SCENARIO: canWithdraw should return true for values not allocated
+     * SCENARIO: canWithdraw should return true if user balance is bigger than allocation
      */
-    function test_CanWithdrawNoAllocatedAmount() public view {
+    function test_CanWithdrawNoAllocatedAmount(uint256 value_) public view {
         // GIVEN alice and bob have 100000 stakingToken and 8 allocated
-        // THEN alice can withdraw 99992
-        assertEq(backersManager.canWithdraw(alice, 99_992 ether), true);
-        // THEN alice cannot withdraw 99993
-        assertEq(backersManager.canWithdraw(alice, 99_993 ether), false);
-    }
-
-    /**
-     * SCENARIO: canWithdraw should return false is value is greater than the balance
-     */
-    function test_CanWithdrawNoEnoughBalance() public view {
-        // GIVEN alice and bob have 100000 stakingToken and 8 allocated
-        // THEN alice cannot withdraw 100001
-        assertEq(backersManager.canWithdraw(alice, 100_001 ether), false);
+        assertEq(backersManager.canWithdraw(alice, value_), true);
     }
 
     /**
@@ -68,15 +57,33 @@ contract StakingTokenWithdrawabilityTest is BaseTest {
 
     /**
      * SCENARIO: alice has 100000 stakingToken and 8 allocated, revert trying to transfer 99993 tokens
+     * with custom STRIFStakedInCollectiveRewardsCanWithdraw error
      */
     function test_RevertWithdraw() public {
         // GIVEN alice and bob have 100000 stakingToken and 8 allocated
-        // WHEN alice transfers 99993 tokens to bob
+        // WHEN alice tries to transfer 99993 tokens to bob
         //  THEN tx reverts because amount exceeds the tokens allocated
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(StakingTokenMock.STRIFStakedInCollectiveRewardsCanWithdraw.selector, false)
         );
         stakingToken.transfer(bob, 99_993 ether);
+    }
+
+    /**
+     * SCENARIO: alice has 100000 stakingToken and 8 allocated, revert trying to transfer 100001 tokens
+     * with default ERC20InsufficientBalance error
+     */
+    function test_RevertWithdrawWithInsufficietBalance() public {
+        // GIVEN alice and bob have 100000 stakingToken and 8 allocated
+        // WHEN alice tries to transfer 100001 tokens to bob
+        //  THEN tx reverts because amount exceeds the tokens allocated
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientBalance.selector, address(alice), 100_000 ether, 100_001 ether
+            )
+        );
+        stakingToken.transfer(bob, 100_001 ether);
     }
 }
