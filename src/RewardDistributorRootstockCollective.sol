@@ -40,6 +40,11 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /// @notice tracks amount of coinbase distributed per cycle
     mapping(uint256 cycleTimestampStart => uint256 amount) public rewardCoinbaseAmountPerCycle;
 
+    ///@notice default reward token amount
+    uint256 public defaultRewardTokenAmount;
+    ///@notice default reward coinbase amount
+    uint256 public defaultRewardCoinbaseAmount;
+
     // -----------------------------
     // ------- Initializer ---------
     // -----------------------------
@@ -71,7 +76,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     }
 
     // -----------------------------
-    // ---- External Functions -----
+    // ----  Public Functions  -----
     // -----------------------------
 
     /**
@@ -81,7 +86,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @param amountERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) external payable onlyFoundationTreasury {
+    function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) public payable onlyFoundationTreasury {
         _sendRewards(amountERC20_, amountCoinbase_);
     }
 
@@ -97,12 +102,50 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         uint256 amountERC20_,
         uint256 amountCoinbase_
     )
-        external
+        public
         payable
         onlyFoundationTreasury
     {
         _sendRewards(amountERC20_, amountCoinbase_);
         backersManager.startDistribution();
+    }
+
+    // -----------------------------
+    // ---- External Functions -----
+    // -----------------------------
+
+    /**
+     * @notice sets the default reward amounts
+     * @dev reverts if is not called by foundation treasury address
+     * @param tokenAmount default amount of ERC20 reward token to send
+     * @param coinbaseAmount default amount of Coinbase reward token to send
+     */
+    function setDefaultRewardAmount(
+        uint256 tokenAmount_,
+        uint256 coinbaseAmount_
+    )
+        external
+        payable
+        onlyFoundationTreasury
+    {
+        defaultRewardTokenAmount = tokenAmount;
+        defaultRewardCoinbaseAmount = coinbaseAmount;
+    }
+
+    /**
+     * @notice sends rewards to backersManager contract with default amounts
+     * @dev reverts if is not called by foundation treasury address
+     */
+    function sendRewardsWithDefaultAmount() external payable onlyFoundationTreasury {
+        sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
+    }
+
+    /**
+     * @notice sends rewards to backersManager contract with default amounts and starts the distribution
+     * @dev reverts if is not called by foundation treasury address
+     */
+    function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyFoundationTreasury {
+        sendRewardsAndStartDistribution(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
     }
 
     // -----------------------------
