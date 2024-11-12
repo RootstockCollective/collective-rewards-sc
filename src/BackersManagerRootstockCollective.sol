@@ -140,14 +140,16 @@ contract BackersManagerRootstockCollective is
 
     /**
      * @notice returns true if can withdraw, remaining balance should exceed the current allocation
+     * @dev user token balance should already account for the update, meaning the check
+     * is applied AFTER the withdraw accounting has become effective.
      * @param targetAddress_ address who wants to withdraw stakingToken
-     * @param value_ amount of stakingToken to withdraw
+     * param value_ amount of stakingToken to withdraw, not used on current version
      */
-    function canWithdraw(address targetAddress_, uint256 value_) external view returns (bool) {
+    function canWithdraw(address targetAddress_, uint256 /*value_*/ ) external view returns (bool) {
         uint256 _allocation = backerTotalAllocation[targetAddress_];
         if (_allocation == 0) return true;
 
-        return stakingToken.balanceOf(targetAddress_) >= _allocation + value_;
+        return stakingToken.balanceOf(targetAddress_) >= _allocation;
     }
 
     /**
