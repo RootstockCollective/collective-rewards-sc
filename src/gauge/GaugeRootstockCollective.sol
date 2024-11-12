@@ -283,6 +283,11 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         address _rewardReceiver = backersManager.builderRewardReceiver(_builder);
         if (backersManager.isBuilderPaused(_builder)) revert BuilderRewardsLocked();
         if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();
+        // if Builder uses the rewardReceiver account to claim, there shouldn't be an
+        // open request to replace such address, he needs to use the Builder account instead
+        if (msg.sender == _rewardReceiver && backersManager.hasBuilderRewardReceverPendingApproval(_builder)) {
+            revert NotAuthorized();
+        }
 
         RewardData storage _rewardData = rewardData[rewardToken_];
 
