@@ -127,6 +127,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
      * @param rewardPercentageCooldown_ time that must elapse for a new reward percentage from a builder to be applied
+     * @param distributionDuration_ duration of the distribution window
      */
     function __BuilderRegistryRootstockCollective_init(
         IGovernanceManagerRootstockCollective governanceManager_,
@@ -134,12 +135,15 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         address rewardDistributor_,
         uint32 cycleDuration_,
         uint24 cycleStartOffset_,
+        uint32 distributionDuration_,
         uint128 rewardPercentageCooldown_
     )
         internal
         onlyInitializing
     {
-        __CycleTimeKeeperRootstockCollective_init(governanceManager_, cycleDuration_, cycleStartOffset_);
+        __CycleTimeKeeperRootstockCollective_init(
+            governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
+        );
         __ERC165_init();
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
         rewardDistributor = rewardDistributor_;

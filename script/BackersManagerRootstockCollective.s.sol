@@ -28,6 +28,7 @@ contract Deploy is Broadcaster {
             _rewardDistributorAddress = vm.envAddress("REWARD_DISTRIBUTOR_ADDRESS");
         }
         uint32 _cycleDuration = uint32(vm.envUint("CYCLE_DURATION"));
+        uint32 _distributionDuration = uint32(vm.envUint("DISTRIBUTION_DURATION"));
         uint24 _cycleStartOffset = uint24(vm.envUint("CYCLE_START_OFFSET"));
         uint128 _rewardPercentageCooldown = uint128(vm.envUint("REWARD_PERCENTAGE_COOLDOWN"));
         (proxy_, implementation_) = run(
@@ -38,6 +39,7 @@ contract Deploy is Broadcaster {
             _rewardDistributorAddress,
             _cycleDuration,
             _cycleStartOffset,
+            _distributionDuration,
             _rewardPercentageCooldown
         );
     }
@@ -50,6 +52,7 @@ contract Deploy is Broadcaster {
         address rewardDistributor_,
         uint32 cycleDuration_,
         uint24 cycleStartOffset_,
+        uint32 distributionDuration_,
         uint128 rewardPercentageCooldown_
     )
         public
@@ -72,6 +75,7 @@ contract Deploy is Broadcaster {
                 rewardDistributor_,
                 cycleDuration_,
                 cycleStartOffset_,
+                distributionDuration_,
                 rewardPercentageCooldown_
             )
         );

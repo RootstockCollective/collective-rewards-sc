@@ -40,6 +40,7 @@ contract BaseTest is Test {
 
     uint32 public cycleDuration = 1 weeks;
     uint24 public cycleStartOffset = 0 days;
+    uint32 public distributionDuration = 1 hours;
     uint128 public rewardPercentageCooldown = 2 weeks;
 
     /* solhint-disable private-vars-leading-underscore */
@@ -77,6 +78,7 @@ contract BaseTest is Test {
             address(rewardDistributor),
             cycleDuration,
             cycleStartOffset,
+            distributionDuration,
             rewardPercentageCooldown
         );
 
