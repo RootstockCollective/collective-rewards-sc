@@ -127,7 +127,7 @@ interface IGovernanceManagerRootstockCollective {
      * @param account_ The address to be validated.
      * @dev Reverts with `NotAuthorizedUpgrader` if the account is not the upgrader.
      */
-    function validateUpgrader(address account_) external view;
+    function validateUpgradeAuthorization(address account_) external view;
 
     /**
      * @notice Updates the governor address

@@ -170,13 +170,13 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: ValidateUpgrader recognizes the upgrader and unauthorized accounts
+     * SCENARIO: ValidateUpgradeAuthorization recognizes the upgrader and unauthorized accounts
      */
-    function test_ValidateUpgrader() public {
-        governanceManager.validateUpgrader(upgrader);
+    function test_ValidateUpgradeAuthorization() public {
+        governanceManager.validateUpgradeAuthorization(upgrader);
 
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedUpgrader.selector);
-        governanceManager.validateUpgrader(alice);
+        governanceManager.validateUpgradeAuthorization(alice);
     }
 
     /**

@@ -34,7 +34,7 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
     }
 
     modifier onlyValidUpgrader() {
-        validateUpgrader(msg.sender);
+        validateUpgradeAuthorization(msg.sender);
         _;
     }
 
@@ -114,7 +114,7 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         if (account_ != _authorizedChanger && account_ != governor) revert NotAuthorizedChanger();
     }
 
-    function validateUpgrader(address account_) public view {
+    function validateUpgradeAuthorization(address account_) public view {
         if (account_ != _authorizedChanger && account_ != governor && account_ != upgrader) {
             revert NotAuthorizedUpgrader();
         }
