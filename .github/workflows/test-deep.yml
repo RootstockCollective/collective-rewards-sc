@@ -11,7 +11,7 @@ on:
       - "main"
 
 jobs:
-  test:
+  deep-test:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Check out the repo"
