@@ -76,7 +76,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     }
 
     // -----------------------------
-    // ----  Public Functions  -----
+    // ---- External Functions -----
     // -----------------------------
 
     /**
@@ -86,7 +86,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @param amountERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) public payable onlyFoundationTreasury {
+    function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) external payable onlyFoundationTreasury {
         _sendRewards(amountERC20_, amountCoinbase_);
     }
 
@@ -102,17 +102,13 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         uint256 amountERC20_,
         uint256 amountCoinbase_
     )
-        public
+        external
         payable
         onlyFoundationTreasury
     {
         _sendRewards(amountERC20_, amountCoinbase_);
         backersManager.startDistribution();
     }
-
-    // -----------------------------
-    // ---- External Functions -----
-    // -----------------------------
 
     /**
      * @notice sets the default reward amounts
@@ -137,7 +133,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @dev reverts if is not called by foundation treasury address
      */
     function sendRewardsWithDefaultAmount() external payable onlyFoundationTreasury {
-        sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
+        _sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
     }
 
     /**
@@ -145,7 +141,8 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @dev reverts if is not called by foundation treasury address
      */
     function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyFoundationTreasury {
-        sendRewardsAndStartDistribution(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
+        _sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
+        backersManager.startDistribution();
     }
 
     // -----------------------------
