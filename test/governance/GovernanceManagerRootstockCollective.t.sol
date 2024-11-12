@@ -145,10 +145,10 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
      * SCENARIO: AuthorizeChange recognizes authorized and unauthorized changers
      */
     function test_AuthorizeChange() public {
-        governanceManager.authorizeChanger(governor);
+        governanceManager.validateAuthorizedChanger(governor);
 
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
-        governanceManager.authorizeChanger(alice);
+        governanceManager.validateAuthorizedChanger(alice);
     }
 
     /**
@@ -185,11 +185,11 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
      * SCENARIO: AuthorizeUpgrade recognizes the authorized and unauthorized accounts
      */
     function test_AuthorizedUpgrade() public {
-        governanceManager.authorizeUpgrader(upgrader);
-        governanceManager.authorizeUpgrader(governor);
+        governanceManager.validateAuthorizedUpgrader(upgrader);
+        governanceManager.validateAuthorizedUpgrader(governor);
 
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedUpgrader.selector);
-        governanceManager.authorizeUpgrader(alice);
+        governanceManager.validateAuthorizedUpgrader(alice);
     }
 
     /**

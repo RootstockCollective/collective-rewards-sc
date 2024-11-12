@@ -16,12 +16,12 @@ abstract contract UpgradeableRootstockCollective is UUPSUpgradeable {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyValidChanger() {
-        governanceManager.authorizeChanger(msg.sender);
+        governanceManager.validateAuthorizedChanger(msg.sender);
         _;
     }
 
     modifier onlyAuthorizedUpgrader() {
-        governanceManager.authorizeUpgrader(msg.sender);
+        governanceManager.validateAuthorizedUpgrader(msg.sender);
         _;
     }
 

@@ -104,7 +104,7 @@ interface IGovernanceManagerRootstockCollective {
      * @param account_ The address to be validated as the changer.
      * @dev Reverts with `NotAuthorizedChanger` if the account is not the authorized changer.
      */
-    function authorizeChanger(address account_) external view;
+    function validateAuthorizedChanger(address account_) external view;
 
     /**
      * @notice Validates if the given account is authorized as the governor.
@@ -132,7 +132,7 @@ interface IGovernanceManagerRootstockCollective {
      * @param account_ The address to be validated.
      * @dev Reverts with `NotAuthorizedUpgrader` if the account is not the upgrader.
      */
-    function authorizeUpgrader(address account_) external view;
+    function validateAuthorizedUpgrader(address account_) external view;
 
     /**
      * @notice Updates the governor address
@@ -157,6 +157,13 @@ interface IGovernanceManagerRootstockCollective {
      * @dev Reverts if the new address is zero.
      */
     function updateKYCApprover(address kycApprover_) external;
+
+    /**
+     * @notice Validates if the given account is authorized as a changer
+     * @param account_ The address to be validated as the changer.
+     * @dev Reverts with `NotAuthorizedChanger` if the account is not the authorized changer.
+     */
+    function isAuthorizedChanger(address account_) external view returns (bool);
 
     /**
      * @dev Updates the account authorized to upgrade the contracts

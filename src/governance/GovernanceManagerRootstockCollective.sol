@@ -29,12 +29,12 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
     }
 
     modifier onlyAuthorizedUpgrader() {
-        authorizeUpgrader(msg.sender);
+        validateAuthorizedUpgrader(msg.sender);
         _;
     }
 
     modifier onlyAuthorizedChanger() {
-        authorizeChanger(msg.sender);
+        validateAuthorizedChanger(msg.sender);
         _;
     }
 
@@ -111,11 +111,11 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         if (account_ != governor) revert NotGovernor();
     }
 
-    function authorizeChanger(address account_) public view {
-        if (account_ != _authorizedChanger && account_ != governor) revert NotAuthorizedChanger();
+    function validateAuthorizedChanger(address account_) public view {
+        if (!isAuthorizedChanger(account_)) revert NotAuthorizedChanger();
     }
 
-    function authorizeUpgrader(address account_) public view {
+    function validateAuthorizedUpgrader(address account_) public view {
         if (account_ != _authorizedChanger && account_ != governor && account_ != upgrader) {
             revert NotAuthorizedUpgrader();
         }
@@ -127,6 +127,10 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
 
     function validateFoundationTreasury(address account_) external view {
         if (account_ != foundationTreasury) revert NotFoundationTreasury();
+    }
+
+    function isAuthorizedChanger(address account_) public view returns (bool) {
+        return account_ == _authorizedChanger || account_ == governor;
     }
 
     // -----------------------------
