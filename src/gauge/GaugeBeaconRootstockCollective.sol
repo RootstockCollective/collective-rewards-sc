@@ -30,6 +30,6 @@ contract GaugeBeaconRootstockCollective is UpgradeableBeacon {
      * @dev We override _checkOwner so that OnlyOwner modifier uses governanceManager to authorize the caller
      */
     function _checkOwner() internal view override {
-        governanceManager.authorizeUpgrader(msg.sender);
+        governanceManager.validateAuthorizedUpgrader(msg.sender);
     }
 }
