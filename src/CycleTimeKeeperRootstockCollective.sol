@@ -6,19 +6,34 @@ import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockCollective {
-    uint256 internal constant _DISTRIBUTION_WINDOW = 1 hours;
+    error NotValidChangerOrFoundation();
+
+    modifier onlyValidChangerOrFoundation() {
+        if (!governanceManager.isAuthorizedChanger(msg.sender) && msg.sender != governanceManager.foundationTreasury())
+        {
+            revert NotValidChangerOrFoundation();
+        }
+        _;
+    }
+
+    modifier onlyFoundation() {
+        governanceManager.validateFoundationTreasury(msg.sender);
+        _;
+    }
 
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
     error CycleDurationTooShort();
-    error CycleDurationsAreNotMultiples();
-    error CycleDurationNotHourBasis();
+    error DistributionDurationTooShort();
+    error DistributionDurationTooLong();
+    error DistributionModifiedDuringDistributionWindow();
 
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
     event NewCycleDurationScheduled(uint256 newCycleDuration_, uint256 cooldownEndTime_);
+    event NewDistributionDuration(uint256 newDistributionDuration_, address by_);
 
     // -----------------------------
     // ---------- Structs ----------
@@ -41,6 +56,7 @@ abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockColl
     // -----------------------------
     /// @notice cycle data
     CycleData public cycleData;
+    uint32 public distributionDuration;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -58,11 +74,13 @@ abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockColl
      * @param governanceManager_ contract with permissioned roles
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
+     * @param distributionDuration_ duration of the distribution window
      */
     function __CycleTimeKeeperRootstockCollective_init(
         IGovernanceManagerRootstockCollective governanceManager_,
         uint32 cycleDuration_,
-        uint24 cycleStartOffset_
+        uint24 cycleStartOffset_,
+        uint32 distributionDuration_
     )
         internal
         onlyInitializing
@@ -80,6 +98,7 @@ abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockColl
 
         // write to storage
         cycleData = _cycleData;
+        distributionDuration = distributionDuration_;
     }
 
     // -----------------------------
@@ -89,11 +108,18 @@ abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockColl
     /**
      * @notice schedule a new cycle duration. It will be applied for the next cycle
      * @dev reverts if is too short. It must be greater than 2 time the distribution window
+     * @dev only callable by an authorized changer or the foundation
      * @param newCycleDuration_ new cycle duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
      */
-    function setCycleDuration(uint32 newCycleDuration_, uint24 cycleStartOffset_) external onlyValidChanger {
-        if (newCycleDuration_ < 2 * _DISTRIBUTION_WINDOW) revert CycleDurationTooShort();
+    function setCycleDuration(
+        uint32 newCycleDuration_,
+        uint24 cycleStartOffset_
+    )
+        external
+        onlyValidChangerOrFoundation
+    {
+        if (!_isValidDistributionToCycleRatio(distributionDuration, newCycleDuration_)) revert CycleDurationTooShort();
 
         (uint256 _start, uint256 _duration) = getCycleStartAndDuration();
         // read from store
@@ -110,6 +136,40 @@ abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockColl
 
         // write to storage
         cycleData = _cycleData;
+    }
+
+    /**
+     * @notice set the duration of the distribution window
+     * @dev reverts if is too short. It must be greater than 0
+     * @dev reverts if the new distribution is greater than half of the cycle duration
+     * @dev reverts if the distribution window is modified during the distribution window
+     * @dev only callable by the foundation
+     * @param newDistributionDuration_ new distribution window duration
+     */
+    function setDistributionDuration(uint32 newDistributionDuration_) external onlyFoundation {
+        // revert if the new distribution duration is too short
+        if (newDistributionDuration_ == 0) revert DistributionDurationTooShort();
+
+        // revert if the distribution duration is modified during the distribution window
+        uint256 _cycleStart = cycleStart(block.timestamp);
+        if (block.timestamp > _cycleStart && block.timestamp < _cycleStart + distributionDuration) {
+            revert DistributionModifiedDuringDistributionWindow();
+        }
+
+        // revert if the new distribution duration is too long
+        CycleData memory _cycleData = cycleData;
+        if (!_isValidDistributionToCycleRatio(newDistributionDuration_, _cycleData.nextDuration)) {
+            revert DistributionDurationTooLong();
+        }
+        if (block.timestamp < _cycleData.nextStart) {
+            if (!_isValidDistributionToCycleRatio(newDistributionDuration_, _cycleData.previousDuration)) {
+                revert DistributionDurationTooLong();
+            }
+        }
+
+        emit NewDistributionDuration(newDistributionDuration_, msg.sender);
+
+        distributionDuration = newDistributionDuration_;
     }
 
     /**
@@ -141,7 +201,7 @@ abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockColl
      * @return endDistributionWindow timestamp when the cycle distribution ends
      */
     function endDistributionWindow(uint256 timestamp_) public view returns (uint256) {
-        return cycleStart(timestamp_) + _DISTRIBUTION_WINDOW;
+        return cycleStart(timestamp_) + distributionDuration;
     }
 
     /**
@@ -153,10 +213,6 @@ abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockColl
         (uint256 _start, uint256 _duration) = getCycleStartAndDuration();
         return UtilsLib._calcTimeUntilNextCycle(_start, _duration, timestamp_);
     }
-
-    // -----------------------------
-    // ---- Internal Functions -----
-    // -----------------------------
 
     /**
      * @notice returns cycle start and duration
@@ -172,6 +228,27 @@ abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockColl
             return (uint256(_cycleData.nextStart + _cycleData.offset), uint256(_cycleData.nextDuration));
         }
         return (uint256(_cycleData.previousStart), uint256(_cycleData.previousDuration));
+    }
+
+    // -----------------------------
+    // ---- Internal Functions -----
+    // -----------------------------
+
+    /**
+     * @notice checks if the distribution and cycle duration are valid
+     * @param distributionDuration_ duration of the distribution window
+     * @param cycleDuration_ cycle time duration
+     * @return true if the distribution duration is less than half of the cycle duration
+     */
+    function _isValidDistributionToCycleRatio(
+        uint32 distributionDuration_,
+        uint32 cycleDuration_
+    )
+        internal
+        pure
+        returns (bool)
+    {
+        return cycleDuration_ >= distributionDuration_ * 2;
     }
 
     /**

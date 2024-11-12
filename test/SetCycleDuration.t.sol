@@ -4,7 +4,6 @@ pragma solidity 0.8.20;
 import { BaseTest } from "./BaseTest.sol";
 import { CycleTimeKeeperRootstockCollective } from "../src/CycleTimeKeeperRootstockCollective.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
-import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract SetCycleDurationTest is BaseTest {
     // -----------------------------
@@ -34,17 +33,24 @@ contract SetCycleDurationTest is BaseTest {
     }
 
     /**
-     * SCENARIO: functions protected by OnlyGovernor should revert when are not
-     *  called by Governor
+     * SCENARIO: Only valid changer or foundation can set a new cycle duration
      */
-    function test_OnlyGovernor() public {
+    function test_OnlyValidChangerOrFoundation() public {
         // GIVEN a backer alice
         //  WHEN alice calls setCycleDuration
         //   THEN tx reverts because caller is not the Governor
 
         vm.prank(alice);
-        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
+        vm.expectRevert(CycleTimeKeeperRootstockCollective.NotValidChangerOrFoundation.selector);
         backersManager.setCycleDuration(3 weeks, 0 days);
+
+        // GIVEN accounts with permissions to change the cycle duration
+        //  WHEN authorized account calls setCycleDuration
+        //   THEN NewCycleDurationScheduled event is emitted
+        vm.prank(foundation);
+        backersManager.setCycleDuration(3 weeks, 0 days);
+        vm.prank(governor);
+        backersManager.setCycleDuration(2 weeks, 0 days);
     }
 
     /**
@@ -52,11 +58,11 @@ contract SetCycleDurationTest is BaseTest {
      */
     function test_RevertCycleDurationTooShort() public {
         // GIVEN a distribution window of 1 hour
-        //  WHEN governor tries to setCycleDuration with 1.5 hours of duration
+        //  WHEN governor tries to set a cycle duration smaller than 2 times the distribution duration
         //   THEN tx reverts because is too short
         vm.prank(governor);
         vm.expectRevert(CycleTimeKeeperRootstockCollective.CycleDurationTooShort.selector);
-        backersManager.setCycleDuration(1.5 hours, 0 days);
+        backersManager.setCycleDuration(distributionDuration, 0 days);
     }
 
     /**

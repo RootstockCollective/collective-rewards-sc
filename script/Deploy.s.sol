@@ -25,6 +25,7 @@ contract Deploy is Broadcaster, OutputWriter {
     address private _upgrader;
     uint32 private _cycleDuration;
     uint24 private _cycleStartOffset;
+    uint32 private _distributionDuration;
     uint128 private _rewardPercentageCooldown;
 
     function setUp() public {
@@ -36,6 +37,7 @@ contract Deploy is Broadcaster, OutputWriter {
         _upgrader = vm.envAddress("UPGRADER_ADDRESS");
         _cycleDuration = uint32(vm.envUint("CYCLE_DURATION"));
         _cycleStartOffset = uint24(vm.envUint("CYCLE_START_OFFSET"));
+        _distributionDuration = uint32(vm.envUint("DISTRIBUTION_DURATION"));
         _rewardPercentageCooldown = uint128(vm.envUint("REWARD_PERCENTAGE_COOLDOWN"));
 
         outputWriterSetup();
@@ -77,6 +79,7 @@ contract Deploy is Broadcaster, OutputWriter {
             address(_rewardDistributorProxy),
             _cycleDuration,
             _cycleStartOffset,
+            _distributionDuration,
             _rewardPercentageCooldown
         );
         saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
