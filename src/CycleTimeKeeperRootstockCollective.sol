@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import { UpgradeableRootstockCollective } from "./governance/UpgradeableRootstockCollective.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockCollective {
     error NotValidChangerOrFoundation();
@@ -150,9 +151,12 @@ abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockColl
         // revert if the new distribution duration is too short
         if (newDistributionDuration_ == 0) revert DistributionDurationTooShort();
 
-        // revert if the distribution duration is modified during the distribution window
+        // revert if the distribution duration is modified during the current or new distribution window
         uint256 _cycleStart = cycleStart(block.timestamp);
-        if (block.timestamp > _cycleStart && block.timestamp < _cycleStart + distributionDuration) {
+        if (
+            block.timestamp > _cycleStart
+                && (block.timestamp < _cycleStart + Math.max(distributionDuration, newDistributionDuration_))
+        ) {
             revert DistributionModifiedDuringDistributionWindow();
         }
 
