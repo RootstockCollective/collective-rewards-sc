@@ -42,7 +42,7 @@ contract SetDistributionDurationTest is BaseTest {
     /**
      * SCENARIO: Reverts if distribution duration is modified during an active distribution window
      */
-    function test_RevertWhenModifiedDuringDistributionWindow() public {
+    function test_RevertWhenModifiedDuringCurrentDistributionWindow() public {
         // GIVEN the caller is authorized and an active distribution window is ongoing
         vm.startPrank(foundation);
 
@@ -58,6 +58,27 @@ contract SetDistributionDurationTest is BaseTest {
 
         // THEN it reverts with DistributionModifiedDuringDistributionWindow
         backersManager.setDistributionDuration(2 hours);
+    }
+
+    /**
+     * SCENARIO: Reverts if distribution duration would be modified during new distribution window
+     */
+    function test_RevertWhenModifiedDuringNewDistributionWindow() public {
+        // GIVEN the caller is authorized and an active distribution window is ongoing
+        vm.startPrank(foundation);
+
+        // Start a distribution cycle to put the contract within an active distribution window
+        uint32 _ongoingDistributionDuration = 2 hours;
+        backersManager.setDistributionDuration(_ongoingDistributionDuration);
+
+        // Fast forward within the distribution window
+        vm.warp(block.timestamp + 3 hours);
+
+        // WHEN trying to modify the distribution duration
+        vm.expectRevert(CycleTimeKeeperRootstockCollective.DistributionModifiedDuringDistributionWindow.selector);
+
+        // THEN it reverts with DistributionModifiedDuringDistributionWindow
+        backersManager.setDistributionDuration(4 hours);
     }
 
     /**
