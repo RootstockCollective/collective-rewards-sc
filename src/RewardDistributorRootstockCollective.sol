@@ -29,8 +29,6 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     // ---------- Storage ----------
     // -----------------------------
 
-    /// @notice foundation treasury address
-    address public foundationTreasury;
     /// @notice address of the token rewarded to builder and backers
     IERC20 public rewardToken;
     /// @notice BackersManagerRootstockCollective contract address

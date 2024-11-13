@@ -2,17 +2,17 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, GaugeRootstockCollective } from "../../BaseTest.sol";
-import { WhitelistBuilderChangerTemplateRootstockCollective } from
-    "../../../src/governance/changerTemplates/WhitelistBuilderChangerTemplateRootstockCollective.sol";
+import { CommunityApproveBuilderChangerTemplateRootstockCollective } from
+    "../../../src/governance/changerTemplates/CommunityApproveBuilderChangerTemplateRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
-contract WhitelistBuilderChangerTest is BaseTest {
-    WhitelistBuilderChangerTemplateRootstockCollective internal _changer;
+contract CommunityApproveBuilderChangerTest is BaseTest {
+    CommunityApproveBuilderChangerTemplateRootstockCollective internal _changer;
     address internal _newBuilder = makeAddr("newBuilder");
 
     function _setUp() internal override {
-        // GIVEN WhitelistBuilderChanger deployed for a new builder
-        _changer = new WhitelistBuilderChangerTemplateRootstockCollective(backersManager, _newBuilder);
+        // GIVEN CommunityApproveBuilderChanger deployed for a new builder
+        _changer = new CommunityApproveBuilderChangerTemplateRootstockCollective(backersManager, _newBuilder);
     }
 
     /**
@@ -49,8 +49,8 @@ contract WhitelistBuilderChangerTest is BaseTest {
         GaugeRootstockCollective _newGauge = _changer.newGauge();
         //  THEN gauge is added on BackersManagerRootstockCollective
         assertEq(address(backersManager.builderToGauge(_newBuilder)), address(_newGauge));
-        //  THEN the new builder is whitelisted
-        (,, bool _whitelisted,,,,) = backersManager.builderState(_newBuilder);
-        assertEq(_whitelisted, true);
+        //  THEN the new builder is community approved
+        (,, bool _communityApproved,,,,) = backersManager.builderState(_newBuilder);
+        assertEq(_communityApproved, true);
     }
 }

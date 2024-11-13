@@ -14,6 +14,7 @@ contract InitializationTest is BaseTest {
         //   THEN tx reverts because InvalidInitialization
         uint32 _cycleDuration = 1 weeks;
         uint24 _cycleStartOffset = 1 days;
+        uint32 _distributionDuration = 1 hours;
         uint128 _rewardPercentageCooldown = 2 weeks;
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         backersManager.initialize(
@@ -24,6 +25,7 @@ contract InitializationTest is BaseTest {
             address(rewardDistributor),
             _cycleDuration,
             _cycleStartOffset,
+            _distributionDuration,
             _rewardPercentageCooldown
         );
     }
@@ -59,6 +61,6 @@ contract InitializationTest is BaseTest {
         //   THEN tx reverts because InvalidInitialization
         vm.prank(governor);
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        governanceManager.initialize(governor, foundation, kycApprover);
+        governanceManager.initialize(governor, foundation, kycApprover, upgrader);
     }
 }

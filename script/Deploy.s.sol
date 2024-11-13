@@ -22,8 +22,10 @@ contract Deploy is Broadcaster, OutputWriter {
     address private _kycApproverAddress;
     address private _governorAddress;
     address private _foundationTreasuryAddress;
+    address private _upgrader;
     uint32 private _cycleDuration;
     uint24 private _cycleStartOffset;
+    uint32 private _distributionDuration;
     uint128 private _rewardPercentageCooldown;
 
     function setUp() public {
@@ -32,8 +34,10 @@ contract Deploy is Broadcaster, OutputWriter {
         _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
         _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
         _kycApproverAddress = vm.envAddress("KYC_APPROVER_ADDRESS");
+        _upgrader = vm.envAddress("UPGRADER_ADDRESS");
         _cycleDuration = uint32(vm.envUint("CYCLE_DURATION"));
         _cycleStartOffset = uint24(vm.envUint("CYCLE_START_OFFSET"));
+        _distributionDuration = uint32(vm.envUint("DISTRIBUTION_DURATION"));
         _rewardPercentageCooldown = uint128(vm.envUint("REWARD_PERCENTAGE_COOLDOWN"));
 
         outputWriterSetup();
@@ -44,7 +48,7 @@ contract Deploy is Broadcaster, OutputWriter {
             GovernanceManagerRootstockCollective _governanceManagerProxy,
             GovernanceManagerRootstockCollective _governanceManagerImpl
         ) = new GovernanceManagerRootstockCollectiveDeployer().run(
-            _governorAddress, _foundationTreasuryAddress, _kycApproverAddress
+            _governorAddress, _foundationTreasuryAddress, _kycApproverAddress, _upgrader
         );
         saveWithProxy(
             "GovernanceManagerRootstockCollective", address(_governanceManagerImpl), address(_governanceManagerProxy)
@@ -75,6 +79,7 @@ contract Deploy is Broadcaster, OutputWriter {
             address(_rewardDistributorProxy),
             _cycleDuration,
             _cycleStartOffset,
+            _distributionDuration,
             _rewardPercentageCooldown
         );
         saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));

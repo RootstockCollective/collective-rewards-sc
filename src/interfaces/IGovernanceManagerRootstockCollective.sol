@@ -8,6 +8,15 @@ import { IChangeContractRootstockCollective } from "src/interfaces/IChangeContra
  */
 interface IGovernanceManagerRootstockCollective {
     // -----------------------------
+    // ---------- Events -----------
+    // -----------------------------
+    event GovernorUpdated(address governor_, address updatedBy_);
+    event FoundationTreasuryUpdated(address foundationTreasury_, address updatedBy_);
+    event KycApproverUpdated(address kycApprover_, address updatedBy_);
+    event UpgraderUpdated(address upgrader_, address updatedBy_);
+    event ChangeExecuted(IChangeContractRootstockCollective changeContract_, address executor_);
+
+    // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
     /**
@@ -36,6 +45,16 @@ interface IGovernanceManagerRootstockCollective {
      */
     error NotKycApprover();
 
+    /**
+     * @notice Thrown when the caller is not authorized to upgrade the contracts
+     */
+    error NotAuthorizedUpgrader();
+
+    /**
+     * @notice Thrown when the caller is not the upgrader.
+     */
+    error NotUpgrader();
+
     // -----------------------------
     // --------- Functions ---------
     // -----------------------------
@@ -45,11 +64,18 @@ interface IGovernanceManagerRootstockCollective {
      * @param governor_ The initial governor address.
      * @param foundationTreasury_ The initial foundation treasury address.
      * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
+     * @param upgrader_ The initial upgrader address.
      */
-    function initialize(address governor_, address foundationTreasury_, address kycApprover_) external;
+    function initialize(
+        address governor_,
+        address foundationTreasury_,
+        address kycApprover_,
+        address upgrader_
+    )
+        external;
 
     /**
-     * @notice Function to be called to make the changes in changeContract
+     * @notice Function to be called to execute the changes in changeContract
      * @dev reverts if is not called by the Governor
      * @param changeContract_ Address of the contract that will execute the changes
      */
@@ -78,7 +104,7 @@ interface IGovernanceManagerRootstockCollective {
      * @param account_ The address to be validated as the changer.
      * @dev Reverts with `NotAuthorizedChanger` if the account is not the authorized changer.
      */
-    function validateChanger(address account_) external view;
+    function validateAuthorizedChanger(address account_) external view;
 
     /**
      * @notice Validates if the given account is authorized as the governor.
@@ -97,28 +123,53 @@ interface IGovernanceManagerRootstockCollective {
     /**
      * @notice Validates if the given account is the foundation treasury.
      * @param account_ The address to be validated as the foundation treasury.
-     * @dev Reverts with `NotFoundationTreasury` if the account is not the foundation treasury.
+     * @dev Reverts with `NotFoundationTreasury` if the caller is not the foundation treasury.
      */
     function validateFoundationTreasury(address account_) external view;
 
     /**
-     * @notice Updates the governor
-     * @param newGovernor_ The new address to be set as the governor.
-     * @dev Only callable by the current governor. Reverts with `NotGovernor` if called by someone else.
+     * @notice Validates if the given account is authorized to upgrade the contracts.
+     * @param account_ The address to be validated.
+     * @dev Reverts with `NotAuthorizedUpgrader` if the account is not the upgrader.
      */
-    function updateGovernor(address newGovernor_) external;
+    function validateAuthorizedUpgrader(address account_) external view;
 
     /**
-     * @notice Updates the foundation treasury
-     * @param foundationTreasury_ The new address to be set as the foundation treasury.
-     * @dev Only callable by the governor. Reverts with `NotGovernor` if called by someone else.
+     * @notice Updates the governor address
+     * @param governor_ The new governor address.
+     * @dev Reverts if caller is not a valid changer.
+     * @dev Reverts if the new address is zero.
+     */
+    function updateGovernor(address governor_) external;
+
+    /**
+     * @notice Updates the foundation treasury address
+     * @param foundationTreasury_ The new foundation treasury address.
+     * @dev Reverts if caller is not a valid changer.
+     * @dev Reverts if the new address is zero.
      */
     function updateFoundationTreasury(address foundationTreasury_) external;
 
     /**
-     * @notice Updates the KYC approver
+     * @notice Updates the KYC approver address
      * @param kycApprover_ The new address to be set as the KYC approver.
-     * @dev Only callable by the governor. Reverts with `NotGovernor` if called by someone else.
+     * @dev Reverts if caller is not a valid changer.
+     * @dev Reverts if the new address is zero.
      */
     function updateKYCApprover(address kycApprover_) external;
+
+    /**
+     * @notice Validates if the given account is authorized as a changer
+     * @param account_ The address to be validated as the changer.
+     * @dev Reverts with `NotAuthorizedChanger` if the account is not the authorized changer.
+     */
+    function isAuthorizedChanger(address account_) external view returns (bool);
+
+    /**
+     * @dev Updates the account authorized to upgrade the contracts
+     * @param upgrader_ The new upgrader address.
+     * @dev Reverts if caller is the upgrader.
+     * @dev allow update to zero address to disable the upgrader role
+     */
+    function updateUpgrader(address upgrader_) external;
 }

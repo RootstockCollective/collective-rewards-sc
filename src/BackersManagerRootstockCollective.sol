@@ -99,6 +99,7 @@ contract BackersManagerRootstockCollective is
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
      * @param rewardPercentageCooldown_ time that must elapse for a new reward percentage from a builder to be applied
+     * @param distributionDuration_ duration of the distribution window
      */
     function initialize(
         IGovernanceManagerRootstockCollective governanceManager_,
@@ -108,6 +109,7 @@ contract BackersManagerRootstockCollective is
         address rewardDistributor_,
         uint32 cycleDuration_,
         uint24 cycleStartOffset_,
+        uint32 distributionDuration_,
         uint128 rewardPercentageCooldown_
     )
         external
@@ -119,6 +121,7 @@ contract BackersManagerRootstockCollective is
             rewardDistributor_,
             cycleDuration_,
             cycleStartOffset_,
+            distributionDuration_,
             rewardPercentageCooldown_
         );
         rewardToken = rewardToken_;
@@ -251,7 +254,7 @@ contract BackersManagerRootstockCollective is
         uint256 _length = gauges_.length;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             // reverts if builder was not activated or approved by the community
-            _validateGauge(gauges_[i]);
+            _validateWhitelisted(gauges_[i]);
 
             gauges_[i].claimBackerReward(msg.sender);
         }
@@ -307,7 +310,7 @@ contract BackersManagerRootstockCollective is
         returns (uint256 newbackerTotalAllocation_, uint256 newTotalPotentialReward_)
     {
         // reverts if builder was not activated or approved by the community
-        _validateGauge(gauge_);
+        _validateWhitelisted(gauge_);
 
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
             gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
@@ -439,7 +442,7 @@ contract BackersManagerRootstockCollective is
 
     /**
      * @notice approves rewardTokens to a given gauge
-     * @dev give full allowance when it is whitelisted and remove it when it is dewhitelisted
+     * @dev give full allowance when it is community approved and remove it when it is dewhitelisted
      * @param gauge_ gauge contract to approve rewardTokens
      * @param value_ amount of rewardTokens to approve
      */

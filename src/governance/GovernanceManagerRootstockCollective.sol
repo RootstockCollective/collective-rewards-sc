@@ -10,6 +10,7 @@ import { IChangeContractRootstockCollective } from "src/interfaces/IChangeContra
  * @notice This contract manages governance addresses.
  * @notice It also allows the governor to execute contracts that implement the IChangeContractRootstockCollective
  * interface.
+ * @dev Complete documentation is provided in the IGovernanceManagerRootstockCollective interface
  * @dev This contract is upgradeable via the UUPS proxy pattern.
  */
 contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceManagerRootstockCollective {
@@ -27,8 +28,13 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _;
     }
 
-    modifier onlyValidChanger() {
-        validateChanger(msg.sender);
+    modifier onlyAuthorizedUpgrader() {
+        validateAuthorizedUpgrader(msg.sender);
+        _;
+    }
+
+    modifier onlyAuthorizedChanger() {
+        validateAuthorizedChanger(msg.sender);
         _;
     }
 
@@ -44,6 +50,8 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
     address public foundationTreasury;
     /// @notice The address of the KYC approver.
     address public kycApprover;
+    /// @notice The upgrader address with contract upgradeability permissions
+    address public upgrader;
 
     /**
      * @dev Disables initializers for the contract. This ensures the contract is upgradeable.
@@ -53,144 +61,107 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _disableInitializers();
     }
 
-    /**
-     * @notice Initializes the contract with the initial governor, foundation treasury, and KYC approver.
-     * @dev Used instead of a constructor for upgradeable contracts.
-     * @param governor_ The initial governor address.
-     * @param foundationTreasury_ The initial foundation treasury address.
-     * @param kycApprover_ The initial KYC approver address.
-     */
-    function initialize(address governor_, address foundationTreasury_, address kycApprover_) public initializer {
+    function initialize(
+        address governor_,
+        address foundationTreasury_,
+        address kycApprover_,
+        address upgrader_
+    )
+        public
+        initializer
+    {
         __UUPSUpgradeable_init();
 
         _updateGovernor(governor_);
         _updateFoundationTreasury(foundationTreasury_);
         _updateKYCApprover(kycApprover_);
+        _updateUpgrader(upgrader_);
     }
 
     // -----------------------------
     // ---- External Functions -----
     // -----------------------------
 
-    /**
-     * @notice Function to be called to make the changes in changeContract
-     * @dev reverts if is not called by the Governor
-     * @param changeContract_ Address of the contract that will execute the changes
-     */
     function executeChange(IChangeContractRootstockCollective changeContract_) external onlyGovernor {
         _authorizeChanger(address(changeContract_));
         changeContract_.execute();
         _authorizeChanger(address(0));
+
+        emit ChangeExecuted(changeContract_, msg.sender);
     }
 
-    /**
-     * @notice Allows the governor to update its own role to a new address.
-     * @param governor_ The new governor address.
-     * @dev Reverts if caller is not the current governor.
-     */
-    function updateGovernor(address governor_) public onlyValidChanger {
+    function updateGovernor(address governor_) public onlyAuthorizedChanger {
         _updateGovernor(governor_);
     }
 
-    /**
-     * @notice Allows the governor to update the foundation treasury address.
-     * @param foundationTreasury_ The new foundation treasury address.
-     * @dev Only callable by the governor. Reverts if the new address is invalid.
-     */
-    function updateFoundationTreasury(address foundationTreasury_) public onlyValidChanger {
+    function updateFoundationTreasury(address foundationTreasury_) public onlyAuthorizedChanger {
         _updateFoundationTreasury(foundationTreasury_);
     }
 
-    /**
-     * @notice Allows the governor to update the KYC approver address.
-     * @param kycApprover_ The new KYC approver address.
-     * @dev Only callable by the governor. Reverts if the new address is invalid.
-     */
-    function updateKYCApprover(address kycApprover_) public onlyValidChanger {
+    function updateKYCApprover(address kycApprover_) public onlyAuthorizedChanger {
         _updateKYCApprover(kycApprover_);
     }
 
-    /**
-     * @notice Validates if an account is authorized as the governor.
-     * @param account_ The address to be validated.
-     * @dev Reverts with `NotGovernor` if the account is not the governor.
-     */
+    function updateUpgrader(address upgrader_) public {
+        if (msg.sender != upgrader) revert NotUpgrader();
+        _updateUpgrader(upgrader_);
+    }
+
     function validateGovernor(address account_) external view {
         if (account_ != governor) revert NotGovernor();
     }
 
-    /**
-     * @notice Validates if an account is authorized to perform changes.
-     * @param account_ The address to be validated.
-     * @dev Reverts with `NotAuthorizedChanger` if the account is not the authorized changer or governor.
-     */
-    function validateChanger(address account_) public view {
-        if (account_ != _authorizedChanger && account_ != governor) revert NotAuthorizedChanger();
+    function validateAuthorizedChanger(address account_) public view {
+        if (!isAuthorizedChanger(account_)) revert NotAuthorizedChanger();
     }
 
-    /**
-     * @notice Validates if an account is authorized as the KYC approver.
-     * @param account_ The address to be validated.
-     * @dev Reverts with `NotKycApprover` if the account is not the KYC approver.
-     */
+    function validateAuthorizedUpgrader(address account_) public view {
+        if (account_ != _authorizedChanger && account_ != governor && account_ != upgrader) {
+            revert NotAuthorizedUpgrader();
+        }
+    }
+
     function validateKycApprover(address account_) external view {
         if (account_ != kycApprover) revert NotKycApprover();
     }
 
-    /**
-     * @notice Validates if the caller is the foundation treasury.
-     * @dev Reverts with `NotFoundationTreasury` if the caller is not the foundation treasury.
-     */
     function validateFoundationTreasury(address account_) external view {
         if (account_ != foundationTreasury) revert NotFoundationTreasury();
+    }
+
+    function isAuthorizedChanger(address account_) public view returns (bool) {
+        return account_ == _authorizedChanger || account_ == governor;
     }
 
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
 
-    /**
-     * @dev Updates the governor address.
-     * @param governor_ The new governor address.
-     * @dev Reverts if the new address is invalid (zero address).
-     */
     function _updateGovernor(address governor_) private onlyValidAddress(governor_) {
         governor = governor_;
+        emit GovernorUpdated(governor_, msg.sender);
     }
 
-    /**
-     * @dev Updates the foundation treasury address.
-     * @param foundationTreasury_ The new foundation treasury address.
-     * @dev Reverts if the new address is invalid (zero address).
-     */
     function _updateFoundationTreasury(address foundationTreasury_) private onlyValidAddress(foundationTreasury_) {
         foundationTreasury = foundationTreasury_;
+        emit FoundationTreasuryUpdated(foundationTreasury_, msg.sender);
     }
 
-    /**
-     * @dev Updates the KYC approver address.
-     * @param kycApprover_ The new KYC approver address.
-     * @dev Reverts if the new address is invalid (zero address).
-     */
     function _updateKYCApprover(address kycApprover_) private onlyValidAddress(kycApprover_) {
         kycApprover = kycApprover_;
+        emit KycApproverUpdated(kycApprover_, msg.sender);
     }
 
-    /**
-     * @notice Assigns a new authorized changer.
-     * @param authorizedChanger_ The new authorized changer address.
-     * @dev Allows zero address to be set to remove the current authorized changer
-     */
+    function _updateUpgrader(address upgrader_) private {
+        upgrader = upgrader_;
+        emit UpgraderUpdated(upgrader_, msg.sender);
+    }
+
     function _authorizeChanger(address authorizedChanger_) internal {
         _authorizedChanger = authorizedChanger_;
     }
 
-    /**
-     * @notice Authorizes an upgrade to a new contract implementation.
-     * @param newImplementation_ The address of the new implementation contract.
-     * @dev Only callable by the governor.
-     */
-    function _authorizeUpgrade(address newImplementation_) internal override onlyValidChanger { }
+    function _authorizeUpgrade(address newImplementation_) internal override onlyAuthorizedUpgrader { }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

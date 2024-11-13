@@ -40,6 +40,7 @@ contract BaseTest is Test {
 
     uint32 public cycleDuration = 1 weeks;
     uint24 public cycleStartOffset = 0 days;
+    uint32 public distributionDuration = 1 hours;
     uint128 public rewardPercentageCooldown = 2 weeks;
 
     /* solhint-disable private-vars-leading-underscore */
@@ -52,10 +53,12 @@ contract BaseTest is Test {
     address internal builder2Receiver = makeAddr("builder2Receiver");
     address public kycApprover = makeAddr("kycApprover");
     address public foundation = makeAddr("foundation");
+    address public upgrader = makeAddr("upgrader");
     /* solhint-enable private-vars-leading-underscore */
 
     function setUp() public {
-        (governanceManager,) = new GovernanceManagerRootstockCollectiveDeployer().run(governor, foundation, kycApprover);
+        (governanceManager,) =
+            new GovernanceManagerRootstockCollectiveDeployer().run(governor, foundation, kycApprover, upgrader);
 
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         MockStakingTokenDeployer _mockStakingTokenDeployer = new MockStakingTokenDeployer();
@@ -75,6 +78,7 @@ contract BaseTest is Test {
             address(rewardDistributor),
             cycleDuration,
             cycleStartOffset,
+            distributionDuration,
             rewardPercentageCooldown
         );
 
@@ -131,7 +135,7 @@ contract BaseTest is Test {
         backersManager.activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
         builders.push(builder_);
         vm.prank(governor);
-        newGauge_ = backersManager.whitelistBuilder(builder_);
+        newGauge_ = backersManager.communityApproveBuilder(builder_);
         gaugesArray.push(newGauge_);
     }
 
