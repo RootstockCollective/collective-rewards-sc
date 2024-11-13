@@ -71,14 +71,14 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: should revert if gauge is whitelisted but not activated
+     * SCENARIO: should revert if gauge is community approved but not activated
      */
-    function test_RevertGaugeIsWhitelistedButNotActivated() public {
+    function test_RevertGaugeIsCommunityApprovedButNotActivated() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
-        //  AND is whitelisted
+        //  AND is community approved
         vm.prank(governor);
-        GaugeRootstockCollective _newGauge = backersManager.whitelistBuilder(_newBuilder);
+        GaugeRootstockCollective _newGauge = backersManager.communityApproveBuilder(_newBuilder);
 
         gaugesArray.push(_newGauge);
         allocationsArray.push(100 ether);

@@ -31,8 +31,8 @@ contract MigrateBuilderTest is BaseTest {
         vm.prank(kycApprover);
         backersManager.migrateBuilder(_v1Builder01, _v1Builder01, _validRewardPercentage);
 
-        // THEN the builder is whitelisted, activated, and KYC-approved
-        _validateIsActivatedAndWhitelisted(_v1Builder01);
+        // THEN the builder is community approved, activated, and KYC-approved
+        _validateIsWhitelisted(_v1Builder01);
 
         // AND reward receiver and percentage are set correctly
         (, uint64 next,) = backersManager.builderRewardPercentage(_v1Builder01);
@@ -58,9 +58,9 @@ contract MigrateBuilderTest is BaseTest {
         backersManager.migrateBuilder(_v1Builder02, _v1Builder02, _validRewardPercentage);
         vm.stopPrank();
 
-        // THEN the builders are whitelisted, activated, and KYC-approved
-        _validateIsActivatedAndWhitelisted(_v1Builder01);
-        _validateIsActivatedAndWhitelisted(_v1Builder02);
+        // THEN the builders are community approved, activated, and KYC-approved
+        _validateIsWhitelisted(_v1Builder01);
+        _validateIsWhitelisted(_v1Builder02);
     }
 
     /**
@@ -85,25 +85,25 @@ contract MigrateBuilderTest is BaseTest {
         backersManager.migrateBuilder(_v1Builder01, _v1Builder01, _validRewardPercentage);
 
         //  WHEN kyc approver attempts to migrate the same builder again
-        //   THEN the transaction reverts with AlreadyWhitelisted error
-        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyWhitelisted.selector);
+        //   THEN the transaction reverts with AlreadyCommunityApproved error
+        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyCommunityApproved.selector);
         backersManager.migrateBuilder(_v1Builder01, _v1Builder01, _validRewardPercentage);
 
         vm.stopPrank();
     }
 
     /**
-     * SCENARIO: Attempt to migrate an already whitelisted builder
+     * SCENARIO: Attempt to migrate an already community approved builder
      */
-    function test_MigrateAlreadyWhitelistedBuilder() public {
-        // GIVEN a builder is already whitelisted
+    function test_MigrateAlreadyCommunityApprovedBuilder() public {
+        // GIVEN a builder is already community approved
         vm.prank(governor);
-        backersManager.whitelistBuilder(_v1Builder01);
+        backersManager.communityApproveBuilder(_v1Builder01);
 
-        //  WHEN kyc approver attempts to migrate the whitelisted builder
-        //   THEN the transaction reverts with AlreadyWhitelisted error
+        //  WHEN kyc approver attempts to migrate the community approved builder
+        //   THEN the transaction reverts with AlreadyCommunityApproved error
         vm.prank(kycApprover);
-        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyWhitelisted.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyCommunityApproved.selector);
         backersManager.migrateBuilder(_v1Builder01, _v1Builder01, _validRewardPercentage);
     }
 
@@ -111,16 +111,16 @@ contract MigrateBuilderTest is BaseTest {
      * SCENARIO: Attempt to migrate an already activated builder
      */
     function test_MigrateAlreadyActivatedBuilder() public {
-        // GIVEN a builder is already whitelisted and activated
+        // GIVEN a builder is already community approved and activated
         vm.prank(governor);
-        backersManager.whitelistBuilder(_v1Builder01);
+        backersManager.communityApproveBuilder(_v1Builder01);
         vm.prank(kycApprover);
         backersManager.activateBuilder(_v1Builder01, _v1Builder01, _validRewardPercentage);
 
         //  WHEN kyc approver attempts to migrate the activated builder
-        //   THEN the transaction reverts with AlreadyWhitelisted error
+        //   THEN the transaction reverts with AlreadyCommunityApproved error
         vm.prank(kycApprover);
-        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyWhitelisted.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyCommunityApproved.selector);
         backersManager.migrateBuilder(_v1Builder01, _v1Builder01, _validRewardPercentage);
     }
 
@@ -153,14 +153,14 @@ contract MigrateBuilderTest is BaseTest {
         vm.prank(governor);
         backersManager.dewhitelistBuilder(_v1Builder01);
 
-        // THEN the builder is no longer whitelisted
-        (,, bool _whitelisted,,,,) = backersManager.builderState(_v1Builder01);
-        vm.assertFalse(_whitelisted);
+        // THEN the builder is no longer community approved
+        (,, bool _communityApproved,,,,) = backersManager.builderState(_v1Builder01);
+        vm.assertFalse(_communityApproved);
     }
 
-    function _validateIsActivatedAndWhitelisted(address builder_) private view {
-        (bool _activated, bool _kycApproved, bool _whitelisted,,,,) = backersManager.builderState(builder_);
-        vm.assertTrue(_whitelisted);
+    function _validateIsWhitelisted(address builder_) private view {
+        (bool _activated, bool _kycApproved, bool _communityApproved,,,,) = backersManager.builderState(builder_);
+        vm.assertTrue(_communityApproved);
         vm.assertTrue(_activated);
         vm.assertTrue(_kycApproved);
     }

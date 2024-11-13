@@ -6,13 +6,13 @@ import { BackersManagerRootstockCollective } from "../../BackersManagerRootstock
 import { GaugeRootstockCollective } from "../../gauge/GaugeRootstockCollective.sol";
 
 /**
- * @title WhitelistBuilderChangerTemplateRootstockCollective
- *   @notice ChangeContract used to whitelist a builder and create its Gauger contract
+ * @title CommunityApproveBuilderChangerTemplateRootstockCollective
+ *   @notice ChangeContract used to community approve a builder and create its Gauger contract
  */
-contract WhitelistBuilderChangerTemplateRootstockCollective is IChangeContractRootstockCollective {
+contract CommunityApproveBuilderChangerTemplateRootstockCollective is IChangeContractRootstockCollective {
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public immutable backersManager;
-    /// @notice builder address to be whitelisted
+    /// @notice builder address to be community approved
     address public immutable builder;
     /// @notice new Gauge created;
     GaugeRootstockCollective public newGauge;
@@ -33,6 +33,6 @@ contract WhitelistBuilderChangerTemplateRootstockCollective is IChangeContractRo
      * because it is not its responsibility in the current architecture
      */
     function execute() external {
-        newGauge = backersManager.whitelistBuilder(builder);
+        newGauge = backersManager.communityApproveBuilder(builder);
     }
 }
