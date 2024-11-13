@@ -272,6 +272,99 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
+     * SCENARIO: alice has all votes staked and wants to move some from one gauge to another using allocateBatch
+     */
+    function test_ReallocateVotes() public {
+        // GIVEN alice has 100_000 ether in stakingToken
+        assertEq(stakingToken.balanceOf(alice), 100_000 ether);
+        // WHEN alice allocates all the staking to 2 builders
+        allocationsArray[0] = 99_000 ether;
+        allocationsArray[1] = 1000 ether;
+        vm.prank(alice);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // THEN allocations get updated
+        assertEq(gauge.allocationOf(alice), 99_000 ether);
+        assertEq(gauge2.allocationOf(alice), 1000 ether);
+
+        // WHEN alice moves votes to first gauge in the array (removing votes from second gauge)
+        allocationsArray[0] = 99_999 ether;
+        allocationsArray[1] = 1 ether;
+        vm.prank(alice);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // THEN allocations get updated
+        assertEq(gauge.allocationOf(alice), 99_999 ether);
+        assertEq(gauge2.allocationOf(alice), 1 ether);
+
+        // WHEN alice moves votes to second gauge in the array (removing votes from first gauge)
+        allocationsArray[0] = 0 ether;
+        allocationsArray[1] = 100_000 ether;
+        vm.prank(alice);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // THEN allocations get updated
+        assertEq(gauge.allocationOf(alice), 0);
+        assertEq(gauge2.allocationOf(alice), 100_000 ether);
+    }
+
+    /**
+     * SCENARIO: alice has all votes staked and wants to move votes from a revoked gauge to another one using
+     * allocateBatch
+     */
+    function test_ReallocateVotesFromRevokedBuilder() public {
+        // GIVEN alice has 100_000 ether in stakingToken
+        assertEq(stakingToken.balanceOf(alice), 100_000 ether);
+        // WHEN alice allocates all the staking to 2 builders
+        allocationsArray[0] = 99_000 ether;
+        allocationsArray[1] = 1000 ether;
+        vm.prank(alice);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // AND first builder gets revoked
+        vm.prank(builder);
+        backersManager.revokeBuilder();
+
+        // WHEN alice moves votes from revoked gauge to the other
+        allocationsArray[0] = 0 ether;
+        allocationsArray[1] = 100_000 ether;
+        vm.prank(alice);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // THEN allocations get updated
+        assertEq(gauge.allocationOf(alice), 0);
+        assertEq(gauge2.allocationOf(alice), 100_000 ether);
+    }
+
+    /**
+     * SCENARIO: alice has all votes staked and wants to move votes from a KYC revoked gauge to another one using
+     * allocateBatch
+     */
+    function test_ReallocateVotesFromKYCRevokedBuilder() public {
+        // GIVEN alice has 100_000 ether in stakingToken
+        assertEq(stakingToken.balanceOf(alice), 100_000 ether);
+        // WHEN alice allocates all the staking to 2 builders
+        allocationsArray[0] = 99_000 ether;
+        allocationsArray[1] = 1000 ether;
+        vm.prank(alice);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // AND first gauge builder gets KYC revoked
+        vm.prank(kycApprover);
+        backersManager.revokeBuilderKYC(builder);
+
+        // WHEN alice moves votes from KYC revoked gauge to the other
+        allocationsArray[0] = 0 ether;
+        allocationsArray[1] = 100_000 ether;
+        vm.prank(alice);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // THEN allocations get updated
+        assertEq(gauge.allocationOf(alice), 0);
+        assertEq(gauge2.allocationOf(alice), 100_000 ether);
+    }
+
+    /**
      * SCENARIO: notifyRewardAmount is called using ERC20 and values are updated
      */
     function test_NotifyRewardAmountERC20() public {
