@@ -10,7 +10,7 @@ contract ProtectedTest is BaseTest {
      * SCENARIO: Governor can execute a change without using the ChangeExecutorRootstockCollective
      */
     function test_GovernorHasPermissions() public {
-        //  WHEN Governor calls a function protected by the modifier onlyValidUpgrader
+        //  WHEN Governor calls a function protected by the modifier onlyAuthorizedUpgrader
         vm.startPrank(governor);
         backersManager.upgradeToAndCall(address(new BackersManagerRootstockCollective()), "");
     }
@@ -19,7 +19,8 @@ contract ProtectedTest is BaseTest {
      * SCENARIO: Upgrader can upgrade the BackersManager contract
      */
     function test_UpgraderCanUpgradeBackersManager() public {
-        //  WHEN Upgrader calls a function function to update the contract, protected by the modifier onlyValidUpgrader
+        //  WHEN Upgrader calls a function function to update the contract, protected by the modifier
+        // onlyAuthorizedUpgrader
         vm.startPrank(upgrader);
         backersManager.upgradeToAndCall(address(new BackersManagerRootstockCollective()), "");
     }
@@ -28,7 +29,7 @@ contract ProtectedTest is BaseTest {
      * SCENARIO: Upgrader can upgrade the GovernanceManager contract
      */
     function test_UpgraderCanUpgradeGovernanceManager() public {
-        //  WHEN Governor calls a function protected by the modifier onlyValidUpgrader
+        //  WHEN Governor calls a function protected by the modifier onlyAuthorizedUpgrader
         vm.startPrank(upgrader);
         governanceManager.upgradeToAndCall(address(new GovernanceManagerRootstockCollective()), "");
     }
@@ -39,7 +40,7 @@ contract ProtectedTest is BaseTest {
     function test_NewUpgraderCanUpgradeGovernanceManager() public {
         //  WHEN Governor updates the upgrader
         address _newUpgrader = makeAddr("newUpgrader");
-        vm.prank(governor);
+        vm.prank(upgrader);
         governanceManager.updateUpgrader(_newUpgrader);
 
         // THEN the new upgrader can upgrade the GovernanceManager contract

@@ -105,17 +105,29 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: Governor can update the upgrader address
+     * SCENARIO: Updater can update the upgrader address
      */
     function test_UpdateUpgrader() public {
         // WHEN the governor updates the upgrader address
-        vm.prank(governor);
+        vm.prank(upgrader);
         vm.expectEmit();
-        emit UpgraderUpdated(bob, governor);
+        emit UpgraderUpdated(bob, upgrader);
         governanceManager.updateUpgrader(bob);
 
         // THEN the upgrader address is updated
         assertEq(governanceManager.upgrader(), bob);
+    }
+
+    /**
+     * SCENARIO: Updater can disable the role by updating the upgrader address to zero
+     */
+    function test_UpdateUpgraderToZeroAddress() public {
+        // WHEN the governor updates the upgrader address to the zero address
+        vm.prank(upgrader);
+        governanceManager.updateUpgrader(address(0));
+
+        // THEN the upgrader address is updated
+        assertEq(governanceManager.upgrader(), address(0));
     }
 
     /**
@@ -125,18 +137,18 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
         // WHEN an unauthorized account attempts to update the upgrader
         vm.prank(alice);
         // THEN tx reverts because NotAuthorizedChanger
-        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotUpgrader.selector);
         governanceManager.updateUpgrader(bob);
     }
 
     /**
-     * SCENARIO: ValidateChanger recognizes authorized and unauthorized changers
+     * SCENARIO: AuthorizeChange recognizes authorized and unauthorized changers
      */
-    function test_ValidateChanger() public {
-        governanceManager.validateChanger(governor);
+    function test_AuthorizeChange() public {
+        governanceManager.authorizeChanger(governor);
 
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
-        governanceManager.validateChanger(alice);
+        governanceManager.authorizeChanger(alice);
     }
 
     /**
@@ -170,13 +182,14 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: ValidateUpgradeAuthorization recognizes the upgrader and unauthorized accounts
+     * SCENARIO: AuthorizeUpgrade recognizes the authorized and unauthorized accounts
      */
-    function test_ValidateUpgradeAuthorization() public {
-        governanceManager.validateUpgradeAuthorization(upgrader);
+    function test_AuthorizedUpgrade() public {
+        governanceManager.authorizeUpgrader(upgrader);
+        governanceManager.authorizeUpgrader(governor);
 
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedUpgrader.selector);
-        governanceManager.validateUpgradeAuthorization(alice);
+        governanceManager.authorizeUpgrader(alice);
     }
 
     /**
