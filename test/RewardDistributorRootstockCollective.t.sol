@@ -127,7 +127,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: sends rewards and starts the distribution with default amounts
+     * SCENARIO: sends rewards twice on one cycle and then on more time on the next one with default amounts
      */
     function test_SendRewardsWithDefaultAmount() public {
         // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
@@ -177,4 +177,38 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         // THEN coinbase balance of gauge is 3 ether
         assertEq(address(gauge).balance, 3 ether);
     }
+
+    /**
+     * SCENARIO: should fail when sends rewards several times on one cycle with default amounts
+     */
+    function test_FailSendRewardsWithDefaultAmountForTokens() public {
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
+        rewardToken.transfer(address(rewardDistributor), 10 ether);
+        Address.sendValue(payable(address(rewardDistributor)), 5 ether);
+        // WHEN foundation treasury calls sendRewardsWithDefaultAmount
+        // setting as default values 6 ethers of reward token and 1 of coinbase
+        vm.startPrank(foundation);
+        rewardDistributor.setDefaultRewardAmount(6 ether, 1 ether);
+        rewardDistributor.sendRewardsWithDefaultAmount();
+        // should fail because send the default Token amount twice exceeding the balance
+        vm.expectRevert();
+        rewardDistributor.sendRewardsWithDefaultAmount();
+    }    
+
+    /**
+     * SCENARIO: should fail when sends rewards several times on one cycle with default amounts
+     */
+    function test_FailSendRewardsWithDefaultAmountForCoinbase() public {
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
+        rewardToken.transfer(address(rewardDistributor), 10 ether);
+        Address.sendValue(payable(address(rewardDistributor)), 5 ether);
+        // WHEN foundation treasury calls sendRewardsWithDefaultAmount
+        // setting as default values 6 ethers of reward token and 1 of coinbase
+        vm.startPrank(foundation);
+        rewardDistributor.setDefaultRewardAmount(1 ether, 3 ether);
+        rewardDistributor.sendRewardsWithDefaultAmount();
+        // should fail because send the default Coinbase amount twice exceeding the balance
+        vm.expectRevert();
+        rewardDistributor.sendRewardsWithDefaultAmount();
+    }    
 }

@@ -35,11 +35,6 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     IERC20 public rewardToken;
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
-    /// @notice tracks amount of reward tokens distributed per cycle
-    mapping(uint256 cycleTimestampStart => uint256 amount) public rewardTokenAmountPerCycle;
-    /// @notice tracks amount of coinbase distributed per cycle
-    mapping(uint256 cycleTimestampStart => uint256 amount) public rewardCoinbaseAmountPerCycle;
-
     ///@notice default reward token amount
     uint256 public defaultRewardTokenAmount;
     ///@notice default reward coinbase amount
