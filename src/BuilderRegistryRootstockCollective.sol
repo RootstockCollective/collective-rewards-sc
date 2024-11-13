@@ -23,11 +23,11 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
 
     error AlreadyActivated();
     error AlreadyKYCApproved();
-    error AlreadyWhitelisted();
+    error AlreadyCommunityApproved();
     error AlreadyRevoked();
     error NotActivated();
     error NotKYCApproved();
-    error NotWhitelisted();
+    error NotCommunityApproved();
     error NotPaused();
     error NotRevoked();
     error IsRevoked();
@@ -44,7 +44,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     event BuilderActivated(address indexed builder_, address rewardReceiver_, uint64 rewardPercentage_);
     event KYCApproved(address indexed builder_);
     event KYCRevoked(address indexed builder_);
-    event Whitelisted(address indexed builder_);
+    event CommunityApproved(address indexed builder_);
     event Dewhitelisted(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
@@ -70,7 +70,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     struct BuilderState {
         bool activated;
         bool kycApproved;
-        bool whitelisted;
+        bool communityApproved;
         bool paused;
         bool revoked;
         bytes7 reserved; // for future upgrades
@@ -203,7 +203,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         builderState[builder_].kycApproved = false;
 
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
-        // if builder is whitelisted, it has a gauge associated
+        // if builder is community approved, it has a gauge associated
         if (address(_gauge) != address(0)) {
             _haltGauge(_gauge);
             _gauge.moveBuilderUnclaimedRewards(rewardDistributor);
@@ -213,30 +213,34 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     }
 
     /**
-     * @notice whitelist builder and create its gauge
+     * @notice community approve builder and create its gauge
      * @dev reverts if it is not called by the governor address or authorized changer
-     * reverts if is already whitelisted
+     * reverts if is already community approved
      * reverts if it has a gauge associated
      * @param builder_ address of the builder
      * @return gauge_ gauge contract
      */
-    function whitelistBuilder(address builder_) external onlyValidChanger returns (GaugeRootstockCollective gauge_) {
-        return _whitelistBuilder(builder_);
+    function communityApproveBuilder(address builder_)
+        external
+        onlyValidChanger
+        returns (GaugeRootstockCollective gauge_)
+    {
+        return _communityApproveBuilder(builder_);
     }
 
     /**
      * @notice de-whitelist builder
      * @dev reverts if it is not called by the governor address or authorized changer
      * reverts if it does not have a gauge associated
-     * reverts if it is not whitelisted
+     * reverts if it is not community approved
      * @param builder_ address of the builder
      */
     function dewhitelistBuilder(address builder_) external onlyValidChanger {
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[builder_].whitelisted) revert NotWhitelisted();
+        if (!builderState[builder_].communityApproved) revert NotCommunityApproved();
 
-        builderState[builder_].whitelisted = false;
+        builderState[builder_].communityApproved = false;
 
         _haltGauge(_gauge);
         _rewardTokenApprove(address(_gauge), 0);
@@ -276,7 +280,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @notice permit builder
      * @dev reverts if it does not have a gauge associated
      *  reverts if it is not KYC approved
-     *  reverts if it is not whitelisted
+     *  reverts if it is not community approved
      *  reverts if it is not revoked
      *  reverts if it is executed in distribution period because changing the totalPotentialReward produce a
      * miscalculation of rewards
@@ -286,7 +290,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
-        if (!builderState[msg.sender].whitelisted) revert NotWhitelisted();
+        if (!builderState[msg.sender].communityApproved) revert NotCommunityApproved();
         if (!builderState[msg.sender].revoked) revert NotRevoked();
 
         // TODO: should we have a minimal amount?
@@ -314,7 +318,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @notice revoke builder
      * @dev reverts if it does not have a gauge associated
      *  reverts if it is not KYC approved
-     *  reverts if it is not whitelisted
+     *  reverts if it is not community approved
      *  reverts if it is already revoked
      *  reverts if it is executed in distribution period because changing the totalPotentialReward produce a
      * miscalculation of rewards
@@ -323,7 +327,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
-        if (!builderState[msg.sender].whitelisted) revert NotWhitelisted();
+        if (!builderState[msg.sender].communityApproved) revert NotCommunityApproved();
         if (builderState[msg.sender].revoked) revert AlreadyRevoked();
 
         builderState[msg.sender].revoked = true;
@@ -379,7 +383,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         public
         onlyKycApprover
     {
-        _whitelistBuilder(builder_);
+        _communityApproveBuilder(builder_);
         _activateBuilder(builder_, rewardAddress_, rewardPercentage_);
 
         emit BuilderMigrated(builder_, msg.sender);
@@ -401,12 +405,12 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     /**
      * @notice return true if builder is operational
      *  kycApproved == true &&
-     *  whitelisted == true &&
+     *  communityApproved == true &&
      *  paused == false
      */
     function isBuilderOperational(address builder_) public view returns (bool) {
         BuilderState memory _builderState = builderState[builder_];
-        return _builderState.kycApproved && _builderState.whitelisted && !_builderState.paused;
+        return _builderState.kycApproved && _builderState.communityApproved && !_builderState.paused;
     }
 
     /**
@@ -419,7 +423,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     /**
      * @notice return true if gauge is operational
      *  kycApproved == true &&
-     *  whitelisted == true &&
+     *  communityApproved == true &&
      *  paused == false
      */
     function isGaugeOperational(GaugeRootstockCollective gauge_) public view returns (bool) {
@@ -488,7 +492,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     /**
      * @notice reverts if builder was not activated or approved by the community
      */
-    function _validateGauge(GaugeRootstockCollective gauge_) internal view {
+    function _validateWhitelisted(GaugeRootstockCollective gauge_) internal view {
         address _builder = gaugeToBuilder[gauge_];
         if (_builder == address(0)) revert GaugeDoesNotExist();
         if (!builderState[_builder].activated) revert NotActivated();
@@ -522,13 +526,13 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     /**
      * @notice returns true if gauge can be resumed
      * @dev kycApproved == true &&
-     *  whitelisted == true &&
+     *  communityApproved == true &&
      *  revoked == false
      * @param gauge_ gauge contract to be resumed
      */
     function _canBeResumed(GaugeRootstockCollective gauge_) internal view returns (bool) {
         BuilderState memory _builderState = builderState[gaugeToBuilder[gauge_]];
-        return _builderState.kycApproved && _builderState.whitelisted && !_builderState.revoked;
+        return _builderState.kycApproved && _builderState.communityApproved && !_builderState.revoked;
     }
 
     /**
@@ -560,19 +564,19 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     }
 
     /**
-     * @dev Internal function to whitelist builder and create its gauge
-     *  See {whitelistBuilder} for details.
+     * @dev Internal function to community approve and create its gauge
+     *  See {communityApproveBuilder} for details.
      */
-    function _whitelistBuilder(address builder_) private returns (GaugeRootstockCollective gauge_) {
-        if (builderState[builder_].whitelisted) revert AlreadyWhitelisted();
+    function _communityApproveBuilder(address builder_) private returns (GaugeRootstockCollective gauge_) {
+        if (builderState[builder_].communityApproved) revert AlreadyCommunityApproved();
         if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
 
-        builderState[builder_].whitelisted = true;
+        builderState[builder_].communityApproved = true;
         gauge_ = _createGauge(builder_);
 
         _rewardTokenApprove(address(gauge_), type(uint256).max);
 
-        emit Whitelisted(builder_);
+        emit CommunityApproved(builder_);
     }
 
     /**

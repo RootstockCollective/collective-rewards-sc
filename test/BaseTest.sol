@@ -133,7 +133,7 @@ contract BaseTest is Test {
         backersManager.activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
         builders.push(builder_);
         vm.prank(governor);
-        newGauge_ = backersManager.whitelistBuilder(builder_);
+        newGauge_ = backersManager.communityApproveBuilder(builder_);
         gaugesArray.push(newGauge_);
     }
 
