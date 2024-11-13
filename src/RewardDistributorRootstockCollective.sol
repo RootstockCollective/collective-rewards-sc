@@ -33,10 +33,10 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     IERC20 public rewardToken;
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
-    /// @notice tracks amount of reward tokens distributed per cycle
-    mapping(uint256 cycleTimestampStart => uint256 amount) public rewardTokenAmountPerCycle;
-    /// @notice tracks amount of coinbase distributed per cycle
-    mapping(uint256 cycleTimestampStart => uint256 amount) public rewardCoinbaseAmountPerCycle;
+    ///@notice default reward token amount
+    uint256 public defaultRewardTokenAmount;
+    ///@notice default reward coinbase amount
+    uint256 public defaultRewardCoinbaseAmount;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -100,6 +100,41 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         onlyFoundationTreasury
     {
         _sendRewards(amountERC20_, amountCoinbase_);
+        backersManager.startDistribution();
+    }
+
+    /**
+     * @notice sets the default reward amounts
+     * @dev reverts if is not called by foundation treasury address
+     * @param tokenAmount_ default amount of ERC20 reward token to send
+     * @param coinbaseAmount_ default amount of Coinbase reward token to send
+     */
+    function setDefaultRewardAmount(
+        uint256 tokenAmount_,
+        uint256 coinbaseAmount_
+    )
+        external
+        payable
+        onlyFoundationTreasury
+    {
+        defaultRewardTokenAmount = tokenAmount_;
+        defaultRewardCoinbaseAmount = coinbaseAmount_;
+    }
+
+    /**
+     * @notice sends rewards to backersManager contract with default amounts
+     * @dev reverts if is not called by foundation treasury address
+     */
+    function sendRewardsWithDefaultAmount() external payable onlyFoundationTreasury {
+        _sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
+    }
+
+    /**
+     * @notice sends rewards to backersManager contract with default amounts and starts the distribution
+     * @dev reverts if is not called by foundation treasury address
+     */
+    function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyFoundationTreasury {
+        _sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
         backersManager.startDistribution();
     }
 
