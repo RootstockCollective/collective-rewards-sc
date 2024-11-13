@@ -157,6 +157,21 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     }
 
     /**
+     * @notice gets the estimated amount of rewardToken left to earn for a backer in current cycle
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param backer_ address of the backer
+     */
+    function estimatedBackerRewards(address rewardToken_, address backer_) external view returns (uint256) {
+        // No allocations or a new cycle started without a distribution
+        if (totalAllocation == 0 || backersManager.periodFinish() <= block.timestamp) {
+            return 0;
+        }
+        // [N] = [N] * [N] / [N]
+        return _left(rewardToken_) * allocationOf[backer_] / totalAllocation;
+    }
+
+    /**
      * @notice gets amount of rewardToken earned for a backer
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
@@ -190,9 +205,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
     function left(address rewardToken_) external view returns (uint256) {
-        RewardData storage _rewardData = rewardData[rewardToken_];
-        // [N] = ([N] - [N]) * [PREC] / [PREC]
-        return UtilsLib._mulPrec(backersManager.periodFinish() - block.timestamp, _rewardData.rewardRate);
+        return _left(rewardToken_);
     }
 
     /**
@@ -476,6 +489,17 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         );
         // [N] = [N] + [N]
         return _rewardData.rewards[backer_] + _currentReward;
+    }
+
+    /**
+     * @notice gets total amount of rewards to distribute for the current rewards period
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     */
+    function _left(address rewardToken_) internal view returns (uint256) {
+        RewardData storage _rewardData = rewardData[rewardToken_];
+        // [N] = ([N] - [N]) * [PREC] / [PREC]
+        return UtilsLib._mulPrec(backersManager.periodFinish() - block.timestamp, _rewardData.rewardRate);
     }
 
     /**

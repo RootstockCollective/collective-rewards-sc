@@ -1619,6 +1619,229 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
+     * SCENARIO: estimated backer rewards with a gauge with no rewards
+     */
+    function test_EstimatedBackerRewardsWithNoRewards() public {
+        // GIVEN there are no allocations in gauge
+        //  THEN estimated backer rewards for alice and bob is 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 0);
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 0);
+
+        // WHEN alice allocates 1 ether and bob 5 ether to gauge
+        vm.prank(alice);
+        backersManager.allocate(gauge, 1 ether);
+        vm.prank(bob);
+        backersManager.allocate(gauge, 5 ether);
+
+        // THEN alice and bob estimated rewards are 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 0);
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 0);
+
+        // AND new cycle starts without a distribution
+        _skipAndStartNewCycle();
+
+        // THEN alice and bob estimated rewards are 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 0);
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 0);
+    }
+
+    /**
+     * SCENARIO: estimated backer rewards with an incentivized gauge
+     */
+    function test_EstimatedBackerRewardsIncentivized() public {
+        // GIVEN alice allocates 1 ether and bob 5 ether to gauge
+        vm.prank(alice);
+        backersManager.allocate(gauge, 1 ether);
+        vm.prank(bob);
+        backersManager.allocate(gauge, 5 ether);
+
+        // WHEN gauge is incentivized
+        vm.prank(address(incentivizer));
+        gauge.incentivizeWithRewardToken(100 ether);
+
+        // THEN alice estimated rewards left to earn is
+        // 16.666666666666666666 = allocation * rewardPerToken = 1 * 16.666666666666666666
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 16_666_666_666_666_666_666);
+        // AND alice earned rewards is 0
+        assertEq(gauge.earned(address(rewardToken), alice), 0);
+
+        // THEN bob estimated rewards left to earn is
+        //  83.333333333333333332 = allocation * rewardPerToken = 5 * 16.666666666666666666
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 83_333_333_333_333_333_332);
+        // AND bob earned rewards is 0
+        assertEq(gauge.earned(address(rewardToken), bob), 0);
+
+        // AND 1 / 3 of and epoch passes
+        _skipRemainingCycleFraction(3);
+
+        // THEN alice estimated rewards left to earn is
+        // 11.111111111111111111 = allocation * rewardPerToken * (2 / 3) = 1 * 16.666666666666666666 * (2 / 3)
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 11_111_111_111_111_111_111);
+        // AND alice earned rewards is
+        // 5.555555555555555555 = allocation * rewardPerToken * (1 / 3) = 1 * 16.666666666666666666 * (1 / 3) 2
+        assertEq(gauge.earned(address(rewardToken), alice), 5_555_555_555_555_555_555);
+
+        // THEN bob estimated rewards left to earn is
+        // 55.555555555555555555 = allocation * rewardPerToken * (2 / 3) = 15 * 16.666666666666666666 * (2 / 3)
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 55_555_555_555_555_555_555);
+        // THEN bob earned rewards is
+        // 27.777777777777777775 = allocation * rewardPerToken * (1 / 3) = 5 * 16.666666666666666666 * (1 / 3)
+        assertEq(gauge.earned(address(rewardToken), bob), 27_777_777_777_777_777_775);
+
+        // AND cycle finishes
+        _skipAndStartNewCycle();
+
+        // THEN alice estimated rewards left to earn is 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 0);
+        // AND alice earned rewards is
+        // 16.666666666666666666 = allocation * rewardPerToken = 1 * 16.666666666666666666
+        assertEq(gauge.earned(address(rewardToken), alice), 16_666_666_666_666_666_666);
+
+        // THEN bob estimated rewards left to earn is 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 0);
+        // THEN bob earned rewards is
+        // 83.333333333333333330 = allocation * rewardPerToken = 5 * 16.666666666666666666
+        assertEq(gauge.earned(address(rewardToken), bob), 83_333_333_333_333_333_330);
+    }
+
+    /**
+     * SCENARIO: estimated backer rewards after a distribution
+     */
+    function test_EstimatedBackerRewardsWithDistribution() public {
+        // GIVEN alice allocates 1 ether and bob 5 ether to gauge
+        vm.prank(alice);
+        backersManager.allocate(gauge, 1 ether);
+        vm.prank(bob);
+        backersManager.allocate(gauge, 5 ether);
+
+        // WHEN there is a distribution of 200 reward token with 50% reward percentage
+        _distribute(200 ether, 0 ether);
+
+        // THEN alice estimated rewards left to earn is
+        // 16.666666666666666666 = allocation * rewardPerToken = 1 * 16.666666666666666666
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 16_666_666_666_666_666_666);
+        // AND alice earned rewards is 0
+        assertEq(gauge.earned(address(rewardToken), alice), 0);
+
+        // THEN bob estimated rewards left to earn is
+        //  83.333333333333333332 = allocation * rewardPerToken = 5 * 16.666666666666666666
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 83_333_333_333_333_333_332);
+        // AND bob earned rewards is 0
+        assertEq(gauge.earned(address(rewardToken), bob), 0);
+
+        // AND cycle finishes
+        _skipAndStartNewCycle();
+
+        // THEN alice estimated rewards left to earn is 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 0);
+        // AND alice earned rewards is
+        // 16.666666666666666666 = allocation * rewardPerToken = 1 * 16.666666666666666666
+        assertEq(gauge.earned(address(rewardToken), alice), 16_666_666_666_666_666_666);
+
+        // THEN bob estimated rewards left to earn is 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 0);
+        // THEN bob earned rewards is
+        // 83.333333333333333330 = allocation * rewardPerToken = 5 * 16.666666666666666666
+        assertEq(gauge.earned(address(rewardToken), bob), 83_333_333_333_333_333_330);
+    }
+
+    /**
+     * SCENARIO: estimated backer rewards with an incentivized gauge after a distribution
+     */
+    function test_EstimatedBackerRewardsWithDistributionAndIncentivized() public {
+        // GIVEN alice allocates 1 ether and bob 5 ether to gauge
+        vm.prank(alice);
+        backersManager.allocate(gauge, 1 ether);
+        vm.prank(bob);
+        backersManager.allocate(gauge, 5 ether);
+
+        // WHEN there is a distribution of 100 reward token with 50% reward percentage
+        _distribute(100 ether, 0 ether);
+
+        // AND gauge is incentivized
+        vm.prank(address(incentivizer));
+        gauge.incentivizeWithRewardToken(50 ether);
+
+        // THEN alice estimated rewards left to earn is
+        // 16.666666666666666666 = allocation * rewardPerToken = 1 * 16.666666666666666666
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 16_666_666_666_666_666_666);
+        // AND alice earned rewards is 0
+        assertEq(gauge.earned(address(rewardToken), alice), 0);
+
+        // THEN bob estimated rewards left to earn is
+        //  83.333333333333333332 = allocation * rewardPerToken = 5 * 16.666666666666666666
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 83_333_333_333_333_333_332);
+        // AND bob earned rewards is 0
+        assertEq(gauge.earned(address(rewardToken), bob), 0);
+
+        // AND cycle finishes
+        _skipAndStartNewCycle();
+
+        // THEN alice estimated rewards left to earn is 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 0);
+        // AND alice earned rewards is
+        // 16.666666666666666666 = allocation * rewardPerToken = 1 * 16.666666666666666666
+        assertEq(gauge.earned(address(rewardToken), alice), 16_666_666_666_666_666_666);
+
+        // THEN bob estimated rewards left to earn is 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 0);
+        // THEN bob earned rewards is
+        // 83.333333333333333330 = allocation * rewardPerToken = 5 * 16.666666666666666666
+        assertEq(gauge.earned(address(rewardToken), bob), 83_333_333_333_333_333_330);
+    }
+
+    /**
+     * SCENARIO: estimated backer rewards with an incentivized gauge and change in allocations in the middle of the
+     * cycle
+     */
+    function test_EstimatedBackerRewardsAllocationsChange() public {
+        // GIVEN alice allocates 1 ether and bob 5 ether to gauge
+        vm.prank(alice);
+        backersManager.allocate(gauge, 1 ether);
+        vm.prank(bob);
+        backersManager.allocate(gauge, 5 ether);
+
+        // WHEN gauge is incentivized
+        vm.prank(address(incentivizer));
+        gauge.incentivizeWithRewardToken(100 ether);
+
+        // AND half an epoch passes
+        _skipRemainingCycleFraction(2);
+
+        // AND alice removes all her votes
+        vm.prank(alice);
+        backersManager.allocate(gauge, 0 ether);
+
+        // THEN alice estimated rewards left to earn is 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 0);
+        // AND alice earned rewards is
+        // 8.333333333333333333 = allocation * old rewardPerToken * 1 / 2 = 1 * 16.666666666666666666 * 1 / 2
+        assertEq(gauge.earned(address(rewardToken), alice), 8_333_333_333_333_333_333);
+
+        // THEN bob estimated rewards left to earn is
+        //  50 ether = allocation * new rewardPerToken * 1 / 2 = 5 * 20 ether * 1 / 2
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 49_999_999_999_999_999_999);
+        // AND bob earned rewards is
+        // 41.666666666666666665 = allocation * old rewardPerToken * 1 / 2  = 5 * 16.666666666666666666 * 1 / 2
+        assertEq(gauge.earned(address(rewardToken), bob), 41_666_666_666_666_666_665);
+
+        // AND cycle finishes
+        _skipAndStartNewCycle();
+
+        // THEN alice estimated rewards left to earn is 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), alice), 0);
+        // AND alice earned rewards did not change
+        assertEq(gauge.earned(address(rewardToken), alice), 8_333_333_333_333_333_333);
+
+        // THEN bob estimated rewards left to earn is 0
+        assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 0);
+        // THEN bob earned rewards is
+        // 91.666666666666666660 = (allocation * old rewardPerToken * 1 / 2) + (allocation * new rewardPerToken * 1 / 2)
+        // 91.666666666666666660 = (5 * 16.666666666666666666  * 1 / 2) + (5 * 20 * 1 / 2)
+        assertEq(gauge.earned(address(rewardToken), bob), 91_666_666_666_666_666_660);
+    }
+
+    /**
      * @notice sets periodFinish on BackersManagerRootstockCollective
      *  Since we are impersonating BackersManagerRootstockCollective instead of allocating and distributing from real
      * use cases,
