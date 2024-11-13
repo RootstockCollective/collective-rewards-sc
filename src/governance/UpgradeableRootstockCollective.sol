@@ -16,12 +16,12 @@ abstract contract UpgradeableRootstockCollective is UUPSUpgradeable {
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyValidChanger() {
-        governanceManager.validateChanger(msg.sender);
+        governanceManager.authorizeChanger(msg.sender);
         _;
     }
 
-    modifier onlyValidUpgrader() {
-        governanceManager.validateUpgradeAuthorization(msg.sender);
+    modifier onlyAuthorizedUpgrader() {
+        governanceManager.authorizeUpgrader(msg.sender);
         _;
     }
 
@@ -54,7 +54,7 @@ abstract contract UpgradeableRootstockCollective is UUPSUpgradeable {
      * @dev checks that the changer that will do the upgrade is currently authorized by governance to makes
      * changes within the system
      */
-    function _authorizeUpgrade(address) internal override onlyValidUpgrader { }
+    function _authorizeUpgrade(address) internal override onlyAuthorizedUpgrader { }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

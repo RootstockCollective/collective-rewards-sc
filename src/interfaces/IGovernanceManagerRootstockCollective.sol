@@ -50,6 +50,11 @@ interface IGovernanceManagerRootstockCollective {
      */
     error NotAuthorizedUpgrader();
 
+    /**
+     * @notice Thrown when the caller is not the upgrader.
+     */
+    error NotUpgrader();
+
     // -----------------------------
     // --------- Functions ---------
     // -----------------------------
@@ -99,7 +104,7 @@ interface IGovernanceManagerRootstockCollective {
      * @param account_ The address to be validated as the changer.
      * @dev Reverts with `NotAuthorizedChanger` if the account is not the authorized changer.
      */
-    function validateChanger(address account_) external view;
+    function authorizeChanger(address account_) external view;
 
     /**
      * @notice Validates if the given account is authorized as the governor.
@@ -127,7 +132,7 @@ interface IGovernanceManagerRootstockCollective {
      * @param account_ The address to be validated.
      * @dev Reverts with `NotAuthorizedUpgrader` if the account is not the upgrader.
      */
-    function validateUpgradeAuthorization(address account_) external view;
+    function authorizeUpgrader(address account_) external view;
 
     /**
      * @notice Updates the governor address
@@ -156,7 +161,8 @@ interface IGovernanceManagerRootstockCollective {
     /**
      * @dev Updates the account authorized to upgrade the contracts
      * @param upgrader_ The new upgrader address.
-     * @dev Reverts if caller is not a valid changer.
+     * @dev Reverts if caller is the upgrader.
+     * @dev allow update to zero address to disable the upgrader role
      */
     function updateUpgrader(address upgrader_) external;
 }

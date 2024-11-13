@@ -28,13 +28,13 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _;
     }
 
-    modifier onlyValidChanger() {
-        validateChanger(msg.sender);
+    modifier onlyAuthorizedUpgrader() {
+        authorizeUpgrader(msg.sender);
         _;
     }
 
-    modifier onlyValidUpgrader() {
-        validateUpgradeAuthorization(msg.sender);
+    modifier onlyAuthorizedChanger() {
+        authorizeChanger(msg.sender);
         _;
     }
 
@@ -90,19 +90,20 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         emit ChangeExecuted(changeContract_, msg.sender);
     }
 
-    function updateGovernor(address governor_) public onlyValidChanger {
+    function updateGovernor(address governor_) public onlyAuthorizedChanger {
         _updateGovernor(governor_);
     }
 
-    function updateFoundationTreasury(address foundationTreasury_) public onlyValidChanger {
+    function updateFoundationTreasury(address foundationTreasury_) public onlyAuthorizedChanger {
         _updateFoundationTreasury(foundationTreasury_);
     }
 
-    function updateKYCApprover(address kycApprover_) public onlyValidChanger {
+    function updateKYCApprover(address kycApprover_) public onlyAuthorizedChanger {
         _updateKYCApprover(kycApprover_);
     }
 
-    function updateUpgrader(address upgrader_) public onlyValidChanger {
+    function updateUpgrader(address upgrader_) public {
+        if (msg.sender != upgrader) revert NotUpgrader();
         _updateUpgrader(upgrader_);
     }
 
@@ -110,11 +111,11 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         if (account_ != governor) revert NotGovernor();
     }
 
-    function validateChanger(address account_) public view {
+    function authorizeChanger(address account_) public view {
         if (account_ != _authorizedChanger && account_ != governor) revert NotAuthorizedChanger();
     }
 
-    function validateUpgradeAuthorization(address account_) public view {
+    function authorizeUpgrader(address account_) public view {
         if (account_ != _authorizedChanger && account_ != governor && account_ != upgrader) {
             revert NotAuthorizedUpgrader();
         }
@@ -156,7 +157,7 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _authorizedChanger = authorizedChanger_;
     }
 
-    function _authorizeUpgrade(address newImplementation_) internal override onlyValidUpgrader { }
+    function _authorizeUpgrade(address newImplementation_) internal override onlyAuthorizedUpgrader { }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
