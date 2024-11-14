@@ -5,7 +5,7 @@ import { BaseTest } from "./BaseTest.sol";
 import { BuilderRegistryRootstockCollective } from "../src/BuilderRegistryRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
-contract setBuilderRewardReceiverTest is BaseTest {
+contract SetBuilderRewardReceiverTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
@@ -96,8 +96,8 @@ contract setBuilderRewardReceiverTest is BaseTest {
         assertEq(backersManager.builderRewardReceiver(builder), builder);
         //   THEN the _newRewardReceiver address is stored on the replacement storage for him
         assertEq(backersManager.builderRewardReceiverReplacement(builder), _newRewardReceiver);
-        //   THEN hasBuilderRewardReceverPendingApproval returns true
-        assertEq(backersManager.hasBuilderRewardReceverPendingApproval(builder), true);
+        //   THEN hasBuilderRewardReceiverPendingApproval returns true
+        assertEq(backersManager.hasBuilderRewardReceiverPendingApproval(builder), true);
     }
 
     /**
@@ -116,8 +116,8 @@ contract setBuilderRewardReceiverTest is BaseTest {
         backersManager.cancelRewardReceiverReplacementRequest();
         //   THEN the new rewardReceiver address is back to the original
         assertEq(backersManager.builderRewardReceiverReplacement(builder), builder);
-        //   THEN hasBuilderRewardReceverPendingApproval returns false
-        assertEq(backersManager.hasBuilderRewardReceverPendingApproval(builder), false);
+        //   THEN hasBuilderRewardReceiverPendingApproval returns false
+        assertEq(backersManager.hasBuilderRewardReceiverPendingApproval(builder), false);
     }
 
     /**
@@ -136,7 +136,7 @@ contract setBuilderRewardReceiverTest is BaseTest {
         backersManager.approveBuidlerRewardReceiverReplacement(builder, _newRewardReceiver);
         //   THEN the new rewardReceiver address is official
         assertEq(backersManager.builderRewardReceiver(builder), _newRewardReceiver);
-        //   THEN hasBuilderRewardReceverPendingApproval returns false
-        assertEq(backersManager.hasBuilderRewardReceverPendingApproval(builder), false);
+        //   THEN hasBuilderRewardReceiverPendingApproval returns false
+        assertEq(backersManager.hasBuilderRewardReceiverPendingApproval(builder), false);
     }
 }

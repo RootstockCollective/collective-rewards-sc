@@ -971,6 +971,62 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
+     * SCENARIO: reward receiver tries to claims his rewards with a pending reward receiver address request.
+     *           After KYC approval, he can complete the claim.
+     */
+    function test_ClaimBuilderRewardsRewardReceiverWithReplacement() public {
+        // GIVEN a builder2 with 30% of reward percentage
+        vm.prank(builder2);
+        backersManager.setBackerRewardPercentage(0.3 ether);
+        skip(rewardPercentageCooldown);
+        // AND alice allocates to gauge2
+        vm.startPrank(alice);
+        backersManager.allocate(gauge2, 2 ether);
+
+        // AND 100 rewardToken and 100 coinbase are distributed
+        _distribute(100 ether, 100 ether);
+
+        // AND half cycle passes
+        _skipRemainingCycleFraction(2);
+
+        // THEN builderRewards is 70 ether
+        assertEq(gauge2.builderRewards(address(rewardToken)), 70 ether);
+
+        // AND another cycle finishes without a new distribution
+        _skipAndStartNewCycle();
+
+        // AND Builder submits a Reward Receiver Replacement Request
+        vm.prank(builder2);
+        address _newRewardReceiver = makeAddr("newRewardReceiver");
+        backersManager.submitRewardReceiverReplacementRequest(_newRewardReceiver);
+
+        // WHEN newRewardReceiver tries to claim rewards
+        // THEN it fails as there is an active reward receiver replacement request
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
+        vm.prank(builder2Receiver);
+        gauge2.claimBuilderReward();
+
+        // WHEN builder claims rewards using the builder account
+        vm.prank(builder2);
+        gauge2.claimBuilderReward();
+        // THEN he receives the reward in the original receiver address
+        assertEq(rewardToken.balanceOf(builder2Receiver), 70 ether);
+
+        // WHEN KYCApprover approved his Reward Receiver Replacement Request
+        vm.prank(kycApprover);
+        backersManager.approveBuidlerRewardReceiverReplacement(builder2, _newRewardReceiver);
+
+        // AND 100 rewardToken and 100 coinbase are distributed
+        _distribute(100 ether, 100 ether);
+
+        // WHEN newRewardReceiver claims his rewards
+        vm.prank(_newRewardReceiver);
+        gauge2.claimBuilderReward();
+        // THEN he receives the reward in the new reward receiver address
+        assertEq(rewardToken.balanceOf(_newRewardReceiver), 70 ether);
+    }
+
+    /**
      * SCENARIO: there are 2 distributions in the same distribution window, builder claimS the rewards
      */
     function test_ClaimBuilderRewards2Distributions() public {
