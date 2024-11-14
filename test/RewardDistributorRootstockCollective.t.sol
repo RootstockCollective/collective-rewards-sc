@@ -193,7 +193,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         // should fail because send the default Token amount twice exceeding the balance
         vm.expectRevert();
         rewardDistributor.sendRewardsWithDefaultAmount();
-    }    
+    }
 
     /**
      * SCENARIO: should fail when sends rewards several times on one cycle with default amounts
@@ -210,5 +210,5 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         // should fail because send the default Coinbase amount twice exceeding the balance
         vm.expectRevert();
         rewardDistributor.sendRewardsWithDefaultAmount();
-    }    
+    }
 }

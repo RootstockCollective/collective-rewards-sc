@@ -30,8 +30,6 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     error NotCommunityApproved();
     error NotPaused();
     error NotRevoked();
-    error IsRevoked();
-    error CannotRevoke();
     error NotOperational();
     error InvalidBuilderRewardPercentage();
     error BuilderAlreadyExists();
