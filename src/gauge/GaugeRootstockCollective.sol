@@ -23,6 +23,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     error BuilderRewardsLocked();
     error GaugeHalted();
     error BeforeDistribution();
+    error NotEnoughAmount();
 
     // -----------------------------
     // ----------- Events ----------
@@ -37,6 +38,15 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
     modifier onlyBackersManager() {
         if (msg.sender != address(backersManager)) revert NotBackersManager();
+        _;
+    }
+
+    /**
+     * @notice prevents spamming of incentives mechanism with low values to introduce errors
+     * @dev 100 should cover any potential rounding errors
+     */
+    modifier minIncentiveAmount(uint256 amount_) {
+        if (amount_ < UtilsLib.MIN_AMOUNT_INCENTIVES) revert NotEnoughAmount();
         _;
     }
 
@@ -352,7 +362,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  reverts if distribution for the cycle has not finished
      * @param amount_ amount of reward tokens
      */
-    function incentivizeWithRewardToken(uint256 amount_) external {
+    function incentivizeWithRewardToken(uint256 amount_) external minIncentiveAmount(amount_) {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
@@ -376,7 +386,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev reverts if Gauge is halted
      *  reverts if distribution for the cycle has not finished
      */
-    function incentivizeWithCoinbase() external payable {
+    function incentivizeWithCoinbase() external payable minIncentiveAmount(msg.value) {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken

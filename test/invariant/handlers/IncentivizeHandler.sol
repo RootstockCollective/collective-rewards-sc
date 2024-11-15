@@ -5,6 +5,7 @@ import { BaseHandler, TimeManager } from "./BaseHandler.sol";
 import { BaseTest } from "../../BaseTest.sol";
 import { ERC20Mock } from "test/mock/ERC20Mock.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
+import { UtilsLib } from "src/libraries/UtilsLib.sol";
 
 contract IncentivizeHandler is BaseHandler {
     ERC20Mock public rewardToken;
@@ -27,8 +28,8 @@ contract IncentivizeHandler is BaseHandler {
         if (msg.sender.code.length != 0) return;
         if (backersManager.periodFinish() <= block.timestamp) return;
         gaugeIndex_ = bound(gaugeIndex_, 0, baseTest.gaugesArrayLength() - 1);
-        amountERC20_ = bound(amountERC20_, 0, type(uint64).max);
-        amountCoinbase_ = bound(amountCoinbase_, 0, type(uint64).max);
+        amountERC20_ = bound(amountERC20_, UtilsLib.MIN_AMOUNT_INCENTIVES, type(uint64).max);
+        amountCoinbase_ = bound(amountCoinbase_, UtilsLib.MIN_AMOUNT_INCENTIVES, type(uint64).max);
 
         GaugeRootstockCollective _gauge = baseTest.gaugesArray(gaugeIndex_);
         if (backersManager.isGaugeHalted(address(_gauge))) return;
