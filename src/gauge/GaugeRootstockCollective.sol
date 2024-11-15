@@ -397,7 +397,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @notice called on the reward distribution. Transfers reward tokens from backerManger to this contract
      * @dev reverts if caller is not the backersManager contract
      * @param amountERC20_ amount of ERC20 rewards
-     * @param builderRewardPercentage_  builder reward percentage percentage
+     * @param backerRewardPercentage_  backers reward percentage
      * @param periodFinish_ timestamp end of current rewards period
      * @param cycleStart_ Collective Rewards cycle start timestamp
      * @param cycleDuration_ Collective Rewards cycle time duration
@@ -405,7 +405,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      */
     function notifyRewardAmountAndUpdateShares(
         uint256 amountERC20_,
-        uint256 builderRewardPercentage_,
+        uint256 backerRewardPercentage_,
         uint256 periodFinish_,
         uint256 cycleStart_,
         uint256 cycleDuration_
@@ -415,8 +415,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         onlyBackersManager
         returns (uint256 newGaugeRewardShares_)
     {
-        uint256 _backerAmountERC20 = UtilsLib._mulPrec(builderRewardPercentage_, amountERC20_);
-        uint256 _backerAmountCoinbase = UtilsLib._mulPrec(builderRewardPercentage_, msg.value);
+        uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountERC20_);
+        uint256 _backerAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
         uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
         _notifyRewardAmount(
             rewardToken, amountERC20_ - _backerAmountERC20, _backerAmountERC20, periodFinish_, _timeUntilNextCycle

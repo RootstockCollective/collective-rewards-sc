@@ -434,9 +434,9 @@ contract BackersManagerRootstockCollective is
         uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
         // [N] = [N] * [N] / [N]
         uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
-        uint256 _builderRewardPercentage = getRewardPercentageToApply(gaugeToBuilder[gauge_]);
+        uint256 _backerRewardPercentage = getRewardPercentageToApply(gaugeToBuilder[gauge_]);
         return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
-            _amountERC20, _builderRewardPercentage, periodFinish_, cycleStart_, cycleDuration_
+            _amountERC20, _backerRewardPercentage, periodFinish_, cycleStart_, cycleDuration_
         );
     }
 

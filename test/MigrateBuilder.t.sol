@@ -35,7 +35,7 @@ contract MigrateBuilderTest is BaseTest {
         _validateIsWhitelisted(_v1Builder01);
 
         // AND reward receiver and percentage are set correctly
-        (, uint64 next,) = backersManager.builderRewardPercentage(_v1Builder01);
+        (, uint64 next,) = backersManager.backerRewardPercentage(_v1Builder01);
         vm.assertEq(backersManager.builderRewardReceiver(_v1Builder01), _v1Builder01);
         vm.assertEq(next, _validRewardPercentage);
     }
@@ -132,8 +132,8 @@ contract MigrateBuilderTest is BaseTest {
         uint64 _invalidRewardPercentage = type(uint64).max;
 
         //  WHEN kyc approver attempts to migrate a builder with the invalid percentage
-        //   THEN the transaction reverts with InvalidBuilderRewardPercentage error
-        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBuilderRewardPercentage.selector);
+        //   THEN the transaction reverts with InvalidBackerRewardPercentage error
+        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBackerRewardPercentage.selector);
         vm.prank(kycApprover);
         backersManager.migrateBuilder(_v1Builder01, _v1Builder01, _invalidRewardPercentage);
     }

@@ -31,7 +31,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     error NotPaused();
     error NotRevoked();
     error NotOperational();
-    error InvalidBuilderRewardPercentage();
+    error InvalidBackerRewardPercentage();
     error BuilderAlreadyExists();
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
@@ -48,9 +48,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     event Unpaused(address indexed builder_);
     event Revoked(address indexed builder_);
     event Permitted(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
-    event BuilderRewardPercentageUpdateScheduled(
-        address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_
-    );
+    event BackerRewardPercentageUpdateScheduled(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
     event BuilderMigrated(address indexed builder_, address indexed migrator_);
 
@@ -96,8 +94,8 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     mapping(address builder => BuilderState state) public builderState;
     /// @notice map of builders reward receiver
     mapping(address builder => address rewardReceiver) public builderRewardReceiver;
-    /// @notice map of builders reward percentage data
-    mapping(address builder => RewardPercentageData rewardPercentageData) public builderRewardPercentage;
+    /// @notice map of backers reward percentage data
+    mapping(address builder => RewardPercentageData rewardPercentageData) public backerRewardPercentage;
     /// @notice array of all the operational gauges
     EnumerableSet.AddressSet internal _gauges;
     /// @notice array of all the halted gauges
@@ -297,19 +295,19 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
 
         // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
-            revert InvalidBuilderRewardPercentage();
+            revert InvalidBackerRewardPercentage();
         }
 
         builderState[msg.sender].revoked = false;
 
         // read from storage
-        RewardPercentageData memory _rewardPercentageData = builderRewardPercentage[msg.sender];
+        RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[msg.sender];
 
         _rewardPercentageData.previous = getRewardPercentageToApply(msg.sender);
         _rewardPercentageData.next = rewardPercentage_;
 
         // write to storage
-        builderRewardPercentage[msg.sender] = _rewardPercentageData;
+        backerRewardPercentage[msg.sender] = _rewardPercentageData;
 
         _resumeGauge(_gauge);
 
@@ -335,7 +333,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         builderState[msg.sender].revoked = true;
         // when revoked builder wants to come back, it can set a new reward percentage. So, the cooldown time starts
         // here
-        builderRewardPercentage[msg.sender].cooldownEndTime = uint128(block.timestamp + rewardPercentageCooldown);
+        backerRewardPercentage[msg.sender].cooldownEndTime = uint128(block.timestamp + rewardPercentageCooldown);
 
         _haltGauge(_gauge);
 
@@ -343,31 +341,29 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     }
 
     /**
-     * @notice set a builder reward percentage
+     * @notice set a backer reward percentage
      * @dev reverts if builder is not operational
      * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
-    function setBuilderRewardPercentage(uint64 rewardPercentage_) external {
+    function setBackerRewardPercentage(uint64 rewardPercentage_) external {
         if (!isBuilderOperational(msg.sender)) revert NotOperational();
 
         // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
-            revert InvalidBuilderRewardPercentage();
+            revert InvalidBackerRewardPercentage();
         }
 
         // read from storage
-        RewardPercentageData memory _rewardPercentageData = builderRewardPercentage[msg.sender];
+        RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[msg.sender];
 
         _rewardPercentageData.previous = getRewardPercentageToApply(msg.sender);
         _rewardPercentageData.next = rewardPercentage_;
         _rewardPercentageData.cooldownEndTime = uint128(block.timestamp) + rewardPercentageCooldown;
 
-        emit BuilderRewardPercentageUpdateScheduled(
-            msg.sender, rewardPercentage_, _rewardPercentageData.cooldownEndTime
-        );
+        emit BackerRewardPercentageUpdateScheduled(msg.sender, rewardPercentage_, _rewardPercentageData.cooldownEndTime);
 
         // write to storage
-        builderRewardPercentage[msg.sender] = _rewardPercentageData;
+        backerRewardPercentage[msg.sender] = _rewardPercentageData;
     }
 
     /**
@@ -397,7 +393,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @param builder_ address of the builder
      */
     function getRewardPercentageToApply(address builder_) public view returns (uint64) {
-        RewardPercentageData memory _rewardPercentageData = builderRewardPercentage[builder_];
+        RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[builder_];
         if (block.timestamp >= _rewardPercentageData.cooldownEndTime) {
             return _rewardPercentageData.next;
         }
@@ -549,18 +545,18 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         builderRewardReceiver[builder_] = rewardReceiver_;
         // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
-            revert InvalidBuilderRewardPercentage();
+            revert InvalidBackerRewardPercentage();
         }
 
         // read from storage
-        RewardPercentageData memory _rewardPercentageData = builderRewardPercentage[builder_];
+        RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[builder_];
 
         _rewardPercentageData.previous = rewardPercentage_;
         _rewardPercentageData.next = rewardPercentage_;
         _rewardPercentageData.cooldownEndTime = uint128(block.timestamp);
 
         // write to storage
-        builderRewardPercentage[builder_] = _rewardPercentageData;
+        backerRewardPercentage[builder_] = _rewardPercentageData;
 
         emit BuilderActivated(builder_, rewardReceiver_, rewardPercentage_);
     }
