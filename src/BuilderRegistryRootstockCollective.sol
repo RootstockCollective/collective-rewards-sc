@@ -94,7 +94,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     mapping(address builder => BuilderState state) public builderState;
     /// @notice map of builders reward receiver
     mapping(address builder => address rewardReceiver) public builderRewardReceiver;
-    /// @notice map of backers reward percentage data
+    /// @notice map of builder's backers reward percentage data
     mapping(address builder => RewardPercentageData rewardPercentageData) public backerRewardPercentage;
     /// @notice array of all the operational gauges
     EnumerableSet.AddressSet internal _gauges;
@@ -341,7 +341,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     }
 
     /**
-     * @notice set a backer reward percentage
+     * @notice allows a builder to set his backers reward percentage
      * @dev reverts if builder is not operational
      * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
