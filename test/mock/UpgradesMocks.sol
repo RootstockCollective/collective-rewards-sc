@@ -4,9 +4,6 @@ pragma solidity 0.8.20;
 import { BackersManagerRootstockCollective } from "../../src/BackersManagerRootstockCollective.sol";
 import { RewardDistributorRootstockCollective } from "../../src/RewardDistributorRootstockCollective.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
-import { ChangeExecutorRootstockCollective } from "src/mvp/ChangeExecutorRootstockCollective.sol";
-import { SimplifiedRewardDistributorRootstockCollective } from
-    "src/mvp/SimplifiedRewardDistributorRootstockCollective.sol";
 import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 
 /**
@@ -45,7 +42,7 @@ contract RewardDistributorRootstockCollectiveUpgradeMock is RewardDistributorRoo
 
 /**
  * @title GaugeUpgradeMock
- * @dev Only for upgradeability testing purposes. Extends Gauge adding a new variable.
+ * @dev Only for upgradeability testing purposes. Extends GaugeRootstockCollective adding a new variable.
  */
 contract GaugeUpgradeMock is GaugeRootstockCollective, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
@@ -60,30 +57,5 @@ contract GaugeUpgradeMock is GaugeRootstockCollective, UpgradeableMock {
 contract GovernanceManagerRootstockCollectiveUpgradeMock is GovernanceManagerRootstockCollective, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
         return newVariable + uint256(uint160(governor));
-    }
-}
-
-/**
- * @title ChangeExecutorUpgradeMock
- * @dev Only for upgradeability testing purposes. Extends ChangeExecutorRootstockCollective adding a new variable.
- */
-contract ChangeExecutorUpgradeMock is ChangeExecutorRootstockCollective, UpgradeableMock {
-    function getCustomMockValue() external view override returns (uint256) {
-        return newVariable + uint256(uint160(_governor));
-    }
-}
-
-/**
- * @title SimplifiedRewardDistributorRootstockCollectiveUpgradeMock
- * @dev Only for upgradeability testing purposes. Extends
- * SimplifiedRewardDistributorRootstockCollective adding a new
- * variable.
- */
-contract SimplifiedRewardDistributorRootstockCollectiveUpgradeMock is
-    SimplifiedRewardDistributorRootstockCollective,
-    UpgradeableMock
-{
-    function getCustomMockValue() external view override returns (uint256) {
-        return newVariable + uint256(uint160(governor()));
     }
 }
