@@ -169,7 +169,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: activateBuilder should revert if reward percentage is higher than 100
      */
-    function test_ActivateBuilderInvalidBuilderRewardPercentage() public {
+    function test_ActivateBuilderInvalidBackerRewardPercentage() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         // AND a kycApprover
@@ -177,7 +177,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
 
         // WHEN tries to activateBuilder
         //  THEN tx reverts because is not a valid reward percentage
-        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBuilderRewardPercentage.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBackerRewardPercentage.selector);
         backersManager.activateBuilder(_newBuilder, _newBuilder, 2 ether);
     }
 
@@ -353,13 +353,13 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: permitBuilder should revert if reward percentage is higher than 100
      */
-    function test_PermitBuilderInvalidBuilderRewardPercentage() public {
+    function test_PermitBuilderInvalidBackerRewardPercentage() public {
         // GIVEN a revoked builder
         vm.startPrank(builder);
         backersManager.revokeBuilder();
         //  WHEN tries to permitBuilder with 200% of reward percentage
         //   THEN tx reverts because is not a valid reward percentage
-        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBuilderRewardPercentage.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBackerRewardPercentage.selector);
         backersManager.permitBuilder(2 ether);
     }
 
