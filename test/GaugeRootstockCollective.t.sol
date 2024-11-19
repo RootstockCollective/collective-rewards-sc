@@ -325,7 +325,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: incentivizer tries to send 0 amount
+     * SCENARIO: incentivizer tries to send 0 amount and fails with min amount required
      */
     function test_IncentivizeWithZeroAmount() public {
         // GIVEN alice allocates 1 ether
@@ -336,17 +336,16 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge, 5 ether);
 
         // WHEN 0 ether are distributed by Incentivizer in rewardToken
+        // THEN it fails with min amount error
         vm.startPrank(incentivizer);
+        vm.expectRevert(GaugeRootstockCollective.NotEnoughAmount.selector);
         gauge.incentivizeWithRewardToken(0 ether);
 
-        // THEN rewardPerToken is 0
-        assertEq(gauge.rewardPerToken(address(rewardToken)), 0);
-        // THEN rewardRate is 0
-        assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 0);
-
-        // WHEN 0 ether are distributed by Incentivizer
+        // WHEN 10 wei are distributed by Incentivizer
+        // THEN it fails with min amount error
         vm.startPrank(incentivizer);
-        gauge.incentivizeWithCoinbase{ value: 0 ether }();
+        vm.expectRevert(GaugeRootstockCollective.NotEnoughAmount.selector);
+        gauge.incentivizeWithCoinbase{ value: 10 }();
 
         // THEN rewardPerToken is 0
         assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);

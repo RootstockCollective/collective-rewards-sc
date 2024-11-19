@@ -183,15 +183,19 @@ contract BaseTest is Test {
         vm.stopPrank();
     }
 
+    /// @dev if any amount is zero, it will not be skipped
     function _incentivize(GaugeRootstockCollective gauge_, uint256 amountERC20_, uint256 amountCoinbase_) internal {
-        vm.deal(incentivizer, amountCoinbase_);
-        gauge_.incentivizeWithCoinbase{ value: amountCoinbase_ }();
-
-        rewardToken.mint(address(incentivizer), amountERC20_);
-        vm.prank(address(incentivizer));
-        rewardToken.approve(address(gauge_), amountERC20_);
-        vm.prank(address(incentivizer));
-        gauge_.incentivizeWithRewardToken(amountERC20_);
+        if (amountCoinbase_ > 0) {
+            vm.deal(incentivizer, amountCoinbase_);
+            gauge_.incentivizeWithCoinbase{ value: amountCoinbase_ }();
+        }
+        if (amountERC20_ > 0) {
+            rewardToken.mint(address(incentivizer), amountERC20_);
+            vm.prank(address(incentivizer));
+            rewardToken.approve(address(gauge_), amountERC20_);
+            vm.prank(address(incentivizer));
+            gauge_.incentivizeWithRewardToken(amountERC20_);
+        }
     }
 
     function _buildersClaim() internal {

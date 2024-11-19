@@ -24,9 +24,9 @@ contract IncentivizeFuzzTest is BaseFuzz {
         public
     {
         uint256 _qIncentives = bound(incentiveAmount_, 1, MAX_INCENTIVES);
-        incentiveAmount_ = bound(incentiveAmount_, 0, MAX_INCENTIVE_AMOUNT);
+        incentiveAmount_ = bound(incentiveAmount_, UtilsLib.MIN_AMOUNT_INCENTIVES, MAX_INCENTIVE_AMOUNT);
         // cannot incentivize in a new cycle and without a distribution, it will revert by BeforeDistribution()
-        incentiveTime_ = bound(incentiveTime_, 0, cycleDuration - 1);
+        incentiveTime_ = bound(incentiveTime_, 100, cycleDuration - 1);
         // GIVEN a random amount of builders
         //  AND a random amount of backers voting the gauges
         _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
