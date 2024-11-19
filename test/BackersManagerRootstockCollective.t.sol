@@ -388,6 +388,38 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
+     * SCENARIO: notifyRewardAmount reverts when there are no active gauges
+     */
+    function test_NotifyRewardAmountWithNoActiveBuilders() public {
+        // GIVEN a BackerManager contract
+        //   WHEN both existing builders get revoked
+        vm.startPrank(kycApprover);
+        backersManager.revokeBuilderKYC(builder);
+        backersManager.revokeBuilderKYC(builder2);
+        vm.stopPrank();
+
+        // THEN there are no active gauges
+        assertEq(backersManager.getGaugesLength(), 0);
+        // THEN all there are 2 halted gauges
+        assertEq(backersManager.getHaltedGaugesLength(), 2);
+
+        // AND notifyRewardAmount is called with coinbase
+        //  THEN it reverts with NoGaugesForDistribution error
+        vm.expectRevert(BackersManagerRootstockCollective.NoGaugesForDistribution.selector);
+        backersManager.notifyRewardAmount{ value: 1 ether }(0 ether);
+
+        // AND notifyRewardAmount is called with rewardTken
+        //  THEN it reverts with NoGaugesForDistribution error
+        vm.expectRevert(BackersManagerRootstockCollective.NoGaugesForDistribution.selector);
+        backersManager.notifyRewardAmount(0 ether);
+
+        // AND notifyRewardAmount is called with both coinbase and rewardToken
+        //  THEN it reverts with NoGaugesForDistribution error
+        vm.expectRevert(BackersManagerRootstockCollective.NoGaugesForDistribution.selector);
+        backersManager.notifyRewardAmount{ value: 1 ether }(1 ether);
+    }
+
+    /**
      * SCENARIO: notifyRewardAmount is called using Coinbase and values are updated
      */
     function test_NotifyRewardAmountCoinbase() public {

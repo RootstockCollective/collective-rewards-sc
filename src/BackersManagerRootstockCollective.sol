@@ -31,6 +31,7 @@ contract BackersManagerRootstockCollective is
     error DistributionPeriodDidNotStart();
     error BeforeDistribution();
     error PositiveAllocationOnHaltedGauge();
+    error NoGaugesForDistribution();
 
     // -----------------------------
     // ----------- Events ----------
@@ -207,8 +208,10 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice transfers reward tokens from the sender to be distributed to the gauges
      * @dev reverts if it is called during the distribution period
+     *  reverts if there are no gauges available for the distribution
      */
     function notifyRewardAmount(uint256 amount_) external payable notInDistributionPeriod {
+        if (getGaugesLength() == 0) revert NoGaugesForDistribution();
         if (msg.value > 0) {
             rewardsCoinbase += msg.value;
             emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
