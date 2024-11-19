@@ -101,7 +101,7 @@ contract SetBuilderRewardReceiverTest is BaseTest {
     }
 
     /**
-     * SCENARIO: Builder cancels a opened rewardReceiver replacement request
+     * SCENARIO: Builder cancels an open rewardReceiver replacement request
      */
     function test_cancelRewardReceiverReplacementRequest() public {
         // GIVEN a Whitelisted builder
@@ -121,7 +121,7 @@ contract SetBuilderRewardReceiverTest is BaseTest {
     }
 
     /**
-     * SCENARIO: KYCApprover approves a opened rewardReceiver replacement request
+     * SCENARIO: KYCApprover approves an open rewardReceiver replacement request
      */
     function test_approveRewardReceiverReplacementRequest() public {
         // GIVEN a Whitelisted builder

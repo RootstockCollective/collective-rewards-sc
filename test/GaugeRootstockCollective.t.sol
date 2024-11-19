@@ -971,7 +971,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: reward receiver tries to claims his rewards with a pending reward receiver address request.
+     * SCENARIO: reward receiver tries to claim his rewards with a pending reward receiver address request.
      *           After KYC approval, he can complete the claim.
      */
     function test_ClaimBuilderRewardsRewardReceiverWithReplacement() public {

@@ -201,7 +201,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     }
 
     /**
-     * @notice returns true, if the builder has an opened request to replace his receiver address
+     * @notice returns true if the builder has an open request to replace his receiver address
      * @param builder_ address of the builder
      */
     function hasBuilderRewardReceiverPendingApproval(address builder_) external view returns (bool) {
