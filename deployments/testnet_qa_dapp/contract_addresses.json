@@ -1,10 +1,10 @@
 {
-  "BackersManagerRootstockCollective": "0x83bD85A96f9427E152bB3876Eebc252DB18af01A",
-  "BackersManagerRootstockCollectiveProxy": "0xec0a29Df5180A6B04496dfAf2D827e36F4a0A52F",
-  "GaugeBeaconRootstockCollective": "0x6474C5bFd269Cb22520F1EAD4F1Cb60eA1eCb1a0",
-  "GaugeFactoryRootstockCollective": "0x0d681203DbaB308E0311Dfe745e17214CD0Ffd68",
-  "GovernanceManagerRootstockCollective": "0x71b9EBa04b180B61798A7B8d7ca1516Ef50d1767",
-  "GovernanceManagerRootstockCollectiveProxy": "0xb7C6918d6aE6df2e147FF464271a94EAfF027E5D",
-  "RewardDistributorRootstockCollective": "0x59f5D5A2D98f03113f4cFB44Cb9209A343723948",
-  "RewardDistributorRootstockCollectiveProxy": "0xD476E4804551595687C1f6F0a9C22dd1Bbfa0319"
+  "BackersManagerRootstockCollective": "0x548bc637d5B893f37CbeE83D18f6d1d2B8D23e4E",
+  "BackersManagerRootstockCollectiveProxy": "0x3A27Cd950ed145b17aEf11B9E19982e4057eE4b8",
+  "GaugeBeaconRootstockCollective": "0x08608ED6c8B53c8E923e97f9EFaea2e24DCc2A43",
+  "GaugeFactoryRootstockCollective": "0x9fd77075F02B4F12CB5aD5e71A1c1eE349cF8Cd4",
+  "GovernanceManagerRootstockCollective": "0xCdF47Ca301E5e18697B7bc131D7b571e5b275372",
+  "GovernanceManagerRootstockCollectiveProxy": "0x147d49E56b3b28EFE24fF275a3Bdc2BA19c80ec4",
+  "RewardDistributorRootstockCollective": "0x8E046041762cA0b3a363813010825535C253e27F",
+  "RewardDistributorRootstockCollectiveProxy": "0x657805540924F5465E50D0827abe023c79354077"
 }
