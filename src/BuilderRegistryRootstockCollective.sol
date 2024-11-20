@@ -32,6 +32,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     error NotRevoked();
     error NotOperational();
     error InvalidBackerRewardPercentage();
+    error InvalidBuilderRewardReceiver();
     error BuilderAlreadyExists();
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
@@ -49,6 +50,9 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     event Revoked(address indexed builder_);
     event Permitted(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event BackerRewardPercentageUpdateScheduled(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
+    event BuilderRewardReceiverReplacementRequested(address indexed builder_, address newRewardReceiver_);
+    event BuilderRewardReceiverReplacementCancelled(address indexed builder_, address newRewardReceiver_);
+    event BuilderRewardReceiverReplacementApproved(address indexed builder_, address newRewardReceiver_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
     event BuilderMigrated(address indexed builder_, address indexed migrator_);
 
@@ -94,6 +98,8 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     mapping(address builder => BuilderState state) public builderState;
     /// @notice map of builders reward receiver
     mapping(address builder => address rewardReceiver) public builderRewardReceiver;
+    /// @notice map of builders reward receiver replacement, used as a buffer until the new address is accepted
+    mapping(address builder => address rewardReceiverReplacement) public builderRewardReceiverReplacement;
     /// @notice map of builder's backers reward percentage data
     mapping(address builder => RewardPercentageData rewardPercentageData) public backerRewardPercentage;
     /// @notice array of all the operational gauges
@@ -149,6 +155,59 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     // -----------------------------
     // ---- External Functions -----
     // -----------------------------
+
+    /**
+     * @notice Builder submits a request to replace his rewardReceiver address,
+     * the request will then need to be appoved by `approveBuidlerRewardReceiverReplacement`
+     * @dev reverts if Builder is not Operational
+     * @param newRewardReceiver_ new address the builder is requesting to use
+     */
+    function submitRewardReceiverReplacementRequest(address newRewardReceiver_) external {
+        _submitRewardReceiverReplacementRequest(newRewardReceiver_);
+        emit BuilderRewardReceiverReplacementRequested(msg.sender, newRewardReceiver_);
+    }
+
+    /**
+     * @notice Builder cancels his request to replace his rewardReceiver address
+     * @dev reverts if Builder is not Operational
+     */
+    function cancelRewardReceiverReplacementRequest() external {
+        // By overriding the replacement with the current, it effectively cancels the request
+        address _currRewardReceiver = builderRewardReceiver[msg.sender];
+        _submitRewardReceiverReplacementRequest(_currRewardReceiver);
+        emit BuilderRewardReceiverReplacementCancelled(msg.sender, _currRewardReceiver);
+    }
+
+    /**
+     * @notice KYCApprover approves Builder's request to replace his rewardReceiver address
+     * @dev reverts if provided `rewardReceiverReplacement_` doesn't match Builder's request
+     * @param builder_ address of the builder
+     * @param rewardReceiverReplacement_ new address the builder is requesting to use
+     */
+    function approveBuidlerRewardReceiverReplacement(
+        address builder_,
+        address rewardReceiverReplacement_
+    )
+        external
+        onlyKycApprover
+    {
+        // Only an operational builder can be approved
+        if (!isBuilderOperational(builder_)) revert NotOperational();
+
+        address _rewardReceiverReplacement = builderRewardReceiverReplacement[builder_];
+        if (_rewardReceiverReplacement != rewardReceiverReplacement_) revert InvalidBuilderRewardReceiver();
+        builderRewardReceiver[builder_] = _rewardReceiverReplacement;
+        emit BuilderRewardReceiverReplacementApproved(builder_, rewardReceiverReplacement_);
+    }
+
+    /**
+     * @notice returns true if the builder has an open request to replace his receiver address
+     * @param builder_ address of the builder
+     */
+    function hasBuilderRewardReceiverPendingApproval(address builder_) external view returns (bool) {
+        return builderRewardReceiverReplacement[builder_] != address(0)
+            && builderRewardReceiver[builder_] != builderRewardReceiverReplacement[builder_];
+    }
 
     /**
      * @notice activates builder for the first time, setting the reward receiver and the reward percentage
@@ -485,6 +544,20 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         gaugeToBuilder[gauge_] = builder_;
         _gauges.add(address(gauge_));
         emit GaugeCreated(builder_, address(gauge_), msg.sender);
+    }
+
+    /**
+     * @notice Builder submits a request to replace his rewardReceiver address,
+     * the request will then need to be appoved by `approveBuidlerRewardReceiverReplacement`
+     * @dev reverts if Builder is not Operational
+     * @param newRewardReceiver_ new address the builder is requesting to use
+     */
+    function _submitRewardReceiverReplacementRequest(address newRewardReceiver_) internal {
+        // Only builder can submit a reward receiver address replacement
+        address _builder = msg.sender;
+        // Only operational builder can initiate this action
+        if (!isBuilderOperational(_builder)) revert NotOperational();
+        builderRewardReceiverReplacement[_builder] = newRewardReceiver_;
     }
 
     /**
