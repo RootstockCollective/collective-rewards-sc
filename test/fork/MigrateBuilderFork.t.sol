@@ -20,8 +20,9 @@ contract MigrateBuilderFork is Test {
     BackersManagerRootstockCollective public backersManager;
     RewardDistributorRootstockCollective public rewardDistributor;
     address public kycApprover;
+    // ASSUMPTION: foundation holds RBTC and RIF
     address public foundation;
-    address public tokenHolderAddress;
+    address public stRifHolder;
 
     IERC20 public rewardToken; // RIF token
     IERC20 public stRif;
@@ -43,7 +44,7 @@ contract MigrateBuilderFork is Test {
         backersManager = BackersManagerRootstockCollective(vm.envAddress("BACKERS_MANAGER_ADDRESS_FORK"));
         kycApprover = backersManager.governanceManager().kycApprover();
         foundation = backersManager.governanceManager().foundationTreasury();
-        tokenHolderAddress = vm.envAddress("TOKEN_HOLDER_ADDRESS_FORK");
+        stRifHolder = vm.envAddress("STRIF_HOLDER_ADDRESS_FORK");
 
         stRif = backersManager.stakingToken();
         address payable _rewardDistributor = payable(backersManager.rewardDistributor());
@@ -88,31 +89,29 @@ contract MigrateBuilderFork is Test {
         }
 
         // THEN Backers can vote on migrated Builders
-        uint256 _unallocatedRif = _getUnallocatedRif();
+        uint256 _unallocatedRif = _getUnallocatedStRif();
         vm.assertGt(_unallocatedRif, 0);
 
         uint256 _amountToAllocate = _unallocatedRif / gauges.length;
         for (uint256 i = 0; i < gauges.length; i++) {
-            vm.prank(tokenHolderAddress);
+            vm.prank(stRifHolder);
             backersManager.allocate(gauges[i], _amountToAllocate);
-            uint256 _allocated = gauges[i].allocationOf(tokenHolderAddress);
+            uint256 _allocated = gauges[i].allocationOf(stRifHolder);
             vm.assertEq(_allocated, _amountToAllocate);
         }
 
         // THEN Fundation does distribution
-        uint256 _distributionRif = 100_000_000;
-        uint256 _distributionRbtc = 10_000_000;
-        _distribute(_distributionRif, _distributionRbtc);
+        _distribute();
         _skipAndStartNewCycle();
 
         // THEN Backer can claim rewards and increase his RIF and RBTC balance
         // Note: Simplified check to avoid complex calculations that are already covered by unit testing
-        uint256 _backerInitialRifBalance = rewardToken.balanceOf(tokenHolderAddress);
-        uint256 _backerInitialRbtcBalance = tokenHolderAddress.balance;
-        vm.prank(tokenHolderAddress);
+        uint256 _backerInitialRifBalance = rewardToken.balanceOf(stRifHolder);
+        uint256 _backerInitialRbtcBalance = stRifHolder.balance;
+        vm.prank(stRifHolder);
         backersManager.claimBackerRewards(gauges);
-        uint256 _backerRifBalance = rewardToken.balanceOf(tokenHolderAddress);
-        uint256 _backerRbtcBalance = tokenHolderAddress.balance;
+        uint256 _backerRifBalance = rewardToken.balanceOf(stRifHolder);
+        uint256 _backerRbtcBalance = stRifHolder.balance;
         vm.assertGt(_backerRifBalance, _backerInitialRifBalance);
         vm.assertGt(_backerRbtcBalance, _backerInitialRbtcBalance);
 
@@ -132,16 +131,20 @@ contract MigrateBuilderFork is Test {
         }
     }
 
-    function _distribute(uint256 amountERC20_, uint256 amountCoinbase_) internal {
+    function _distribute() internal {
         _skipAndStartNewCycle();
-        vm.prank(tokenHolderAddress);
-        rewardToken.transfer(address(rewardDistributor), amountERC20_);
-        vm.deal(address(rewardDistributor), amountCoinbase_ + address(rewardDistributor).balance);
-        vm.prank(foundation);
-        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountCoinbase_);
+        vm.startPrank(foundation);
+        uint256 _amountERC20 = rewardToken.balanceOf(foundation) / 2;
+        vm.assertGt(_amountERC20, 0);
+        uint256 _amountCoinbase = foundation.balance / 2;
+        vm.assertGt(_amountCoinbase, 0);
+        rewardToken.transfer(address(rewardDistributor), _amountERC20);
+        vm.deal(address(rewardDistributor), _amountCoinbase + address(rewardDistributor).balance);
+        rewardDistributor.sendRewardsAndStartDistribution(_amountERC20, _amountCoinbase);
         while (backersManager.onDistributionPeriod()) {
             backersManager.distribute();
         }
+        vm.stopPrank();
     }
 
     function _skipAndStartNewCycle() internal {
@@ -149,10 +152,10 @@ contract MigrateBuilderFork is Test {
         skip(_currentCycleRemaining);
     }
 
-    function _getUnallocatedRif() internal view returns (uint256 unstakedRif_) {
-        uint256 _balance = stRif.balanceOf(tokenHolderAddress);
-        uint256 _backerTotalAllocation = backersManager.backerTotalAllocation(tokenHolderAddress);
-        unstakedRif_ = _balance - _backerTotalAllocation;
+    function _getUnallocatedStRif() internal view returns (uint256 unstakedStRif_) {
+        uint256 _balance = stRif.balanceOf(stRifHolder);
+        uint256 _backerTotalAllocation = backersManager.backerTotalAllocation(stRifHolder);
+        unstakedStRif_ = _balance - _backerTotalAllocation;
     }
 
     function _validateIsWhitelisted(address builder_) private view {

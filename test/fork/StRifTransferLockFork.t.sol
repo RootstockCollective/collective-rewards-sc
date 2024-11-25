@@ -7,14 +7,14 @@ import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol
 import { IStRIFTokenV02 } from "./interfaces/IStRIFTokenV02.sol";
 
 contract StRifTransferLockFork is Test {
-    address public tokenHolderAddress;
+    address public stRifHolder;
     BackersManagerRootstockCollective public backersManager;
     IStRIFTokenV02 public stRif;
     GaugeRootstockCollective public operationalGauge;
 
     function setUp() public {
         backersManager = BackersManagerRootstockCollective(vm.envAddress("BACKERS_MANAGER_ADDRESS_FORK"));
-        tokenHolderAddress = vm.envAddress("TOKEN_HOLDER_ADDRESS_FORK");
+        stRifHolder = vm.envAddress("STRIF_HOLDER_ADDRESS_FORK");
         stRif = IStRIFTokenV02(address(backersManager.stakingToken()));
         operationalGauge = _getOperationalGauge();
     }
@@ -24,21 +24,21 @@ contract StRifTransferLockFork is Test {
      */
     function test_fork_LockAllocatedStRif() public {
         // Given a backer with stRIF tokens
-        uint256 _balance = stRif.balanceOf(tokenHolderAddress);
+        uint256 _balance = stRif.balanceOf(stRifHolder);
         vm.assertTrue(_balance > 0, "Backer has no stRIF tokens");
-        uint256 _backerTotalAllocation = backersManager.backerTotalAllocation(tokenHolderAddress);
+        uint256 _backerTotalAllocation = backersManager.backerTotalAllocation(stRifHolder);
         uint256 _amountToAllocate = _balance - _backerTotalAllocation;
 
         // When the backer allocates their stRIF tokens to an operational gauge
-        vm.prank(tokenHolderAddress);
+        vm.prank(stRifHolder);
         backersManager.allocate(operationalGauge, _amountToAllocate);
 
         // Then the allocated amount should equal the backer's balance
-        uint256 _allocated = operationalGauge.allocationOf(tokenHolderAddress);
+        uint256 _allocated = operationalGauge.allocationOf(stRifHolder);
         vm.assertEq(_allocated, _balance);
 
         // And the backer should not be able to transfer their stRIF tokens
-        vm.startPrank(tokenHolderAddress);
+        vm.startPrank(stRifHolder);
         bytes memory _withdrawError =
             abi.encodeWithSelector(IStRIFTokenV02.STRIFStakedInCollectiveRewardsCanWithdraw.selector, false);
         vm.expectRevert(_withdrawError);
