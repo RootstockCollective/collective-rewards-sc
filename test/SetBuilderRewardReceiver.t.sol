@@ -57,27 +57,27 @@ contract SetBuilderRewardReceiverTest is BaseTest {
     }
 
     /**
-     * SCENARIO: approveBuidlerRewardReceiverReplacement should revert if is not called by the kycApprover
+     * SCENARIO: approveBuilderRewardReceiverReplacement should revert if is not called by the kycApprover
      */
     function test_approverIsNotKYCApprover() public {
         // GIVEN a whitelisted builder
-        //  WHEN alice calls approveBuidlerRewardReceiverReplacement
+        //  WHEN alice calls approveBuilderRewardReceiverReplacement
         //   THEN tx reverts because caller is not an the KYC Approver
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
         vm.prank(alice);
-        backersManager.approveBuidlerRewardReceiverReplacement(builder, alice);
+        backersManager.approveBuilderRewardReceiverReplacement(builder, alice);
     }
 
     /**
-     * SCENARIO: approveBuidlerRewardReceiverReplacement should revert if builder is not Operational
+     * SCENARIO: approveBuilderRewardReceiverReplacement should revert if builder is not Operational
      */
     function test_approveANonOperationalBuilder() public {
         // GIVEN a none existent builder
-        //  WHEN kycApprover calls approveBuidlerRewardReceiverReplacement
+        //  WHEN kycApprover calls approveBuilderRewardReceiverReplacement
         //   THEN tx reverts because Builder is not operational
         vm.prank(kycApprover);
         vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
-        backersManager.approveBuidlerRewardReceiverReplacement(alice, alice);
+        backersManager.approveBuilderRewardReceiverReplacement(alice, alice);
     }
 
     /**
@@ -133,7 +133,7 @@ contract SetBuilderRewardReceiverTest is BaseTest {
         vm.prank(kycApprover);
         vm.expectEmit();
         emit BuilderRewardReceiverReplacementApproved(builder, _newRewardReceiver);
-        backersManager.approveBuidlerRewardReceiverReplacement(builder, _newRewardReceiver);
+        backersManager.approveBuilderRewardReceiverReplacement(builder, _newRewardReceiver);
         //   THEN the new rewardReceiver address is official
         assertEq(backersManager.builderRewardReceiver(builder), _newRewardReceiver);
         //   THEN hasBuilderRewardReceiverPendingApproval returns false

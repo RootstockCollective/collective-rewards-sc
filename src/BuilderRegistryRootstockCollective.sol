@@ -158,7 +158,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
 
     /**
      * @notice Builder submits a request to replace his rewardReceiver address,
-     * the request will then need to be appoved by `approveBuidlerRewardReceiverReplacement`
+     * the request will then need to be approved by `approveBuilderRewardReceiverReplacement`
      * @dev reverts if Builder is not Operational
      * @param newRewardReceiver_ new address the builder is requesting to use
      */
@@ -184,7 +184,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @param builder_ address of the builder
      * @param rewardReceiverReplacement_ new address the builder is requesting to use
      */
-    function approveBuidlerRewardReceiverReplacement(
+    function approveBuilderRewardReceiverReplacement(
         address builder_,
         address rewardReceiverReplacement_
     )
@@ -548,7 +548,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
 
     /**
      * @notice Builder submits a request to replace his rewardReceiver address,
-     * the request will then need to be appoved by `approveBuidlerRewardReceiverReplacement`
+     * the request will then need to be approved by `approveBuilderRewardReceiverReplacement`
      * @dev reverts if Builder is not Operational
      * @param newRewardReceiver_ new address the builder is requesting to use
      */
