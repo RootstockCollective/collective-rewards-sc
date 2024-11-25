@@ -23,7 +23,7 @@ contract MigrateBuilderFork is Test {
     address public foundation;
     address public tokenHolderAddress;
 
-    IERC20 public rewardToken; // rif right?
+    IERC20 public rewardToken; // RIF token
     IERC20 public stRif;
 
     event BuilderMigrated(address indexed builder_, address indexed migrator_);
@@ -87,7 +87,7 @@ contract MigrateBuilderFork is Test {
             vm.assertNotEq(address(_gauge), address(0));
         }
 
-        // THEN Backers can vote on migrated Buidlers
+        // THEN Backers can vote on migrated Builders
         uint256 _unallocatedRif = _getUnallocatedRif();
         vm.assertGt(_unallocatedRif, 0);
 

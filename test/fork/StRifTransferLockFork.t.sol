@@ -23,13 +23,13 @@ contract StRifTransferLockFork is Test {
      * SCENARIO: A backer allocates their stRIF tokens and tries to transfer them
      */
     function test_fork_LockAllocatedStRif() public {
-        // Given a backer with RIF tokens
+        // Given a backer with stRIF tokens
         uint256 _balance = stRif.balanceOf(tokenHolderAddress);
         vm.assertTrue(_balance > 0, "Backer has no stRIF tokens");
         uint256 _backerTotalAllocation = backersManager.backerTotalAllocation(tokenHolderAddress);
         uint256 _amountToAllocate = _balance - _backerTotalAllocation;
 
-        // When the backer allocates their RIF tokens to an operational gauge
+        // When the backer allocates their stRIF tokens to an operational gauge
         vm.prank(tokenHolderAddress);
         backersManager.allocate(operationalGauge, _amountToAllocate);
 
@@ -37,7 +37,7 @@ contract StRifTransferLockFork is Test {
         uint256 _allocated = operationalGauge.allocationOf(tokenHolderAddress);
         vm.assertEq(_allocated, _balance);
 
-        // And the backer should not be able to transfer their staked RIF tokens
+        // And the backer should not be able to transfer their stRIF tokens
         vm.startPrank(tokenHolderAddress);
         bytes memory _withdrawError =
             abi.encodeWithSelector(IStRIFTokenV02.STRIFStakedInCollectiveRewardsCanWithdraw.selector, false);
@@ -46,7 +46,7 @@ contract StRifTransferLockFork is Test {
         vm.expectRevert(_withdrawError);
         stRif.transfer(address(this), 1);
 
-        // And the backer should not be able to withdraw their staked RIF tokens
+        // And the backer should not be able to withdraw their stRIF tokens
         vm.expectRevert(_withdrawError);
         stRif.withdrawTo(address(this), 1);
         vm.stopPrank();
