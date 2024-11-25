@@ -64,7 +64,7 @@
     "prettier:check": "prettier --check \"**/*.{json,md,yml,ts}\" --ignore-path \".prettierignore\"  && prettier --check \"utils/solhint-plugin/**/*.js\" && forge fmt --check",
     "prettier:write": "prettier --write \"**/*.{json,md,yml,ts}\" --ignore-path \".prettierignore\" && prettier --write \"utils/solhint-plugin/**/*.js\" && forge fmt",
     "test": "forge test --no-match-test '(testFuzz|invariant|fork)'",
-    "test:deep": "forge test --no-match-test '(fork)'",
+    "test:deep": "forge test --match-test '(testFuzz|invariant)'",
     "test:fuzz": "forge test --match-test testFuzz",
     "test:invariant": "forge test --match-test invariant",
     "test:integration": "hardhat test",
