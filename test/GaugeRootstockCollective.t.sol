@@ -1014,7 +1014,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN KYCApprover approved his Reward Receiver Replacement Request
         vm.prank(kycApprover);
-        backersManager.approveBuidlerRewardReceiverReplacement(builder2, _newRewardReceiver);
+        backersManager.approveBuilderRewardReceiverReplacement(builder2, _newRewardReceiver);
 
         // AND 100 rewardToken and 100 coinbase are distributed
         _distribute(100 ether, 100 ether);
