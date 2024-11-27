@@ -43,19 +43,18 @@ contract RewardInvariants is BaseInvariants {
             _totalGaugesBalances + _backersManagerBalance + _totalBuilderBalances + _totalBackersBalances
         );
 
-        assertLe(_backersManagerBalance, 10_000);
+        assertLe(_backersManagerBalance, DUST);
 
         for (uint256 i = 0; i < gaugesArray.length; i++) {
+            uint256 _gaugeBalance = rewardToken.balanceOf(address(gaugesArray[i]));
+            uint256 _gaugeAccountedBalance;
             if (gaugesArray[i].totalAllocation() > 0) {
-                uint256 _gaugeBalance = rewardToken.balanceOf(address(gaugesArray[i]))
-                    - gaugesArray[i].rewardMissing(address(rewardToken)) / 10 ** 18;
-                assertLe(_gaugeBalance, 10_000);
+                _gaugeAccountedBalance = gaugesArray[i].rewardMissing(address(rewardToken)) / 10 ** 18;
             } else {
-                assertEq(
-                    rewardToken.balanceOf(address(gaugesArray[i])),
-                    incentivizeHandler.rewardTokenIncentives(gaugesArray[i])
-                );
+                _gaugeAccountedBalance = incentivizeHandler.rewardTokenIncentives(gaugesArray[i]);
             }
+            // There might be dust from previous cycles
+            assertLe(_gaugeBalance - _gaugeAccountedBalance, DUST);
         }
     }
 }

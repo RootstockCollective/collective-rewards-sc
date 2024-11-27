@@ -10,6 +10,8 @@ import { DistributionHandler } from "./handlers/DistributionHandler.sol";
 import { IncentivizeHandler } from "./handlers/IncentivizeHandler.sol";
 
 contract BaseInvariants is BaseTest {
+    uint256 constant DUST = 10_000;
+
     TimeManager public timeManager;
     BuilderHandler public builderHandler;
     AllocateHandler public allocateHandler;
