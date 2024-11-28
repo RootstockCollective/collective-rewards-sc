@@ -52,8 +52,12 @@ contract StRifTransferLockFork is Test {
         vm.stopPrank();
     }
 
-    function _getOperationalGauge() internal view returns (GaugeRootstockCollective) {
+    function _getOperationalGauge() internal returns (GaugeRootstockCollective) {
         uint256 _length = backersManager.getGaugesLength();
+        if (_length == 0) {
+            return _createOperationalGauge();
+        }
+
         for (uint256 i = 0; i < _length; i++) {
             GaugeRootstockCollective _gauge = GaugeRootstockCollective(backersManager.getGaugeAt(i));
             if (backersManager.isGaugeOperational(_gauge)) {
@@ -61,5 +65,17 @@ contract StRifTransferLockFork is Test {
             }
         }
         revert("No operational gauge found");
+    }
+
+    function _createOperationalGauge() internal returns (GaugeRootstockCollective) {
+        address _kycApprover = backersManager.governanceManager().kycApprover();
+        uint64 _rewardPercentage = 1 ether / 5; // 20%
+        address _builder = makeAddr("builder");
+        vm.prank(_kycApprover);
+        backersManager.activateBuilder(_builder, _builder, _rewardPercentage);
+
+        address _governor = backersManager.governanceManager().governor();
+        vm.prank(_governor);
+        return backersManager.communityApproveBuilder(_builder);
     }
 }
