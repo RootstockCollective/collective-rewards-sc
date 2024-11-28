@@ -490,4 +490,49 @@ contract SetCycleDurationTest is BaseTest {
         // THEN alice receives 50% of coinbase 1.875 = (30 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearCoinbaseBalance(alice), 1.875 ether, 100);
     }
+
+    function test_LongerDistributionDurationAfterCycleStart() public {
+        uint32 _confCycleDuration = 1 weeks;
+        uint24 _confCycleStartOffset = 1 weeks;
+        vm.prank(governor);
+        backersManager.setCycleDuration(_confCycleDuration, _confCycleStartOffset);
+
+        _skipAndStartNewCycle();
+
+        uint32 _newDistributionDuration = 1.5 weeks;
+        vm.prank(foundation);
+        vm.expectRevert(CycleTimeKeeperRootstockCollective.DistributionDurationTooLong.selector);
+        backersManager.setDistributionDuration(_newDistributionDuration);
+
+        //After the cycle starts the new duration and offset comes into place
+        (, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        assertEq(_cycleDuration, _confCycleDuration + _confCycleStartOffset);
+    }
+
+    function test_LongerDistributionDurationBeforeCycleStart() public {
+        uint32 _confCycleDuration = 1 weeks;
+        uint24 _confCycleStartOffset = 1 weeks;
+
+        (uint256 _previousCycleStart, uint256 _previousCycleDuration) = backersManager.getCycleStartAndDuration();
+
+        vm.prank(governor);
+        backersManager.setCycleDuration(_confCycleDuration, _confCycleStartOffset);
+
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+
+        //Since here we haven't started the cycle the new duration and offset are not applied
+        assertEq(_previousCycleStart, _cycleStart);
+        assertEq(_previousCycleDuration, _cycleDuration);
+
+        uint32 _newDistributionDuration = 1.5 weeks;
+        vm.prank(foundation);
+        vm.expectRevert(CycleTimeKeeperRootstockCollective.DistributionDurationTooLong.selector);
+        backersManager.setDistributionDuration(_newDistributionDuration);
+
+        _skipAndStartNewCycle();
+
+        //After the cycle starts the new duration and offset comes into place
+        (, uint256 _newCycleDuration) = backersManager.getCycleStartAndDuration();
+        assertEq(_newCycleDuration, _confCycleDuration + _confCycleStartOffset);
+    }
 }
