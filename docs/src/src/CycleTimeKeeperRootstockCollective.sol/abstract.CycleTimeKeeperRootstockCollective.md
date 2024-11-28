@@ -1,17 +1,11 @@
 # CycleTimeKeeperRootstockCollective
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/0c4368dc418c200f21d2a798619d1dd68234c5c1/src/CycleTimeKeeperRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/6d0eca4e2c61e833bcb70c54d8668e5644ba180e/src/CycleTimeKeeperRootstockCollective.sol)
 
 **Inherits:**
 [UpgradeableRootstockCollective](/src/governance/UpgradeableRootstockCollective.sol/abstract.UpgradeableRootstockCollective.md)
 
 ## State Variables
-
-### \_DISTRIBUTION_WINDOW
-
-```solidity
-uint256 internal constant _DISTRIBUTION_WINDOW = 1 hours;
-```
 
 ### cycleData
 
@@ -19,6 +13,12 @@ cycle data
 
 ```solidity
 CycleData public cycleData;
+```
+
+### distributionDuration
+
+```solidity
+uint32 public distributionDuration;
 ```
 
 ### \_\_gap
@@ -31,6 +31,18 @@ uint256[50] private __gap;
 ```
 
 ## Functions
+
+### onlyValidChangerOrFoundation
+
+```solidity
+modifier onlyValidChangerOrFoundation();
+```
+
+### onlyFoundation
+
+```solidity
+modifier onlyFoundation();
+```
 
 ### constructor
 
@@ -49,7 +61,8 @@ the desired period_
 function __CycleTimeKeeperRootstockCollective_init(
     IGovernanceManagerRootstockCollective governanceManager_,
     uint32 cycleDuration_,
-    uint24 cycleStartOffset_
+    uint24 cycleStartOffset_,
+    uint32 distributionDuration_
 )
     internal
     onlyInitializing;
@@ -57,11 +70,12 @@ function __CycleTimeKeeperRootstockCollective_init(
 
 **Parameters**
 
-| Name                 | Type                                    | Description                                                                       |
-| -------------------- | --------------------------------------- | --------------------------------------------------------------------------------- |
-| `governanceManager_` | `IGovernanceManagerRootstockCollective` | contract with permissioned roles                                                  |
-| `cycleDuration_`     | `uint32`                                | Collective Rewards cycle time duration                                            |
-| `cycleStartOffset_`  | `uint24`                                | offset to add to the first cycle, used to set an specific day to start the cycles |
+| Name                    | Type                                    | Description                                                                       |
+| ----------------------- | --------------------------------------- | --------------------------------------------------------------------------------- |
+| `governanceManager_`    | `IGovernanceManagerRootstockCollective` | contract with permissioned roles                                                  |
+| `cycleDuration_`        | `uint32`                                | Collective Rewards cycle time duration                                            |
+| `cycleStartOffset_`     | `uint24`                                | offset to add to the first cycle, used to set an specific day to start the cycles |
+| `distributionDuration_` | `uint32`                                | duration of the distribution window                                               |
 
 ### setCycleDuration
 
@@ -69,8 +83,10 @@ schedule a new cycle duration. It will be applied for the next cycle
 
 _reverts if is too short. It must be greater than 2 time the distribution window_
 
+_only callable by an authorized changer or the foundation_
+
 ```solidity
-function setCycleDuration(uint32 newCycleDuration_, uint24 cycleStartOffset_) external onlyValidChanger;
+function setCycleDuration(uint32 newCycleDuration_, uint24 cycleStartOffset_) external onlyValidChangerOrFoundation;
 ```
 
 **Parameters**
@@ -79,6 +95,28 @@ function setCycleDuration(uint32 newCycleDuration_, uint24 cycleStartOffset_) ex
 | ------------------- | -------- | --------------------------------------------------------------------------------- |
 | `newCycleDuration_` | `uint32` | new cycle duration                                                                |
 | `cycleStartOffset_` | `uint24` | offset to add to the first cycle, used to set an specific day to start the cycles |
+
+### setDistributionDuration
+
+set the duration of the distribution window
+
+_reverts if is too short. It must be greater than 0_
+
+_reverts if the new distribution is greater than half of the cycle duration_
+
+_reverts if the distribution window is modified during the distribution window_
+
+_only callable by the foundation_
+
+```solidity
+function setDistributionDuration(uint32 newDistributionDuration_) external onlyFoundation;
+```
+
+**Parameters**
+
+| Name                       | Type     | Description                      |
+| -------------------------- | -------- | -------------------------------- |
+| `newDistributionDuration_` | `uint32` | new distribution window duration |
 
 ### cycleStart
 
@@ -169,6 +207,33 @@ the previous one
 function getCycleStartAndDuration() public view returns (uint256, uint256);
 ```
 
+### \_isValidDistributionToCycleRatio
+
+checks if the distribution and cycle duration are valid
+
+```solidity
+function _isValidDistributionToCycleRatio(
+    uint32 distributionDuration_,
+    uint32 cycleDuration_
+)
+    internal
+    pure
+    returns (bool);
+```
+
+**Parameters**
+
+| Name                    | Type     | Description                         |
+| ----------------------- | -------- | ----------------------------------- |
+| `distributionDuration_` | `uint32` | duration of the distribution window |
+| `cycleDuration_`        | `uint32` | cycle time duration                 |
+
+**Returns**
+
+| Name     | Type   | Description                                                               |
+| -------- | ------ | ------------------------------------------------------------------------- |
+| `<none>` | `bool` | true if the distribution duration is less than half of the cycle duration |
+
 ## Events
 
 ### NewCycleDurationScheduled
@@ -177,7 +242,19 @@ function getCycleStartAndDuration() public view returns (uint256, uint256);
 event NewCycleDurationScheduled(uint256 newCycleDuration_, uint256 cooldownEndTime_);
 ```
 
+### NewDistributionDuration
+
+```solidity
+event NewDistributionDuration(uint256 newDistributionDuration_, address by_);
+```
+
 ## Errors
+
+### NotValidChangerOrFoundation
+
+```solidity
+error NotValidChangerOrFoundation();
+```
 
 ### CycleDurationTooShort
 
@@ -185,16 +262,22 @@ event NewCycleDurationScheduled(uint256 newCycleDuration_, uint256 cooldownEndTi
 error CycleDurationTooShort();
 ```
 
-### CycleDurationsAreNotMultiples
+### DistributionDurationTooShort
 
 ```solidity
-error CycleDurationsAreNotMultiples();
+error DistributionDurationTooShort();
 ```
 
-### CycleDurationNotHourBasis
+### DistributionDurationTooLong
 
 ```solidity
-error CycleDurationNotHourBasis();
+error DistributionDurationTooLong();
+```
+
+### DistributionModifiedDuringDistributionWindow
+
+```solidity
+error DistributionModifiedDuringDistributionWindow();
 ```
 
 ## Structs
