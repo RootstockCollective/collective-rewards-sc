@@ -33,9 +33,9 @@ contract RewardRateManipulationTest is BaseTest {
         vm.stopPrank();
         assertEq(rate1, rate2);
     }
+
     // This tescase does not wait between calls to incentivizeWithRewardToken() function, showing that the rate
     // variation is time-dependent.
-
     function test_RewardRateIssueNoTime() public {
         uint256 minIncentiveAmount = 100 wei;
         // WHEN an Incentivizer has rewardToken
@@ -49,7 +49,7 @@ contract RewardRateManipulationTest is BaseTest {
         console.log("Incentivizing 100 Eth");
         uint256 rate1 = gauge.rewardRate(address(rewardToken));
         console.log("RewardRate 1: %d", rate1);
-        console.log("In this test case, we immediately incentivize with 0 eths, not triggering the bug");
+        console.log("In this test case, we immediately incentivize with min amount (100 wei), not triggering the bug");
         // WHEN 0 ether are distributed by Incentivizer
         gauge.incentivizeWithRewardToken(minIncentiveAmount);
         console.log("Incentivizing 100 Eth");
@@ -57,10 +57,26 @@ contract RewardRateManipulationTest is BaseTest {
         console.log("RewardRate 2: %d", rate2);
         console.log("TotalAllocation: %d", gauge.totalAllocation());
         vm.stopPrank();
-        assertEq(rate1, rate2);
-    }
-    // This testcase triggers the issue, showing that the rewardRate changes by doing 0-eth incentivizing.
 
+        //assertEq(rate1, rate2);
+
+        console.log("Alice and bob allocate 1 vote each");
+        vm.startPrank(alice);
+        backersManager.allocate(gauge, 1 ether);
+        vm.startPrank(bob);
+        backersManager.allocate(gauge, 1 ether);
+
+        _skipAndStartNewCycle();
+        console.log("Then alice and bob both earned the correct amount of incentives: (100 eth + 100 wei) / 2");
+
+        // THEN alice has rewards to claim: (100 eth + 100 wei) / 2 = 50.000000000000000049
+        assertEq(gauge.earned(address(rewardToken), alice), 50_000_000_000_000_000_049);
+
+        // THEN bob has rewards to claim: (100 eth + 100 wei) / 2 = 50.000000000000000049
+        assertEq(gauge.earned(address(rewardToken), bob), 50_000_000_000_000_000_049);
+    }
+
+    // This testcase triggers the issue, showing that the rewardRate changes by doing 0-eth incentivizing.
     function test_RewardRateIssue() public {
         uint256 minIncentiveAmount = 100 wei;
         // WHEN an Incentivizer has rewardToken
@@ -85,6 +101,22 @@ contract RewardRateManipulationTest is BaseTest {
         console.log("RewardRate 2: %d", rate2);
         console.log("TotalAllocation: %d", gauge.totalAllocation());
         vm.stopPrank();
-        assertEq(rate1, rate2);
+
+        //assertEq(rate1, rate2);
+
+        console.log("Alice and bob allocate 1 vote each");
+        vm.startPrank(alice);
+        backersManager.allocate(gauge, 1 ether);
+        vm.startPrank(bob);
+        backersManager.allocate(gauge, 1 ether);
+
+        _skipAndStartNewCycle();
+        console.log("Then alice and bob both earned the correct amount of incentives: (100 eth + 100 wei) / 2");
+
+        // THEN alice has rewards to claim: (100 eth + 100 wei) / 2 = 50.000000000000000049
+        assertEq(gauge.earned(address(rewardToken), alice), 50_000_000_000_000_000_049);
+
+        // THEN bob has rewards to claim: (100 eth + 100 wei) / 2 = 50.000000000000000049
+        assertEq(gauge.earned(address(rewardToken), bob), 50_000_000_000_000_000_049);
     }
 }
