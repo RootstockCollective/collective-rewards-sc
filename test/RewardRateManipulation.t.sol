@@ -26,7 +26,7 @@ contract RewardRateManipulationTest is BaseTest {
         skip(1 days);
         // WHEN 0 ether are distributed by Incentivizer
         gauge.incentivizeWithRewardToken(minIncentiveAmount);
-        console.log("Incentivizing 0 Eth");
+        console.log("Incentivizing 100 Eth");
         uint256 rate2 = gauge.rewardRate(address(rewardToken));
         console.log("RewardRate 2: %d", rate2);
         console.log("TotalAllocation: %d", gauge.totalAllocation());
@@ -52,7 +52,7 @@ contract RewardRateManipulationTest is BaseTest {
         console.log("In this test case, we immediately incentivize with 0 eths, not triggering the bug");
         // WHEN 0 ether are distributed by Incentivizer
         gauge.incentivizeWithRewardToken(minIncentiveAmount);
-        console.log("Incentivizing 0 Eth");
+        console.log("Incentivizing 100 Eth");
         uint256 rate2 = gauge.rewardRate(address(rewardToken));
         console.log("RewardRate 2: %d", rate2);
         console.log("TotalAllocation: %d", gauge.totalAllocation());
