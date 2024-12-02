@@ -388,6 +388,20 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
+     * SCENARIO: notifyRewardAmount is called with zero value - should not revert and rewards don't change
+     */
+    function test_NotifyRewardAmountZeroValue() public {
+        // GIVEN a BackersManager contract
+        //   WHEN 0 ether in rewardToken and 0 coinbase are added
+        //    THEN it does not revert and rewards don't change
+        backersManager.notifyRewardAmount(0 ether);
+        // THEN reward for reward token is 0 ether
+        assertEq(backersManager.rewardsERC20(), 0 ether);
+        // THEN Coinbase reward is 0
+        assertEq(backersManager.rewardsCoinbase(), 0);
+    }
+
+    /**
      * SCENARIO: notifyRewardAmount reverts when there are no active gauges
      */
     function test_NotifyRewardAmountWithNoActiveBuilders() public {
@@ -516,7 +530,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: should revert is distribution window did not start
+     * SCENARIO: should revert if distribution window did not start
      */
     function test_RevertOnlyInDistributionWindow() public {
         // GIVEN a BackerManager contract

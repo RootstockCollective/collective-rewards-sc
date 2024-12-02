@@ -105,20 +105,31 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         address _newRewardReceiver = makeAddr("newRewardReceiver");
+        uint64 _backerRewardPercentage = 0.1 ether;
         // AND a kycApprover
         vm.prank(kycApprover);
         // WHEN calls activateBuilder
         //  THEN BuilderActivated event is emitted
         vm.expectEmit();
-        emit BuilderActivated(_newBuilder, _newRewardReceiver, 0.1 ether);
-        backersManager.activateBuilder(_newBuilder, _newRewardReceiver, 0.1 ether);
+        emit BuilderActivated(_newBuilder, _newRewardReceiver, _backerRewardPercentage);
+        backersManager.activateBuilder(_newBuilder, _newRewardReceiver, _backerRewardPercentage);
 
         // THEN builder is kycApproved
-        (, bool _kycApproved,,,,,) = backersManager.builderState(_newBuilder);
+        (, bool _kycApproved, bool _communityApproved,,,,) = backersManager.builderState(_newBuilder);
         assertEq(_kycApproved, true);
+        // THEN builder is not community approved
+        assertEq(_communityApproved, false);
 
         // THEN builder rewards receiver is set
         assertEq(backersManager.builderRewardReceiver(_newBuilder), _newRewardReceiver);
+
+        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = backersManager.backerRewardPercentage(_newBuilder);
+        // THEN previous backer reward percentage is 10%
+        assertEq(_previous, _backerRewardPercentage);
+        // THEN next backer reward percentage is 10%
+        assertEq(_next, _backerRewardPercentage);
+        // THEN backer reward percentage cooldown end time is the current block time
+        assertEq(_cooldownEndTime, block.timestamp);
     }
 
     /**

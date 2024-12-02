@@ -204,17 +204,18 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
         // AND alice removes allocations
+        vm.prank(alice);
         backersManager.allocate(gauge, 0 ether);
 
         // WHEN builder is halted
         _haltGauge();
 
-        // // THEN gauge rewardShares is 30240000 ether = 100 * 1/2 WEEK
-        // assertEq(gauge.rewardShares(), 30_240_000 ether);
-        // // THEN alice total allocation is 6
-        // assertEq(backersManager.backerTotalAllocation(alice), 6 ether);
-        // // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
-        // assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
+        // THEN gauge rewardShares is 30240000 ether = 100 * 1/2 WEEK
+        assertEq(gauge.rewardShares(), 30_240_000 ether);
+        // THEN alice total allocation is 6
+        assertEq(backersManager.backerTotalAllocation(alice), 6 ether);
+        // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
+        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
     }
 
     /**
