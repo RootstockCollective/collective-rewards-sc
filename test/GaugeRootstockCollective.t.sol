@@ -927,6 +927,78 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
+     * SCENARIO: builder claims his rewards at any time during the cycle by asset receiving the total rewards of the
+     * asset claimed.
+     */
+    function test_ClaimBuilderRewardsRewardToken() public {
+        // GIVEN a builder with 30% of reward percentage for backers
+        vm.startPrank(builder);
+        backersManager.setBackerRewardPercentage(0.3 ether);
+        skip(rewardPercentageCooldown);
+        // AND alice allocates to gauge
+        vm.startPrank(alice);
+        backersManager.allocate(gauge, 1 ether);
+
+        // AND 100 rewardToken and 100 coinbase are distributed
+        _distribute(100 ether, 100 ether);
+
+        // THEN builderRewards is 70 ether in rewardToken and 70 ether in coinbase
+        assertEq(gauge.builderRewards(address(rewardToken)), 70 ether);
+        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 70 ether);
+
+        // AND another cycle finishes without a new distribution
+        _skipAndStartNewCycle();
+
+        // WHEN builder claims rewards by rewardToken
+        vm.startPrank(builder);
+        gauge.claimBuilderReward(address(rewardToken));
+        // THEN builder rewardToken balance is 70 ether
+        assertEq(rewardToken.balanceOf(builder), 70 ether);
+        // THEN builderRewards in rewardToken is 0
+        assertEq(gauge.builderRewards(address(rewardToken)), 0 ether);
+        // THEN builder coinbase balance is 0 ether
+        assertEq(builder.balance, 0 ether);
+        // THEN builderRewards in coinbase is 70 ether
+        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 70 ether);
+    }
+
+    /**
+     * SCENARIO: builder claims his rewards at any time during the cycle by asset receiving the total rewards of the
+     * asset claimed.
+     */
+    function test_ClaimBuilderRewardsCoinbase() public {
+        // GIVEN a builder with 30% of reward percentage for backers
+        vm.startPrank(builder);
+        backersManager.setBackerRewardPercentage(0.3 ether);
+        skip(rewardPercentageCooldown);
+        // AND alice allocates to gauge
+        vm.startPrank(alice);
+        backersManager.allocate(gauge, 1 ether);
+
+        // AND 100 rewardToken and 100 coinbase are distributed
+        _distribute(100 ether, 100 ether);
+
+        // THEN builderRewards is 70 ether in rewardToken and 70 ether in coinbase
+        assertEq(gauge.builderRewards(address(rewardToken)), 70 ether);
+        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 70 ether);
+
+        // AND another cycle finishes without a new distribution
+        _skipAndStartNewCycle();
+
+        // WHEN builder claims rewards by Coinbase
+        vm.startPrank(builder);
+        gauge.claimBuilderReward(UtilsLib._COINBASE_ADDRESS);
+        // THEN builder rewardToken balance is 70 ether
+        assertEq(rewardToken.balanceOf(builder), 0 ether);
+        // THEN builderRewards in rewardToken is 70 ether
+        assertEq(gauge.builderRewards(address(rewardToken)), 70 ether);
+        // THEN builder coinbase balance is 70 ether
+        assertEq(builder.balance, 70 ether);
+        // THEN builderRewards in coinbase is 0 ether
+        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 0 ether);
+    }
+
+    /**
      * SCENARIO: reward receiver claims his rewards at any time during the cycle receiving the total amount of rewards.
      */
     function test_ClaimBuilderRewardsRewardReceiver() public {
