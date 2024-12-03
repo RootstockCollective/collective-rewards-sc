@@ -11,14 +11,14 @@ contract Deploy is Broadcaster {
         public
         returns (RewardDistributorRootstockCollective proxy_, RewardDistributorRootstockCollective implementation_)
     {
-        address _governanceManager = vm.envOr("GovernanceManagerRootstockCollective", address(0));
+        address _governanceManager = vm.envOr("GovernanceManagerRootstockCollectiveProxy", address(0));
         if (_governanceManager == address(0)) {
             _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
         }
 
         (proxy_, implementation_) = run(_governanceManager);
 
-        address _backersManagerAddress = vm.envOr("BackersManagerRootstockCollective", address(0));
+        address _backersManagerAddress = vm.envOr("BackersManagerRootstockCollectiveProxy", address(0));
         if (_backersManagerAddress == address(0)) {
             _backersManagerAddress = vm.envAddress("BACKERS_MANAGER_ADDRESS");
         }
