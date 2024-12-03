@@ -93,7 +93,7 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice contract initializer
      * @param governanceManager_ contract with permissioned roles
-     * @param rewardToken_ address of the token rewarded to builder and voters
+     * @param rewardToken_ address of the token rewarded to builder and voters, only standard ERC20 MUST be used
      * @param stakingToken_ address of the staking token for builder and voters
      * @param gaugeFactory_ address of the GaugeFactoryRootstockCollective contract
      * @param rewardDistributor_ address of the rewardDistributor contract
