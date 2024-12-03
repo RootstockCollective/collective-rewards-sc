@@ -355,6 +355,49 @@ Generate coverage report:
 
 1. Open `coverage/index.html`
 
+#### Fork Tests
+
+Fork tests are run against a snapshot of the RSK Testnet/Mainnet at specific blocks. These tests ensure that v2 contract
+deployments behave as expected once deployed on the RSK blockchain and interact correctly with existing live components.
+
+Currently, two main flows are covered:
+
+- Migration of builders from v1 to v2.
+- stRIF functionality.
+
+**IMPORTANT**: If the tests require interactions with newly deployed components on the live network after the fork was
+created, a new fork must be created to include those components.
+
+##### Running Fork Tests
+
+Two environment files are provided:
+
+- Testnet: `.env.31.fork`
+- Mainnet: `.env.30.fork`
+
+To run the tests:
+
+1. Select the appropriate environment file and apply it:
+
+   ```sh
+   direnv allow
+   ```
+
+2. Execute the test command:
+
+   ```sh
+   bun run test:fork
+   ```
+
+#### Fork Environment Variables
+
+- **`RPC_URL_FORK`**: The fork RPC URL for the RSK network. Create a virtual TestNet on Tenderly for the desired network
+  and copy the generated RPC URL. The fork will point to the latest block at the time it was created.
+- **`BACKERS_MANAGER_ADDRESS_FORK`**: Address of the backers manager.
+- **`STRIF_HOLDER_ADDRESS_FORK`**: An address holding RIF greater than 0 when the fork was created.
+- **`SIMPLIFIED_REWARD_DISTRIBUTOR_ADDRESS_FORK`**: Address of the v1 simplified reward distributor for testing the
+  migration to v2.
+
 ## Glossary
 
 ### Reward token
