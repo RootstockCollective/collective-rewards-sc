@@ -1,6 +1,6 @@
 # BuilderRegistryRootstockCollective
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/0c4368dc418c200f21d2a798619d1dd68234c5c1/src/BuilderRegistryRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/6d0eca4e2c61e833bcb70c54d8668e5644ba180e/src/BuilderRegistryRootstockCollective.sol)
 
 **Inherits:**
 [CycleTimeKeeperRootstockCollective](/src/CycleTimeKeeperRootstockCollective.sol/abstract.CycleTimeKeeperRootstockCollective.md),
@@ -40,12 +40,20 @@ map of builders reward receiver
 mapping(address builder => address rewardReceiver) public builderRewardReceiver;
 ```
 
-### builderRewardPercentage
+### builderRewardReceiverReplacement
 
-map of builders reward percentage data
+map of builders reward receiver replacement, used as a buffer until the new address is accepted
 
 ```solidity
-mapping(address builder => RewardPercentageData rewardPercentageData) public builderRewardPercentage;
+mapping(address builder => address rewardReceiverReplacement) public builderRewardReceiverReplacement;
+```
+
+### backerRewardPercentage
+
+map of builder's backers reward percentage data
+
+```solidity
+mapping(address builder => RewardPercentageData rewardPercentageData) public backerRewardPercentage;
 ```
 
 ### \_gauges
@@ -132,6 +140,7 @@ function __BuilderRegistryRootstockCollective_init(
     address rewardDistributor_,
     uint32 cycleDuration_,
     uint24 cycleStartOffset_,
+    uint32 distributionDuration_,
     uint128 rewardPercentageCooldown_
 )
     internal
@@ -147,7 +156,71 @@ function __BuilderRegistryRootstockCollective_init(
 | `rewardDistributor_`        | `address`                               | address of the rewardDistributor contract                                         |
 | `cycleDuration_`            | `uint32`                                | Collective Rewards cycle time duration                                            |
 | `cycleStartOffset_`         | `uint24`                                | offset to add to the first cycle, used to set an specific day to start the cycles |
+| `distributionDuration_`     | `uint32`                                | duration of the distribution window                                               |
 | `rewardPercentageCooldown_` | `uint128`                               | time that must elapse for a new reward percentage from a builder to be applied    |
+
+### submitRewardReceiverReplacementRequest
+
+Builder submits a request to replace his rewardReceiver address, the request will then need to be approved by
+`approveBuilderRewardReceiverReplacement`
+
+_reverts if Builder is not Operational_
+
+```solidity
+function submitRewardReceiverReplacementRequest(address newRewardReceiver_) external;
+```
+
+**Parameters**
+
+| Name                 | Type      | Description                                  |
+| -------------------- | --------- | -------------------------------------------- |
+| `newRewardReceiver_` | `address` | new address the builder is requesting to use |
+
+### cancelRewardReceiverReplacementRequest
+
+Builder cancels his request to replace his rewardReceiver address
+
+_reverts if Builder is not Operational_
+
+```solidity
+function cancelRewardReceiverReplacementRequest() external;
+```
+
+### approveBuilderRewardReceiverReplacement
+
+KYCApprover approves Builder's request to replace his rewardReceiver address
+
+_reverts if provided `rewardReceiverReplacement_` doesn't match Builder's request\_
+
+```solidity
+function approveBuilderRewardReceiverReplacement(
+    address builder_,
+    address rewardReceiverReplacement_
+)
+    external
+    onlyKycApprover;
+```
+
+**Parameters**
+
+| Name                         | Type      | Description                                  |
+| ---------------------------- | --------- | -------------------------------------------- |
+| `builder_`                   | `address` | address of the builder                       |
+| `rewardReceiverReplacement_` | `address` | new address the builder is requesting to use |
+
+### hasBuilderRewardReceiverPendingApproval
+
+returns true if the builder has an open request to replace his receiver address
+
+```solidity
+function hasBuilderRewardReceiverPendingApproval(address builder_) external view returns (bool);
+```
+
+**Parameters**
+
+| Name       | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| `builder_` | `address` | address of the builder |
 
 ### activateBuilder
 
@@ -207,15 +280,18 @@ function revokeBuilderKYC(address builder_) external onlyKycApprover;
 | ---------- | --------- | ---------------------- |
 | `builder_` | `address` | address of the builder |
 
-### whitelistBuilder
+### communityApproveBuilder
 
-whitelist builder and create its gauge
+community approve builder and create its gauge
 
-_reverts if it is not called by the governor address or authorized changer reverts if is already whitelisted reverts if
-it has a gauge associated_
+_reverts if it is not called by the governor address or authorized changer reverts if is already community approved
+reverts if it has a gauge associated_
 
 ```solidity
-function whitelistBuilder(address builder_) external onlyValidChanger returns (GaugeRootstockCollective gauge_);
+function communityApproveBuilder(address builder_)
+    external
+    onlyValidChanger
+    returns (GaugeRootstockCollective gauge_);
 ```
 
 **Parameters**
@@ -235,7 +311,7 @@ function whitelistBuilder(address builder_) external onlyValidChanger returns (G
 de-whitelist builder
 
 _reverts if it is not called by the governor address or authorized changer reverts if it does not have a gauge
-associated reverts if it is not whitelisted_
+associated reverts if it is not community approved_
 
 ```solidity
 function dewhitelistBuilder(address builder_) external onlyValidChanger;
@@ -284,9 +360,9 @@ function unpauseBuilder(address builder_) external onlyKycApprover;
 
 permit builder
 
-_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if it is not whitelisted
-reverts if it is not revoked reverts if it is executed in distribution period because changing the totalPotentialReward
-produce a miscalculation of rewards_
+_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if it is not community
+approved reverts if it is not revoked reverts if it is executed in distribution period because changing the
+totalPotentialReward produce a miscalculation of rewards_
 
 ```solidity
 function permitBuilder(uint64 rewardPercentage_) external;
@@ -302,22 +378,22 @@ function permitBuilder(uint64 rewardPercentage_) external;
 
 revoke builder
 
-_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if it is not whitelisted
-reverts if it is already revoked reverts if it is executed in distribution period because changing the
+_reverts if it does not have a gauge associated reverts if it is not KYC approved reverts if it is not community
+approved reverts if it is already revoked reverts if it is executed in distribution period because changing the
 totalPotentialReward produce a miscalculation of rewards_
 
 ```solidity
 function revokeBuilder() external;
 ```
 
-### setBuilderRewardPercentage
+### setBackerRewardPercentage
 
-set a builder reward percentage
+allows a builder to set his backers reward percentage
 
 _reverts if builder is not operational_
 
 ```solidity
-function setBuilderRewardPercentage(uint64 rewardPercentage_) external;
+function setBackerRewardPercentage(uint64 rewardPercentage_) external;
 ```
 
 **Parameters**
@@ -325,6 +401,22 @@ function setBuilderRewardPercentage(uint64 rewardPercentage_) external;
 | Name                | Type     | Description                        |
 | ------------------- | -------- | ---------------------------------- |
 | `rewardPercentage_` | `uint64` | reward percentage(100% == 1 ether) |
+
+### migrateBuilder
+
+migrate v1 builder to the new builder registry
+
+```solidity
+function migrateBuilder(address builder_, address rewardAddress_, uint64 rewardPercentage_) public onlyKycApprover;
+```
+
+**Parameters**
+
+| Name                | Type      | Description                                                                                         |
+| ------------------- | --------- | --------------------------------------------------------------------------------------------------- |
+| `builder_`          | `address` | address of the builder whitelisted on the V1's SimplifiedRewardDistributor contract                 |
+| `rewardAddress_`    | `address` | address of the builder reward receiver whitelisted on the V1's SimplifiedRewardDistributor contract |
+| `rewardPercentage_` | `uint64`  | reward percentage(100% == 1 ether)                                                                  |
 
 ### getRewardPercentageToApply
 
@@ -343,7 +435,7 @@ function getRewardPercentageToApply(address builder_) public view returns (uint6
 
 ### isBuilderOperational
 
-return true if builder is operational kycApproved == true && whitelisted == true && paused == false
+return true if builder is operational kycApproved == true && communityApproved == true && paused == false
 
 ```solidity
 function isBuilderOperational(address builder_) public view returns (bool);
@@ -359,7 +451,7 @@ function isBuilderPaused(address builder_) public view returns (bool);
 
 ### isGaugeOperational
 
-return true if gauge is operational kycApproved == true && whitelisted == true && paused == false
+return true if gauge is operational kycApproved == true && communityApproved == true && paused == false
 
 ```solidity
 function isGaugeOperational(GaugeRootstockCollective gauge_) public view returns (bool);
@@ -433,12 +525,29 @@ function _createGauge(address builder_) internal returns (GaugeRootstockCollecti
 | -------- | -------------------------- | -------------- |
 | `gauge_` | `GaugeRootstockCollective` | gauge contract |
 
-### \_validateGauge
+### \_submitRewardReceiverReplacementRequest
+
+Builder submits a request to replace his rewardReceiver address, the request will then need to be approved by
+`approveBuilderRewardReceiverReplacement`
+
+_reverts if Builder is not Operational_
+
+```solidity
+function _submitRewardReceiverReplacementRequest(address newRewardReceiver_) internal;
+```
+
+**Parameters**
+
+| Name                 | Type      | Description                                  |
+| -------------------- | --------- | -------------------------------------------- |
+| `newRewardReceiver_` | `address` | new address the builder is requesting to use |
+
+### \_validateWhitelisted
 
 reverts if builder was not activated or approved by the community
 
 ```solidity
-function _validateGauge(GaugeRootstockCollective gauge_) internal view;
+function _validateWhitelisted(GaugeRootstockCollective gauge_) internal view;
 ```
 
 ### \_haltGauge
@@ -475,7 +584,7 @@ function _resumeGauge(GaugeRootstockCollective gauge_) internal;
 
 returns true if gauge can be resumed
 
-_kycApproved == true && whitelisted == true && revoked == false_
+_kycApproved == true && communityApproved == true && revoked == false_
 
 ```solidity
 function _canBeResumed(GaugeRootstockCollective gauge_) internal view returns (bool);
@@ -486,6 +595,27 @@ function _canBeResumed(GaugeRootstockCollective gauge_) internal view returns (b
 | Name     | Type                       | Description                  |
 | -------- | -------------------------- | ---------------------------- |
 | `gauge_` | `GaugeRootstockCollective` | gauge contract to be resumed |
+
+### \_activateBuilder
+
+_activates builder for the first time, setting the reward receiver and the reward percentage Sets activate flag to true.
+It cannot be switched to false anymore See
+[activateBuilder](/src/BuilderRegistryRootstockCollective.sol/abstract.BuilderRegistryRootstockCollective.md#activatebuilder)
+for details._
+
+```solidity
+function _activateBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private;
+```
+
+### \_communityApproveBuilder
+
+_Internal function to community approve and create its gauge See
+[communityApproveBuilder](/src/BuilderRegistryRootstockCollective.sol/abstract.BuilderRegistryRootstockCollective.md#communityapprovebuilder)
+for details._
+
+```solidity
+function _communityApproveBuilder(address builder_) private returns (GaugeRootstockCollective gauge_);
+```
 
 ### \_rewardTokenApprove
 
@@ -550,10 +680,10 @@ event KYCApproved(address indexed builder_);
 event KYCRevoked(address indexed builder_);
 ```
 
-### Whitelisted
+### CommunityApproved
 
 ```solidity
-event Whitelisted(address indexed builder_);
+event CommunityApproved(address indexed builder_);
 ```
 
 ### Dewhitelisted
@@ -586,16 +716,40 @@ event Revoked(address indexed builder_);
 event Permitted(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
 ```
 
-### BuilderRewardPercentageUpdateScheduled
+### BackerRewardPercentageUpdateScheduled
 
 ```solidity
-event BuilderRewardPercentageUpdateScheduled(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
+event BackerRewardPercentageUpdateScheduled(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
+```
+
+### BuilderRewardReceiverReplacementRequested
+
+```solidity
+event BuilderRewardReceiverReplacementRequested(address indexed builder_, address newRewardReceiver_);
+```
+
+### BuilderRewardReceiverReplacementCancelled
+
+```solidity
+event BuilderRewardReceiverReplacementCancelled(address indexed builder_, address newRewardReceiver_);
+```
+
+### BuilderRewardReceiverReplacementApproved
+
+```solidity
+event BuilderRewardReceiverReplacementApproved(address indexed builder_, address newRewardReceiver_);
 ```
 
 ### GaugeCreated
 
 ```solidity
 event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
+```
+
+### BuilderMigrated
+
+```solidity
+event BuilderMigrated(address indexed builder_, address indexed migrator_);
 ```
 
 ## Errors
@@ -612,10 +766,10 @@ error AlreadyActivated();
 error AlreadyKYCApproved();
 ```
 
-### AlreadyWhitelisted
+### AlreadyCommunityApproved
 
 ```solidity
-error AlreadyWhitelisted();
+error AlreadyCommunityApproved();
 ```
 
 ### AlreadyRevoked
@@ -636,10 +790,10 @@ error NotActivated();
 error NotKYCApproved();
 ```
 
-### NotWhitelisted
+### NotCommunityApproved
 
 ```solidity
-error NotWhitelisted();
+error NotCommunityApproved();
 ```
 
 ### NotPaused
@@ -654,28 +808,22 @@ error NotPaused();
 error NotRevoked();
 ```
 
-### IsRevoked
-
-```solidity
-error IsRevoked();
-```
-
-### CannotRevoke
-
-```solidity
-error CannotRevoke();
-```
-
 ### NotOperational
 
 ```solidity
 error NotOperational();
 ```
 
-### InvalidBuilderRewardPercentage
+### InvalidBackerRewardPercentage
 
 ```solidity
-error InvalidBuilderRewardPercentage();
+error InvalidBackerRewardPercentage();
+```
+
+### InvalidBuilderRewardReceiver
+
+```solidity
+error InvalidBuilderRewardReceiver();
 ```
 
 ### BuilderAlreadyExists
@@ -704,7 +852,7 @@ error GaugeDoesNotExist();
 struct BuilderState {
     bool activated;
     bool kycApproved;
-    bool whitelisted;
+    bool communityApproved;
     bool paused;
     bool revoked;
     bytes7 reserved;

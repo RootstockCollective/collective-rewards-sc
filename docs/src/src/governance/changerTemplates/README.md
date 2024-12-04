@@ -1,3 +1,3 @@
 # Contents
 
-- [WhitelistBuilderChangerTemplateRootstockCollective](WhitelistBuilderChangerTemplateRootstockCollective.sol/contract.WhitelistBuilderChangerTemplateRootstockCollective.md)
+- [CommunityApproveBuilderChangerTemplateRootstockCollective](CommunityApproveBuilderChangerTemplateRootstockCollective.sol/contract.CommunityApproveBuilderChangerTemplateRootstockCollective.md)

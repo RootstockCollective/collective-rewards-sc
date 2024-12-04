@@ -1,6 +1,6 @@
 # RewardDistributorRootstockCollective
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/0c4368dc418c200f21d2a798619d1dd68234c5c1/src/RewardDistributorRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/6d0eca4e2c61e833bcb70c54d8668e5644ba180e/src/RewardDistributorRootstockCollective.sol)
 
 **Inherits:**
 [UpgradeableRootstockCollective](/src/governance/UpgradeableRootstockCollective.sol/abstract.UpgradeableRootstockCollective.md)
@@ -8,14 +8,6 @@
 Accumulates all the rewards to be distributed for each cycle
 
 ## State Variables
-
-### foundationTreasury
-
-foundation treasury address
-
-```solidity
-address public foundationTreasury;
-```
 
 ### rewardToken
 
@@ -33,20 +25,20 @@ BackersManagerRootstockCollective contract address
 BackersManagerRootstockCollective public backersManager;
 ```
 
-### rewardTokenAmountPerCycle
+### defaultRewardTokenAmount
 
-tracks amount of reward tokens distributed per cycle
+default reward token amount
 
 ```solidity
-mapping(uint256 cycleTimestampStart => uint256 amount) public rewardTokenAmountPerCycle;
+uint256 public defaultRewardTokenAmount;
 ```
 
-### rewardCoinbaseAmountPerCycle
+### defaultRewardCoinbaseAmount
 
-tracks amount of coinbase distributed per cycle
+default reward coinbase amount
 
 ```solidity
-mapping(uint256 cycleTimestampStart => uint256 amount) public rewardCoinbaseAmountPerCycle;
+uint256 public defaultRewardCoinbaseAmount;
 ```
 
 ### \_\_gap
@@ -145,6 +137,49 @@ function sendRewardsAndStartDistribution(
 | ----------------- | --------- | --------------------------------------- |
 | `amountERC20_`    | `uint256` | amount of ERC20 reward token to send    |
 | `amountCoinbase_` | `uint256` | amount of Coinbase reward token to send |
+
+### setDefaultRewardAmount
+
+sets the default reward amounts
+
+_reverts if is not called by foundation treasury address_
+
+```solidity
+function setDefaultRewardAmount(
+    uint256 tokenAmount_,
+    uint256 coinbaseAmount_
+)
+    external
+    payable
+    onlyFoundationTreasury;
+```
+
+**Parameters**
+
+| Name              | Type      | Description                                     |
+| ----------------- | --------- | ----------------------------------------------- |
+| `tokenAmount_`    | `uint256` | default amount of ERC20 reward token to send    |
+| `coinbaseAmount_` | `uint256` | default amount of Coinbase reward token to send |
+
+### sendRewardsWithDefaultAmount
+
+sends rewards to backersManager contract with default amounts
+
+_reverts if is not called by foundation treasury address_
+
+```solidity
+function sendRewardsWithDefaultAmount() external payable onlyFoundationTreasury;
+```
+
+### sendRewardsAndStartDistributionWithDefaultAmount
+
+sends rewards to backersManager contract with default amounts and starts the distribution
+
+_reverts if is not called by foundation treasury address_
+
+```solidity
+function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyFoundationTreasury;
+```
 
 ### \_sendRewards
 
