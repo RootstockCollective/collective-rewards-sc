@@ -84,6 +84,7 @@ contract Deploy is Broadcaster, OutputWriter {
         );
         saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
 
+        vm.broadcast();
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
     }
 }

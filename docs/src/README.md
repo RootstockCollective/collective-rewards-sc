@@ -359,23 +359,25 @@ Generate coverage report:
 
 ### Reward token
 
-TODO:
+The reward token for the collective incentives program is `RIF`.
 
 ### Staking token
 
-TODO:
+The staking token is `stRIF`, where the token balance represents the backing power a backer has to vote for builders.
 
 ### Governor
 
-TODO:
+The Governor represents the DAO’s governance mechanism and is in charge of the community approval and de-whitelisting of
+builders.
 
 ### KYC Approver
 
-TODO:
+The RoostockCollective Foundation requires builders to got through a KYC process and is in charge of submitting said
+approval as well as revoking it if necessary.
 
 ### Foundation treasury
 
-TODO:
+The RoostockCollective Foundation is in charge of holding and distributing the rewards from the program.
 
 ## Acknowledgment
 

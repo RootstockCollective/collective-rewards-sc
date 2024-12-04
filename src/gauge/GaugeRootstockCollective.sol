@@ -99,7 +99,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice contract initializer
-     * @param rewardToken_ address of the token rewarded to builder and voters
+     * @param rewardToken_ address of the token rewarded to builder and voters, only standard ERC20 MUST be used
      * @param backersManager_ address of the BackersManagerRootstockCollective contract
      */
     function initialize(address rewardToken_, address backersManager_) external initializer {

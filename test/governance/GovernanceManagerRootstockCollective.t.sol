@@ -232,6 +232,7 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
 contract SampleChangeContract is IChangeContractRootstockCollective {
     bool public executed = false;
 
+    // solhint-disable-next-line foundry-test-functions
     function execute() external {
         executed = true;
     }

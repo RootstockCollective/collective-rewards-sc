@@ -1,6 +1,6 @@
 # GaugeFactoryRootstockCollective
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/0c4368dc418c200f21d2a798619d1dd68234c5c1/src/gauge/GaugeFactoryRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/6d0eca4e2c61e833bcb70c54d8668e5644ba180e/src/gauge/GaugeFactoryRootstockCollective.sol)
 
 ## State Variables
 

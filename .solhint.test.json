@@ -14,6 +14,8 @@
     "bim/private-vars-leading-underscore-lib": "error",
     "bim/func-return-param-name-trailing-underscore": "error",
     "func-name-mixedcase": "off",
-    "foundry-test-functions": ["warn", ["setUp"]]
+    "foundry-test-functions": ["warn", ["setUp"]],
+    "no-empty-blocks": "off",
+    "one-contract-per-file": "off"
   }
 }

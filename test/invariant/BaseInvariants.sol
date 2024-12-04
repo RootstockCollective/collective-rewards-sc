@@ -19,7 +19,7 @@ contract BaseInvariants is BaseTest {
     DistributionHandler public distributionHandler;
     IncentivizeHandler public incentivizeHandler;
 
-    function _setUp() internal override {
+    function _setUp() internal virtual override {
         // delete all the arrays created on BaseTest setup to start from scratch
         delete gaugesArray;
         delete allocationsArray;

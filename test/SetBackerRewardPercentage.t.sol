@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { BaseTest } from "./BaseTest.sol";
 import { BuilderRegistryRootstockCollective } from "../src/BuilderRegistryRootstockCollective.sol";
 
-contract setBackerRewardPercentageTest is BaseTest {
+contract SetBackerRewardPercentageTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------

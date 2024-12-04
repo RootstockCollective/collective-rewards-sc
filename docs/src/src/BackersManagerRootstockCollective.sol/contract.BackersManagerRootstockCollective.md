@@ -1,6 +1,6 @@
 # BackersManagerRootstockCollective
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/0c4368dc418c200f21d2a798619d1dd68234c5c1/src/BackersManagerRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/6d0eca4e2c61e833bcb70c54d8668e5644ba180e/src/BackersManagerRootstockCollective.sol)
 
 **Inherits:**
 [ICollectiveRewardsCheckRootstockCollective](/src/interfaces/ICollectiveRewardsCheckRootstockCollective.sol/interface.ICollectiveRewardsCheckRootstockCollective.md),
@@ -138,6 +138,7 @@ function initialize(
     address rewardDistributor_,
     uint32 cycleDuration_,
     uint24 cycleStartOffset_,
+    uint32 distributionDuration_,
     uint128 rewardPercentageCooldown_
 )
     external
@@ -155,6 +156,7 @@ function initialize(
 | `rewardDistributor_`        | `address`                               | address of the rewardDistributor contract                                         |
 | `cycleDuration_`            | `uint32`                                | Collective Rewards cycle time duration                                            |
 | `cycleStartOffset_`         | `uint24`                                | offset to add to the first cycle, used to set an specific day to start the cycles |
+| `distributionDuration_`     | `uint32`                                | duration of the distribution window                                               |
 | `rewardPercentageCooldown_` | `uint128`                               | time that must elapse for a new reward percentage from a builder to be applied    |
 
 ### supportsInterface
@@ -170,16 +172,19 @@ function supportsInterface(bytes4 interfaceId_) public view override returns (bo
 
 returns true if can withdraw, remaining balance should exceed the current allocation
 
+_user token balance should already account for the update, meaning the check is applied AFTER the withdraw accounting
+has become effective._
+
 ```solidity
-function canWithdraw(address targetAddress_, uint256 value_) external view returns (bool);
+function canWithdraw(address targetAddress_, uint256) external view returns (bool);
 ```
 
 **Parameters**
 
-| Name             | Type      | Description                                |
-| ---------------- | --------- | ------------------------------------------ |
-| `targetAddress_` | `address` | address who wants to withdraw stakingToken |
-| `value_`         | `uint256` | amount of stakingToken to withdraw         |
+| Name             | Type      | Description                                                                                                              |
+| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `targetAddress_` | `address` | address who wants to withdraw stakingToken param value\_ amount of stakingToken to withdraw, not used on current version |
+| `<none>`         | `uint256` |                                                                                                                          |
 
 ### allocate
 
@@ -224,7 +229,7 @@ function allocateBatch(
 
 transfers reward tokens from the sender to be distributed to the gauges
 
-_reverts if it is called during the distribution period_
+_reverts if it is called during the distribution period reverts if there are no gauges available for the distribution_
 
 ```solidity
 function notifyRewardAmount(uint256 amount_) external payable notInDistributionPeriod;
@@ -415,7 +420,7 @@ function _gaugeDistribute(
 
 approves rewardTokens to a given gauge
 
-_give full allowance when it is whitelisted and remove it when it is dewhitelisted_
+_give full allowance when it is community approved and remove it when it is dewhitelisted_
 
 ```solidity
 function _rewardTokenApprove(address gauge_, uint256 value_) internal override;
@@ -536,4 +541,10 @@ error BeforeDistribution();
 
 ```solidity
 error PositiveAllocationOnHaltedGauge();
+```
+
+### NoGaugesForDistribution
+
+```solidity
+error NoGaugesForDistribution();
 ```

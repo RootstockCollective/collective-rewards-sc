@@ -1,6 +1,6 @@
 # UtilsLib
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/0c4368dc418c200f21d2a798619d1dd68234c5c1/src/libraries/UtilsLib.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/6d0eca4e2c61e833bcb70c54d8668e5644ba180e/src/libraries/UtilsLib.sol)
 
 ## State Variables
 
@@ -14,6 +14,12 @@ uint256 internal constant _PRECISION = 10 ** 18;
 
 ```solidity
 address internal constant _COINBASE_ADDRESS = address(uint160(uint256(keccak256("COINBASE_ADDRESS"))));
+```
+
+### MIN_AMOUNT_INCENTIVES
+
+```solidity
+uint256 public constant MIN_AMOUNT_INCENTIVES = 100;
 ```
 
 ## Functions

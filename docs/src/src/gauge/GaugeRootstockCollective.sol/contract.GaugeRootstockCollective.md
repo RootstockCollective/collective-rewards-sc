@@ -1,6 +1,6 @@
 # GaugeRootstockCollective
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/0c4368dc418c200f21d2a798619d1dd68234c5c1/src/gauge/GaugeRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/6d0eca4e2c61e833bcb70c54d8668e5644ba180e/src/gauge/GaugeRootstockCollective.sol)
 
 **Inherits:** ReentrancyGuardUpgradeable
 
@@ -74,6 +74,16 @@ uint256[50] private __gap;
 
 ```solidity
 modifier onlyBackersManager();
+```
+
+### minIncentiveAmount
+
+prevents spamming of incentives mechanism with low values to introduce errors
+
+_100 should cover any potential rounding errors_
+
+```solidity
+modifier minIncentiveAmount(uint256 amount_);
 ```
 
 ### constructor
@@ -181,6 +191,21 @@ function backerRewardPerTokenPaid(address rewardToken_, address backer_) public 
 | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
 | `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
 | `backer_`      | `address` |                                                                                                                     |
+
+### estimatedBackerRewards
+
+gets the estimated amount of rewardToken left to earn for a backer in current cycle
+
+```solidity
+function estimatedBackerRewards(address rewardToken_, address backer_) external view returns (uint256);
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
+| `backer_`      | `address` | address of the backer                                                                                               |
 
 ### rewards
 
@@ -379,7 +404,7 @@ transfers reward tokens to this contract to incentivize backers
 _reverts if Gauge is halted reverts if distribution for the cycle has not finished_
 
 ```solidity
-function incentivizeWithRewardToken(uint256 amount_) external;
+function incentivizeWithRewardToken(uint256 amount_) external minIncentiveAmount(amount_);
 ```
 
 **Parameters**
@@ -395,7 +420,7 @@ transfers coinbase to this contract to incentivize backers
 _reverts if Gauge is halted reverts if distribution for the cycle has not finished_
 
 ```solidity
-function incentivizeWithCoinbase() external payable;
+function incentivizeWithCoinbase() external payable minIncentiveAmount(msg.value);
 ```
 
 ### notifyRewardAmountAndUpdateShares
@@ -407,7 +432,7 @@ _reverts if caller is not the backersManager contract_
 ```solidity
 function notifyRewardAmountAndUpdateShares(
     uint256 amountERC20_,
-    uint256 builderRewardPercentage_,
+    uint256 backerRewardPercentage_,
     uint256 periodFinish_,
     uint256 cycleStart_,
     uint256 cycleDuration_
@@ -420,13 +445,13 @@ function notifyRewardAmountAndUpdateShares(
 
 **Parameters**
 
-| Name                       | Type      | Description                              |
-| -------------------------- | --------- | ---------------------------------------- |
-| `amountERC20_`             | `uint256` | amount of ERC20 rewards                  |
-| `builderRewardPercentage_` | `uint256` | builder reward percentage percentage     |
-| `periodFinish_`            | `uint256` | timestamp end of current rewards period  |
-| `cycleStart_`              | `uint256` | Collective Rewards cycle start timestamp |
-| `cycleDuration_`           | `uint256` | Collective Rewards cycle time duration   |
+| Name                      | Type      | Description                              |
+| ------------------------- | --------- | ---------------------------------------- |
+| `amountERC20_`            | `uint256` | amount of ERC20 rewards                  |
+| `backerRewardPercentage_` | `uint256` | backers reward percentage                |
+| `periodFinish_`           | `uint256` | timestamp end of current rewards period  |
+| `cycleStart_`             | `uint256` | Collective Rewards cycle start timestamp |
+| `cycleDuration_`          | `uint256` | Collective Rewards cycle time duration   |
 
 **Returns**
 
@@ -490,6 +515,20 @@ function _earned(address rewardToken_, address backer_, uint256 periodFinish_) i
 | `rewardToken_`  | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
 | `backer_`       | `address` | address who earned the rewards                                                                                      |
 | `periodFinish_` | `uint256` | timestamp end of current rewards period                                                                             |
+
+### \_left
+
+gets total amount of rewards to distribute for the current rewards period
+
+```solidity
+function _left(address rewardToken_) internal view returns (uint256);
+```
+
+**Parameters**
+
+| Name           | Type      | Description                                                                                                         |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `rewardToken_` | `address` | address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address |
 
 ### \_notifyRewardAmount
 
@@ -634,6 +673,12 @@ error GaugeHalted();
 
 ```solidity
 error BeforeDistribution();
+```
+
+### NotEnoughAmount
+
+```solidity
+error NotEnoughAmount();
 ```
 
 ## Structs

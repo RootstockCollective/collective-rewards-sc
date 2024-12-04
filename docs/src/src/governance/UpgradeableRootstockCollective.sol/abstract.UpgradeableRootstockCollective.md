@@ -1,6 +1,6 @@
 # UpgradeableRootstockCollective
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/0c4368dc418c200f21d2a798619d1dd68234c5c1/src/governance/UpgradeableRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/6d0eca4e2c61e833bcb70c54d8668e5644ba180e/src/governance/UpgradeableRootstockCollective.sol)
 
 **Inherits:** UUPSUpgradeable
 
@@ -34,6 +34,12 @@ uint256[50] private __gap;
 modifier onlyValidChanger();
 ```
 
+### onlyAuthorizedUpgrader
+
+```solidity
+modifier onlyAuthorizedUpgrader();
+```
+
 ### \_\_Upgradeable_init
 
 contract initializer
@@ -54,5 +60,5 @@ _checks that the changer that will do the upgrade is currently authorized by gov
 system_
 
 ```solidity
-function _authorizeUpgrade(address) internal override onlyValidChanger;
+function _authorizeUpgrade(address) internal override onlyAuthorizedUpgrader;
 ```
