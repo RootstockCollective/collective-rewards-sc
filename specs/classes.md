@@ -41,11 +41,22 @@ Its main responsibility is to manage the Builders and their state. It allows to:
 
 It's in charge of managing the cycle and the distribution and to retrieve the related information:
 - it returns the start and the end of the cycle using a specific timestamp
-- it allows to change the cycle duration so as the distribution duration
+- it allows to change the next cycle duration and offset, so as the distribution duration
 
 ## Reward Distributor
 
+This contract is in charge of storing funds to cover multiple cycles and to send those funds to `BackersManger` to be then re-distributed. It stores the default amounts that will be used for the next distribution. By using it, `FoundationTreasury` can:
+- send the rewards using the default amount to BackersManager and start the distribution
+- send the rewards to BackersManager (using amounts that are different than the default ones) and start the distribution
+- send the rewards without starting the distribution
+- set the default reward amounts
+
+
 ## GovernanceManager
 
-
-
+Its responsibility is to manage all the roles involved in the protocol and to execute complex changes by means of an authorized changer. It exposes few functions to validate that an address is one of the managed roles and to update the addresses assigned to those roles.
+- governor: the contract representing the DAO governor TODO: add link here
+- authorized changer: a smart contract temporarily authorized by the Governor
+- foundationTreasury: an address in charge of managing the RewardDistributor
+- kycApprover: an address whose responsibility is to manage the KYC
+- upgrader: ad address that is authorized (together with the governor and an authorized changer) to upgrade the contracts
