@@ -12,9 +12,9 @@ To create gauges for each Builder, we made use of the [Beacon proxy pattern](htt
 
 ## GaugeFactory
 
-GaugeFactory is the contract which creates Gauge when a new Builder is approved by the community. It makes use of the GaugeBeacon to create new [BeaconProxy](https://docs.openzeppelin.com/contracts/3.x/api/proxy#BeaconProxy) contracts.
+GaugeFactory is the contract which creates Gauge contracts when a new Builder is approved by the community. It makes use of the GaugeBeacon to create new [BeaconProxy](https://docs.openzeppelin.com/contracts/3.x/api/proxy#BeaconProxy) contracts.
 
-## BackersMangers
+## BackersManagers
 
 This contract is in charge of:
 - allocating Backers votes to Builder gauges. Backers can allocate to one Builder or multiple Builders at the same time.
