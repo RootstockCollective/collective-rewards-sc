@@ -2,7 +2,7 @@
 
 ## Definitions
 
-- Builder: anyone who is building on Rootstock and is whitelisted through the RootstockCollective DAO
+- Builder: anyone who is building on Rootstock and is activated through the RootstockCollective DAO
 - Backer: anyone who staked their RIF to participate to the Collective Reward program
 - CR: Collective Reward
 
@@ -97,8 +97,77 @@ But what happens if the Backer joined the system later? That's where the rewards
 
 What happens to the rewards when the Builder doesn't have allocated votes? We keep track of the rewards missing and they're included in the calculation of the reward rate.
 
-Example:
+### Scenario 1: single Backer
+
+A Gauge has 1000 tokens to distribute to Backers over a cycle of 100 seconds.
+The leftover is 0 because the reward rate is initially 0.
+The reward missing is initially 0.
+The reward per token stored is currently 0, because no time has passed.
+The reward rate at time 0 is 1000/100 = 10. 10 tokens will be distributed for each second.
+Last time update = 0.
+
+Alice allocates 100 votes at time 10.
+The reward missing is updated to 10 seconds (now - last time update) multiplied by reward rate 10 = 100
+The reward per token stored is 0, because the total allocation hasn't been updated yet.
+Last time update = 10.
+Alice reward per token paid is 0.
+Alice rewards is set to 0, because her allocation is updated at the end.
+Alice allocation is set to 100.
+Total allocation is updated to 100.
+
+Alice claims at time 90.
+The reward per token stored is updated; old value + ((current time - last time update) * reward rate)/total allocation ((90-10)*10)/90 =~ 8.9.
+Last time update = 90.
+Alice rewards = Alice allocation * (reward per token stored - Alice reward per token paid) = 100 * 8.9 = 890.
+Alice per token paid is set to reward per token stored that is equal to 8.9.
+Token is transferred to Alice address
+Alice reward is set to 0.
+
+### Scenario 2: multiple Backers
+
+A Gauge has 1000 tokens to distribute to Backers over a cycle of 100 seconds.
+The leftover is 0 because the reward rate is initially 0.
+The reward per token stored is currently 0, because no time has passed.
+The reward missing is initially 0.
+The reward rate at time 0 is 1000/100 = 10. 10 tokens will be distributed for each second.
+Last time update = 0.
+
+Alice allocates 100 votes at time 10.
+The reward missing is updated to 10 seconds (now - last time update) multiplied by reward rate 10 = 100
+The reward per token stored is 0, because the total allocation hasn't been updated yet
+Alice reward per token paid is 0.
+Alice rewards is set to 0, because her allocation is updated at the end.
+Alice allocation so as the total allocation is updated.
+Last time update = 10.
+
+Bob allocates 50 votes at time 50.
+Reward missing isn't updated because total allocation is greater than 0.
+The reward per token stored is updated; old value + ((current time - last time update) * reward rate)/total allocation ((50-10)*10)/100 = 4
+Last time update = 50.
+Bob rewards = Bob allocation * (reward per token stored - Bob reward per token paid) = 0 * 4 = 0
+Bob per token paid is set to reward per token stored that is equal to 4.
+Bob allocation is updated to 50.
+Total allocation is updated to 150.
+
+Bob claims at time 100
+The reward per token stored is updated; old value + ((current time - last time update) * reward rate)/total allocation ((100-50)*10)/150 =~ 7.3.
+Last time update = 100.
+Bob rewards = old value + (Bob allocation * (reward per token stored - Bob reward per token paid)) = 50 * (7.3 - 4) = 165.
+Bob per token paid is set to reward per token stored that is equal to 7.3.
+Token is transferred to Bob address
+Bob reward is set to 0.
+
+Alice claims at time 100
+The reward per token stored is updated; old value + ((current time - last time update) * reward rate)/total allocation ((100-50)*10)/150 =~ 7.3, no time has passed.
+Last time update = 100.
+Alice rewards = old value + (Alice allocation * (reward per token stored - Alice reward per token paid)) = 100 * (7.3 - 0) = 730.
+Alice per token paid is set to reward per token stored that is equal to 7.3.
+Token is transferred to Bob address
+Alice reward is set to 0.
 
 
+## Builder incentivization
+
+In order for the Builder to distribute rewards, they need to earn rewards. Builders could also incentivize votes by allocating Rewards on Gauge contracts by means of `Gauge#incentivizeWithRewardToken()` and `Gauge#incentivizeWithCoinbase()`. Those rewards will be available only for the Backers who vote for the Builder and they'll be undistinguishable between the rewards gained by votes.
 
 
