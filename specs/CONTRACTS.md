@@ -19,7 +19,7 @@ GaugeFactory is the contract which creates Gauge contracts when a new Builder is
 This contract is in charge of:
 - allocating Backers votes to Builder gauges. Backers can allocate to one Builder or multiple Builders at the same time.
 - managing the distributution of the rewards across the Builder gauges
-- allow the Backers to claim all of the rewards in a single transaction.
+- allowing Backers to claim all of the rewards in a single transaction.
 
 In the initial implementation, the BackersManager was an independent contract. To reduce the gas cost and still keep responsibilities separated we decided to implement a separation of concerns through inheritance. Please have a look at the class diagram to check the inheritance chain.
 
