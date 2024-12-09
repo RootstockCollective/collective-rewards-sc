@@ -117,7 +117,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function rewardRate(address rewardToken_) public view returns (uint256) {
+    function rewardRate(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].rewardRate;
     }
 
@@ -126,7 +126,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function rewardPerTokenStored(address rewardToken_) public view returns (uint256) {
+    function rewardPerTokenStored(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].rewardPerTokenStored;
     }
 
@@ -135,7 +135,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function rewardMissing(address rewardToken_) public view returns (uint256) {
+    function rewardMissing(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].rewardMissing;
     }
 
@@ -144,7 +144,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function lastUpdateTime(address rewardToken_) public view returns (uint256) {
+    function lastUpdateTime(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].lastUpdateTime;
     }
 
@@ -153,7 +153,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function builderRewards(address rewardToken_) public view returns (uint256) {
+    function builderRewards(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].builderRewards;
     }
 
@@ -162,7 +162,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function backerRewardPerTokenPaid(address rewardToken_, address backer_) public view returns (uint256) {
+    function backerRewardPerTokenPaid(address rewardToken_, address backer_) external view returns (uint256) {
         return rewardData[rewardToken_].backerRewardPerTokenPaid[backer_];
     }
 
@@ -187,7 +187,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      * @param backer_ address of the backer
      */
-    function rewards(address rewardToken_, address backer_) public view returns (uint256) {
+    function rewards(address rewardToken_, address backer_) external view returns (uint256) {
         return rewardData[rewardToken_].rewards[backer_];
     }
 
@@ -195,7 +195,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @notice gets the last time the reward is applicable, now or when the cycle finished
      * @return lastTimeRewardApplicable minimum between current timestamp or periodFinish
      */
-    function lastTimeRewardApplicable() public view returns (uint256) {
+    function lastTimeRewardApplicable() external view returns (uint256) {
         return _lastTimeRewardApplicable(backersManager.periodFinish());
     }
 
@@ -205,7 +205,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
      */
-    function rewardPerToken(address rewardToken_) public view returns (uint256) {
+    function rewardPerToken(address rewardToken_) external view returns (uint256) {
         return _rewardPerToken(rewardToken_, backersManager.periodFinish());
     }
 
@@ -224,7 +224,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      * @param backer_ address who earned the rewards
      */
-    function earned(address rewardToken_, address backer_) public view returns (uint256) {
+    function earned(address rewardToken_, address backer_) external view returns (uint256) {
         return _earned(rewardToken_, backer_, backersManager.periodFinish());
     }
 
@@ -233,7 +233,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev reverts if is not called by the `backer_` or the backersManager
      * @param backer_ address who receives the rewards
      */
-    function claimBackerReward(address backer_) public {
+    function claimBackerReward(address backer_) external {
         claimBackerReward(rewardToken, backer_);
         claimBackerReward(UtilsLib._COINBASE_ADDRESS, backer_);
     }
@@ -266,7 +266,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  reverts if builder is not operational
      * @dev rewards are transferred to the builder reward receiver
      */
-    function claimBuilderReward() public {
+    function claimBuilderReward() external {
         claimBuilderReward(rewardToken);
         claimBuilderReward(UtilsLib._COINBASE_ADDRESS);
     }
@@ -329,32 +329,36 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         onlyBackersManager
         returns (uint256 allocationDeviation_, uint256 rewardSharesDeviation_, bool isNegative_)
     {
+        address _rewardToken = rewardToken;
         uint256 _periodFinish = backersManager.periodFinish();
         // if backers quit before cycle finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
-            _updateRewardMissing(rewardToken, _periodFinish);
+            _updateRewardMissing(_rewardToken, _periodFinish);
             _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
 
-        _updateRewards(rewardToken, backer_, _periodFinish);
+        _updateRewards(_rewardToken, backer_, _periodFinish);
         _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
-
-        // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
-        uint256 _previousAllocation = allocationOf[backer_];
-        if (allocation_ > _previousAllocation) {
-            allocationDeviation_ = allocation_ - _previousAllocation;
-            rewardSharesDeviation_ = allocationDeviation_ * timeUntilNextCycle_;
-            totalAllocation += allocationDeviation_;
-            rewardShares += rewardSharesDeviation_;
-        } else {
-            allocationDeviation_ = _previousAllocation - allocation_;
-            // avoid underflow because rewardShares may not be correctly updated if the distribution was skipped
-            rewardSharesDeviation_ = Math.min(rewardShares, allocationDeviation_ * timeUntilNextCycle_);
-            totalAllocation -= allocationDeviation_;
-            rewardShares -= rewardSharesDeviation_;
-            isNegative_ = true;
+        
+        unchecked {
+            // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
+            uint256 _previousAllocation = allocationOf[backer_];
+            if (allocation_ > _previousAllocation) {
+                allocationDeviation_ = allocation_ - _previousAllocation;
+                rewardSharesDeviation_ = allocationDeviation_ * timeUntilNextCycle_;
+                totalAllocation += allocationDeviation_;
+                rewardShares += rewardSharesDeviation_;
+            } else {
+                allocationDeviation_ = _previousAllocation - allocation_;
+                // avoid underflow because rewardShares may not be correctly updated if the distribution was skipped
+                rewardSharesDeviation_ = Math.min(rewardShares, allocationDeviation_ * timeUntilNextCycle_);
+                totalAllocation -= allocationDeviation_;
+                rewardShares -= rewardSharesDeviation_;
+                isNegative_ = true;
+            }
         }
+
         allocationOf[backer_] = allocation_;
 
         emit NewAllocation(backer_, allocation_);
@@ -430,24 +434,27 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         onlyBackersManager
         returns (uint256 newGaugeRewardShares_)
     {
-        uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountERC20_);
-        uint256 _backerAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
-        uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
-        _notifyRewardAmount(
-            rewardToken, amountERC20_ - _backerAmountERC20, _backerAmountERC20, periodFinish_, _timeUntilNextCycle
-        );
-        _notifyRewardAmount(
-            UtilsLib._COINBASE_ADDRESS,
-            msg.value - _backerAmountCoinbase,
-            _backerAmountCoinbase,
-            periodFinish_,
-            _timeUntilNextCycle
-        );
+        address rewardToken_ = rewardToken;
+        unchecked {
+            uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountERC20_);
+            uint256 _backerAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
+            uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
+            _notifyRewardAmount(
+                rewardToken_, amountERC20_ - _backerAmountERC20, _backerAmountERC20, periodFinish_, _timeUntilNextCycle
+            );
+            _notifyRewardAmount(
+                UtilsLib._COINBASE_ADDRESS,
+                msg.value - _backerAmountCoinbase,
+                _backerAmountCoinbase,
+                periodFinish_,
+                _timeUntilNextCycle
+            );
+        }
 
         newGaugeRewardShares_ = totalAllocation * cycleDuration_;
         rewardShares = newGaugeRewardShares_;
 
-        SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amountERC20_);
+        SafeERC20.safeTransferFrom(IERC20(rewardToken_), msg.sender, address(this), amountERC20_);
     }
 
     // -----------------------------
@@ -512,9 +519,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
     function _left(address rewardToken_) internal view returns (uint256) {
-        RewardData storage _rewardData = rewardData[rewardToken_];
+        uint256 _rewardRate = rewardData[rewardToken_].rewardRate;
         // [N] = ([N] - [N]) * [PREC] / [PREC]
-        return UtilsLib._mulPrec(backersManager.periodFinish() - block.timestamp, _rewardData.rewardRate);
+        return UtilsLib._mulPrec(backersManager.periodFinish() - block.timestamp, _rewardRate);
     }
 
     /**
