@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { UpgradeableRootstockCollective } from "./governance/UpgradeableRootstockCollective.sol";
-import { UtilsLib } from "./libraries/UtilsLib.sol";
-import { IBackersManagerRootstockCollective } from "./interfaces/IBackersManagerRootstockCollective.sol";
-import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
+import { UpgradeableRootstockCollective } from "../governance/UpgradeableRootstockCollective.sol";
+import { UtilsLib } from "../libraries/UtilsLib.sol";
+import { IBackersManagerRootstockCollective } from "../interfaces/IBackersManagerRootstockCollective.sol";
+import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract CycleTimeKeeperRootstockCollective is
