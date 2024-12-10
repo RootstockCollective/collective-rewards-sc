@@ -2,12 +2,12 @@
 pragma solidity 0.8.20;
 
 import { CycleTimeKeeperRootstockCollective } from "./CycleTimeKeeperRootstockCollective.sol";
-import { UtilsLib } from "./libraries/UtilsLib.sol";
+import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { GaugeRootstockCollective } from "./gauge/GaugeRootstockCollective.sol";
-import { GaugeFactoryRootstockCollective } from "./gauge/GaugeFactoryRootstockCollective.sol";
-import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
+import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
+import { GaugeFactoryRootstockCollective } from "../gauge/GaugeFactoryRootstockCollective.sol";
+import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
  * @title BuilderRegistryRootstockCollective
