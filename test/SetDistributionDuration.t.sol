@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseTest } from "./BaseTest.sol";
-import { CycleTimeKeeperRootstockCollective } from "../src/CycleTimeKeeperRootstockCollective.sol";
+import { CycleTimeKeeperRootstockCollective } from "../src/backersManager/CycleTimeKeeperRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract SetDistributionDurationTest is BaseTest {

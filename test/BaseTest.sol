@@ -14,7 +14,7 @@ import { StakingTokenMock } from "./mock/StakingTokenMock.sol";
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
-import { BackersManagerRootstockCollective } from "src/BackersManagerRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
