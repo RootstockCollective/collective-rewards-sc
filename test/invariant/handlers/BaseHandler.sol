@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { Test } from "forge-std/src/Test.sol";
 import { BaseTest } from "../../BaseTest.sol";
 import { TimeManager } from "./TimeManager.sol";
-import { BackersManagerRootstockCollective } from "src/BackersManagerRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
 
 contract BaseHandler is Test {
     BaseTest public baseTest;
