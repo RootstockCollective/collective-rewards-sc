@@ -36,6 +36,7 @@ Its main responsibility is to manage the Builders and their state. It allows to:
 - allow the Builder to change the Backers reward percentage
 - allow the Builder to replace the Builder reward receiver address
 - get the list of gauges
+- allow the Builders to revoke themselves.
 
 ## CycleTimeKeeper
 
@@ -59,4 +60,4 @@ Its responsibility is to manage all the roles involved in the protocol and to ex
 - authorized changer: a smart contract temporarily authorized by the Governor
 - foundationTreasury: an address in charge of managing the RewardDistributor
 - kycApprover: an address whose responsibility is to manage the KYC
-- upgrader: ad address that is authorized (together with the governor and an authorized changer) to upgrade the contracts
+- upgrader: an address that is authorized (together with the governor and an authorized changer) to upgrade the contracts

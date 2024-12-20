@@ -25,16 +25,16 @@ When a Builder is KYC approved, they need to specify the amount of rewards that 
 Once the Builder is activated, they can be voted by Backers. The number of votes that a Builder gets will determine the rewards the Builder will be entitled of. If a Backer allocated votes for a Builder, they'll receive rewards that are proportional to the votes allocated and the amount of time for which the votes stay allocated to that Builder.
 
 Example:
-Alice is a Builder.
-Bob and Chad are Backers.
-Alice is KYC and community approved and her backer rewards percentage is 50%.
-The Backers who vote for Alice will get 25% of the rewards distributed to Alice.
-At the end of the cycle Alice is entitled to get 2000 RIF.
-Bob voted with 100 StRIF for Alice for a whole cycle.
-Chad voted with 100 StRIF for Alice for half cycle.
-Alice will get 1500 RIF (75%).
-Bob will get 375 RIF. For half of the cycle, Bob got all the possible rewards, 500/2 = 250. For the other half of the cycle, the remaining rewards got split between Bob and Chad, hence 250/2 = 125.
-Chad will get 125 RIF.
+Chad is a Builder.
+Alice and Bob are Backers.
+Chad is KYC and community approved and his backer rewards percentage is 50%.
+The Backers who vote for Chad will get 50% of the rewards distributed to Chad.
+At the end of the cycle Chad is entitled to get 2000 RIF.
+Alice voted with 100 StRIF for Chad for half cycle.
+Bob voted with 100 StRIF for Chad for a whole cycle.
+Chad will get 1500 RIF (75%).
+Bob will get 375 RIF. For half of the cycle, Bob got all the possible rewards, 500/2 = 250. For the other half of the cycle, the remaining rewards got split between Alice and Bob, hence 250/2 = 125.
+Alice will get 125 RIF.
 
 
 ## Builder status
@@ -99,7 +99,7 @@ What happens to the rewards when the Builder doesn't have allocated votes? We ke
 
 ### Scenario 1: single Backer
 
-A Gauge has 1000 tokens to distribute to Backers over a cycle of 100 seconds.
+A Gauge has 1000 tokens to be distributed to Backers over a 100 second cycle.
 The leftover is 0 because the reward rate is initially 0.
 The reward missing is initially 0.
 The reward per token stored is currently 0, because no time has passed.
@@ -168,6 +168,6 @@ Alice reward is set to 0.
 
 ## Builder incentivization
 
-In order for the Builder to distribute rewards, they need to earn rewards. Builders could also incentivize votes by allocating Rewards on Gauge contracts by means of `Gauge#incentivizeWithRewardToken()` and `Gauge#incentivizeWithCoinbase()`. Those rewards will be available only for the Backers who vote for the Builder and they'll be undistinguishable between the rewards gained by votes.
+In order for the Builder to receive rewards, they need to capture Backers attention and votes. Beside the Builder network community value itself, and setting a compelling backers reward, Builders could also pump their rewards up on theirs Gauge contracts by means of `Gauge#incentivizeWithRewardToken()` and `Gauge#incentivizeWithCoinbase()`. Those rewards will be available only for the Backers who vote for the Builder on the ongoing cycle and they'll be undistinguishable from the rewards gained by votes.
 
 
