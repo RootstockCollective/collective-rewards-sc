@@ -7,8 +7,7 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-A set of Solidity smart contracts, to implement builder incentives and staker rewards mechanisms to be integrated with
-the DAO.
+A set of Solidity smart [contracts](./specs/CONTRACTS.md), to implement builder incentives and staker rewards mechanisms to be integrated with the DAO. For technical detail, please refer to the [specifications](./specs/SPECIFICATION.md).
 
 ## What's Inside
 
