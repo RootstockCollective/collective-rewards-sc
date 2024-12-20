@@ -9,6 +9,7 @@ import { BuilderRegistryRootstockCollective } from "./BuilderRegistryRootstockCo
 import { ICollectiveRewardsCheckRootstockCollective } from "./interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
 import { UtilsLib } from "./libraries/UtilsLib.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
+import { IBoosterRootstockCollective as IBooster } from "./interfaces/IBoosterRootstockCollective.sol";
 
 /**
  * @title BackersManagerRootstockCollective
@@ -32,6 +33,8 @@ contract BackersManagerRootstockCollective is
     error BeforeDistribution();
     error PositiveAllocationOnHaltedGauge();
     error NoGaugesForDistribution();
+    error NotBoosterOwner();
+    error InvalidBooster();
 
     // -----------------------------
     // ----------- Events ----------
@@ -53,6 +56,21 @@ contract BackersManagerRootstockCollective is
     modifier notInDistributionPeriod() {
         if (onDistributionPeriod) revert NotInDistributionPeriod();
         _;
+    }
+
+    modifier onlyBoosterOwner(IBooster booster_, uint256 tokenId_) {
+        if (booster_.ownerOf(tokenId_) != msg.sender) revert NotBoosterOwner();
+        _;
+    }
+
+    // -----------------------------
+    // ---------- Structs ----------
+    // -----------------------------
+
+    struct BoosterData {
+        bool exists;
+        uint8 multiplier;
+        uint128 capacity;
     }
 
     // -----------------------------
@@ -80,6 +98,9 @@ contract BackersManagerRootstockCollective is
 
     /// @notice total amount of stakingToken allocated by a backer
     mapping(address backer => uint256 allocation) public backerTotalAllocation;
+
+    // TODO
+    mapping(IBooster booster => BoosterData) public boosters;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -164,15 +185,80 @@ contract BackersManagerRootstockCollective is
      * @param allocation_ amount of votes to allocate
      */
     function allocate(GaugeRootstockCollective gauge_, uint256 allocation_) external notInDistributionPeriod {
-        (uint256 _newbackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
+        (uint256 _newBackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
+            msg.sender,
             gauge_,
             allocation_,
             backerTotalAllocation[msg.sender],
             totalPotentialReward,
             timeUntilNextCycle(block.timestamp)
         );
+        // TODO: move to a common fnc
+        if (_newBackerTotalAllocation > stakingToken.balanceOf(msg.sender)) revert NotEnoughStaking();
+        _updateAllocation(msg.sender, _newBackerTotalAllocation, _newTotalPotentialReward);
+    }
 
-        _updateAllocation(msg.sender, _newbackerTotalAllocation, _newTotalPotentialReward);
+    // TODO
+    function verifyBoosterCapacity(IBooster booster_, uint256 newTotalAllocation_) public {
+        BoosterData storage _boosterData = boosters[booster_];
+        if (!_boosterData.exists) revert InvalidBooster();
+        // Initialize booster's capacity
+        if (_boosterData.capacity == 0) {
+            // TODO: Assumes multipliers will be small int numbers
+            _boosterData.capacity = uint128(_boosterData.multiplier * stakingToken.balanceOf(msg.sender));
+        }
+        // TODO: change error
+        if (newTotalAllocation_ > _boosterData.capacity) revert NotEnoughStaking();
+    }
+
+    // TODO
+    function toAddress(IBooster booster_, uint256 tokenId_) public pure returns (address) {
+        bytes32 _id = keccak256(abi.encodePacked(address(booster_), tokenId_));
+        return address(uint160(uint256(_id)));
+    }
+
+    /**
+     * @notice allocates votes for a gauge
+     * @dev reverts if it is called during the distribution period
+     *  reverts if gauge does not have a builder associated
+     * TODO
+     * @param gauge_ address of the gauge where the votes will be allocated
+     * @param allocation_ amount of votes to allocate
+     */
+    function allocateWithBooster(
+        IBooster booster_,
+        uint256 tokenId_,
+        GaugeRootstockCollective gauge_,
+        uint256 allocation_
+    )
+        external
+        notInDistributionPeriod
+        onlyBoosterOwner(booster_, tokenId_)
+    {
+        address _backer = toAddress(booster_, tokenId_);
+        (uint256 _newTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
+            _backer,
+            gauge_,
+            allocation_,
+            backerTotalAllocation[_backer],
+            totalPotentialReward,
+            timeUntilNextCycle(block.timestamp)
+        );
+
+        verifyBoosterCapacity(booster_, _newTotalAllocation);
+
+        _updateAllocation(_backer, _newTotalAllocation, _newTotalPotentialReward);
+
+        // TODO: emit event
+    }
+
+    // TODO: define who whitelists the NFT or if we get them dynamically from DAO
+    function whitelistBoosters(IBooster booster_, uint8 multiplier_) external {
+        BoosterData storage _boosterData = boosters[booster_];
+        if (_boosterData.exists) revert InvalidBooster();
+        _boosterData.exists = true;
+        _boosterData.multiplier = multiplier_;
+        boosters[booster_] = _boosterData;
     }
 
     /**
@@ -196,12 +282,19 @@ contract BackersManagerRootstockCollective is
         uint256 _totalPotentialReward = totalPotentialReward;
         uint256 _timeUntilNextCycle = timeUntilNextCycle(block.timestamp);
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-            (uint256 _newbackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
-                gauges_[i], allocations_[i], _backerTotalAllocation, _totalPotentialReward, _timeUntilNextCycle
+            (uint256 _newBackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
+                msg.sender,
+                gauges_[i],
+                allocations_[i],
+                _backerTotalAllocation,
+                _totalPotentialReward,
+                _timeUntilNextCycle
             );
-            _backerTotalAllocation = _newbackerTotalAllocation;
+            _backerTotalAllocation = _newBackerTotalAllocation;
             _totalPotentialReward = _newTotalPotentialReward;
         }
+
+        if (_backerTotalAllocation > stakingToken.balanceOf(msg.sender)) revert NotEnoughStaking();
         _updateAllocation(msg.sender, _backerTotalAllocation, _totalPotentialReward);
     }
 
@@ -294,6 +387,7 @@ contract BackersManagerRootstockCollective is
 
     /**
      * @notice internal function used to allocate votes for a gauge or a batch of gauges
+     * TODO
      * @param gauge_ address of the gauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
      * @param backerTotalAllocation_ current backer total allocation
@@ -303,6 +397,7 @@ contract BackersManagerRootstockCollective is
      * @return newTotalPotentialReward_ total potential reward  after the new allocation
      */
     function _allocate(
+        address backer_,
         GaugeRootstockCollective gauge_,
         uint256 allocation_,
         uint256 backerTotalAllocation_,
@@ -316,7 +411,7 @@ contract BackersManagerRootstockCollective is
         _validateWhitelisted(gauge_);
 
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
-            gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
+            gauge_.allocate(backer_, allocation_, timeUntilNextCycle_);
 
         // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
         if (isGaugeHalted(address(gauge_))) {
@@ -335,7 +430,7 @@ contract BackersManagerRootstockCollective is
             newTotalPotentialReward_ = totalPotentialReward_ + _rewardSharesDeviation;
         }
 
-        emit NewAllocation(msg.sender, address(gauge_), allocation_);
+        emit NewAllocation(backer_, address(gauge_), allocation_);
         return (newbackerTotalAllocation_, newTotalPotentialReward_);
     }
 
@@ -355,8 +450,6 @@ contract BackersManagerRootstockCollective is
     {
         backerTotalAllocation[backer_] = newbackerTotalAllocation_;
         totalPotentialReward = newTotalPotentialReward_;
-
-        if (newbackerTotalAllocation_ > stakingToken.balanceOf(backer_)) revert NotEnoughStaking();
     }
 
     /**
