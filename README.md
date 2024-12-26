@@ -31,24 +31,6 @@ The following tools are required to be installed:
 - [jq](https://jqlang.github.io/jq/download/) - Again, this is packaged to a variety of OSs, but if you don't have it
   follow the link to install it for your system
 
-> [!IMPORTANT]
-> Please make sure to install foundry using the branch `f625d0fa7c51e65b4bf1e8f7931cd1c6e2e285e9`. By using
-> the latest version we experienced the following error on RSKj:
-> `... deserialization error: missing field ``effectiveGasPrice`` ...`
-
-That foundry branch works with cargo >=1.76.0 or <= 1.79.0. So first, switch the version
-
-```sh
-rustup default 1.79.0
-```
-
-```sh
-foundryup --branch f625d0fa7c51e65b4bf1e8f7931cd1c6e2e285e9
-```
-
-If this is your first time with Foundry, check out the
-[installation](https://github.com/foundry-rs/foundry#installation) instructions.
-
 ## Getting Started
 
 Clone the repo and install the dependencies
