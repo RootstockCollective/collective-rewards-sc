@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
+
 /**
  * @title IBackersManagerRootstockCollective
  */
@@ -13,7 +15,7 @@ interface IBackersManagerRootstockCollective {
     /**
      * @notice returns builder address for a given gauge
      */
-    function gaugeToBuilder(address gauge_) external view returns (address builder_);
+    function gaugeToBuilder(GaugeRootstockCollective gauge_) external view returns (address builder_);
 
     /**
      * @notice returns rewards receiver for a given builder
