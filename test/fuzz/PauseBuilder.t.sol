@@ -151,7 +151,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             // 70% chance to pause
             if (_random % 10 > 2) {
                 vm.prank(kycApprover);
-                backersManager.pauseBuilder(builders[i], "pause");
+                builderRegistry.pauseBuilder(builders[i], "pause");
                 pausedBuilders[builders[i]] = true;
             }
         }
@@ -163,7 +163,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             // 70% chance to unpause
             if (pausedBuilders[builders[i]] && _random % 10 > 2) {
                 vm.prank(kycApprover);
-                backersManager.unpauseBuilder(builders[i]);
+                builderRegistry.unpauseBuilder(builders[i]);
                 pausedBuilders[builders[i]] = false;
             }
         }

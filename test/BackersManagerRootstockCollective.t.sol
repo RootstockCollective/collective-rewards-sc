@@ -78,7 +78,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         address _newBuilder = makeAddr("newBuilder");
         //  AND is community approved
         vm.prank(governor);
-        GaugeRootstockCollective _newGauge = backersManager.communityApproveBuilder(_newBuilder);
+        GaugeRootstockCollective _newGauge = builderRegistry.communityApproveBuilder(_newBuilder);
 
         gaugesArray.push(_newGauge);
         allocationsArray.push(100 ether);
@@ -323,7 +323,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // AND first builder gets revoked
         vm.prank(builder);
-        backersManager.revokeBuilder();
+        builderRegistry.revokeBuilder();
 
         // WHEN alice moves votes from revoked gauge to the other
         allocationsArray[0] = 0 ether;
@@ -351,7 +351,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // AND first gauge builder gets KYC revoked
         vm.prank(kycApprover);
-        backersManager.revokeBuilderKYC(builder);
+        builderRegistry.revokeBuilderKYC(builder);
 
         // WHEN alice moves votes from KYC revoked gauge to the other
         allocationsArray[0] = 0 ether;
@@ -408,14 +408,14 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // GIVEN a BackerManager contract
         //   WHEN both existing builders get revoked
         vm.startPrank(kycApprover);
-        backersManager.revokeBuilderKYC(builder);
-        backersManager.revokeBuilderKYC(builder2);
+        builderRegistry.revokeBuilderKYC(builder);
+        builderRegistry.revokeBuilderKYC(builder2);
         vm.stopPrank();
 
         // THEN there are no active gauges
-        assertEq(backersManager.getGaugesLength(), 0);
+        assertEq(builderRegistry.getGaugesLength(), 0);
         // THEN all there are 2 halted gauges
-        assertEq(backersManager.getHaltedGaugesLength(), 2);
+        assertEq(builderRegistry.getHaltedGaugesLength(), 2);
 
         // AND notifyRewardAmount is called with coinbase
         //  THEN it reverts with NoGaugesForDistribution error
@@ -488,15 +488,15 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
             allocationsArray.push(1 ether);
 
             // THEN gauges length increase
-            assertEq(backersManager.getGaugesLength(), gaugesArray.length);
+            assertEq(builderRegistry.getGaugesLength(), gaugesArray.length);
             // THEN new gauge is added in the last index
-            assertEq(backersManager.getGaugeAt(gaugesArray.length - 1), address(_newGauge));
+            assertEq(builderRegistry.getGaugeAt(gaugesArray.length - 1), address(_newGauge));
         }
         vm.prank(alice);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         vm.prank(builder2);
-        backersManager.revokeBuilder();
+        builderRegistry.revokeBuilder();
 
         //  AND 2 ether reward are added
         backersManager.notifyRewardAmount(2 ether);
@@ -521,12 +521,12 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  THEN tx reverts because NotInDistributionPeriod
         vm.prank(builder);
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
-        backersManager.revokeBuilder();
+        builderRegistry.revokeBuilder();
         // WHEN tries to permit a builder
         //  THEN tx reverts because NotInDistributionPeriod
         vm.prank(builder2);
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
-        backersManager.permitBuilder(0.1 ether);
+        builderRegistry.permitBuilder(0.1 ether);
     }
 
     /**
@@ -1552,7 +1552,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         );
 
         (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart, uint24 _offset) =
-            backersManager.cycleData();
+            builderRegistry.cycleData();
 
         // THEN previous cycle duration is 1 week
         assertEq(_previousDuration, 1 weeks);
@@ -1566,9 +1566,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(_offset, 7 weeks);
 
         // THEN cycle starts now
-        assertEq(backersManager.cycleStart(block.timestamp), block.timestamp);
+        assertEq(builderRegistry.cycleStart(block.timestamp), block.timestamp);
         // THEN cycle ends in 8 weeks from now (1 weeks duration + 7 weeks offset)
-        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 8 weeks);
+        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 8 weeks);
 
         // AND alice allocates 2 ether to builder and 6 ether to builder2
         vm.startPrank(alice);
@@ -1589,9 +1589,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(block.timestamp - _timestampBefore, 1 weeks);
 
         // THEN cycle starts now
-        assertEq(backersManager.cycleStart(block.timestamp), block.timestamp);
+        assertEq(builderRegistry.cycleStart(block.timestamp), block.timestamp);
         // THEN cycle ends in 1 weeks
-        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks);
+        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 1 weeks);
 
         // WHEN alice claim rewards
         vm.prank(alice);
@@ -1623,7 +1623,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // periodFinish is initialized using the cycleStartOffset = 0 on initialization, we need to calculate it again
         // with the newCycleStartOffset = 7 weeks
         stdstore.target(address(backersManager)).sig("periodFinish()").checked_write(
-            backersManager.cycleNext(block.timestamp)
+            builderRegistry.cycleNext(block.timestamp)
         );
 
         // AND gauge is incentive with 100 ether of rewardToken
@@ -1642,9 +1642,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(block.timestamp - _timestampBefore, 8 weeks);
 
         // THEN cycle starts now
-        assertEq(backersManager.cycleStart(block.timestamp), block.timestamp);
+        assertEq(builderRegistry.cycleStart(block.timestamp), block.timestamp);
         // THEN cycle ends in 1 weeks
-        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks);
+        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 1 weeks);
 
         // WHEN alice claim rewards
         vm.prank(alice);

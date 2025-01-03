@@ -7,6 +7,7 @@ import { Deploy as MockStakingTokenDeployer } from "script/test_mock/MockStaking
 import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/GaugeBeaconRootstockCollective.s.sol";
 import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
 import { Deploy as BackersManagerRootstockCollectiveDeployer } from "script/BackersManagerRootstockCollective.s.sol";
+import { Deploy as BuilderRegistryRootstockCollectiveDeployer } from "script/BuilderRegistryRootstockCollective.s.sol";
 import { Deploy as RewardDistributorRootstockCollectiveDeployer } from
     "script/RewardDistributorRootstockCollective.s.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
@@ -15,6 +16,7 @@ import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCo
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "src/backersManager/BuilderRegistryRootstockCollective.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
@@ -37,6 +39,8 @@ contract BaseTest is Test {
     BackersManagerRootstockCollective public backersManager;
     RewardDistributorRootstockCollective public rewardDistributorImpl;
     RewardDistributorRootstockCollective public rewardDistributor;
+    BuilderRegistryRootstockCollective public builderRegistryImpl;
+    BuilderRegistryRootstockCollective public builderRegistry;
 
     uint32 public cycleDuration = 1 weeks;
     uint24 public cycleStartOffset = 0 days;
@@ -54,6 +58,7 @@ contract BaseTest is Test {
     address public kycApprover = makeAddr("kycApprover");
     address public foundation = makeAddr("foundation");
     address public upgrader = makeAddr("upgrader");
+
     /* solhint-enable private-vars-leading-underscore */
 
     function setUp() public {
@@ -70,10 +75,8 @@ contract BaseTest is Test {
         (rewardDistributor, rewardDistributorImpl) =
             new RewardDistributorRootstockCollectiveDeployer().run(address(governanceManager));
 
-        (backersManager, backersManagerImpl) = new BackersManagerRootstockCollectiveDeployer().run(
+        (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer().run(
             address(governanceManager),
-            address(rewardToken),
-            address(stakingToken),
             address(gaugeFactory),
             address(rewardDistributor),
             cycleDuration,
@@ -81,6 +84,12 @@ contract BaseTest is Test {
             distributionDuration,
             rewardPercentageCooldown
         );
+
+        (backersManager, backersManagerImpl) = new BackersManagerRootstockCollectiveDeployer().run(
+            address(builderRegistry), address(rewardToken), address(stakingToken)
+        );
+
+        builderRegistry.setBackersManager(backersManager);
 
         rewardDistributor.initializeCollectiveRewardsAddresses(address(backersManager));
 
@@ -104,12 +113,12 @@ contract BaseTest is Test {
     function _setUp() internal virtual { }
 
     function _skipAndStartNewCycle() internal {
-        uint256 _currentCycleRemaining = backersManager.cycleNext(block.timestamp) - block.timestamp;
+        uint256 _currentCycleRemaining = builderRegistry.cycleNext(block.timestamp) - block.timestamp;
         skip(_currentCycleRemaining);
     }
 
     function _skipRemainingCycleFraction(uint256 fraction_) internal {
-        uint256 _currentCycleRemaining = backersManager.cycleNext(block.timestamp) - block.timestamp;
+        uint256 _currentCycleRemaining = builderRegistry.cycleNext(block.timestamp) - block.timestamp;
         skip(_currentCycleRemaining / fraction_);
     }
 
@@ -119,7 +128,7 @@ contract BaseTest is Test {
 
     function _skipToEndDistributionWindow() internal {
         _skipAndStartNewCycle();
-        uint256 _currentCycleRemaining = backersManager.endDistributionWindow(block.timestamp) - block.timestamp;
+        uint256 _currentCycleRemaining = builderRegistry.endDistributionWindow(block.timestamp) - block.timestamp;
         skip(_currentCycleRemaining);
     }
 
@@ -132,10 +141,10 @@ contract BaseTest is Test {
         returns (GaugeRootstockCollective newGauge_)
     {
         vm.prank(kycApprover);
-        backersManager.activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
+        builderRegistry.activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
         builders.push(builder_);
         vm.prank(governor);
-        newGauge_ = backersManager.communityApproveBuilder(builder_);
+        newGauge_ = builderRegistry.communityApproveBuilder(builder_);
         gaugesArray.push(newGauge_);
     }
 
@@ -200,7 +209,7 @@ contract BaseTest is Test {
 
     function _buildersClaim() internal {
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            address _builder = backersManager.gaugeToBuilder(gaugesArray[i]);
+            address _builder = builderRegistry.gaugeToBuilder(gaugesArray[i]);
             vm.prank(_builder);
             gaugesArray[i].claimBuilderReward();
         }

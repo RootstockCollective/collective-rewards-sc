@@ -6,8 +6,6 @@ pragma solidity 0.8.20;
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
-import { BuilderRegistryRootstockCollective } from "src/backersManager/BuilderRegistryRootstockCollective.sol";
-import { IGovernanceManagerRootstockCollective } from "../src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
     function run()
@@ -35,8 +33,7 @@ contract Deploy is Broadcaster {
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
 
         bytes memory _initializerData = abi.encodeCall(
-            BackersManagerRootstockCollective.initialize,
-            (BuilderRegistryRootstockCollective(builderRegistry_), rewardToken_, stakingToken_)
+            BackersManagerRootstockCollective.initialize, (builderRegistry_, rewardToken_, stakingToken_)
         );
         address _implementation;
         address _proxy;

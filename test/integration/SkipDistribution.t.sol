@@ -530,7 +530,7 @@ contract SkipDistribution is BaseTest {
 
         // AND builder (gauge) gets revoked
         vm.prank(builder);
-        backersManager.revokeBuilder();
+        builderRegistry.revokeBuilder();
 
         // CYCLE 3
         // AND cycle finishes without a distribution
@@ -539,7 +539,7 @@ contract SkipDistribution is BaseTest {
         // THEN builder can't be permitted before distribution
         vm.expectRevert(BackersManagerRootstockCollective.BeforeDistribution.selector);
         vm.prank(builder);
-        backersManager.permitBuilder(0.5 ether);
+        builderRegistry.permitBuilder(0.5 ether);
 
         // CYCLE 4
         // AND there is a distribution
@@ -547,7 +547,7 @@ contract SkipDistribution is BaseTest {
 
         // AND builder is permitted again
         vm.prank(builder);
-        backersManager.permitBuilder(0.5 ether);
+        builderRegistry.permitBuilder(0.5 ether);
 
         // AND alice allocates to gauge
         vm.prank(alice);
@@ -602,7 +602,7 @@ contract SkipDistribution is BaseTest {
 
         // AND builder (gauge) gets revoked
         vm.prank(builder);
-        backersManager.revokeBuilder();
+        builderRegistry.revokeBuilder();
 
         // CYCLE 3
         // AND cycle finishes without a distribution
@@ -613,7 +613,7 @@ contract SkipDistribution is BaseTest {
 
         // AND builder is permitted again
         vm.prank(builder);
-        backersManager.permitBuilder(0.5 ether);
+        builderRegistry.permitBuilder(0.5 ether);
 
         // AND alice allocates to gauge
         vm.prank(alice);

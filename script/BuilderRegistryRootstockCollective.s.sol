@@ -6,6 +6,7 @@ pragma solidity 0.8.20;
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { BuilderRegistryRootstockCollective } from "src/backersManager/BuilderRegistryRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "../src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
@@ -13,6 +14,10 @@ contract Deploy is Broadcaster {
         public
         returns (BuilderRegistryRootstockCollective proxy_, BuilderRegistryRootstockCollective implementation_)
     {
+        address _backersManager = vm.envOr("BackersManagerRootstockCollective", address(0));
+        if (_backersManager == address(0)) {
+            _backersManager = vm.envAddress("BACKERS_MANAGER_ADDRESS");
+        }
         address _governanceManager = vm.envOr("GovernanceManagerRootstockCollective", address(0));
         if (_governanceManager == address(0)) {
             _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
@@ -38,6 +43,12 @@ contract Deploy is Broadcaster {
             _distributionDuration,
             _rewardPercentageCooldown
         );
+
+        if (_backersManager != address(0)) {
+            BuilderRegistryRootstockCollective(proxy_).setBackersManager(
+                BackersManagerRootstockCollective(_backersManager)
+            );
+        }
     }
 
     function run(
@@ -69,6 +80,7 @@ contract Deploy is Broadcaster {
                 rewardPercentageCooldown_
             )
         );
+
         address _implementation;
         address _proxy;
         if (vm.envOr("NO_DD", false)) {
@@ -79,6 +91,7 @@ contract Deploy is Broadcaster {
         }
         _implementation = address(new BuilderRegistryRootstockCollective{ salt: _salt }());
         _proxy = address(new ERC1967Proxy{ salt: _salt }(_implementation, _initializerData));
+
         return (BuilderRegistryRootstockCollective(_proxy), BuilderRegistryRootstockCollective(_implementation));
     }
 }

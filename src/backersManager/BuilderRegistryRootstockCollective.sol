@@ -127,7 +127,7 @@ contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollectiv
     mapping(GaugeRootstockCollective gauge => uint256 lastPeriodFinish) public haltedGaugeLastPeriodFinish;
     /// @notice time that must elapse for a new reward percentage from a builder to be applied
     uint128 public rewardPercentageCooldown;
-    BackersManagerRootstockCollective backersManager;
+    BackersManagerRootstockCollective public backersManager;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -158,9 +158,8 @@ contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollectiv
         uint128 rewardPercentageCooldown_
     )
         external
-        onlyInitializing
+        initializer
     {
-        backersManager = BackersManagerRootstockCollective(msg.sender);
         __CycleTimeKeeperRootstockCollective_init(
             governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
         );
@@ -168,6 +167,12 @@ contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollectiv
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
         rewardPercentageCooldown = rewardPercentageCooldown_;
+    }
+
+    function setBackersManager(BackersManagerRootstockCollective backersManager_) external {
+        require(address(backersManager) == address(0), "Already set");
+        require(address(backersManager_) != address(0), "Must set backers manager");
+        backersManager = backersManager_;
     }
 
     // -----------------------------

@@ -12,13 +12,13 @@ contract DewhitelistBuilderTest is HaltedBuilderBehavior {
 
         // AND builder is dewhitelisted
         vm.prank(governor);
-        backersManager.dewhitelistBuilder(builder);
+        builderRegistry.dewhitelistBuilder(builder);
     }
 
     function _haltGauge() internal override {
         // AND builder is dewhitelisted
         vm.prank(governor);
-        backersManager.dewhitelistBuilder(builder);
+        builderRegistry.dewhitelistBuilder(builder);
     }
 
     /**

@@ -93,6 +93,7 @@ contract Deploy is Broadcaster, OutputWriter {
             address(_builderRegistryProxy), _rewardTokenAddress, _stakingTokenAddress
         );
         saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
+        _builderRegistryProxy.setBackersManager(_backersManagerProxy);
 
         vm.broadcast();
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
