@@ -34,7 +34,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         // use a low rewardPercentageCooldown to let apply it
-        stdstore.target(address(backersManager)).sig("rewardPercentageCooldown()").checked_write(1 days);
+        stdstore.target(address(builderRegistry)).sig("rewardPercentageCooldown()").checked_write(1 days);
 
         uint256[] memory _rewardPercentageBefore = new uint256[](builders.length);
         for (uint256 i = 0; i < builders.length; i++) {

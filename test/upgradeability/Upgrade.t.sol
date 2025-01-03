@@ -24,7 +24,7 @@ contract UpgradeTest is BaseTest {
             address(_builderRegistryNewImpl), abi.encodeCall(_builderRegistryNewImpl.initializeMock, (42))
         );
         // THEN getCustomMockValue is 44 = 2 gaugeLength + 42 newVariable
-        assertEq(BuilderRegistryRootstockCollectiveUpgradeMock(address(backersManager)).getCustomMockValue(), 44);
+        assertEq(BuilderRegistryRootstockCollectiveUpgradeMock(address(builderRegistry)).getCustomMockValue(), 44);
     }
 
     /**

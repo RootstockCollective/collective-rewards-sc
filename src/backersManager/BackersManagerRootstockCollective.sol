@@ -346,67 +346,67 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
         if (newbackerTotalAllocation_ > stakingToken.balanceOf(backer_)) revert NotEnoughStaking();
     }
 
-  /**
-   * @notice distribute accumulated reward tokens to the gauges
-   * @dev reverts if distribution period has not yet started
-   *  This function is paginated and it finishes once all gauges distribution are completed,
-   *  ending the distribution period and voting restrictions.
-   * @return true if distribution has finished
-   */
-  function _distribute() internal returns (bool) {
-    uint256 _newTotalPotentialReward = tempTotalPotentialReward;
-    uint256 _gaugeIndex = indexLastGaugeDistributed;
-    uint256 _gaugesLength = builderRegistry.getGaugesLength();
-    uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
+    /**
+     * @notice distribute accumulated reward tokens to the gauges
+     * @dev reverts if distribution period has not yet started
+     *  This function is paginated and it finishes once all gauges distribution are completed,
+     *  ending the distribution period and voting restrictions.
+     * @return true if distribution has finished
+     */
+    function _distribute() internal returns (bool) {
+        uint256 _newTotalPotentialReward = tempTotalPotentialReward;
+        uint256 _gaugeIndex = indexLastGaugeDistributed;
+        uint256 _gaugesLength = builderRegistry.getGaugesLength();
+        uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
 
-    // cache variables read in the loop
-    uint256 _rewardsERC20 = rewardsERC20;
-    uint256 _rewardsCoinbase = rewardsCoinbase;
-    uint256 _totalPotentialReward = totalPotentialReward;
-    uint256 __periodFinish = _periodFinish;
-    (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        // cache variables read in the loop
+        uint256 _rewardsERC20 = rewardsERC20;
+        uint256 _rewardsCoinbase = rewardsCoinbase;
+        uint256 _totalPotentialReward = totalPotentialReward;
+        uint256 __periodFinish = _periodFinish;
+        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
 
-    // no rewards to distribute since there are no allocations
-    if (_totalPotentialReward == 0) {
-      _finishDistribution();
-      return true;
+        // no rewards to distribute since there are no allocations
+        if (_totalPotentialReward == 0) {
+            _finishDistribution();
+            return true;
+        }
+
+        // loop through all pending distributions
+        while (_gaugeIndex < _lastDistribution) {
+            _newTotalPotentialReward += _gaugeDistribute(
+                GaugeRootstockCollective(builderRegistry.getGaugeAt(_gaugeIndex)),
+                _rewardsERC20,
+                _rewardsCoinbase,
+                _totalPotentialReward,
+                __periodFinish,
+                _cycleStart,
+                _cycleDuration
+            );
+            _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
+        }
+        emit RewardDistributed(msg.sender);
+
+        // all the gauges were distributed, so distribution period is finished
+        if (_lastDistribution == _gaugesLength) {
+            _finishDistribution();
+            totalPotentialReward = _newTotalPotentialReward;
+            rewardsERC20 = rewardsCoinbase = 0;
+            return true;
+        }
+
+        // Define new reference to batch beginning
+        indexLastGaugeDistributed = _gaugeIndex;
+        tempTotalPotentialReward = _newTotalPotentialReward;
+        return false;
     }
 
-    // loop through all pending distributions
-    while (_gaugeIndex < _lastDistribution) {
-      _newTotalPotentialReward += _gaugeDistribute(
-        GaugeRootstockCollective(builderRegistry.getGaugeAt(_gaugeIndex)),
-        _rewardsERC20,
-        _rewardsCoinbase,
-        _totalPotentialReward,
-        __periodFinish,
-        _cycleStart,
-        _cycleDuration
-      );
-      _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
+    function _finishDistribution() internal {
+        emit RewardDistributionFinished(msg.sender);
+        indexLastGaugeDistributed = 0;
+        tempTotalPotentialReward = 0;
+        _periodFinish = builderRegistry.cycleNext(block.timestamp);
     }
-    emit RewardDistributed(msg.sender);
-
-    // all the gauges were distributed, so distribution period is finished
-    if (_lastDistribution == _gaugesLength) {
-      _finishDistribution();
-      totalPotentialReward = _newTotalPotentialReward;
-      rewardsERC20 = rewardsCoinbase = 0;
-      return true;
-    }
-
-    // Define new reference to batch beginning
-    indexLastGaugeDistributed = _gaugeIndex;
-    tempTotalPotentialReward = _newTotalPotentialReward;
-    return false;
-  }
-
-  function _finishDistribution() internal {
-    emit RewardDistributionFinished(msg.sender);
-    indexLastGaugeDistributed = 0;
-    tempTotalPotentialReward = 0;
-    _periodFinish = builderRegistry.cycleNext(block.timestamp);
-  }
 
     /**
      * @notice internal function used to distribute reward tokens to a gauge

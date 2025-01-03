@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest, BackersManagerRootstockCollective } from "../BaseTest.sol";
+import { BaseTest, BackersManagerRootstockCollective, BuilderRegistryRootstockCollective } from "../BaseTest.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 
@@ -12,7 +12,7 @@ contract ProtectedTest is BaseTest {
     function test_GovernorHasPermissions() public {
         //  WHEN Governor calls a function protected by the modifier onlyAuthorizedUpgrader
         vm.startPrank(governor);
-        builderRegistry.upgradeToAndCall(address(new BackersManagerRootstockCollective()), "");
+        builderRegistry.upgradeToAndCall(address(new BuilderRegistryRootstockCollective()), "");
     }
 
     /**
@@ -22,7 +22,7 @@ contract ProtectedTest is BaseTest {
         //  WHEN Upgrader calls a function function to update the contract, protected by the modifier
         // onlyAuthorizedUpgrader
         vm.startPrank(upgrader);
-        builderRegistry.upgradeToAndCall(address(new BackersManagerRootstockCollective()), "");
+        builderRegistry.upgradeToAndCall(address(new BuilderRegistryRootstockCollective()), "");
     }
 
     /**
