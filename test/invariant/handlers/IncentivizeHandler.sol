@@ -32,7 +32,7 @@ contract IncentivizeHandler is BaseHandler {
         amountCoinbase_ = bound(amountCoinbase_, UtilsLib.MIN_AMOUNT_INCENTIVES, type(uint64).max);
 
         GaugeRootstockCollective _gauge = baseTest.gaugesArray(gaugeIndex_);
-        if (backersManager.isGaugeHalted(address(_gauge))) return;
+        if (builderRegistry.isGaugeHalted(address(_gauge))) return;
 
         rewardTokenIncentives[_gauge] += amountERC20_;
 

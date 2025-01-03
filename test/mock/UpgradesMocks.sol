@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BackersManagerRootstockCollective } from "../../src/backersManager/BackersManagerRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "../../src/backersManager/BuilderRegistryRootstockCollective.sol";
 import { RewardDistributorRootstockCollective } from "../../src/RewardDistributorRootstockCollective.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
@@ -21,10 +22,10 @@ abstract contract UpgradeableMock {
 }
 
 /**
- * @title BackersManagerRootstockCollectiveUpgradeMock
- * @dev Only for upgradeability testing purposes. Extends BackersManagerRootstockCollective adding a new variable.
+ * @title BuilderRegistryRootstockCollectiveUpgradeMock
+ * @dev Only for upgradeability testing purposes. Extends BuilderRegistryRootstockCollective adding a new variable.
  */
-contract BackersManagerRootstockCollectiveUpgradeMock is BackersManagerRootstockCollective, UpgradeableMock {
+contract BuilderRegistryRootstockCollectiveUpgradeMock is BuilderRegistryRootstockCollective, UpgradeableMock {
     function getCustomMockValue() external view override returns (uint256) {
         return newVariable + getGaugesLength();
     }

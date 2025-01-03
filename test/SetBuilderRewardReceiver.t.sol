@@ -41,7 +41,7 @@ contract SetBuilderRewardReceiverTest is BaseTest {
         //   THEN tx reverts because caller is not an operational builder
         vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
         vm.prank(alice);
-        backersManager.submitRewardReceiverReplacementRequest(alice);
+        builderRegistry.submitRewardReceiverReplacementRequest(alice);
     }
 
     /**
@@ -53,7 +53,7 @@ contract SetBuilderRewardReceiverTest is BaseTest {
         //   THEN tx reverts because caller is not an operational builder
         vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
         vm.prank(alice);
-        backersManager.cancelRewardReceiverReplacementRequest();
+        builderRegistry.cancelRewardReceiverReplacementRequest();
     }
 
     /**
@@ -65,7 +65,7 @@ contract SetBuilderRewardReceiverTest is BaseTest {
         //   THEN tx reverts because caller is not an the KYC Approver
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
         vm.prank(alice);
-        backersManager.approveBuilderRewardReceiverReplacement(builder, alice);
+        builderRegistry.approveBuilderRewardReceiverReplacement(builder, alice);
     }
 
     /**
@@ -77,7 +77,7 @@ contract SetBuilderRewardReceiverTest is BaseTest {
         //   THEN tx reverts because Builder is not operational
         vm.prank(kycApprover);
         vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
-        backersManager.approveBuilderRewardReceiverReplacement(alice, alice);
+        builderRegistry.approveBuilderRewardReceiverReplacement(alice, alice);
     }
 
     /**
@@ -90,14 +90,14 @@ contract SetBuilderRewardReceiverTest is BaseTest {
         //   THEN BuilderRewardReceiverReplacementRequested event is emitted
         vm.expectEmit();
         emit BuilderRewardReceiverReplacementRequested(builder, _newRewardReceiver);
-        backersManager.submitRewardReceiverReplacementRequest(_newRewardReceiver);
+        builderRegistry.submitRewardReceiverReplacementRequest(_newRewardReceiver);
 
         //   THEN his original rewardReceiver address is not afected
-        assertEq(backersManager.builderRewardReceiver(builder), builder);
+        assertEq(builderRegistry.builderRewardReceiver(builder), builder);
         //   THEN the _newRewardReceiver address is stored on the replacement storage for him
-        assertEq(backersManager.builderRewardReceiverReplacement(builder), _newRewardReceiver);
+        assertEq(builderRegistry.builderRewardReceiverReplacement(builder), _newRewardReceiver);
         //   THEN hasBuilderRewardReceiverPendingApproval returns true
-        assertEq(backersManager.hasBuilderRewardReceiverPendingApproval(builder), true);
+        assertEq(builderRegistry.hasBuilderRewardReceiverPendingApproval(builder), true);
     }
 
     /**
@@ -107,17 +107,17 @@ contract SetBuilderRewardReceiverTest is BaseTest {
         // GIVEN a Whitelisted builder
         // AND builder has submitted a RewardReceiverReplacementRequest
         vm.prank(builder);
-        backersManager.submitRewardReceiverReplacementRequest(_newRewardReceiver);
+        builderRegistry.submitRewardReceiverReplacementRequest(_newRewardReceiver);
         //  WHEN Builder cancels the request
         //   THEN BuilderRewardReceiverReplacementCancelled event is emitted
         vm.prank(builder);
         vm.expectEmit();
         emit BuilderRewardReceiverReplacementCancelled(builder, builder);
-        backersManager.cancelRewardReceiverReplacementRequest();
+        builderRegistry.cancelRewardReceiverReplacementRequest();
         //   THEN the new rewardReceiver address is back to the original
-        assertEq(backersManager.builderRewardReceiverReplacement(builder), builder);
+        assertEq(builderRegistry.builderRewardReceiverReplacement(builder), builder);
         //   THEN hasBuilderRewardReceiverPendingApproval returns false
-        assertEq(backersManager.hasBuilderRewardReceiverPendingApproval(builder), false);
+        assertEq(builderRegistry.hasBuilderRewardReceiverPendingApproval(builder), false);
     }
 
     /**
@@ -127,16 +127,16 @@ contract SetBuilderRewardReceiverTest is BaseTest {
         // GIVEN a Whitelisted builder
         // AND builder has submitted a RewardReceiverReplacementRequest
         vm.prank(builder);
-        backersManager.submitRewardReceiverReplacementRequest(_newRewardReceiver);
+        builderRegistry.submitRewardReceiverReplacementRequest(_newRewardReceiver);
         //  WHEN kycApprover approves the request, confirming the _newRewardReceiver
         //   THEN BuilderRewardReceiverReplacementApproved event is emitted
         vm.prank(kycApprover);
         vm.expectEmit();
         emit BuilderRewardReceiverReplacementApproved(builder, _newRewardReceiver);
-        backersManager.approveBuilderRewardReceiverReplacement(builder, _newRewardReceiver);
+        builderRegistry.approveBuilderRewardReceiverReplacement(builder, _newRewardReceiver);
         //   THEN the new rewardReceiver address is official
-        assertEq(backersManager.builderRewardReceiver(builder), _newRewardReceiver);
+        assertEq(builderRegistry.builderRewardReceiver(builder), _newRewardReceiver);
         //   THEN hasBuilderRewardReceiverPendingApproval returns false
-        assertEq(backersManager.hasBuilderRewardReceiverPendingApproval(builder), false);
+        assertEq(builderRegistry.hasBuilderRewardReceiverPendingApproval(builder), false);
     }
 }

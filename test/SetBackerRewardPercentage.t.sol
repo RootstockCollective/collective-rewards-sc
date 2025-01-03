@@ -30,7 +30,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
 
         // AND builder sets a new reward percentage of 10%
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.1 ether);
+        builderRegistry.setBackerRewardPercentage(0.1 ether);
         vm.stopPrank();
     }
 
@@ -42,7 +42,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         //  WHEN calls setBackerRewardPercentage
         //   THEN tx reverts because caller is not an operational builder
         vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
-        backersManager.setBackerRewardPercentage(0.1 ether);
+        builderRegistry.setBackerRewardPercentage(0.1 ether);
     }
 
     /**
@@ -55,9 +55,9 @@ contract SetBackerRewardPercentageTest is BaseTest {
         //   THEN BackerRewardPercentageUpdateScheduled event is emitted
         vm.expectEmit();
         emit BackerRewardPercentageUpdateScheduled(builder, 0.1 ether, block.timestamp + 2 weeks);
-        backersManager.setBackerRewardPercentage(0.1 ether);
+        builderRegistry.setBackerRewardPercentage(0.1 ether);
 
-        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = backersManager.backerRewardPercentage(builder);
+        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         // THEN previous backer reward percentage is 50%
         assertEq(_previous, 0.5 ether);
         // THEN next backer reward percentage is 10%
@@ -65,7 +65,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         // THEN backer reward percentage cooldown end time is 2 weeks from now
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
         // THEN backer reward percentage to apply is 50%
-        assertEq(backersManager.getRewardPercentageToApply(builder), 0.5 ether);
+        assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.5 ether);
     }
 
     /**
@@ -75,13 +75,13 @@ contract SetBackerRewardPercentageTest is BaseTest {
         // GIVEN a Whitelisted builder with 50% of reward percentage for backers
         //  WHEN builder calls setBackerRewardPercentage again with 50%
         vm.prank(builder);
-        backersManager.setBackerRewardPercentage(0.5 ether);
+        builderRegistry.setBackerRewardPercentage(0.5 ether);
 
-        (uint64 _previous, uint64 _next,) = backersManager.backerRewardPercentage(builder);
+        (uint64 _previous, uint64 _next,) = builderRegistry.backerRewardPercentage(builder);
         // THEN previous and next reward percentages are the same
         assertEq(_previous, _next);
         // THEN backer reward percentage to apply is 50%
-        assertEq(backersManager.getRewardPercentageToApply(builder), 0.5 ether);
+        assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.5 ether);
     }
 
     /**
@@ -90,12 +90,12 @@ contract SetBackerRewardPercentageTest is BaseTest {
     function test_RevertsetBackerRewardPercentageWrongStatus() public {
         // GIVEN a Paused builder
         vm.startPrank(kycApprover);
-        backersManager.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilder(builder, "paused");
         // WHEN tries to setBackerRewardPercentage
         //  THEN tx reverts because is not operational
         vm.startPrank(builder);
         vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
-        backersManager.setBackerRewardPercentage(0.1 ether);
+        builderRegistry.setBackerRewardPercentage(0.1 ether);
     }
 
     /**
@@ -107,7 +107,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         //   THEN tx reverts because is not a valid reward percentage
         vm.prank(builder);
         vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBackerRewardPercentage.selector);
-        backersManager.setBackerRewardPercentage(2 ether);
+        builderRegistry.setBackerRewardPercentage(2 ether);
     }
 
     /**
@@ -118,14 +118,14 @@ contract SetBackerRewardPercentageTest is BaseTest {
         //  AND builder sets a new reward percentage of 10%
         _initialState();
 
-        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = backersManager.backerRewardPercentage(builder);
+        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         // AND cooldown time didn't end
         vm.warp(_cooldownEndTime - 1);
 
         // AND builder sets the reward percentage to 80%
         vm.prank(builder);
-        backersManager.setBackerRewardPercentage(0.8 ether);
-        (_previous, _next, _cooldownEndTime) = backersManager.backerRewardPercentage(builder);
+        builderRegistry.setBackerRewardPercentage(0.8 ether);
+        (_previous, _next, _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         // THEN previous backer reward percentage is 50%
         assertEq(_previous, 0.5 ether);
         // THEN next backer reward percentage is 80%
@@ -133,7 +133,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         // THEN backer reward percentage cooldown end time is 2 weeks from now
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
         // THEN backer reward percentage to apply is 50%
-        assertEq(backersManager.getRewardPercentageToApply(builder), 0.5 ether);
+        assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.5 ether);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -155,10 +155,10 @@ contract SetBackerRewardPercentageTest is BaseTest {
         assertApproxEqAbs(_clearCoinbaseBalance(alice), 0.625 ether, 100);
 
         // AND cooldown time ends
-        (_previous, _next, _cooldownEndTime) = backersManager.backerRewardPercentage(builder);
+        (_previous, _next, _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         vm.warp(_cooldownEndTime);
         // THEN backer reward percentage to apply is 80%
-        assertEq(backersManager.getRewardPercentageToApply(builder), 0.8 ether);
+        assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.8 ether);
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
 
@@ -188,27 +188,27 @@ contract SetBackerRewardPercentageTest is BaseTest {
         _initialState();
 
         // AND cooldown time ends
-        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = backersManager.backerRewardPercentage(builder);
+        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         vm.warp(_cooldownEndTime);
         // THEN backer reward percentage to apply is 10%
-        assertEq(backersManager.getRewardPercentageToApply(builder), 0.1 ether);
+        assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.1 ether);
         // AND builder sets the reward percentage to 80%
         vm.prank(builder);
-        backersManager.setBackerRewardPercentage(0.8 ether);
+        builderRegistry.setBackerRewardPercentage(0.8 ether);
         // THEN backerRewardPercentageExpiration is 2 weeks from now
-        (_previous, _next, _cooldownEndTime) = backersManager.backerRewardPercentage(builder);
+        (_previous, _next, _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
 
-        (_previous, _next, _cooldownEndTime) = backersManager.backerRewardPercentage(builder);
+        (_previous, _next, _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         // THEN previous backer reward percentage is 10%
         assertEq(_previous, 0.1 ether);
         // THEN next backer reward percentage is 80%
         assertEq(_next, 0.8 ether);
         // THEN backer reward percentage to apply is still 10%
-        assertEq(backersManager.getRewardPercentageToApply(builder), 0.1 ether);
+        assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.1 ether);
 
         // WHEN builder claim rewards
         _buildersClaim();
@@ -235,10 +235,10 @@ contract SetBackerRewardPercentageTest is BaseTest {
         //  AND builder sets a new reward percentage of 10%
         _initialState();
         // AND cooldown time ends
-        (,, uint128 _cooldownEndTime) = backersManager.backerRewardPercentage(builder);
+        (,, uint128 _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         vm.warp(_cooldownEndTime);
         // THEN backer reward percentage to apply is 10%
-        assertEq(backersManager.getRewardPercentageToApply(builder), 0.1 ether);
+        assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.1 ether);
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
 

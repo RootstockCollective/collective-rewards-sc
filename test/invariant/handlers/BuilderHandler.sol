@@ -10,10 +10,10 @@ contract BuilderHandler is BaseHandler {
     function revokeBuilder(uint256 builderIndex_, uint256 timeToSkip_) external skipTime(timeToSkip_) {
         builderIndex_ = bound(builderIndex_, 0, baseTest.buildersArrayLength() - 1);
         address _builder = baseTest.builders(builderIndex_);
-        (, bool _kycApproved, bool _communityApproved,, bool _revoked,,) = backersManager.builderState(_builder);
+        (, bool _kycApproved, bool _communityApproved,, bool _revoked,,) = builderRegistry.builderState(_builder);
         if (_kycApproved && _communityApproved && !_revoked) {
             vm.prank(_builder);
-            backersManager.revokeBuilder();
+            builderRegistry.revokeBuilder();
         }
     }
 
@@ -21,10 +21,10 @@ contract BuilderHandler is BaseHandler {
         if (block.timestamp >= backersManager.periodFinish()) return;
         builderIndex_ = bound(builderIndex_, 0, baseTest.buildersArrayLength() - 1);
         address _builder = baseTest.builders(builderIndex_);
-        (, bool _kycApproved, bool _communityApproved,, bool _revoked,,) = backersManager.builderState(_builder);
+        (, bool _kycApproved, bool _communityApproved,, bool _revoked,,) = builderRegistry.builderState(_builder);
         if (_kycApproved && _communityApproved && _revoked) {
             vm.prank(_builder);
-            backersManager.permitBuilder(0.4 ether);
+            builderRegistry.permitBuilder(0.4 ether);
         }
     }
 }

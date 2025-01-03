@@ -13,7 +13,7 @@ contract PauseBuilderTest is BaseTest {
 
         // AND builder is paused
         vm.startPrank(kycApprover);
-        backersManager.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilder(builder, "paused");
         vm.stopPrank();
     }
 
@@ -131,7 +131,7 @@ contract PauseBuilderTest is BaseTest {
 
         // WHEN gauge is unpaused
         vm.startPrank(kycApprover);
-        backersManager.unpauseBuilder(builder);
+        builderRegistry.unpauseBuilder(builder);
 
         // WHEN builder claim rewards
         vm.startPrank(builder);
@@ -165,7 +165,7 @@ contract PauseBuilderTest is BaseTest {
 
         // WHEN gauge is unpaused
         vm.startPrank(kycApprover);
-        backersManager.unpauseBuilder(builder);
+        builderRegistry.unpauseBuilder(builder);
 
         // WHEN builder claim rewards
         vm.startPrank(builder);
@@ -192,10 +192,10 @@ contract PauseBuilderTest is BaseTest {
         _initialDistribution();
         // AND builder is revoked
         vm.startPrank(builder);
-        backersManager.revokeBuilder();
+        builderRegistry.revokeBuilder();
         // AND builder is paused
         vm.startPrank(kycApprover);
-        backersManager.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilder(builder, "paused");
 
         // WHEN builder claim rewards
         vm.startPrank(builder);

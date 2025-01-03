@@ -12,7 +12,7 @@ contract ProtectedTest is BaseTest {
     function test_GovernorHasPermissions() public {
         //  WHEN Governor calls a function protected by the modifier onlyAuthorizedUpgrader
         vm.startPrank(governor);
-        backersManager.upgradeToAndCall(address(new BackersManagerRootstockCollective()), "");
+        builderRegistry.upgradeToAndCall(address(new BackersManagerRootstockCollective()), "");
     }
 
     /**
@@ -22,7 +22,7 @@ contract ProtectedTest is BaseTest {
         //  WHEN Upgrader calls a function function to update the contract, protected by the modifier
         // onlyAuthorizedUpgrader
         vm.startPrank(upgrader);
-        backersManager.upgradeToAndCall(address(new BackersManagerRootstockCollective()), "");
+        builderRegistry.upgradeToAndCall(address(new BackersManagerRootstockCollective()), "");
     }
 
     /**
@@ -65,7 +65,7 @@ contract ProtectedTest is BaseTest {
         //   THEN tx reverts because is not an authorized upgrader
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedUpgrader.selector);
         address _newImplementation = makeAddr("newImplementation");
-        backersManager.upgradeToAndCall(_newImplementation, "0x0");
+        builderRegistry.upgradeToAndCall(_newImplementation, "0x0");
     }
 
     /**

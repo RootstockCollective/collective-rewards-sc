@@ -22,8 +22,8 @@ contract DistributionDurationInvariants is BaseInvariants {
     /// forge-config: ci.invariant.fail-on-revert = false
     /// forge-config: deep.invariant.fail-on-revert = false
     function invariant_DistributionDurationRatio() public useTime {
-        (, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
-        uint32 _distributionDuration_ = backersManager.distributionDuration();
+        (, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        uint32 _distributionDuration_ = builderRegistry.distributionDuration();
         assertGe(_cycleDuration, _distributionDuration_ * 2);
     }
 }

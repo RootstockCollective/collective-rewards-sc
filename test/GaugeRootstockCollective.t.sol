@@ -42,12 +42,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         // WHEN alice calls allocate
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
-        uint256 _timeUntilNextCycle = backersManager.timeUntilNextCycle(block.timestamp);
+        uint256 _timeUntilNextCycle = builderRegistry.timeUntilNextCycle(block.timestamp);
         vm.expectRevert(GaugeRootstockCollective.NotBackersManager.selector);
         gauge.allocate(alice, 1 ether, _timeUntilNextCycle);
         // WHEN alice calls notifyRewardAmountAndUpdateShares
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
-        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
         vm.expectRevert(GaugeRootstockCollective.NotBackersManager.selector);
         gauge.notifyRewardAmountAndUpdateShares(1 ether, 1 ether, block.timestamp, _cycleStart, _cycleDuration);
         // WHEN alice calls moveBuilderUnclaimedRewards
@@ -117,7 +117,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN alice backerRewardPerTokenPaid is 0 because there are no rewards distributed
         assertEq(gauge.backerRewardPerTokenPaid(address(rewardToken), alice), 0);
         // THEN lastUpdateTime is cycle start since there are no rewards distributed
-        assertEq(gauge.lastUpdateTime(address(rewardToken)), backersManager.cycleStart(block.timestamp));
+        assertEq(gauge.lastUpdateTime(address(rewardToken)), builderRegistry.cycleStart(block.timestamp));
     }
 
     /**
@@ -155,7 +155,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN alice backerRewardPerTokenPaid is 0 because there are no rewards distributed
         assertEq(gauge.backerRewardPerTokenPaid(address(rewardToken), alice), 0);
         // THEN lastUpdateTime is cycle start since there are no rewards distributed
-        assertEq(gauge.lastUpdateTime(address(rewardToken)), backersManager.cycleStart(block.timestamp));
+        assertEq(gauge.lastUpdateTime(address(rewardToken)), builderRegistry.cycleStart(block.timestamp));
     }
 
     /**
@@ -188,7 +188,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_NotifyRewardAmountWithStrategy() public {
         // GIVEN a builder with 70% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.7 ether);
+        builderRegistry.setBackerRewardPercentage(0.7 ether);
         skip(rewardPercentageCooldown);
 
         // AND 6 ether are allocated to alice
@@ -213,7 +213,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN lastUpdateTime is the current one
         assertEq(gauge.lastUpdateTime(address(rewardToken)), block.timestamp);
         // THEN periodFinish is updated with the timestamp when the cycle finish
-        assertEq(backersManager.periodFinish(), backersManager.cycleNext(block.timestamp));
+        assertEq(backersManager.periodFinish(), builderRegistry.cycleNext(block.timestamp));
         // THEN time until next cycle is 1 week
         assertEq(backersManager.periodFinish() - block.timestamp, 1 weeks);
         // THEN rewardRate is 0.000115740740740740 = 70 ether / 604800 sec
@@ -266,7 +266,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN lastUpdateTime is the current one
         assertEq(gauge.lastUpdateTime(address(rewardToken)), block.timestamp);
         // THEN periodFinish is updated with the timestamp when the cycle finish
-        assertEq(backersManager.periodFinish(), backersManager.cycleNext(block.timestamp));
+        assertEq(backersManager.periodFinish(), builderRegistry.cycleNext(block.timestamp));
         // THEN time until next cycle is 518400
         assertEq(backersManager.periodFinish() - block.timestamp, 518_400);
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
@@ -580,7 +580,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 0 ether are distributed for backers
         vm.startPrank(address(backersManager));
-        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
         // rewardMissing are updated with all the existing rewards (since there were no allocations), included in the
         // rewardRate for new cycle and set back to 0 in this method
         gauge.notifyRewardAmountAndUpdateShares(
@@ -668,7 +668,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 0 ether are distributed for backers
         vm.startPrank(address(backersManager));
-        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
             0 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
@@ -690,7 +690,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 0 ether are distributed for backers
         vm.startPrank(address(backersManager));
-        (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
+        (_cycleStart, _cycleDuration) = builderRegistry.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
             0 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
@@ -761,7 +761,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         _skipAndStartNewCycle();
         // AND 100 ether are distributed for backers
         vm.startPrank(address(backersManager));
-        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
             100 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
@@ -829,7 +829,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND distribution finishes with 100 ether being distributed
         vm.startPrank(address(backersManager));
-        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
             100 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
@@ -859,10 +859,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderWrongGauge() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         // GIVEN a builder2 with 15% of reward percentage for backers
         vm.startPrank(builder2);
-        backersManager.setBackerRewardPercentage(0.15 ether);
+        builderRegistry.setBackerRewardPercentage(0.15 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge and gauge2
         vm.startPrank(alice);
@@ -899,7 +899,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsBuilder() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
@@ -933,7 +933,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsRewardToken() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
@@ -969,7 +969,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsCoinbase() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
@@ -1004,7 +1004,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsRewardReceiver() public {
         // GIVEN a builder2 with 30% of reward percentage for backers
         vm.startPrank(builder2);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge2
         vm.startPrank(alice);
@@ -1049,7 +1049,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsRewardReceiverWithReplacement() public {
         // GIVEN a builder2 with 30% of reward percentage
         vm.prank(builder2);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge2
         vm.startPrank(alice);
@@ -1070,7 +1070,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND Builder submits a Reward Receiver Replacement Request
         vm.prank(builder2);
         address _newRewardReceiver = makeAddr("newRewardReceiver");
-        backersManager.submitRewardReceiverReplacementRequest(_newRewardReceiver);
+        builderRegistry.submitRewardReceiverReplacementRequest(_newRewardReceiver);
 
         // WHEN newRewardReceiver tries to claim rewards
         // THEN it fails as there is an active reward receiver replacement request
@@ -1086,7 +1086,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN KYCApprover approved his Reward Receiver Replacement Request
         vm.prank(kycApprover);
-        backersManager.approveBuilderRewardReceiverReplacement(builder2, _newRewardReceiver);
+        builderRegistry.approveBuilderRewardReceiverReplacement(builder2, _newRewardReceiver);
 
         // AND 100 rewardToken and 100 coinbase are distributed
         _distribute(100 ether, 100 ether);
@@ -1104,7 +1104,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewards2Distributions() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
@@ -1114,7 +1114,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         _distribute(100 ether, 100 ether);
 
         // AND 100 rewardToken and 100 coinbase are distributed in the same distribution window
-        vm.warp(backersManager.endDistributionWindow(block.timestamp) - 1);
+        vm.warp(builderRegistry.endDistributionWindow(block.timestamp) - 1);
         rewardToken.mint(address(rewardDistributor), 100 ether);
         vm.deal(address(rewardDistributor), 100 ether);
         vm.startPrank(foundation);
@@ -1149,7 +1149,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewards2Cycles() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
@@ -1570,7 +1570,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge, 5 ether);
 
         // THEN lastUpdateTime is cycle start
-        assertEq(gauge.lastUpdateTime(address(rewardToken)), backersManager.cycleStart(block.timestamp));
+        assertEq(gauge.lastUpdateTime(address(rewardToken)), builderRegistry.cycleStart(block.timestamp));
         // THEN rewardRate is 0.000082671957671957 = (100 ether / 2) / 604800 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 82_671_957_671_957);
         // THEN rewardMissing is 49.999999999999999999 = 518400 / 2 * 0.000192901234567901
@@ -1722,7 +1722,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 0 ether distributed for backers
         vm.startPrank(address(backersManager));
-        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(0, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration);
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -1977,7 +1977,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
      */
     function _setPeriodFinish() internal {
         stdstore.target(address(backersManager)).sig("periodFinish()").checked_write(
-            backersManager.cycleNext(block.timestamp)
+            builderRegistry.cycleNext(block.timestamp)
         );
     }
 }
