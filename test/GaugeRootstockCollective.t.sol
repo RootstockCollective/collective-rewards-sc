@@ -43,16 +43,16 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // WHEN alice calls allocate
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
         uint256 _timeUntilNextCycle = builderRegistry.timeUntilNextCycle(block.timestamp);
-        vm.expectRevert(GaugeRootstockCollective.NotBackersManager.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         gauge.allocate(alice, 1 ether, _timeUntilNextCycle);
         // WHEN alice calls notifyRewardAmountAndUpdateShares
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
         (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
-        vm.expectRevert(GaugeRootstockCollective.NotBackersManager.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         gauge.notifyRewardAmountAndUpdateShares(1 ether, 1 ether, block.timestamp, _cycleStart, _cycleDuration);
         // WHEN alice calls moveBuilderUnclaimedRewards
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
-        vm.expectRevert(GaugeRootstockCollective.NotBackersManager.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         gauge.moveBuilderUnclaimedRewards(alice);
     }
 
@@ -584,7 +584,11 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // rewardMissing are updated with all the existing rewards (since there were no allocations), included in the
         // rewardRate for new cycle and set back to 0 in this method
         gauge.notifyRewardAmountAndUpdateShares(
-            0 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
+            0 ether,
+            1 ether,
+            backersManager.periodFinish(),
+            _cycleStart,
+            _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -670,7 +674,11 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
-            0 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
+            0 ether,
+            1 ether,
+            backersManager.periodFinish(),
+            _cycleStart,
+            _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -692,7 +700,11 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(address(backersManager));
         (_cycleStart, _cycleDuration) = builderRegistry.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
-            0 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
+            0 ether,
+            1 ether,
+            backersManager.periodFinish(),
+            _cycleStart,
+            _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -763,7 +775,11 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
-            100 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
+            100 ether,
+            1 ether,
+            backersManager.periodFinish(),
+            _cycleStart,
+            _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -831,7 +847,11 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
-            100 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
+            100 ether,
+            1 ether,
+            backersManager.periodFinish(),
+            _cycleStart,
+            _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();

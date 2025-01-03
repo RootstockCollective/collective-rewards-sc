@@ -7,8 +7,7 @@ import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/int
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { BuilderRegistryRootstockCollective } from "./BuilderRegistryRootstockCollective.sol";
-import { ICollectiveRewardsCheckRootstockCollective } from
-    "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
+import { ICollectiveRewardsCheckRootstockCollective } from "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 
 /**
@@ -121,8 +120,9 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
      * @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId_) public view override returns (bool) {
-        return interfaceId_ == type(ICollectiveRewardsCheckRootstockCollective).interfaceId
-            || super.supportsInterface(interfaceId_);
+        return
+            interfaceId_ == type(ICollectiveRewardsCheckRootstockCollective).interfaceId ||
+            super.supportsInterface(interfaceId_);
     }
 
     /**
@@ -132,7 +132,7 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
      * @param targetAddress_ address who wants to withdraw stakingToken
      * param value_ amount of stakingToken to withdraw, not used on current version
      */
-    function canWithdraw(address targetAddress_, uint256 /*value_*/ ) external view returns (bool) {
+    function canWithdraw(address targetAddress_, uint256 /*value_*/) external view returns (bool) {
         uint256 _allocation = backerTotalAllocation[targetAddress_];
         if (_allocation == 0) return true;
 
@@ -168,10 +168,7 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
     function allocateBatch(
         GaugeRootstockCollective[] calldata gauges_,
         uint256[] calldata allocations_
-    )
-        external
-        notInDistributionPeriod
-    {
+    ) external notInDistributionPeriod {
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
         // TODO: check length < MAX or let revert by out of gas?
@@ -180,7 +177,11 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
         uint256 _timeUntilNextCycle = builderRegistry.timeUntilNextCycle(block.timestamp);
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             (uint256 _newbackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
-                gauges_[i], allocations_[i], _backerTotalAllocation, _totalPotentialReward, _timeUntilNextCycle
+                gauges_[i],
+                allocations_[i],
+                _backerTotalAllocation,
+                _totalPotentialReward,
+                _timeUntilNextCycle
             );
             _backerTotalAllocation = _newbackerTotalAllocation;
             _totalPotentialReward = _newTotalPotentialReward;
@@ -295,15 +296,15 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
         uint256 backerTotalAllocation_,
         uint256 totalPotentialReward_,
         uint256 timeUntilNextCycle_
-    )
-        internal
-        returns (uint256 newbackerTotalAllocation_, uint256 newTotalPotentialReward_)
-    {
+    ) internal returns (uint256 newbackerTotalAllocation_, uint256 newTotalPotentialReward_) {
         // reverts if builder was not activated or approved by the community
         builderRegistry.validateWhitelisted(gauge_);
 
-        (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
-            gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
+        (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) = gauge_.allocate(
+            msg.sender,
+            allocation_,
+            timeUntilNextCycle_
+        );
 
         // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
         if (builderRegistry.isGaugeHalted(address(gauge_))) {
@@ -337,9 +338,7 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
         address backer_,
         uint256 newbackerTotalAllocation_,
         uint256 newTotalPotentialReward_
-    )
-        internal
-    {
+    ) internal {
         backerTotalAllocation[backer_] = newbackerTotalAllocation_;
         totalPotentialReward = newTotalPotentialReward_;
 
@@ -415,20 +414,23 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
         uint256 periodFinish_,
         uint256 cycleStart_,
         uint256 cycleDuration_
-    )
-        internal
-        returns (uint256)
-    {
+    ) internal returns (uint256) {
         uint256 _rewardShares = gauge_.rewardShares();
         // [N] = [N] * [N] / [N]
         uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
         // [N] = [N] * [N] / [N]
         uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
-        uint256 _backerRewardPercentage =
-            builderRegistry.getRewardPercentageToApply(builderRegistry.gaugeToBuilder(gauge_));
-        return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
-            _amountERC20, _backerRewardPercentage, periodFinish_, cycleStart_, cycleDuration_
+        uint256 _backerRewardPercentage = builderRegistry.getRewardPercentageToApply(
+            builderRegistry.gaugeToBuilder(gauge_)
         );
+        return
+            gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
+                _amountERC20,
+                _backerRewardPercentage,
+                periodFinish_,
+                cycleStart_,
+                cycleDuration_
+            );
     }
 
     /**
@@ -468,7 +470,11 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
         if (builderRegistry.haltedGaugeLastPeriodFinish(gauge_) < _periodFinish) {
             (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
             totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-                0, 0, builderRegistry.haltedGaugeLastPeriodFinish(gauge_), _cycleStart, _cycleDuration
+                0,
+                0,
+                builderRegistry.haltedGaugeLastPeriodFinish(gauge_),
+                _cycleStart,
+                _cycleDuration
             );
         } else {
             // halt and resume were in the same cycle, we don't update the shares

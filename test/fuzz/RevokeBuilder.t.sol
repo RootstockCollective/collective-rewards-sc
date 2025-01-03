@@ -25,16 +25,14 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         uint256 backersAmount_,
         uint256 seed_,
         uint256 randomTime_
-    )
-        public
-    {
+    ) public {
         randomTime_ = bound(randomTime_, 0, cycleDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of backers voting the gauges
         _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         // use a low rewardPercentageCooldown to let apply it
-        stdstore.target(address(backersManager)).sig("rewardPercentageCooldown()").checked_write(1 days);
+        stdstore.target(address(builderRegistry)).sig("rewardPercentageCooldown()").checked_write(1 days);
 
         uint256[] memory _rewardPercentageBefore = new uint256[](builders.length);
         for (uint256 i = 0; i < builders.length; i++) {
@@ -57,8 +55,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // AND permitted builders have the new reward percentage applied if cooldown time has passed
         for (uint256 i = 0; i < builders.length; i++) {
             if (
-                revokedBuilders[builders[i]] == RevokeState.permitted
-                    && block.timestamp - _revokeTimestamp >= builderRegistry.rewardPercentageCooldown()
+                revokedBuilders[builders[i]] == RevokeState.permitted &&
+                block.timestamp - _revokeTimestamp >= builderRegistry.rewardPercentageCooldown()
             ) {
                 assertEq(builderRegistry.getRewardPercentageToApply(builders[i]), 0.1 ether);
             } else {
@@ -74,7 +72,9 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (revokedBuilders[builders[i]] < RevokeState.revoked) {
                 assertApproxEqAbs(
-                    rewardToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(RT_DISTRIBUTION_AMOUNT, i), 100
+                    rewardToken.balanceOf(address(gaugesArray[i])),
+                    _calcGaugeReward(RT_DISTRIBUTION_AMOUNT, i),
+                    100
                 );
                 assertApproxEqAbs(address(gaugesArray[i]).balance, _calcGaugeReward(CB_DISTRIBUTION_AMOUNT, i), 100);
             } else {
@@ -93,9 +93,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         uint256 backersAmount_,
         uint256 seed_,
         uint256 randomTime_
-    )
-        public
-    {
+    ) public {
         randomTime_ = bound(randomTime_, 0, cycleDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of backers voting the gauges
@@ -121,11 +119,13 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
                 // revoked gauges don't modify the totalPotentialReward
                 if (!builderRegistry.isGaugeHalted(address(backersGauges[i][j]))) {
                     if (backersAllocations[i][j] > _allocationBefore) {
-                        _expectedTotalPotentialReward += (backersAllocations[i][j] - _allocationBefore)
-                            * builderRegistry.timeUntilNextCycle(block.timestamp);
+                        _expectedTotalPotentialReward +=
+                            (backersAllocations[i][j] - _allocationBefore) *
+                            builderRegistry.timeUntilNextCycle(block.timestamp);
                     } else {
-                        _expectedTotalPotentialReward -= (_allocationBefore - backersAllocations[i][j])
-                            * builderRegistry.timeUntilNextCycle(block.timestamp);
+                        _expectedTotalPotentialReward -=
+                            (_allocationBefore - backersAllocations[i][j]) *
+                            builderRegistry.timeUntilNextCycle(block.timestamp);
                     }
                 } else {
                     if (backersAllocations[i][j] > _allocationBefore) {
@@ -175,9 +175,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         uint256 seed_,
         uint256 randomTime_,
         uint32 newCycleDuration_
-    )
-        public
-    {
+    ) public {
         randomTime_ = bound(randomTime_, 0, cycleDuration);
         newCycleDuration_ = uint32(bound(newCycleDuration_, 2 hours, MAX_CYCLE_DURATION));
         // GIVEN a random amount of builders
@@ -233,9 +231,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         uint256 backersAmount_,
         uint256 seed_,
         uint256 randomTime_
-    )
-        public
-    {
+    ) public {
         randomTime_ = bound(randomTime_, 0, cycleDuration);
         // GIVEN a random amount of builders
         //  AND a random amount of backers voting the gauges
@@ -306,7 +302,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             if (revokedBuilders[builders[i]] == RevokeState.revoked && _random % 10 > 2) {
                 expectedTotalPotentialReward_ += gaugesArray[i].rewardShares();
                 vm.prank(builders[i]);
-                builderRegistry.permitBuilder(0.1 ether /*reward percentage*/ );
+                builderRegistry.permitBuilder(0.1 ether /*reward percentage*/);
                 revokedBuilders[builders[i]] = RevokeState.permitted;
             }
         }

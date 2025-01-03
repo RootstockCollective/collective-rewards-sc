@@ -483,8 +483,11 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
-            GaugeRootstockCollective _newGauge =
-                _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
+            GaugeRootstockCollective _newGauge = _whitelistBuilder(
+                makeAddr(string(abi.encode(i + 10))),
+                builder,
+                1 ether
+            );
             allocationsArray.push(1 ether);
 
             // THEN gauges length increase
@@ -1547,12 +1550,17 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 7 weeks;
 
-        stdstore.target(address(backersManager)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
+        stdstore.target(address(builderRegistry)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
             _newOffset
         );
 
-        (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart, uint24 _offset) =
-            builderRegistry.cycleData();
+        (
+            uint32 _previousDuration,
+            uint32 _nextDuration,
+            uint64 _previousStart,
+            uint64 _nextStart,
+            uint24 _offset
+        ) = builderRegistry.cycleData();
 
         // THEN previous cycle duration is 1 week
         assertEq(_previousDuration, 1 weeks);
@@ -1616,7 +1624,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 7 weeks;
 
-        stdstore.target(address(backersManager)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
+        stdstore.target(address(builderRegistry)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
             _newOffset
         );
 
@@ -1666,7 +1674,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 3 days;
 
-        stdstore.target(address(backersManager)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
+        stdstore.target(address(builderRegistry)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
             _newOffset
         );
 

@@ -7,7 +7,8 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
-import { IBackersManagerRootstockCollective } from "../interfaces/IBackersManagerRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "../backersManager/BuilderRegistryRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "../backersManager/BackersManagerRootstockCollective.sol";
 
 /**
  * @title GaugeRootstockCollective
@@ -19,7 +20,6 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // ------- Custom Errors -------
     // -----------------------------
     error NotAuthorized();
-    error NotBackersManager();
     error BuilderRewardsLocked();
     error GaugeHalted();
     error BeforeDistribution();
@@ -36,8 +36,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
-    modifier onlyBackersManager() {
-        if (msg.sender != address(backersManager)) revert NotBackersManager();
+    modifier onlyAuthorisedContract() {
+        if (msg.sender != address(builderRegistry) && msg.sender != address(backersManager)) revert NotAuthorized();
         _;
     }
 
@@ -77,7 +77,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /// @notice address of the token rewarded to builder and voters
     address public rewardToken;
     /// @notice BackersManagerRootstockCollective contract address
-    IBackersManagerRootstockCollective public backersManager;
+    BackersManagerRootstockCollective public backersManager;
+    /// @notice BuilderRegistryRootstockCollective contract address
+    BuilderRegistryRootstockCollective public builderRegistry;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
     /// @notice cycle rewards shares, optimistically tracking the time weighted votes allocations for this gauge
@@ -100,12 +102,13 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice contract initializer
      * @param rewardToken_ address of the token rewarded to builder and voters, only standard ERC20 MUST be used
-     * @param backersManager_ address of the BackersManagerRootstockCollective contract
+     * @param builderRegistry_ address of the BackersManagerRootstockCollective contract
      */
-    function initialize(address rewardToken_, address backersManager_) external initializer {
+    function initialize(address rewardToken_, address builderRegistry_) external initializer {
         __ReentrancyGuard_init();
         rewardToken = rewardToken_;
-        backersManager = IBackersManagerRootstockCollective(backersManager_);
+        builderRegistry = BuilderRegistryRootstockCollective(builderRegistry_);
+        backersManager = BackersManagerRootstockCollective(builderRegistry.backersManager());
     }
 
     // -----------------------------
@@ -178,7 +181,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             return 0;
         }
         // [N] = [N] * [N] / [N]
-        return _left(rewardToken_) * allocationOf[backer_] / totalAllocation;
+        return (_left(rewardToken_) * allocationOf[backer_]) / totalAllocation;
     }
 
     /**
@@ -279,13 +282,13 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
     function claimBuilderReward(address rewardToken_) public {
-        address _builder = backersManager.gaugeToBuilder(this);
-        address _rewardReceiver = backersManager.builderRewardReceiver(_builder);
-        if (backersManager.isBuilderPaused(_builder)) revert BuilderRewardsLocked();
+        address _builder = builderRegistry.gaugeToBuilder(this);
+        address _rewardReceiver = builderRegistry.builderRewardReceiver(_builder);
+        if (builderRegistry.isBuilderPaused(_builder)) revert BuilderRewardsLocked();
         if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();
         // if Builder uses the rewardReceiver account to claim, there shouldn't be an
         // open request to replace such address, they need to use the Builder account instead
-        if (msg.sender == _rewardReceiver && backersManager.hasBuilderRewardReceiverPendingApproval(_builder)) {
+        if (msg.sender == _rewardReceiver && builderRegistry.hasBuilderRewardReceiverPendingApproval(_builder)) {
             revert NotAuthorized();
         }
 
@@ -305,7 +308,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev reverts if caller is not the backersManager contract
      * @param to_ address who receives the rewards
      */
-    function moveBuilderUnclaimedRewards(address to_) external onlyBackersManager {
+    function moveBuilderUnclaimedRewards(address to_) external onlyAuthorisedContract {
         _moveBuilderUnclaimedRewards(rewardToken, to_);
         _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
     }
@@ -326,7 +329,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         uint256 timeUntilNextCycle_
     )
         external
-        onlyBackersManager
+        onlyAuthorisedContract
         returns (uint256 allocationDeviation_, uint256 rewardSharesDeviation_, bool isNegative_)
     {
         uint256 _periodFinish = backersManager.periodFinish();
@@ -371,16 +374,16 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
-        if (backersManager.isGaugeHalted(address(this))) revert GaugeHalted();
+        if (builderRegistry.isGaugeHalted(address(this))) revert GaugeHalted();
         // Gauges cannot be incentivized before the distribution of the cycle finishes
         if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
 
         _notifyRewardAmount(
             rewardToken,
-            0, /*builderAmount_*/
+            0 /*builderAmount_*/,
             amount_,
             backersManager.periodFinish(),
-            backersManager.timeUntilNextCycle(block.timestamp)
+            builderRegistry.timeUntilNextCycle(block.timestamp)
         );
 
         SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
@@ -395,16 +398,16 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
-        if (backersManager.isGaugeHalted(address(this))) revert GaugeHalted();
+        if (builderRegistry.isGaugeHalted(address(this))) revert GaugeHalted();
         // Gauges cannot be incentivized before the distribution of the cycle finishes
         if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
 
         _notifyRewardAmount(
             UtilsLib._COINBASE_ADDRESS,
-            0, /*builderAmount_*/
+            0 /*builderAmount_*/,
             msg.value,
             backersManager.periodFinish(),
-            backersManager.timeUntilNextCycle(block.timestamp)
+            builderRegistry.timeUntilNextCycle(block.timestamp)
         );
     }
 
@@ -424,17 +427,16 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         uint256 periodFinish_,
         uint256 cycleStart_,
         uint256 cycleDuration_
-    )
-        external
-        payable
-        onlyBackersManager
-        returns (uint256 newGaugeRewardShares_)
-    {
+    ) external payable onlyAuthorisedContract returns (uint256 newGaugeRewardShares_) {
         uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountERC20_);
         uint256 _backerAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
         uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
         _notifyRewardAmount(
-            rewardToken, amountERC20_ - _backerAmountERC20, _backerAmountERC20, periodFinish_, _timeUntilNextCycle
+            rewardToken,
+            amountERC20_ - _backerAmountERC20,
+            _backerAmountERC20,
+            periodFinish_,
+            _timeUntilNextCycle
         );
         _notifyRewardAmount(
             UtilsLib._COINBASE_ADDRESS,
@@ -481,8 +483,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         }
 
         // [PREC] = (([N] - [N]) * [PREC]) / [N]
-        uint256 _rewardPerTokenCurrent =
-            ((__lastTimeRewardApplicable - _lastUpdateTime) * _rewardData.rewardRate) / totalAllocation;
+        uint256 _rewardPerTokenCurrent = ((__lastTimeRewardApplicable - _lastUpdateTime) * _rewardData.rewardRate) /
+            totalAllocation;
         // [PREC] = [PREC] + [PREC]
         return _rewardData.rewardPerTokenStored + _rewardPerTokenCurrent;
     }
@@ -532,9 +534,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         uint256 backersAmount_,
         uint256 periodFinish_,
         uint256 timeUntilNextCycle_
-    )
-        internal
-    {
+    ) internal {
         RewardData storage _rewardData = rewardData[rewardToken_];
         // cache storage variables used multiple times
         uint256 _rewardRate = _rewardData.rewardRate;
@@ -553,7 +553,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
         // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
         _rewardRate =
-            (backersAmount_ * UtilsLib._PRECISION + _rewardData.rewardMissing + _leftover) / timeUntilNextCycle_;
+            (backersAmount_ * UtilsLib._PRECISION + _rewardData.rewardMissing + _leftover) /
+            timeUntilNextCycle_;
 
         _rewardData.builderRewards += builderAmount_;
         _rewardData.rewardPerTokenStored = _rewardPerToken(rewardToken_, periodFinish_);
