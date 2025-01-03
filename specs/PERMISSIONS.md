@@ -112,3 +112,61 @@ You can find bellow the permissions, roles, and functionalities within the `Buil
     + Triggered when a new cycle duration is scheduled. Defined at `CycleTimeKeeperRootstockCollective.sol`
 - `NewDistributionDuration(uint256 newDistributionDuration_, address by_)`
     + Triggered when a new distribution duration is set. Defined at `CycleTimeKeeperRootstockCollective.sol`
+
+# RewardDistributorRootstockCollective.sol
+You can find below the permissions, roles, and functionalities within the `RewardDistributorRootstockCollective` contract.
+
+## User Roles and Permissions
+### Foundation Treasury
+- Who: Defined by the `foundationTreasury` state variable in the `GovernanceManagerRootstockCollective` contract.
+- Permissions and Capabilities:
+    + Send rewards to the `backersManager` contract using `sendRewards`.
+    + Send rewards and start distribution using `sendRewardsAndStartDistribution`.
+    + Set the default reward amounts using `setDefaultRewardAmount`.
+    + Send rewards with default amounts using `sendRewardsWithDefaultAmount`.
+    + Send rewards and start distribution with default amounts using `sendRewardsAndStartDistributionWithDefaultAmount`.
+
+## Events
+- `RewardDistributed(address indexed sender_)`
+    + Triggered when rewards are distributed.
+- `RewardDistributionStarted(address indexed sender_)`
+    + Triggered when the reward distribution starts.
+- `RewardDistributionFinished(address indexed sender_)`
+    + Triggered when the reward distribution finishes.
+- `NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_)`
+    + Triggered when a reward amount is notified.
+- `NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_)`
+    + Triggered when a new allocation is made.
+
+# GaugeRootstockCollective.sol
+You can find below the permissions, roles, and functionalities within the `GaugeRootstockCollective` contract.
+
+## User Roles and Permissions
+### Backers Manager
+- Who: Defined by the `backersManager` state variable.
+- Permissions and Capabilities:
+    + Allocate staking tokens using `allocate`.
+    + Notify reward amount and update shares using `notifyRewardAmountAndUpdateShares`.
+    + Move builder unclaimed rewards using `moveBuilderUnclaimedRewards`.
+    + Claim backer rewards using `claimBackerReward`.
+    + Claim builder rewards using `claimBuilderReward`.
+
+### Backer
+- Who: Address registered as a backer.
+- Permissions and Capabilities:
+    + Claim backer rewards using `claimBackerReward`.
+
+### Builder
+- Who: Address registered as a builder.
+- Permissions and Capabilities:
+    + Claim builder rewards using `claimBuilderReward`.
+
+## Events
+- `BackerRewardsClaimed(address indexed rewardToken_, address indexed backer_, uint256 amount_)`
+    + Triggered when backer rewards are claimed.
+- `BuilderRewardsClaimed(address indexed rewardToken_, address indexed builder_, uint256 amount_)`
+    + Triggered when builder rewards are claimed.
+- `NewAllocation(address indexed backer_, uint256 allocation_)`
+    + Triggered when a new allocation is made.
+- `NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 backersAmount_)`
+    + Triggered when a reward amount is notified.
