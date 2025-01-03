@@ -69,11 +69,11 @@ contract BaseFuzz is BaseTest {
     }
 
     function _calcGaugeReward(uint256 amount_, uint256 gaugeIndex_) internal view returns (uint256) {
-        return amount_ * gaugesArray[gaugeIndex_].rewardShares() / backersManager.totalPotentialReward();
+        return (amount_ * gaugesArray[gaugeIndex_].rewardShares()) / backersManager.totalPotentialReward();
     }
 
     function _calcBuilderReward(uint256 amount_, uint256 gaugeIndex_) internal view returns (uint256) {
-        uint256 _rewardPercentage = 10 ** 18 - backersManager.getRewardPercentageToApply(builders[gaugeIndex_]);
+        uint256 _rewardPercentage = 10 ** 18 - builderRegistry.getRewardPercentageToApply(builders[gaugeIndex_]);
         return (_calcGaugeReward(amount_, gaugeIndex_) * _rewardPercentage) / 10 ** 18;
     }
 
@@ -81,8 +81,10 @@ contract BaseFuzz is BaseTest {
         uint256 _rewards;
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (gaugesArray[i].totalAllocation() > 0) {
-                _rewards += (_calcGaugeReward(amount_, i) - _calcBuilderReward(amount_, i))
-                    * gaugesArray[i].allocationOf(backersArray[backerIndex_]) / gaugesArray[i].totalAllocation();
+                _rewards += (
+                    (_calcGaugeReward(amount_, i) - _calcBuilderReward(amount_, i))
+                        * gaugesArray[i].allocationOf(backersArray[backerIndex_])
+                ) / gaugesArray[i].totalAllocation();
             }
         }
         return _rewards;

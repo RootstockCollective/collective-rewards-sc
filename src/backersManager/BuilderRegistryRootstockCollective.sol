@@ -5,15 +5,18 @@ import { CycleTimeKeeperRootstockCollective } from "./CycleTimeKeeperRootstockCo
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { BackersManagerRootstockCollective } from "./BackersManagerRootstockCollective.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "../gauge/GaugeFactoryRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
+import { ICollectiveRewardsCheckRootstockCollective } from
+    "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol"; //def not
 
 /**
  * @title BuilderRegistryRootstockCollective
  * @notice Keeps registers of the builders
  */
-abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollective, ERC165Upgradeable {
+contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollective, ERC165Upgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_REWARD_PERCENTAGE = UtilsLib._PRECISION;
@@ -36,6 +39,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     error BuilderAlreadyExists();
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
+    error NotAuthorised();
 
     // -----------------------------
     // ----------- Events ----------
@@ -61,6 +65,13 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     // -----------------------------
     modifier onlyKycApprover() {
         governanceManager.validateKycApprover(msg.sender);
+        _;
+    }
+
+    modifier onlyBackersManager() {
+        if (msg.sender != address(backersManager)) {
+            revert NotAuthorised();
+        }
         _;
     }
 
@@ -116,10 +127,16 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     mapping(GaugeRootstockCollective gauge => uint256 lastPeriodFinish) public haltedGaugeLastPeriodFinish;
     /// @notice time that must elapse for a new reward percentage from a builder to be applied
     uint128 public rewardPercentageCooldown;
+    BackersManagerRootstockCollective public backersManager;
 
     // -----------------------------
     // ------- Initializer ---------
     // -----------------------------
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
     /**
      * @notice contract initializer
@@ -131,7 +148,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @param rewardPercentageCooldown_ time that must elapse for a new reward percentage from a builder to be applied
      * @param distributionDuration_ duration of the distribution window
      */
-    function __BuilderRegistryRootstockCollective_init(
+    function initialize(
         IGovernanceManagerRootstockCollective governanceManager_,
         address gaugeFactory_,
         address rewardDistributor_,
@@ -140,8 +157,8 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         uint32 distributionDuration_,
         uint128 rewardPercentageCooldown_
     )
-        internal
-        onlyInitializing
+        external
+        initializer
     {
         __CycleTimeKeeperRootstockCollective_init(
             governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
@@ -152,9 +169,34 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         rewardPercentageCooldown = rewardPercentageCooldown_;
     }
 
+    function setBackersManager(BackersManagerRootstockCollective backersManager_) external {
+        require(address(backersManager) == address(0), "Already set");
+        require(address(backersManager_) != address(0), "Must set backers manager");
+        backersManager = backersManager_;
+    }
+
     // -----------------------------
     // ---- External Functions -----
     // -----------------------------
+
+    function setHaltedGaugeLastPeriodFinish(
+        GaugeRootstockCollective gauge_,
+        uint256 periodFinish_
+    )
+        external
+        onlyBackersManager
+    {
+        haltedGaugeLastPeriodFinish[gauge_] = periodFinish_;
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId_) public view override returns (bool) {
+        return interfaceId_ == type(ICollectiveRewardsCheckRootstockCollective).interfaceId // change to some other
+            // interface presumably
+            || super.supportsInterface(interfaceId_);
+    }
 
     /**
      * @notice Builder submits a request to replace his rewardReceiver address,
@@ -302,7 +344,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         builderState[builder_].communityApproved = false;
 
         _haltGauge(_gauge);
-        _rewardTokenApprove(address(_gauge), 0);
+        backersManager.rewardTokenApprove(address(_gauge), 0);
 
         emit Dewhitelisted(builder_);
     }
@@ -563,7 +605,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     /**
      * @notice reverts if builder was not activated or approved by the community
      */
-    function _validateWhitelisted(GaugeRootstockCollective gauge_) internal view {
+    function validateWhitelisted(GaugeRootstockCollective gauge_) external view onlyBackersManager {
         address _builder = gaugeToBuilder[gauge_];
         if (_builder == address(0)) revert GaugeDoesNotExist();
         if (!builderState[_builder].activated) revert NotActivated();
@@ -577,7 +619,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         if (!isGaugeHalted(address(gauge_))) {
             _haltedGauges.add(address(gauge_));
             _gauges.remove(address(gauge_));
-            _haltGaugeShares(gauge_);
+            backersManager.haltGaugeShares(gauge_);
         }
     }
 
@@ -590,7 +632,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         if (_canBeResumed(gauge_)) {
             _gauges.add(address(gauge_));
             _haltedGauges.remove(address(gauge_));
-            _resumeGaugeShares(gauge_);
+            backersManager.resumeGaugeShares(gauge_);
         }
     }
 
@@ -645,28 +687,10 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         builderState[builder_].communityApproved = true;
         gauge_ = _createGauge(builder_);
 
-        _rewardTokenApprove(address(gauge_), type(uint256).max);
+        backersManager.rewardTokenApprove(address(gauge_), type(uint256).max);
 
         emit CommunityApproved(builder_);
     }
-
-    /**
-     * @notice BackersManagerRootstockCollective override this function to modify gauge rewardToken allowance
-     * @param gauge_ gauge contract to approve rewardTokens
-     * @param value_ amount of rewardTokens to approve
-     */
-    function _rewardTokenApprove(address gauge_, uint256 value_) internal virtual { }
-    /**
-     * @notice BackersManagerRootstockCollective override this function to remove its shares
-     * @param gauge_ gauge contract to be halted
-     */
-    function _haltGaugeShares(GaugeRootstockCollective gauge_) internal virtual { }
-
-    /**
-     * @notice BackersManagerRootstockCollective override this function to restore its shares
-     * @param gauge_ gauge contract to be resumed
-     */
-    function _resumeGaugeShares(GaugeRootstockCollective gauge_) internal virtual { }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

@@ -12,7 +12,7 @@ contract CommunityApproveBuilderChangerTest is BaseTest {
 
     function _setUp() internal override {
         // GIVEN CommunityApproveBuilderChanger deployed for a new builder
-        _changer = new CommunityApproveBuilderChangerTemplateRootstockCollective(backersManager, _newBuilder);
+        _changer = new CommunityApproveBuilderChangerTemplateRootstockCollective(builderRegistry, _newBuilder);
     }
 
     /**
@@ -48,9 +48,9 @@ contract CommunityApproveBuilderChangerTest is BaseTest {
         //  THEN the change is successfully executed
         GaugeRootstockCollective _newGauge = _changer.newGauge();
         //  THEN gauge is added on BackersManagerRootstockCollective
-        assertEq(address(backersManager.builderToGauge(_newBuilder)), address(_newGauge));
+        assertEq(address(builderRegistry.builderToGauge(_newBuilder)), address(_newGauge));
         //  THEN the new builder is community approved
-        (,, bool _communityApproved,,,,) = backersManager.builderState(_newBuilder);
+        (,, bool _communityApproved,,,,) = builderRegistry.builderState(_newBuilder);
         assertEq(_communityApproved, true);
     }
 }

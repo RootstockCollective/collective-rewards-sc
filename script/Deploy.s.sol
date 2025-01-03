@@ -4,7 +4,9 @@ pragma solidity 0.8.20;
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "src/backersManager/BuilderRegistryRootstockCollective.sol";
 import { Deploy as BackersManagerRootstockCollectiveDeployer } from "script/BackersManagerRootstockCollective.s.sol";
+import { Deploy as BuilderRegistryRootstockCollectiveDeployer } from "script/BuilderRegistryRootstockCollective.s.sol";
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
 import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/GaugeBeaconRootstockCollective.s.sol";
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
@@ -70,11 +72,11 @@ contract Deploy is Broadcaster, OutputWriter {
             "RewardDistributorRootstockCollective", address(_rewardDistributorImpl), address(_rewardDistributorProxy)
         );
 
-        (BackersManagerRootstockCollective _backersManagerProxy, BackersManagerRootstockCollective _backersManagerImpl)
-        = new BackersManagerRootstockCollectiveDeployer().run(
+        (
+            BuilderRegistryRootstockCollective _builderRegistryProxy,
+            BuilderRegistryRootstockCollective _builderRegistryImpl
+        ) = new BuilderRegistryRootstockCollectiveDeployer().run(
             address(_governanceManagerProxy),
-            _rewardTokenAddress,
-            _stakingTokenAddress,
             address(_gaugeFactory),
             address(_rewardDistributorProxy),
             _cycleDuration,
@@ -82,7 +84,16 @@ contract Deploy is Broadcaster, OutputWriter {
             _distributionDuration,
             _rewardPercentageCooldown
         );
+        saveWithProxy(
+            "BuilderRegistryRootstockCollective", address(_builderRegistryImpl), address(_builderRegistryProxy)
+        );
+
+        (BackersManagerRootstockCollective _backersManagerProxy, BackersManagerRootstockCollective _backersManagerImpl)
+        = new BackersManagerRootstockCollectiveDeployer().run(
+            address(_builderRegistryProxy), _rewardTokenAddress, _stakingTokenAddress
+        );
         saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
+        _builderRegistryProxy.setBackersManager(_backersManagerProxy);
 
         vm.broadcast();
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
