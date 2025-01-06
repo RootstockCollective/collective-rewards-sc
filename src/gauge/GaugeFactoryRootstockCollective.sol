@@ -5,27 +5,25 @@ import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.so
 import { GaugeRootstockCollective } from "./GaugeRootstockCollective.sol";
 
 contract GaugeFactoryRootstockCollective {
-  /// @notice address of beacon contract who stores gauge implementation address which is where gauge proxies will
-  /// delegate all function calls
-  address public immutable beacon;
-  /// @notice address of the token rewarded to builder and voters
-  address public immutable rewardToken;
+    /// @notice address of beacon contract who stores gauge implementation address which is where gauge proxies will
+    /// delegate all function calls
+    address public immutable beacon;
+    /// @notice address of the token rewarded to builder and voters
+    address public immutable rewardToken;
 
-  /**
-   * @notice constructor
-   * @param beacon_ address of the beacon
-   * @param rewardToken_ address of the token rewarded to builder and voters
-   */
-  constructor(address beacon_, address rewardToken_) {
-    beacon = beacon_;
-    rewardToken = rewardToken_;
-  }
+    /**
+     * @notice constructor
+     * @param beacon_ address of the beacon
+     * @param rewardToken_ address of the token rewarded to builder and voters
+     */
+    constructor(address beacon_, address rewardToken_) {
+        beacon = beacon_;
+        rewardToken = rewardToken_;
+    }
 
-  function createGauge(address builder_) external returns (GaugeRootstockCollective gauge_) {
-    bytes memory _initializerData = abi.encodeCall(
-      GaugeRootstockCollective.initialize,
-      (rewardToken, msg.sender, builder_)
-    );
-    gauge_ = GaugeRootstockCollective(address(new BeaconProxy(beacon, _initializerData)));
-  }
+    function createGauge(address builder_) external returns (GaugeRootstockCollective gauge_) {
+        bytes memory _initializerData =
+            abi.encodeCall(GaugeRootstockCollective.initialize, (rewardToken, msg.sender, builder_));
+        gauge_ = GaugeRootstockCollective(address(new BeaconProxy(beacon, _initializerData)));
+    }
 }
