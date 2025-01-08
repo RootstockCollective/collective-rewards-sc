@@ -1,0 +1,10 @@
+{
+  "BackersManagerRootstockCollective": "0x67B7EF93e916A64BF119bdfE2D7b7e2395469C72",
+  "BackersManagerRootstockCollectiveProxy": "0xA46a06B29874ca18f51d3e2c306d32847ECDfaf7",
+  "GaugeBeaconRootstockCollective": "0x1EF85F649f013390c05a304A3B054EDF462E0505",
+  "GaugeFactoryRootstockCollective": "0xf165c3d140ba306966e93D888F060362677728e4",
+  "GovernanceManagerRootstockCollective": "0x1576A885f75a5e2F52c032d26DF697856b42fEb9",
+  "GovernanceManagerRootstockCollectiveProxy": "0x4663B8326C4AdE92AA4674D570b9DACd7f2bbC55",
+  "RewardDistributorRootstockCollective": "0x5E42605aE232f8acf11F50b50FEc97df5853250A",
+  "RewardDistributorRootstockCollectiveProxy": "0xee3F0C605944a9B5348002B489A7213535fc38DE"
+}
