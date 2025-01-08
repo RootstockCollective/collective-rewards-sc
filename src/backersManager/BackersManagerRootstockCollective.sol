@@ -60,7 +60,7 @@ contract BackersManagerRootstockCollective is
   // ---------- Storage ----------
   // -----------------------------
 
-  CycleTimeKeeperRootstockCollective timeKeeper;
+  CycleTimeKeeperRootstockCollective public timeKeeper;
   /// @notice address of the token used to stake
   IERC20 public stakingToken;
   /// @notice address of the token rewarded to builder and voters

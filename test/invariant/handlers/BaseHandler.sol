@@ -7,21 +7,21 @@ import { TimeManager } from "./TimeManager.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
 
 contract BaseHandler is Test {
-    BaseTest public baseTest;
-    TimeManager public timeManager;
-    BackersManagerRootstockCollective public backersManager;
+  BaseTest public baseTest;
+  TimeManager public timeManager;
+  BackersManagerRootstockCollective public backersManager;
 
-    constructor(BaseTest baseTest_, TimeManager timeManager_) {
-        baseTest = baseTest_;
-        timeManager = timeManager_;
-        backersManager = baseTest_.backersManager();
-    }
+  constructor(BaseTest baseTest_, TimeManager timeManager_) {
+    baseTest = baseTest_;
+    timeManager = timeManager_;
+    backersManager = baseTest_.backersManager();
+  }
 
-    modifier skipTime(uint256 timeToSkip_) {
-        vm.warp(timeManager.timestamp());
-        uint256 _nextCycle = backersManager.cycleNext(block.timestamp) - block.timestamp;
-        timeToSkip_ = bound(timeToSkip_, 0, 2 * _nextCycle);
-        timeManager.increaseTimestamp(timeToSkip_);
-        _;
-    }
+  modifier skipTime(uint256 timeToSkip_) {
+    vm.warp(timeManager.timestamp());
+    uint256 _nextCycle = backersManager.timeKeeper().cycleNext(block.timestamp) - block.timestamp;
+    timeToSkip_ = bound(timeToSkip_, 0, 2 * _nextCycle);
+    timeManager.increaseTimestamp(timeToSkip_);
+    _;
+  }
 }
