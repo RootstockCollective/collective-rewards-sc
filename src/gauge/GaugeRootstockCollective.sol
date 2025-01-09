@@ -329,34 +329,31 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         onlyBackersManager
         returns (uint256 allocationDeviation_, uint256 rewardSharesDeviation_, bool isNegative_)
     {
-        address _rewardToken = rewardToken;
         uint256 _periodFinish = backersManager.periodFinish();
         // if backers quit before cycle finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
-            _updateRewardMissing(_rewardToken, _periodFinish);
+            _updateRewardMissing(rewardToken, _periodFinish);
             _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
 
-        _updateRewards(_rewardToken, backer_, _periodFinish);
+        _updateRewards(rewardToken, backer_, _periodFinish);
         _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
-        
-        unchecked {
-            // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
-            uint256 _previousAllocation = allocationOf[backer_];
-            if (allocation_ > _previousAllocation) {
-                allocationDeviation_ = allocation_ - _previousAllocation;
-                rewardSharesDeviation_ = allocationDeviation_ * timeUntilNextCycle_;
-                totalAllocation += allocationDeviation_;
-                rewardShares += rewardSharesDeviation_;
-            } else {
-                allocationDeviation_ = _previousAllocation - allocation_;
-                // avoid underflow because rewardShares may not be correctly updated if the distribution was skipped
-                rewardSharesDeviation_ = Math.min(rewardShares, allocationDeviation_ * timeUntilNextCycle_);
-                totalAllocation -= allocationDeviation_;
-                rewardShares -= rewardSharesDeviation_;
-                isNegative_ = true;
-            }
+
+        // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
+        uint256 _previousAllocation = allocationOf[backer_];
+        if (allocation_ > _previousAllocation) {
+            allocationDeviation_ = allocation_ - _previousAllocation;
+            rewardSharesDeviation_ = allocationDeviation_ * timeUntilNextCycle_;
+            totalAllocation += allocationDeviation_;
+            rewardShares += rewardSharesDeviation_;
+        } else {
+            allocationDeviation_ = _previousAllocation - allocation_;
+            // avoid underflow because rewardShares may not be correctly updated if the distribution was skipped
+            rewardSharesDeviation_ = Math.min(rewardShares, allocationDeviation_ * timeUntilNextCycle_);
+            totalAllocation -= allocationDeviation_;
+            rewardShares -= rewardSharesDeviation_;
+            isNegative_ = true;
         }
 
         allocationOf[backer_] = allocation_;
@@ -519,9 +516,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
     function _left(address rewardToken_) internal view returns (uint256) {
-        uint256 _rewardRate = rewardData[rewardToken_].rewardRate;
         // [N] = ([N] - [N]) * [PREC] / [PREC]
-        return UtilsLib._mulPrec(backersManager.periodFinish() - block.timestamp, _rewardRate);
+        return UtilsLib._mulPrec(backersManager.periodFinish() - block.timestamp, rewardData[rewardToken_].rewardRate);
     }
 
     /**
