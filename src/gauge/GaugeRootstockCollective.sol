@@ -279,7 +279,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
     function claimBuilderReward(address rewardToken_) public {
-        address _builder = backersManager.gaugeToBuilder(address(this));
+        address _builder = backersManager.gaugeToBuilder(this);
         address _rewardReceiver = backersManager.builderRewardReceiver(_builder);
         if (backersManager.isBuilderPaused(_builder)) revert BuilderRewardsLocked();
         if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();

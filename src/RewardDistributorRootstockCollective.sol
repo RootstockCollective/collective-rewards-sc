@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { UpgradeableRootstockCollective } from "./governance/UpgradeableRootstockCollective.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { BackersManagerRootstockCollective } from "./BackersManagerRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "./backersManager/BackersManagerRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**

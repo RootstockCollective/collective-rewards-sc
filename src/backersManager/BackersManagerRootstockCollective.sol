@@ -4,11 +4,12 @@ pragma solidity 0.8.20;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { GaugeRootstockCollective } from "./gauge/GaugeRootstockCollective.sol";
+import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { BuilderRegistryRootstockCollective } from "./BuilderRegistryRootstockCollective.sol";
-import { ICollectiveRewardsCheckRootstockCollective } from "./interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
-import { UtilsLib } from "./libraries/UtilsLib.sol";
-import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
+import { ICollectiveRewardsCheckRootstockCollective } from
+    "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
+import { UtilsLib } from "../libraries/UtilsLib.sol";
+import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
  * @title BackersManagerRootstockCollective

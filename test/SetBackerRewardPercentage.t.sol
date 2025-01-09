@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseTest } from "./BaseTest.sol";
-import { BuilderRegistryRootstockCollective } from "../src/BuilderRegistryRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "../src/backersManager/BuilderRegistryRootstockCollective.sol";
 
 contract SetBackerRewardPercentageTest is BaseTest {
     // -----------------------------
