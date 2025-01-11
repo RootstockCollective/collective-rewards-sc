@@ -9,6 +9,7 @@ import { BuilderRegistryRootstockCollective } from "./BuilderRegistryRootstockCo
 import { ICollectiveRewardsCheckRootstockCollective } from
     "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
+import { BackersManagerLib } from "../libraries/BackersManagerLib.sol";
 import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
@@ -37,11 +38,11 @@ contract BackersManagerRootstockCollective is
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_);
-    event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
-    event RewardDistributionStarted(address indexed sender_);
-    event RewardDistributed(address indexed sender_);
-    event RewardDistributionFinished(address indexed sender_);
+    // event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_);
+    // event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
+    // event RewardDistributionStarted(address indexed sender_);
+    // event RewardDistributed(address indexed sender_);
+    // event RewardDistributionFinished(address indexed sender_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -81,6 +82,7 @@ contract BackersManagerRootstockCollective is
 
     /// @notice total amount of stakingToken allocated by a backer
     mapping(address backer => uint256 allocation) public backerTotalAllocation;
+
 
     // -----------------------------
     // ------- Initializer ---------
@@ -215,11 +217,11 @@ contract BackersManagerRootstockCollective is
         if (getGaugesLength() == 0) revert NoGaugesForDistribution();
         if (msg.value > 0) {
             rewardsCoinbase += msg.value;
-            emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
+            emit BackersManagerLib.NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
         }
         if (amount_ > 0) {
             rewardsERC20 += amount_;
-            emit NotifyReward(rewardToken, msg.sender, amount_);
+            emit BackersManagerLib.NotifyReward(rewardToken, msg.sender, amount_);
             SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
         }
     }
@@ -232,7 +234,7 @@ contract BackersManagerRootstockCollective is
      * @return finished_ true if distribution has finished
      */
     function startDistribution() external onlyInDistributionWindow notInDistributionPeriod returns (bool finished_) {
-        emit RewardDistributionStarted(msg.sender);
+        emit BackersManagerLib.RewardDistributionStarted(msg.sender);
         finished_ = _distribute();
         onDistributionPeriod = !finished_;
     }
@@ -245,7 +247,7 @@ contract BackersManagerRootstockCollective is
      * @return finished_ true if distribution has finished
      */
     function distribute() external returns (bool finished_) {
-        if (onDistributionPeriod == false) revert DistributionPeriodDidNotStart();
+        if (onDistributionPeriod == false) revert BackersManagerLib.DistributionPeriodDidNotStart();
         finished_ = _distribute();
         onDistributionPeriod = !finished_;
     }
@@ -319,25 +321,17 @@ contract BackersManagerRootstockCollective is
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
             gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
 
-        // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
-        if (isGaugeHalted(address(gauge_))) {
-            if (!_isNegative) {
-                revert PositiveAllocationOnHaltedGauge();
-            }
-            newbackerTotalAllocation_ = backerTotalAllocation_ - _allocationDeviation;
-            return (newbackerTotalAllocation_, totalPotentialReward_);
-        }
-
-        if (_isNegative) {
-            newbackerTotalAllocation_ = backerTotalAllocation_ - _allocationDeviation;
-            newTotalPotentialReward_ = totalPotentialReward_ - _rewardSharesDeviation;
-        } else {
-            newbackerTotalAllocation_ = backerTotalAllocation_ + _allocationDeviation;
-            newTotalPotentialReward_ = totalPotentialReward_ + _rewardSharesDeviation;
-        }
-
-        emit NewAllocation(msg.sender, address(gauge_), allocation_);
-        return (newbackerTotalAllocation_, newTotalPotentialReward_);
+        (newbackerTotalAllocation_, newTotalPotentialReward_) = BackersManagerLib
+            ._allocate(
+                this.isGaugeHalted,
+                gauge_,
+                allocation_,
+                backerTotalAllocation_,
+                totalPotentialReward_,
+                _allocationDeviation,
+                _rewardSharesDeviation,
+                _isNegative
+            );
     }
 
     /**
@@ -392,10 +386,10 @@ contract BackersManagerRootstockCollective is
             );
             _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
         }
-        emit RewardDistributed(msg.sender);
+        emit BackersManagerLib.RewardDistributed(msg.sender);
         // all the gauges were distributed, so distribution period is finished
         if (_lastDistribution == _gaugesLength) {
-            emit RewardDistributionFinished(msg.sender);
+            emit BackersManagerLib.RewardDistributionFinished(msg.sender);
             indexLastGaugeDistributed = 0;
             rewardsERC20 = rewardsCoinbase = 0;
             onDistributionPeriod = false;
