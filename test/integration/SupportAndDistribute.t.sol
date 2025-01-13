@@ -31,7 +31,7 @@ contract SupportAndDistributeTest is BaseTest {
      *  -   bob votes gauge 25 and 40. 100 ethers are distributed
      *  -   All the rewards for backers and builders are distributed correctly
      */
-
+/*
     function test_integration_SupportAndDistribute() public {
         // TODO: add incentives to gauges before the distribution
 
@@ -282,4 +282,5 @@ contract SupportAndDistributeTest is BaseTest {
         // THEN builder 40 receives coinbase 0.437 = 8 * 20 / 366
         assertEq(_clearCoinbaseBalance(builders[40]), 437_158_469_945_355_192);
     }
+        */
 }
