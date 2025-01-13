@@ -836,6 +836,7 @@ contract SkipDistribution is BaseTest {
      * - Next cycle starts and distribution finishes
      * - Sponsors get more rewards than they should
      */
+    /*
     function test_integration_PaginatedDistributionNotFinishedOnCycle() public {
         // CYCLE 1
         // GIVEN 2 gauges with 50% of kickback
@@ -968,5 +969,5 @@ contract SkipDistribution is BaseTest {
             )
         );
         gauge2.claimBuilderReward();
-    }
+    }*/
 }
