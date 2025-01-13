@@ -22,7 +22,8 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         _skipAndStartNewCycle();
 
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 8_467_200 ether);
 
         // WHEN alice claim rewards
         vm.startPrank(alice);
@@ -57,7 +58,8 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 8_467_200 ether);
 
         // AND cycle finish
         _skipAndStartNewCycle();
@@ -103,7 +105,8 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // THEN alice total allocation is 6
         assertEq(backersManager.backerTotalAllocation(alice), 6 ether);
         // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 8_467_200 ether);
     }
 
     /**
@@ -183,7 +186,8 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // THEN alice total allocation is 106
         assertEq(backersManager.backerTotalAllocation(alice), 106 ether);
         // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 8_467_200 ether);
     }
 
     /**
@@ -215,7 +219,8 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // THEN alice total allocation is 6
         assertEq(backersManager.backerTotalAllocation(alice), 6 ether);
         // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 8_467_200 ether);
     }
 
     /**
@@ -247,7 +252,8 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // THEN alice total allocation is 6
         assertEq(backersManager.backerTotalAllocation(alice), 6 ether);
         // THEN totalPotentialReward is 8467200 ether = 14 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 8_467_200 ether);
     }
 
     /**

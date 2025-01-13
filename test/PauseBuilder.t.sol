@@ -104,7 +104,8 @@ contract PauseBuilderTest is BaseTest {
         // THEN gauge rewardShares is 604800 ether = 2 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 604_800 ether);
         // THEN total allocation is 9072000 ether = 2 * 1/2 WEEK + 14 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 9_072_000 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 9_072_000 ether);
 
         // WHEN alice adds allocations to paused builder
         vm.startPrank(alice);
@@ -112,7 +113,8 @@ contract PauseBuilderTest is BaseTest {
         // THEN gauge rewardShares is 1814400 ether = 2 * 1/2 WEEK + 4 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 1_814_400 ether);
         // THEN total allocation is 10281600 ether =  2 * 1/2 WEEK + 4 * 1/2 WEEK + 14 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 10_281_600 ether);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 10_281_600 ether);
     }
 
     /**

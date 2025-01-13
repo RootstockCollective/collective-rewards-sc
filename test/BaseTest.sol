@@ -20,6 +20,7 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
     "script/governance/GovernanceManagerRootstockCollective.s.sol";
 import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract BaseTest is Test {
     StakingTokenMock public stakingToken;
@@ -177,7 +178,8 @@ contract BaseTest is Test {
         vm.deal(address(rewardDistributor), amountCoinbase_ + address(rewardDistributor).balance);
         vm.startPrank(foundation);
         rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountCoinbase_);
-        while (backersManager.onDistributionPeriod()) {
+        (, , , , , , , bool onDistributionPeriod) = backersManager.backersManagerData();
+        while (onDistributionPeriod) {
             backersManager.distribute();
         }
         vm.stopPrank();
@@ -244,3 +246,27 @@ contract BaseTest is Test {
 
     receive() external payable { }
 }
+
+// (
+//     address rewardToken,
+//     uint256 totalPotentialReward,
+//     uint256 tempTotalPotentialReward,
+//     uint256 rewardsERC20,
+//     uint256 rewardsCoinbase,
+//     uint256 indexLastGaugeDistributed,
+//     uint256 periodFinish,
+//     bool onDistributionPeriod,
+// ) = backersManager.backersManagerData(); 
+
+// (address rewardToken,,,,,,,) = backersManager.backersManagerData(); 
+// (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+// (,,uint256 tempTotalPotentialReward,,,,,) = backersManager.backersManagerData(); 
+// (,,,uint256 rewardsERC20,,,,) = backersManager.backersManagerData(); 
+// (,,,,uint256 rewardsCoinbase,,,) = backersManager.backersManagerData(); 
+// (,,,,,uint256 indexLastGaugeDistributed,,) = backersManager.backersManagerData(); 
+// (,,,,,,uint256 periodFinish,) = backersManager.backersManagerData(); 
+// (,,,,,,,bool onDistributionPeriod) = backersManager.backersManagerData(); 
+
+// (,,,uint256 rewardsERC20, uint256 rewardsCoinbase,,,) = backersManager.backersManagerData(); 
+// (,uint256 totalPotentialReward, uint256 tempTotalPotentialReward,,,uint256 indexLastGaugeDistributed,,bool onDistributionPeriod) = backersManager.backersManagerData(); 
+// (,,,,,uint256 indexLastGaugeDistributed,,bool onDistributionPeriod) = backersManager.backersManagerData(); 

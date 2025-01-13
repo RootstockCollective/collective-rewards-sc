@@ -45,14 +45,16 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
-        _randomRevoke(seed_, backersManager.totalPotentialReward());
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        _randomRevoke(seed_, totalPotentialReward);
         uint256 _revokeTimestamp = block.timestamp;
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
         // AND permit randomly
-        _randomPermit(seed_, backersManager.totalPotentialReward());
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        _randomPermit(seed_, totalPotentialReward);
 
         // AND permitted builders have the new reward percentage applied if cooldown time has passed
         for (uint256 i = 0; i < builders.length; i++) {
@@ -105,10 +107,11 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
-        uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, backersManager.totalPotentialReward());
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, totalPotentialReward);
 
         // THEN totalPotentialReward does not consider the revoked gauges
-        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(totalPotentialReward, _expectedTotalPotentialReward);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
@@ -138,7 +141,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         }
 
         // THEN totalPotentialReward does not consider the revoked gauges
-        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, _expectedTotalPotentialReward);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
@@ -147,7 +151,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _expectedTotalPotentialReward = _randomPermit(seed_, _expectedTotalPotentialReward);
 
         // THEN totalPotentialReward increase by permitted gauges
-        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, _expectedTotalPotentialReward);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
@@ -161,7 +166,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             }
         }
         // THEN totalPotentialReward is the entire cycle of non revoked gauges
-        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, _expectedTotalPotentialReward);
     }
 
     /**
@@ -188,10 +194,11 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
-        uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, backersManager.totalPotentialReward());
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, totalPotentialReward);
 
         // THEN totalPotentialReward does not consider the revoked gauges
-        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        assertEq(totalPotentialReward, _expectedTotalPotentialReward);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
@@ -207,7 +214,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _expectedTotalPotentialReward = _randomPermit(seed_, _expectedTotalPotentialReward);
 
         // THEN totalPotentialReward increase by permitted gauges
-        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, _expectedTotalPotentialReward);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
@@ -221,7 +229,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             }
         }
         // THEN totalPotentialReward is the entire cycle of non revoked gauges
-        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, _expectedTotalPotentialReward);
     }
 
     /**
@@ -245,7 +254,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _skipLimitPeriodFinish(randomTime_);
 
         // AND revoke randomly
-        _randomRevoke(seed_, backersManager.totalPotentialReward());
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        _randomRevoke(seed_, totalPotentialReward);
 
         // AND a random time passes
         skip(randomTime_);
@@ -257,7 +267,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         _skipLimitPeriodFinish(randomTime_);
 
         // AND permit randomly
-        _randomPermit(seed_, backersManager.totalPotentialReward());
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        _randomPermit(seed_, totalPotentialReward);
 
         uint256 _expectedTotalPotentialReward;
         // THEN rewardShares for each non revoked gauge is the entire cycle
@@ -268,7 +279,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             }
         }
         // THEN totalPotentialReward is the entire cycle of non revoked gauges
-        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, _expectedTotalPotentialReward);
     }
 
     /**

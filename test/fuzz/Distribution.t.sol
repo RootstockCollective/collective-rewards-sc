@@ -117,7 +117,8 @@ contract DistributionFuzzTest is BaseFuzz {
             _expectedTotalPotentialReward -=
                 (_totalAllocations - _newTotalAllocations) * backersManager.timeUntilNextCycle(block.timestamp);
         }
-        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, _expectedTotalPotentialReward);
 
         // THEN rewardShares for each gauge is updated considering the new allocations and the time until next cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
@@ -135,7 +136,8 @@ contract DistributionFuzzTest is BaseFuzz {
         // AND there is a distribution of 10000 rewardToken and 1000 coinbase
         _distribute(10_000 ether, 1000 ether);
         // THEN totalPotentialReward is the entire cycle
-        assertEq(backersManager.totalPotentialReward(), _newTotalAllocations * cycleDuration);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, _newTotalAllocations * cycleDuration);
         // THEN rewardShares for each gauge is the entire cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * cycleDuration);

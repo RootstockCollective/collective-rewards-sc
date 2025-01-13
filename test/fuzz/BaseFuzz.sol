@@ -64,12 +64,14 @@ contract BaseFuzz is BaseTest {
             backersManager.allocateBatch(backersGauges[i], backersAllocations[i]);
 
             // THEN there are allocations
-            assertGt(backersManager.totalPotentialReward(), 0);
+            (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+            assertGt(totalPotentialReward, 0);
         }
     }
 
     function _calcGaugeReward(uint256 amount_, uint256 gaugeIndex_) internal view returns (uint256) {
-        return amount_ * gaugesArray[gaugeIndex_].rewardShares() / backersManager.totalPotentialReward();
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        return amount_ * gaugesArray[gaugeIndex_].rewardShares() / totalPotentialReward;
     }
 
     function _calcBuilderReward(uint256 amount_, uint256 gaugeIndex_) internal view returns (uint256) {
@@ -77,7 +79,7 @@ contract BaseFuzz is BaseTest {
         return (_calcGaugeReward(amount_, gaugeIndex_) * _rewardPercentage) / 10 ** 18;
     }
 
-    function _calcBackerReward(uint256 amount_, uint256 backerIndex_) internal view virtual returns (uint256) {
+    function _calcBackerReward(uint256 amount_, uint256 backerIndex_) internal virtual returns (uint256) {
         uint256 _rewards;
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (gaugesArray[i].totalAllocation() > 0) {

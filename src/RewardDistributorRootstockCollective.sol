@@ -65,7 +65,8 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     function initializeCollectiveRewardsAddresses(address backersManager_) external {
         if (address(backersManager) != address(0)) revert CollectiveRewardsAddressesAlreadyInitialized();
         backersManager = BackersManagerRootstockCollective(backersManager_);
-        rewardToken = IERC20(BackersManagerRootstockCollective(backersManager_).rewardToken());
+        (address rewardToken_, , , , , , , ) = backersManager.backersManagerData();
+        rewardToken = IERC20(rewardToken_);
     }
 
     // -----------------------------

@@ -123,9 +123,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         allocationsArray[0] = 4 ether;
         allocationsArray[1] = 10 ether;
         backersManager.allocateBatch(gaugesArray, allocationsArray);
-
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
         // THEN total potential rewards is 13305600 ether = 22 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 13_305_600 ether);
+        assertEq(totalPotentialReward, 13_305_600 ether);
         // THEN alice total allocation is 8 ether
         assertEq(backersManager.backerTotalAllocation(alice), 8 ether);
         // THEN bob total allocation is 14 ether
@@ -154,7 +154,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN alice gauge2 allocation is 6 ether
         assertEq(gauge2.allocationOf(alice), 6 ether);
         // THEN total potential rewards is 9676800 ether = 16 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 9_676_800 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 9_676_800 ether);
         // THEN alice total allocation is 16 ether
         assertEq(backersManager.backerTotalAllocation(alice), 16 ether);
     }
@@ -180,8 +181,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(gauge.allocationOf(alice), 10 ether);
         // THEN alice gauge2 allocation is 6 ether
         assertEq(gauge2.allocationOf(alice), 6 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData();
         // THEN total potential rewards is 9676800 ether = 16 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 9_676_800 ether);
+        assertEq(totalPotentialReward, 9_676_800 ether);
         // THEN alice total allocation is 16 ether
         assertEq(backersManager.backerTotalAllocation(alice), 16 ether);
     }
@@ -217,7 +219,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN alice gauge3 allocation is 6 ether
         assertEq(_gauge3.allocationOf(alice), 10 ether);
         // THEN total potential rewards is 10886400 ether = 18 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 10_886_400 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData();
+        assertEq(totalPotentialReward, 10_886_400 ether);
         // THEN alice total allocation is 18 ether
         assertEq(backersManager.backerTotalAllocation(alice), 18 ether);
     }
@@ -235,7 +238,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // WHEN alice allocates 2 ether to builder and 6 ether to builder2
         backersManager.allocateBatch(gaugesArray, allocationsArray);
         // THEN total allocation is 4838400 ether = 8 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 4_838_400 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData();
+        assertEq(totalPotentialReward, 4_838_400 ether);
         // THEN alice total allocation is 8 ether
         assertEq(backersManager.backerTotalAllocation(alice), 8 ether);
 
@@ -247,7 +251,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         // THEN total allocation is 5443200 ether = 8 * 1 WEEK + 2 * 1/2 WEEK
-        assertEq(backersManager.totalPotentialReward(), 5_443_200 ether);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData();
+        assertEq(totalPotentialReward, 5_443_200 ether);
         // THEN alice total allocation is 10 ether
         assertEq(backersManager.backerTotalAllocation(alice), 10 ether);
     }
@@ -378,9 +383,10 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         emit NotifyReward(address(rewardToken), address(this), 2 ether);
         backersManager.notifyRewardAmount(2 ether);
         // THEN rewards is 2 ether
-        assertEq(backersManager.rewardsERC20(), 2 ether);
+        (,,,uint256 rewardsERC20, uint256 rewardsCoinbase,,,) = backersManager.backersManagerData();
+        assertEq(rewardsERC20, 2 ether);
         // THEN Coinbase rewards is 0
-        assertEq(backersManager.rewardsCoinbase(), 0);
+        assertEq(rewardsCoinbase, 0);
         // THEN reward token balance of backersManager is 2 ether
         assertEq(rewardToken.balanceOf(address(backersManager)), 2 ether);
         // THEN Coinbase balance of backersManager is 0
@@ -396,9 +402,10 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //    THEN it does not revert and rewards don't change
         backersManager.notifyRewardAmount(0 ether);
         // THEN reward for reward token is 0 ether
-        assertEq(backersManager.rewardsERC20(), 0 ether);
+        (,,,uint256 rewardsERC20, uint256 rewardsCoinbase,,,) = backersManager.backersManagerData(); 
+        assertEq(rewardsERC20, 0 ether);
         // THEN Coinbase reward is 0
-        assertEq(backersManager.rewardsCoinbase(), 0);
+        assertEq(rewardsCoinbase, 0);
     }
 
     /**
@@ -447,9 +454,10 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         emit NotifyReward(UtilsLib._COINBASE_ADDRESS, address(this), 2 ether);
         backersManager.notifyRewardAmount{ value: 2 ether }(0);
         // THEN Coinbase rewards is 2 ether
-        assertEq(backersManager.rewardsCoinbase(), 2 ether);
+        (,,,uint256 rewardsERC20, uint256 rewardsCoinbase,,,) = backersManager.backersManagerData();
+        assertEq(rewardsCoinbase, 2 ether);
         // THEN ERC20 rewards is 0
-        assertEq(backersManager.rewardsERC20(), 0);
+        assertEq(rewardsERC20, 0);
         // THEN Coinbase balance of backersManager is 2 ether
         assertEq(address(backersManager).balance, 2 ether);
         // THEN reward token balance of backersManager is 0
@@ -469,7 +477,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // WHEN 10 ether reward are more added
         backersManager.notifyRewardAmount(10 ether);
         // THEN rewards is is 12 ether
-        assertEq(backersManager.rewardsERC20(), 12 ether);
+        (,,,uint256 rewardsERC20,,,,) = backersManager.backersManagerData();
+        assertEq(rewardsERC20, 12 ether);
         // THEN reward token balance of backersManager is 12 ether
         assertEq(rewardToken.balanceOf(address(backersManager)), 12 ether);
     }
@@ -699,7 +708,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN rewardShares is 7560000 ether = 10 * 1/2 WEEK + 15 * 1/2 WEEK
         assertEq(gauge2.rewardShares(), 7_560_000 ether);
         // THEN total allocation is 12096000 ether = 4536000 + 7560000
-        assertEq(backersManager.totalPotentialReward(), 12_096_000 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData();
+        assertEq(totalPotentialReward, 12_096_000 ether);
 
         //  AND 100 ether reward are added and distributed
         backersManager.notifyRewardAmount(100 ether);
@@ -713,7 +723,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN rewardShares is 9072000 ether = 15 * 1 WEEK
         assertEq(gauge2.rewardShares(), 9_072_000 ether);
         // THEN total allocation is 12096000 ether = 3024000 + 9072000
-        assertEq(backersManager.totalPotentialReward(), 12_096_000 ether);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData();
+        assertEq(totalPotentialReward, 12_096_000 ether);
 
         // THEN reward token balance of gauge is 37.5 ether = 100 * 4536000 / 12096000
         assertEq(rewardToken.balanceOf(address(gauge)), 37.5 ether);
@@ -748,8 +759,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewardShares(), 3_024_000 ether);
         // THEN rewardShares is 6048000 ether = 10 * 1 WEEK
         assertEq(gauge2.rewardShares(), 6_048_000 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData();
         // THEN total allocation is 9072000 ether = 3024000 + 6048000
-        assertEq(backersManager.totalPotentialReward(), 9_072_000 ether);
+        assertEq(totalPotentialReward, 9_072_000 ether);
 
         //  AND 100 ether reward are added and distributed
         backersManager.notifyRewardAmount(100 ether);
@@ -763,7 +775,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN rewardShares is 6048000 ether = 10 * 1 WEEK
         assertEq(gauge2.rewardShares(), 6_048_000 ether);
         // THEN total allocation is 6048000 ether = 0 + 6048000
-        assertEq(backersManager.totalPotentialReward(), 6_048_000 ether);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData();
+        assertEq(totalPotentialReward, 6_048_000 ether);
 
         // THEN reward token balance of gauge is 33.33 ether = 100 * 3024000 / 9072000
         assertEq(rewardToken.balanceOf(address(gauge)), 33_333_333_333_333_333_333);
@@ -799,7 +812,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN rewardShares is 6048000 ether = 10 * 1 WEEK
         assertEq(gauge2.rewardShares(), 6_048_000 ether);
         // THEN total allocation is 10584000 ether = 4536000 + 6048000
-        assertEq(backersManager.totalPotentialReward(), 10_584_000 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData();
+        assertEq(totalPotentialReward, 10_584_000 ether);
 
         //  AND 100 ether reward are added and distributed
         backersManager.notifyRewardAmount(100 ether);
@@ -813,7 +827,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN rewardShares is 6048000 ether = 10 * 1 WEEK
         assertEq(gauge2.rewardShares(), 6_048_000 ether);
         // THEN total allocation is 9072000 ether = 3024000 + 6048000
-        assertEq(backersManager.totalPotentialReward(), 9_072_000 ether);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData();
+        assertEq(totalPotentialReward, 9_072_000 ether);
 
         // THEN reward token balance of gauge is 42.857 ether = 100 * 4536000 / 10584000
         assertEq(rewardToken.balanceOf(address(gauge)), 42_857_142_857_142_857_142);
@@ -849,7 +864,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN rewardShares is 6048000 ether = 10 * 1 WEEK
         assertEq(gauge2.rewardShares(), 6_048_000 ether);
         // THEN total allocation is 13608000 ether = 7560000 + 6048000
-        assertEq(backersManager.totalPotentialReward(), 13_608_000 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData();
+        assertEq(totalPotentialReward, 13_608_000 ether);
 
         //  AND 100 ether reward are added and distributed
         backersManager.notifyRewardAmount(100 ether);
@@ -863,7 +879,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN rewardShares is 6048000 ether = 10 * 1 WEEK
         assertEq(gauge2.rewardShares(), 6_048_000 ether);
         // THEN total allocation is 15120000 ether = 9072000 + 6048000
-        assertEq(backersManager.totalPotentialReward(), 15_120_000 ether);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData();
+        assertEq(totalPotentialReward, 15_120_000 ether);
 
         // THEN reward token balance of gauge is 55.5 ether = 100 * 7560000 / 13608000
         assertEq(rewardToken.balanceOf(address(gauge)), 55_555_555_555_555_555_555);
@@ -939,22 +956,24 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // WHEN distribute is executed
         backersManager.startDistribution();
         // THEN temporal total potential rewards is 12096000 ether = 20 * 1 WEEK
-        assertEq(backersManager.tempTotalPotentialReward(), 12_096_000 ether);
+        (,uint256 totalPotentialReward,uint256 tempTotalPotentialReward,,,uint256 indexLastGaugeDistributed,,bool onDistributionPeriod) = backersManager.backersManagerData(); 
+        assertEq(tempTotalPotentialReward, 12_096_000 ether);
         // THEN distribution period is still started
-        assertEq(backersManager.onDistributionPeriod(), true);
+        assertEq(onDistributionPeriod, true);
         // THEN last gauge distributed is gauge 20
-        assertEq(backersManager.indexLastGaugeDistributed(), 20);
+        assertEq(indexLastGaugeDistributed, 20);
 
         // AND distribute is executed again
         backersManager.distribute();
         // THEN temporal total potential rewards is 0
-        assertEq(backersManager.tempTotalPotentialReward(), 0);
+        (,totalPotentialReward, tempTotalPotentialReward,,,indexLastGaugeDistributed,,onDistributionPeriod) = backersManager.backersManagerData(); 
+        assertEq(tempTotalPotentialReward, 0);
         // THEN total potential rewards is 13305600 ether = 22 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 13_305_600 ether);
+        assertEq(totalPotentialReward, 13_305_600 ether);
         // THEN distribution period finished
-        assertEq(backersManager.onDistributionPeriod(), false);
+        assertEq(onDistributionPeriod, false);
         // THEN last gauge distributed is 0
-        assertEq(backersManager.indexLastGaugeDistributed(), 0);
+        assertEq(indexLastGaugeDistributed, 0);
 
         for (uint256 i = 0; i < 22; i++) {
             // THEN reward token balance of all the gauges is 4.545454545454545454 = 100 * 1 / 22
@@ -1005,7 +1024,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.startDistribution();
 
         // THEN last gauge distributed is gauge 20
-        assertEq(backersManager.indexLastGaugeDistributed(), 20);
+        (,,,,,uint256 indexLastGaugeDistributed,,bool onDistributionPeriod) = backersManager.backersManagerData();
+        assertEq(indexLastGaugeDistributed, 20);
 
         // AND some minutes pass
         skip(600);
@@ -1029,9 +1049,10 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.distribute();
 
         // THEN distribution period finished
-        assertEq(backersManager.onDistributionPeriod(), false);
+        (,,,,,indexLastGaugeDistributed,,onDistributionPeriod) = backersManager.backersManagerData(); 
+        assertEq(onDistributionPeriod, false);
         // THEN last gauge distributed is 0
-        assertEq(backersManager.indexLastGaugeDistributed(), 0);
+        assertEq(indexLastGaugeDistributed, 0);
 
         for (uint256 i = 0; i < 22; i++) {
             // THEN reward token balance of all the gauges is 4.545454545454545454 = 100 * 1 / 22
@@ -1063,7 +1084,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // WHEN distribute is executed
         backersManager.startDistribution();
         // THEN distribution period started
-        assertEq(backersManager.onDistributionPeriod(), true);
+        (,,,,,,,bool onDistributionPeriod) = backersManager.backersManagerData(); 
+        assertEq(onDistributionPeriod, true);
 
         // WHEN there is an attempt to add 100 ether reward in the middle of the distribution
         //  THEN notifyRewardAmount reverts
@@ -1074,7 +1096,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.distribute();
 
         // THEN distribution period finished
-        assertEq(backersManager.onDistributionPeriod(), false);
+        (,,,,,,,onDistributionPeriod) = backersManager.backersManagerData(); 
+        assertEq(onDistributionPeriod, false);
 
         for (uint256 i = 0; i < 22; i++) {
             // THEN reward token balance of all the gauges is 4.545454545454545454 = 100 * 1 / 22
@@ -1680,7 +1703,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // AND distribution starts
         backersManager.startDistribution();
         // THEN distribution finished
-        assertEq(backersManager.onDistributionPeriod(), false);
+        (,,,,,,,bool onDistributionPeriod) = backersManager.backersManagerData(); 
+        assertEq(onDistributionPeriod, false);
 
         uint256 _deployTimestamp = block.timestamp;
         // AND distribution windows finishes
@@ -1712,7 +1736,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // AND distribution starts
         backersManager.startDistribution();
         // THEN distribution finished
-        assertEq(backersManager.onDistributionPeriod(), false);
+        (,,,,,,,onDistributionPeriod) = backersManager.backersManagerData(); 
+        assertEq(onDistributionPeriod, false);
     }
 
     /**

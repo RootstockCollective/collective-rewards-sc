@@ -25,7 +25,8 @@ contract DistributionHandler is BaseHandler {
         external
         skipTime(timeToSkip_)
     {
-        if (backersManager.totalPotentialReward() == 0) return;
+        (,uint256 tPotentialReward,,,,,,) = backersManager.backersManagerData();
+        if (tPotentialReward == 0) return;
         amountERC20_ = bound(amountERC20_, 0, type(uint64).max);
         amountCoinbase_ = bound(amountCoinbase_, 0, type(uint64).max);
 

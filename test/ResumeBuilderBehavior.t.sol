@@ -27,7 +27,8 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         // THEN gauge rewardShares is 1209600 ether = 2 * 1 WEEK
         assertEq(gauge.rewardShares(), 1_209_600 ether);
         // THEN total allocation didn't change is 9676800 ether = 16 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 9_676_800 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 9_676_800 ether);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -84,7 +85,8 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         // THEN gauge rewardShares is 1209600 ether = 2 * 1 WEEK
         assertEq(gauge.rewardShares(), 1_209_600 ether);
         // THEN total allocation didn't change is 9676800 ether = 16 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 9_676_800 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 9_676_800 ether);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -230,7 +232,8 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         // THEN gauge rewardShares is 907200 ether = 2 * 1/2 WEEK + 1 * 1/2 WEEK
         assertEq(gauge.rewardShares(), 907_200 ether);
         // THEN total allocation didn't change is 8467200 ether = 14 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 8_467_200 ether);
 
         // skip some time to resume on another timestamp
         skip(10);
@@ -242,6 +245,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         assertEq(gauge.rewardShares(), 907_200 ether);
         // THEN total allocation didn't change is 9374400 ether = gauge(2 * 1/2 WEEK + 1 * 1/2 WEEK) + gauge2(14 * 1
         // WEEK)
-        assertEq(backersManager.totalPotentialReward(), 9_374_400 ether);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 9_374_400 ether);
     }
 }

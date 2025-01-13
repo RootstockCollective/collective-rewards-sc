@@ -220,7 +220,8 @@ contract SetCycleDurationTest is BaseTest {
         // THEN period finish in 3 weeks
         assertEq(backersManager.periodFinish(), block.timestamp + 3 weeks);
         // THEN totalPotentialReward is 16 * 3 weeks
-        assertEq(backersManager.totalPotentialReward(), 16 ether * 3 weeks);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 16 ether * 3 weeks);
         // THEN gauge rewardRate in rewardToken is 6.25 / 3 weeks; 6.25 = (100 * 2 / 16) * 0.5
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 6.25 ether / uint256(3 weeks));
         // THEN gauge rewardRate in coinbase is 0.625 / 3 weeks; 0.625 = (10 * 2 / 16) * 0.5
@@ -289,7 +290,8 @@ contract SetCycleDurationTest is BaseTest {
         // THEN period finish in 0.5 weeks
         assertEq(backersManager.periodFinish(), block.timestamp + 0.5 weeks);
         // THEN totalPotentialReward is 16 * 0.5 weeks
-        assertEq(backersManager.totalPotentialReward(), 16 ether * 0.5 weeks);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 16 ether * 0.5 weeks);
         // THEN gauge rewardRate in rewardToken is 6.25 / 0.5 weeks; 6.25 = (100 * 2 / 16) * 0.5
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 6.25 ether / uint256(0.5 weeks));
         // THEN gauge rewardRate in coinbase is 0.625 / 0.5 weeks; 0.625 = (10 * 2 / 16) * 0.5

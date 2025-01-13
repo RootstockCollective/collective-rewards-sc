@@ -53,16 +53,11 @@ contract BackersManagerRootstockCollective is
     }
 
     modifier notInDistributionPeriod() {
-        if (onDistributionPeriod) revert NotInDistributionPeriod();
+        if (backersManagerData.onDistributionPeriod) revert NotInDistributionPeriod();
         _;
     }
 
-    // -----------------------------
-    // ---------- Storage ----------
-    // -----------------------------
-
-    /// @notice address of the token used to stake
-    IERC20 public stakingToken;
+    /*
     /// @notice address of the token rewarded to builder and voters
     address public rewardToken;
     /// @notice total potential reward
@@ -79,10 +74,17 @@ contract BackersManagerRootstockCollective is
     uint256 internal _periodFinish;
     /// @notice true if distribution period started. Allocations remain blocked until it finishes
     bool public onDistributionPeriod;
-
+    */
+   
+    // -----------------------------
+    // ---------- Storage ----------
+    // -----------------------------
+    /// @notice address of the token used to stake
+    IERC20 public stakingToken;
     /// @notice total amount of stakingToken allocated by a backer
     mapping(address backer => uint256 allocation) public backerTotalAllocation;
 
+    BackersManagerLib.BackerData public backersManagerData;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -128,9 +130,9 @@ contract BackersManagerRootstockCollective is
             distributionDuration_,
             rewardPercentageCooldown_
         );
-        rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
-        _periodFinish = cycleNext(block.timestamp);
+        backersManagerData.rewardToken = rewardToken_;
+        backersManagerData._periodFinish = cycleNext(block.timestamp);
     }
 
     // -----------------------------
@@ -171,7 +173,7 @@ contract BackersManagerRootstockCollective is
             gauge_,
             allocation_,
             backerTotalAllocation[msg.sender],
-            totalPotentialReward,
+            backersManagerData.totalPotentialReward,
             timeUntilNextCycle(block.timestamp)
         );
 
@@ -196,7 +198,7 @@ contract BackersManagerRootstockCollective is
         if (_length != allocations_.length) revert UnequalLengths();
         // TODO: check length < MAX or let revert by out of gas?
         uint256 _backerTotalAllocation = backerTotalAllocation[msg.sender];
-        uint256 _totalPotentialReward = totalPotentialReward;
+        uint256 _totalPotentialReward = backersManagerData.totalPotentialReward;
         uint256 _timeUntilNextCycle = timeUntilNextCycle(block.timestamp);
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             (uint256 _newbackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
@@ -216,13 +218,13 @@ contract BackersManagerRootstockCollective is
     function notifyRewardAmount(uint256 amount_) external payable notInDistributionPeriod {
         if (getGaugesLength() == 0) revert NoGaugesForDistribution();
         if (msg.value > 0) {
-            rewardsCoinbase += msg.value;
+            backersManagerData.rewardsCoinbase += msg.value;
             emit BackersManagerLib.NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
         }
         if (amount_ > 0) {
-            rewardsERC20 += amount_;
-            emit BackersManagerLib.NotifyReward(rewardToken, msg.sender, amount_);
-            SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
+            backersManagerData.rewardsERC20 += amount_;
+            emit BackersManagerLib.NotifyReward(backersManagerData.rewardToken, msg.sender, amount_);
+            SafeERC20.safeTransferFrom(IERC20(backersManagerData.rewardToken), msg.sender, address(this), amount_);
         }
     }
 
@@ -236,7 +238,7 @@ contract BackersManagerRootstockCollective is
     function startDistribution() external onlyInDistributionWindow notInDistributionPeriod returns (bool finished_) {
         emit BackersManagerLib.RewardDistributionStarted(msg.sender);
         finished_ = _distribute();
-        onDistributionPeriod = !finished_;
+        backersManagerData.onDistributionPeriod = !finished_;
     }
 
     /**
@@ -247,9 +249,9 @@ contract BackersManagerRootstockCollective is
      * @return finished_ true if distribution has finished
      */
     function distribute() external returns (bool finished_) {
-        if (onDistributionPeriod == false) revert BackersManagerLib.DistributionPeriodDidNotStart();
+        if (backersManagerData.onDistributionPeriod == false) revert BackersManagerLib.DistributionPeriodDidNotStart();
         finished_ = _distribute();
-        onDistributionPeriod = !finished_;
+        backersManagerData.onDistributionPeriod = !finished_;
     }
 
     /**
@@ -288,7 +290,7 @@ contract BackersManagerRootstockCollective is
      */
     function periodFinish() external view returns (uint256) {
         if (isGaugeHalted(msg.sender)) return haltedGaugeLastPeriodFinish[GaugeRootstockCollective(msg.sender)];
-        return _periodFinish;
+        return backersManagerData._periodFinish;
     }
 
     // -----------------------------
@@ -349,7 +351,7 @@ contract BackersManagerRootstockCollective is
         internal
     {
         backerTotalAllocation[backer_] = newbackerTotalAllocation_;
-        totalPotentialReward = newTotalPotentialReward_;
+        backersManagerData.totalPotentialReward = newTotalPotentialReward_;
 
         if (newbackerTotalAllocation_ > stakingToken.balanceOf(backer_)) revert NotEnoughStaking();
     }
@@ -362,80 +364,35 @@ contract BackersManagerRootstockCollective is
      * @return true if distribution has finished
      */
     function _distribute() internal returns (bool) {
-        uint256 _newTotalPotentialReward = tempTotalPotentialReward;
-        uint256 _gaugeIndex = indexLastGaugeDistributed;
-        uint256 _gaugesLength = getGaugesLength();
-        uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
-
-        // cache variables read in the loop
-        uint256 _rewardsERC20 = rewardsERC20;
-        uint256 _rewardsCoinbase = rewardsCoinbase;
-        uint256 _totalPotentialReward = totalPotentialReward;
-        uint256 __periodFinish = _periodFinish;
         (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
-        // loop through all pending distributions
-        while (_gaugeIndex < _lastDistribution) {
-            _newTotalPotentialReward += _gaugeDistribute(
-                GaugeRootstockCollective(getGaugeAt(_gaugeIndex)),
-                _rewardsERC20,
-                _rewardsCoinbase,
-                _totalPotentialReward,
-                __periodFinish,
-                _cycleStart,
-                _cycleDuration
-            );
-            _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
-        }
-        emit BackersManagerLib.RewardDistributed(msg.sender);
-        // all the gauges were distributed, so distribution period is finished
-        if (_lastDistribution == _gaugesLength) {
-            emit BackersManagerLib.RewardDistributionFinished(msg.sender);
-            indexLastGaugeDistributed = 0;
-            rewardsERC20 = rewardsCoinbase = 0;
-            onDistributionPeriod = false;
-            tempTotalPotentialReward = 0;
-            totalPotentialReward = _newTotalPotentialReward;
-            _periodFinish = cycleNext(block.timestamp);
-            return true;
-        }
-        // Define new reference to batch beginning
-        indexLastGaugeDistributed = _gaugeIndex;
-        tempTotalPotentialReward = _newTotalPotentialReward;
-        return false;
-    }
+        // uint256 _newTotalPotentialReward = backersManagerData.tempTotalPotentialReward;
+        uint256 gIndex = backersManagerData.indexLastGaugeDistributed;
+        uint256 gLength = getGaugesLength();
+        uint256 lDistribution = Math.min(gLength, gIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
 
-    /**
-     * @notice internal function used to distribute reward tokens to a gauge
-     * @param gauge_ address of the gauge to distribute
-     * @param rewardsERC20_ ERC20 rewards to distribute
-     * @param rewardsCoinbase_ Coinbase rewards to distribute
-     * @param totalPotentialReward_ cached total potential reward
-     * @param periodFinish_ cached period finish
-     * @param cycleStart_ cached cycle start timestamp
-     * @param cycleDuration_ cached cycle duration
-     * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
-     */
-    function _gaugeDistribute(
-        GaugeRootstockCollective gauge_,
-        uint256 rewardsERC20_,
-        uint256 rewardsCoinbase_,
-        uint256 totalPotentialReward_,
-        uint256 periodFinish_,
-        uint256 cycleStart_,
-        uint256 cycleDuration_
-    )
-        internal
-        returns (uint256)
-    {
-        uint256 _rewardShares = gauge_.rewardShares();
-        // [N] = [N] * [N] / [N]
-        uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
-        // [N] = [N] * [N] / [N]
-        uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
-        uint256 _backerRewardPercentage = getRewardPercentageToApply(gaugeToBuilder[gauge_]);
-        return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
-            _amountERC20, _backerRewardPercentage, periodFinish_, cycleStart_, cycleDuration_
+
+        BackersManagerLib.GaugeDistribute memory _gDistribute = BackersManagerLib.GaugeDistribute({
+            _newTotalPotentialReward:backersManagerData.tempTotalPotentialReward,
+            _gaugeIndex:gIndex,
+            _gaugesLength:gLength,
+            _lastDistribution:lDistribution,
+            _rewardsERC20:backersManagerData.rewardsERC20,
+            _rewardsCoinbase:backersManagerData.rewardsCoinbase,
+            _totalPotentialReward:backersManagerData.totalPotentialReward,
+            __periodFinish:backersManagerData._periodFinish,
+            _cycleStart:_cycleStart,
+            _cycleDuration:_cycleDuration
+        });
+
+        bool distributed = BackersManagerLib._distribute(
+            backersManagerData,
+            this.getGaugeAt,
+            this.cycleNext,
+            this.getRewardPercentageToApply,
+            _gDistribute,
+            gaugeToBuilder            
         );
+        return distributed;
     }
 
     /**
@@ -445,7 +402,7 @@ contract BackersManagerRootstockCollective is
      * @param value_ amount of rewardTokens to approve
      */
     function _rewardTokenApprove(address gauge_, uint256 value_) internal override {
-        IERC20(rewardToken).approve(gauge_, value_);
+        IERC20(backersManagerData.rewardToken).approve(gauge_, value_);
     }
 
     /**
@@ -456,8 +413,8 @@ contract BackersManagerRootstockCollective is
      */
     function _haltGaugeShares(GaugeRootstockCollective gauge_) internal override notInDistributionPeriod {
         // allocations are not considered for the reward's distribution
-        totalPotentialReward -= gauge_.rewardShares();
-        haltedGaugeLastPeriodFinish[gauge_] = _periodFinish;
+        backersManagerData.totalPotentialReward -= gauge_.rewardShares();
+        haltedGaugeLastPeriodFinish[gauge_] = backersManagerData._periodFinish;
     }
 
     /**
@@ -469,17 +426,17 @@ contract BackersManagerRootstockCollective is
     function _resumeGaugeShares(GaugeRootstockCollective gauge_) internal override notInDistributionPeriod {
         // gauges cannot be resumed before the distribution,
         // incentives can stay in the gauge because lastUpdateTime > lastTimeRewardApplicable
-        if (_periodFinish <= block.timestamp) revert BeforeDistribution();
+        if (backersManagerData._periodFinish <= block.timestamp) revert BeforeDistribution();
         // allocations are considered again for the reward's distribution
         // if there was a distribution we need to update the shares with the full cycle duration
-        if (haltedGaugeLastPeriodFinish[gauge_] < _periodFinish) {
+        if (haltedGaugeLastPeriodFinish[gauge_] < backersManagerData._periodFinish) {
             (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
-            totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
+            backersManagerData.totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
                 0, 0, haltedGaugeLastPeriodFinish[gauge_], _cycleStart, _cycleDuration
             );
         } else {
             // halt and resume were in the same cycle, we don't update the shares
-            totalPotentialReward += gauge_.rewardShares();
+            backersManagerData.totalPotentialReward += gauge_.rewardShares();
         }
         haltedGaugeLastPeriodFinish[gauge_] = 0;
     }

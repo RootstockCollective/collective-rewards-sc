@@ -864,7 +864,8 @@ contract SkipDistribution is BaseTest {
         rewardDistributor.sendRewardsAndStartDistribution(100 ether, 10 ether);
 
         // THEN distribution is ongoing
-        assertTrue(backersManager.onDistributionPeriod());
+        (,,,,,,,bool onDistributionPeriod) = backersManager.backersManagerData();
+        assertTrue(onDistributionPeriod);
         // CYCLE 3
         // AND cycle finishes with distribution ongoing
         _skipAndStartNewCycle();
@@ -873,7 +874,8 @@ contract SkipDistribution is BaseTest {
         backersManager.distribute();
 
         // THEN distribution is no longer ongoing
-        assertFalse(backersManager.onDistributionPeriod());
+        (,,,,,,,onDistributionPeriod) = backersManager.backersManagerData();
+        assertFalse(onDistributionPeriod);
 
         // CYCLE 4
         // AND 100 rewardTokens and 10 coinbase are distributed in next cycle

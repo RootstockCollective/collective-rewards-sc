@@ -13,6 +13,7 @@ contract AllocateInvariants is BaseInvariants {
         for (uint256 i = 0; i < backersManager.getGaugesLength(); i++) {
             _expectedTotalPotentialReward += GaugeRootstockCollective(backersManager.getGaugeAt(i)).rewardShares();
         }
-        assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
+        (,uint256 tPotentialReward,,,,,,) = backersManager.backersManagerData();
+        assertEq(tPotentialReward, _expectedTotalPotentialReward);
     }
 }

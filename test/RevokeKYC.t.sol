@@ -210,7 +210,8 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN gauge rewardShares is 1209600 ether = 2 * 1 WEEK
         assertEq(gauge.rewardShares(), 1_209_600 ether);
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
+        (,uint256 totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 8_467_200 ether);
 
         // AND builder is KYC approved again
         vm.startPrank(kycApprover);
@@ -221,7 +222,8 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN gauge rewardShares is 1209600 ether = 2 * 1 WEEK
         assertEq(gauge.rewardShares(), 1_209_600 ether);
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 8_467_200 ether);
 
         // AND builder is permitted again
         vm.startPrank(builder);
@@ -232,6 +234,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN gauge rewardShares is 1209600 ether = 2 * 1 WEEK
         assertEq(gauge.rewardShares(), 1_209_600 ether);
         // THEN total allocation is 8467200 ether = 16 * 1 WEEK
-        assertEq(backersManager.totalPotentialReward(), 9_676_800 ether);
+        (,totalPotentialReward,,,,,,) = backersManager.backersManagerData(); 
+        assertEq(totalPotentialReward, 9_676_800 ether);
     }
 }
