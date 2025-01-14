@@ -21,7 +21,7 @@ contract OptOutRewardsBehaviour is BaseTest {
         backersManager.optOutRewards(alice);
         //  WHEN alice tries to OptOut again
         //   THEN tx reverts because AlreadyOptedOut
-        vm.expectRevert(BackersManagerRootstockCollective.AlreadyOptedOutRewards.selector);
+        vm.expectRevert(BackersManagerRootstockCollective.BackerOptedOutRewards.selector);
         backersManager.optOutRewards(alice);
     }
 
@@ -82,8 +82,8 @@ contract OptOutRewardsBehaviour is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 0.1 ether);
         //  WHEN alice tries to OptOut
-        //   THEN tx reverts because OptOutWithAllocations
-        vm.expectRevert(BackersManagerRootstockCollective.OptOutWithAllocations.selector);
+        //   THEN tx reverts because BackerHasAllocations
+        vm.expectRevert(BackersManagerRootstockCollective.BackerHasAllocations.selector);
         backersManager.optOutRewards(alice);
         //  WHEN alice removes the allocation
         backersManager.allocate(gauge, 0 ether);

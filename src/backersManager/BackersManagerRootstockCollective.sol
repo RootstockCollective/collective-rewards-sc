@@ -38,9 +38,8 @@ contract BackersManagerRootstockCollective is
     error NoGaugesForDistribution();
     error NotAuthorized();
     error BackerOptedOutRewards();
-    error AlreadyOptedOutRewards();
     error AlreadyOptedInRewards();
-    error OptOutWithAllocations();
+    error BackerHasAllocations();
 
     // -----------------------------
     // ----------- Events ----------
@@ -200,7 +199,7 @@ contract BackersManagerRootstockCollective is
     )
         external
         notInDistributionPeriod
-        onlyOptedInBacker(msg.sender)
+        onlyOptedInBacker
     {
         (uint256 _newBackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
             gauge_,
@@ -227,7 +226,7 @@ contract BackersManagerRootstockCollective is
     )
         external
         notInDistributionPeriod
-        onlyOptedInBacker(msg.sender)
+        onlyOptedInBacker
     {
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
@@ -347,10 +346,10 @@ contract BackersManagerRootstockCollective is
      */
     function optOutRewards(address backer_) external onlyBackerOrFoundation(backer_) {
         if (backerTotalAllocation[backer_] != 0) {
-            revert OptOutWithAllocations();
+            revert BackerHasAllocations();
         }
         if (rewardsOptedOut[backer_]) {
-            revert AlreadyOptedOutRewards();
+            revert BackerOptedOutRewards();
         }
         rewardsOptedOut[backer_] = true;
         emit BackerRewardsOptedOut(backer_);
