@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { stdStorage, StdStorage, stdError } from "forge-std/src/Test.sol";
+import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 import { BaseTest, BackersManagerRootstockCollective, GaugeRootstockCollective } from "./BaseTest.sol";
 import { BuilderRegistryRootstockCollective } from "../src/backersManager/BuilderRegistryRootstockCollective.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
@@ -1718,11 +1718,24 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: startDistribution reverts if there are no allocations
      */
-    function test_RevertsStartDistributionWithoutAllocations() public {
+    function test_StartDistributionWithoutAllocations() public {
         // GIVEN a BackersManagerRootstockCollective without allocations
-        //  WHEN startDistribution is called
-        // THEN reverts calling startDistribution because cannot calculate shares, totalAllocation is 0
-        vm.expectRevert(stdError.divisionError);
+        //  WHEN distribute is executed
+        //   THEN RewardDistributionStarted event is emitted
+        vm.expectEmit();
+        emit RewardDistributionStarted(address(this));
+        //   THEN RewardDistributionFinished event is emitted
+        vm.expectEmit();
+        emit RewardDistributionFinished(address(this));
         backersManager.startDistribution();
+
+        // THEN last gauge distributed is gauge 0
+        assertEq(backersManager.indexLastGaugeDistributed(), 0);
+        // THEN temporal total potential rewards is 0
+        assertEq(backersManager.tempTotalPotentialReward(), 0);
+        // THEN distribution finished
+        assertEq(backersManager.onDistributionPeriod(), false);
+        // THEN periodFinish is 0
+        assertEq(backersManager.periodFinish(), backersManager.cycleNext(block.timestamp));
     }
 }
