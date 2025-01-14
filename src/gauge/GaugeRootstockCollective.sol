@@ -432,21 +432,19 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         returns (uint256 newGaugeRewardShares_)
     {
         address _rewardToken = rewardToken;
-        unchecked {
-            uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountERC20_);
-            uint256 _backerAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
-            uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
-            _notifyRewardAmount(
-                _rewardToken, amountERC20_ - _backerAmountERC20, _backerAmountERC20, periodFinish_, _timeUntilNextCycle
-            );
-            _notifyRewardAmount(
-                UtilsLib._COINBASE_ADDRESS,
-                msg.value - _backerAmountCoinbase,
-                _backerAmountCoinbase,
-                periodFinish_,
-                _timeUntilNextCycle
-            );
-        }
+        uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountERC20_);
+        uint256 _backerAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
+        uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
+        _notifyRewardAmount(
+            _rewardToken, amountERC20_ - _backerAmountERC20, _backerAmountERC20, periodFinish_, _timeUntilNextCycle
+        );
+        _notifyRewardAmount(
+            UtilsLib._COINBASE_ADDRESS,
+            msg.value - _backerAmountCoinbase,
+            _backerAmountCoinbase,
+            periodFinish_,
+            _timeUntilNextCycle
+        );
 
         newGaugeRewardShares_ = totalAllocation * cycleDuration_;
         rewardShares = newGaugeRewardShares_;
