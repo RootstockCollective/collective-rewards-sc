@@ -270,9 +270,10 @@ contract BackersManagerRootstockCollective is
      */
     function claimBackerRewards(GaugeRootstockCollective[] memory gauges_) external {
         uint256 _length = gauges_.length;
+        BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             // reverts if builder was not activated or approved by the community
-            builderRegistry.validateWhitelisted(gauges_[i]);
+            _builderRegistry.validateWhitelisted(gauges_[i]);
 
             gauges_[i].claimBackerReward(msg.sender);
         }
@@ -286,8 +287,9 @@ contract BackersManagerRootstockCollective is
      */
     function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external {
         uint256 _length = gauges_.length;
+        BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-            if (builderRegistry.gaugeToBuilder(gauges_[i]) == address(0)) {
+            if (_builderRegistry.gaugeToBuilder(gauges_[i]) == address(0)) {
                 revert BuilderRegistryRootstockCollective.GaugeDoesNotExist();
             }
             gauges_[i].claimBackerReward(rewardToken_, msg.sender);
@@ -390,7 +392,8 @@ contract BackersManagerRootstockCollective is
     function _distribute() internal returns (bool) {
         uint256 _newTotalPotentialReward = tempTotalPotentialReward;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
-        uint256 _gaugesLength = builderRegistry.getGaugesLength();
+        BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
+        uint256 _gaugesLength = _builderRegistry.getGaugesLength();
         uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
 
         // cache variables read in the loop
@@ -409,7 +412,7 @@ contract BackersManagerRootstockCollective is
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
             _newTotalPotentialReward += _gaugeDistribute(
-                GaugeRootstockCollective(builderRegistry.getGaugeAt(_gaugeIndex)),
+                GaugeRootstockCollective(_builderRegistry.getGaugeAt(_gaugeIndex)),
                 _rewardsERC20,
                 _rewardsCoinbase,
                 _totalPotentialReward,
@@ -511,16 +514,17 @@ contract BackersManagerRootstockCollective is
         if (_periodFinish <= block.timestamp) revert BeforeDistribution();
         // allocations are considered again for the reward's distribution
         // if there was a distribution we need to update the shares with the full cycle duration
-        if (builderRegistry.haltedGaugeLastPeriodFinish(gauge_) < _periodFinish) {
+        BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
+        if (_builderRegistry.haltedGaugeLastPeriodFinish(gauge_) < _periodFinish) {
             (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
             totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-                0, 0, builderRegistry.haltedGaugeLastPeriodFinish(gauge_), _cycleStart, _cycleDuration
+                0, 0, _builderRegistry.haltedGaugeLastPeriodFinish(gauge_), _cycleStart, _cycleDuration
             );
         } else {
             // halt and resume were in the same cycle, we don't update the shares
             totalPotentialReward += gauge_.rewardShares();
         }
-        builderRegistry.setHaltedGaugeLastPeriodFinish(gauge_, 0);
+        _builderRegistry.setHaltedGaugeLastPeriodFinish(gauge_, 0);
     }
 
     /**
