@@ -1716,10 +1716,60 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: startDistribution reverts if there are no allocations
+     * SCENARIO: distribution with no allocations
      */
     function test_StartDistributionWithoutAllocations() public {
+        _startDistributionWithoutAllocations();
+    }
+
+    /**
+     * SCENARIO: after a distribution with allocations, the next distribution with no allocations
+     */
+    function test_StartDistributionAfterLosingAllocations() public {
+        // GIVEN a BackersManagerRootstockCollective with allocations
+        vm.startPrank(alice);
+        backersManager.allocate(gauge, 2 ether);
+        vm.stopPrank();
+
+        // THEN total potential reward is 12096000 ether = 2 ether * 1 WEEK
+        assertEq(backersManager.totalPotentialReward(), 1_209_600 ether);
+
+        //  AND 50 ether rewardToken and 50 ether coinbase are added
+        backersManager.notifyRewardAmount{ value: 50 ether }(50 ether);
+
+        // AND a new cycle
+        _skipAndStartNewCycle();
+
+        //  AND distribute is executed
+        backersManager.startDistribution();
+
+        // THEN reward token balance of backersManager is 0 ether
+        assertEq(rewardToken.balanceOf(address(backersManager)), 0);
+        // THEN Coinbase balance of backersManager is 0 ether
+        assertEq(address(backersManager).balance, 0);
+        // THEN backersManager rewardsERC20 is 0 ether
+        assertEq(backersManager.rewardsERC20(), 0);
+        // THEN backersManager rewardsCoinbase is 0 ether
+        assertEq(backersManager.rewardsCoinbase(), 0);
+
+        // AND alice removes allocations from gauge
+        vm.startPrank(alice);
+        backersManager.allocate(gauge, 0);
+        vm.stopPrank();
+
+        // AND a new cycle
+        _skipAndStartNewCycle();
+
+        _startDistributionWithoutAllocations();
+    }
+
+    function _startDistributionWithoutAllocations() internal {
         // GIVEN a BackersManagerRootstockCollective without allocations
+        assertEq(backersManager.totalPotentialReward(), 0);
+
+        //  AND 50 ether rewardToken and 50 ether coinbase are added
+        backersManager.notifyRewardAmount{ value: 50 ether }(50 ether);
+
         //  WHEN distribute is executed
         //   THEN RewardDistributionStarted event is emitted
         vm.expectEmit();
@@ -1728,6 +1778,15 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.expectEmit();
         emit RewardDistributionFinished(address(this));
         backersManager.startDistribution();
+
+        // THEN reward token balance of backersManager is 50 ether
+        assertEq(rewardToken.balanceOf(address(backersManager)), 50 ether);
+        // THEN Coinbase balance of backersManager is 50 ether
+        assertEq(address(backersManager).balance, 50 ether);
+        // THEN backersManager rewardsERC20 is 50 ether
+        assertEq(backersManager.rewardsERC20(), 50 ether);
+        // THEN backersManager rewardsCoinbase is 50 ether
+        assertEq(backersManager.rewardsCoinbase(), 50 ether);
 
         // THEN last gauge distributed is gauge 0
         assertEq(backersManager.indexLastGaugeDistributed(), 0);
