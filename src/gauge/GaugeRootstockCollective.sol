@@ -384,7 +384,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             0, /*builderAmount_*/
             amount_,
             backersManager.periodFinish(),
-            builderRegistry.timeUntilNextCycle(block.timestamp),
+            backersManager.timeUntilNextCycle(block.timestamp),
             false /*resetRewardMissing_*/
         );
 
@@ -409,7 +409,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             0, /*builderAmount_*/
             msg.value,
             backersManager.periodFinish(),
-            builderRegistry.timeUntilNextCycle(block.timestamp),
+            backersManager.timeUntilNextCycle(block.timestamp),
             false /*resetRewardMissing_*/
         );
     }

@@ -19,10 +19,10 @@ contract SetDistributionDurationTest is BaseTest {
         uint32 _newDistributionDuration = 3 hours;
         vm.expectEmit();
         emit NewDistributionDuration(_newDistributionDuration, foundation);
-        builderRegistry.setDistributionDuration(_newDistributionDuration);
+        backersManager.setDistributionDuration(_newDistributionDuration);
 
         // THEN the distribution duration should be updated to the new value
-        vm.assertEq(builderRegistry.distributionDuration(), _newDistributionDuration);
+        vm.assertEq(backersManager.distributionDuration(), _newDistributionDuration);
     }
 
     /**
@@ -36,7 +36,7 @@ contract SetDistributionDurationTest is BaseTest {
         vm.expectRevert(CycleTimeKeeperRootstockCollective.DistributionDurationTooShort.selector);
 
         // THEN it reverts with DistributionDurationTooShort
-        builderRegistry.setDistributionDuration(0);
+        backersManager.setDistributionDuration(0);
     }
 
     /**
@@ -53,7 +53,7 @@ contract SetDistributionDurationTest is BaseTest {
         vm.expectRevert(CycleTimeKeeperRootstockCollective.DistributionModifiedDuringDistributionWindow.selector);
 
         // THEN it reverts because the distribution is ongoing
-        builderRegistry.setDistributionDuration(2 hours);
+        backersManager.setDistributionDuration(2 hours);
     }
 
     /**
@@ -70,7 +70,7 @@ contract SetDistributionDurationTest is BaseTest {
         vm.expectRevert(CycleTimeKeeperRootstockCollective.DistributionModifiedDuringDistributionWindow.selector);
 
         // THEN it reverts because the distribution window would be re-activated
-        builderRegistry.setDistributionDuration(3 hours);
+        backersManager.setDistributionDuration(3 hours);
     }
 
     /**
@@ -78,7 +78,7 @@ contract SetDistributionDurationTest is BaseTest {
      */
     function test_RevertWhenDistributionDurationTooLongForNextCycle() public {
         // GIVEN a distribution cycle is set with a next cycle duration
-        (, uint32 nextDuration,,,) = builderRegistry.cycleData();
+        (, uint32 nextDuration,,,) = backersManager.cycleData();
         uint32 invalidLongDuration = (nextDuration / 2) + 1;
 
         // WHEN an overly long duration is attempted to be set
@@ -86,7 +86,7 @@ contract SetDistributionDurationTest is BaseTest {
 
         // THEN it reverts with DistributionDurationTooLong
         vm.prank(foundation);
-        builderRegistry.setDistributionDuration(invalidLongDuration);
+        backersManager.setDistributionDuration(invalidLongDuration);
     }
 
     /**
@@ -101,7 +101,7 @@ contract SetDistributionDurationTest is BaseTest {
 
         // THEN it reverts with DistributionDurationTooLong
         vm.prank(foundation);
-        builderRegistry.setDistributionDuration(_invalidLongDuration);
+        backersManager.setDistributionDuration(_invalidLongDuration);
     }
 
     /**
@@ -114,6 +114,6 @@ contract SetDistributionDurationTest is BaseTest {
         // WHEN it tries to set the distribution duration
         // THEN it reverts with NotValidChangerOrFoundation
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotFoundationTreasury.selector);
-        builderRegistry.setDistributionDuration(2 hours);
+        backersManager.setDistributionDuration(2 hours);
     }
 }

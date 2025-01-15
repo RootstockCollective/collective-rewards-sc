@@ -10,12 +10,18 @@ import { BuilderRegistryRootstockCollective } from "./BuilderRegistryRootstockCo
 import { ICollectiveRewardsCheckRootstockCollective } from
     "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
+import { CycleTimeKeeperRootstockCollective } from "./CycleTimeKeeperRootstockCollective.sol";
+import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
 
 /**
  * @title BackersManagerRootstockCollective
  * @notice Creates gauges, manages backers votes and distribute rewards
  */
-contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCollective, ERC165Upgradeable {
+contract BackersManagerRootstockCollective is
+    CycleTimeKeeperRootstockCollective,
+    ICollectiveRewardsCheckRootstockCollective,
+    ERC165Upgradeable
+{
     // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
     uint256 internal constant _MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
@@ -45,7 +51,7 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyInDistributionWindow() {
-        if (block.timestamp >= builderRegistry.endDistributionWindow(block.timestamp)) {
+        if (block.timestamp >= endDistributionWindow(block.timestamp)) {
             revert OnlyInDistributionWindow();
         }
         _;
@@ -101,16 +107,35 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
 
     /**
      * @notice contract initializer
+     * @param governanceManager_ contract with permissioned roles
      * @param builderRegistry_ address of the builder registry contract
      * @param rewardToken_ address of the token rewarded to builder and voters, only standard ERC20 MUST be used
      * @param stakingToken_ address of the staking token for builder and voters
+     * @param cycleDuration_ Collective Rewards cycle time duration
+     * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
+     * @param distributionDuration_ duration of the distribution window
      */
-    function initialize(address builderRegistry_, address rewardToken_, address stakingToken_) external initializer {
+    function initialize(
+        IGovernanceManagerRootstockCollective governanceManager_,
+        address builderRegistry_,
+        address rewardToken_,
+        address stakingToken_,
+        uint32 cycleDuration_,
+        uint24 cycleStartOffset_,
+        uint32 distributionDuration_
+    )
+        external
+        initializer
+    {
+        __CycleTimeKeeperRootstockCollective_init(
+            governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
+        );
+
         require(address(builderRegistry_) != address(0), "Must set builder registry");
         builderRegistry = BuilderRegistryRootstockCollective(builderRegistry_);
         rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
-        _periodFinish = builderRegistry.cycleNext(block.timestamp);
+        _periodFinish = cycleNext(block.timestamp);
     }
 
     // -----------------------------
@@ -152,7 +177,7 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
             allocation_,
             backerTotalAllocation[msg.sender],
             totalPotentialReward,
-            builderRegistry.timeUntilNextCycle(block.timestamp)
+            timeUntilNextCycle(block.timestamp)
         );
 
         _updateAllocation(msg.sender, _newbackerTotalAllocation, _newTotalPotentialReward);
@@ -177,7 +202,7 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
         // TODO: check length < MAX or let revert by out of gas?
         uint256 _backerTotalAllocation = backerTotalAllocation[msg.sender];
         uint256 _totalPotentialReward = totalPotentialReward;
-        uint256 _timeUntilNextCycle = builderRegistry.timeUntilNextCycle(block.timestamp);
+        uint256 _timeUntilNextCycle = timeUntilNextCycle(block.timestamp);
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             (uint256 _newbackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
                 gauges_[i], allocations_[i], _backerTotalAllocation, _totalPotentialReward, _timeUntilNextCycle
@@ -364,7 +389,7 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
         uint256 _rewardsCoinbase = rewardsCoinbase;
         uint256 _totalPotentialReward = totalPotentialReward;
         uint256 __periodFinish = _periodFinish;
-        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
 
         // no rewards to distribute since there are no allocations
         if (_totalPotentialReward == 0) {
@@ -405,7 +430,7 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
         emit RewardDistributionFinished(msg.sender);
         indexLastGaugeDistributed = 0;
         tempTotalPotentialReward = 0;
-        _periodFinish = builderRegistry.cycleNext(block.timestamp);
+        _periodFinish = cycleNext(block.timestamp);
     }
 
     /**
@@ -478,7 +503,7 @@ contract BackersManagerRootstockCollective is ICollectiveRewardsCheckRootstockCo
         // allocations are considered again for the reward's distribution
         // if there was a distribution we need to update the shares with the full cycle duration
         if (builderRegistry.haltedGaugeLastPeriodFinish(gauge_) < _periodFinish) {
-            (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+            (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
             totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
                 0, 0, builderRegistry.haltedGaugeLastPeriodFinish(gauge_), _cycleStart, _cycleDuration
             );

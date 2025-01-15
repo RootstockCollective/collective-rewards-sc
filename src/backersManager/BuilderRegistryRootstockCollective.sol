@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { CycleTimeKeeperRootstockCollective } from "./CycleTimeKeeperRootstockCollective.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { BackersManagerRootstockCollective } from "./BackersManagerRootstockCollective.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "../gauge/GaugeFactoryRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
+import { UpgradeableRootstockCollective } from "../governance/UpgradeableRootstockCollective.sol";
 
 /**
  * @title BuilderRegistryRootstockCollective
  * @notice Keeps registers of the builders
  */
-contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollective {
+contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_REWARD_PERCENTAGE = UtilsLib._PRECISION;
@@ -140,26 +140,18 @@ contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollectiv
      * @param governanceManager_ contract with permissioned roles
      * @param gaugeFactory_ address of the GaugeFactoryRootstockCollective contract
      * @param rewardDistributor_ address of the rewardDistributor contract
-     * @param cycleDuration_ Collective Rewards cycle time duration
-     * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
      * @param rewardPercentageCooldown_ time that must elapse for a new reward percentage from a builder to be applied
-     * @param distributionDuration_ duration of the distribution window
      */
     function initialize(
         IGovernanceManagerRootstockCollective governanceManager_,
         address gaugeFactory_,
         address rewardDistributor_,
-        uint32 cycleDuration_,
-        uint24 cycleStartOffset_,
-        uint32 distributionDuration_,
         uint128 rewardPercentageCooldown_
     )
         external
         initializer
     {
-        __CycleTimeKeeperRootstockCollective_init(
-            governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
-        );
+        __Upgradeable_init(governanceManager_);
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
         rewardPercentageCooldown = rewardPercentageCooldown_;

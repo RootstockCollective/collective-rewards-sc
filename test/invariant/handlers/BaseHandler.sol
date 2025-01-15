@@ -22,7 +22,7 @@ contract BaseHandler is Test {
 
     modifier skipTime(uint256 timeToSkip_) {
         vm.warp(timeManager.timestamp());
-        uint256 _nextCycle = builderRegistry.cycleNext(block.timestamp) - block.timestamp;
+        uint256 _nextCycle = backersManager.cycleNext(block.timestamp) - block.timestamp;
         timeToSkip_ = bound(timeToSkip_, 0, 2 * _nextCycle);
         timeManager.increaseTimestamp(timeToSkip_);
         _;

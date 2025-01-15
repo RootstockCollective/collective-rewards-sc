@@ -26,11 +26,11 @@ contract SetCycleDurationFuzzTest is BaseFuzz {
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
         // AND governor sets a random cycle duration and offset
         vm.prank(governor);
-        builderRegistry.setCycleDuration(newCycleDuration_, cycleStartOffset_);
+        backersManager.setCycleDuration(newCycleDuration_, cycleStartOffset_);
 
         (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart,) =
-            builderRegistry.cycleData();
-        (_previousDuration, _nextDuration, _previousStart, _nextStart,) = builderRegistry.cycleData();
+            backersManager.cycleData();
+        (_previousDuration, _nextDuration, _previousStart, _nextStart,) = backersManager.cycleData();
         // THEN previous cycle duration is 1 week
         assertEq(_previousDuration, 1 weeks);
         // THEN next cycle duration is the new random cycle duration
@@ -40,38 +40,38 @@ contract SetCycleDurationFuzzTest is BaseFuzz {
         // THEN next cycle starts in 1 weeks from now
         assertEq(_nextStart, block.timestamp + 1 weeks);
 
-        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle starts is 1 week ago
         assertEq(_cycleStart, block.timestamp - 1 weeks);
         // THEN cycle duration is 1 week
         assertEq(_cycleDuration, 1 weeks);
         // THEN cycle finishes in 1 week
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 1 weeks);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
-        (_cycleStart, _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is newCycleDuration_ + cycleStartOffset_
         assertEq(_cycleDuration, newCycleDuration_ + cycleStartOffset_);
         // THEN cycles start time is now
         assertEq(_cycleStart, block.timestamp);
         // THEN distribution window ends in 1 hour
-        assertEq(builderRegistry.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
+        assertEq(backersManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
         // THEN next cycle is in newCycleDuration_ + cycleStartOffset_
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + newCycleDuration_ + cycleStartOffset_);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + newCycleDuration_ + cycleStartOffset_);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
-        (_cycleStart, _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is the new random cycle duration
         assertEq(_cycleDuration, newCycleDuration_);
         // THEN cycles starts time is the new random cycle duration ago
         assertEq(_cycleStart, block.timestamp - newCycleDuration_);
         // THEN distribution window ends in 1 hour
-        assertEq(builderRegistry.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
+        assertEq(backersManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
         // THEN next cycle is after the new random cycle duration
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + newCycleDuration_);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + newCycleDuration_);
 
         // WHEN all the builders claim their rewards
         _buildersClaim();

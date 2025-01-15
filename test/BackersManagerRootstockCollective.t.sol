@@ -1547,12 +1547,12 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 7 weeks;
 
-        stdstore.target(address(builderRegistry)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
+        stdstore.target(address(backersManager)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
             _newOffset
         );
 
         (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart, uint24 _offset) =
-            builderRegistry.cycleData();
+            backersManager.cycleData();
 
         // THEN previous cycle duration is 1 week
         assertEq(_previousDuration, 1 weeks);
@@ -1566,9 +1566,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(_offset, 7 weeks);
 
         // THEN cycle starts now
-        assertEq(builderRegistry.cycleStart(block.timestamp), block.timestamp);
+        assertEq(backersManager.cycleStart(block.timestamp), block.timestamp);
         // THEN cycle ends in 8 weeks from now (1 weeks duration + 7 weeks offset)
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 8 weeks);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 8 weeks);
 
         // AND alice allocates 2 ether to builder and 6 ether to builder2
         vm.startPrank(alice);
@@ -1589,9 +1589,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(block.timestamp - _timestampBefore, 1 weeks);
 
         // THEN cycle starts now
-        assertEq(builderRegistry.cycleStart(block.timestamp), block.timestamp);
+        assertEq(backersManager.cycleStart(block.timestamp), block.timestamp);
         // THEN cycle ends in 1 weeks
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 1 weeks);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks);
 
         // WHEN alice claim rewards
         vm.prank(alice);
@@ -1616,14 +1616,14 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 7 weeks;
 
-        stdstore.target(address(builderRegistry)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
+        stdstore.target(address(backersManager)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
             _newOffset
         );
 
         // periodFinish is initialized using the cycleStartOffset = 0 on initialization, we need to calculate it again
         // with the newCycleStartOffset = 7 weeks
         stdstore.target(address(backersManager)).sig("periodFinish()").checked_write(
-            builderRegistry.cycleNext(block.timestamp)
+            backersManager.cycleNext(block.timestamp)
         );
 
         // AND gauge is incentive with 100 ether of rewardToken
@@ -1642,9 +1642,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(block.timestamp - _timestampBefore, 8 weeks);
 
         // THEN cycle starts now
-        assertEq(builderRegistry.cycleStart(block.timestamp), block.timestamp);
+        assertEq(backersManager.cycleStart(block.timestamp), block.timestamp);
         // THEN cycle ends in 1 weeks
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 1 weeks);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks);
 
         // WHEN alice claim rewards
         vm.prank(alice);
@@ -1666,7 +1666,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // to test the scenario where the contract is initialized with a different value
         uint24 _newOffset = 3 days;
 
-        stdstore.target(address(builderRegistry)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
+        stdstore.target(address(backersManager)).sig("cycleData()").depth(4).enable_packed_slots().checked_write(
             _newOffset
         );
 
@@ -1795,6 +1795,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN distribution finished
         assertEq(backersManager.onDistributionPeriod(), false);
         // THEN periodFinish is 0
-        assertEq(backersManager.periodFinish(), backersManager.builderRegistry().cycleNext(block.timestamp));
+        assertEq(backersManager.periodFinish(), backersManager.cycleNext(block.timestamp));
     }
 }

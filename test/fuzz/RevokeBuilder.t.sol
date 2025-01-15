@@ -122,10 +122,10 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
                 if (!builderRegistry.isGaugeHalted(address(backersGauges[i][j]))) {
                     if (backersAllocations[i][j] > _allocationBefore) {
                         _expectedTotalPotentialReward += (backersAllocations[i][j] - _allocationBefore)
-                            * builderRegistry.timeUntilNextCycle(block.timestamp);
+                            * backersManager.timeUntilNextCycle(block.timestamp);
                     } else {
                         _expectedTotalPotentialReward -= (_allocationBefore - backersAllocations[i][j])
-                            * builderRegistry.timeUntilNextCycle(block.timestamp);
+                            * backersManager.timeUntilNextCycle(block.timestamp);
                     }
                 } else {
                     if (backersAllocations[i][j] > _allocationBefore) {
@@ -198,7 +198,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
 
         // AND governor sets a random cycle duration
         vm.prank(governor);
-        builderRegistry.setCycleDuration(newCycleDuration_, 0);
+        backersManager.setCycleDuration(newCycleDuration_, 0);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);

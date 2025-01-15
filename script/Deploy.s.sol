@@ -12,11 +12,11 @@ import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/G
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
 import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
+import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 import { Deploy as RewardDistributorRootstockCollectiveDeployer } from
     "script/RewardDistributorRootstockCollective.s.sol";
 import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
     "script/governance/GovernanceManagerRootstockCollective.s.sol";
-import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster, OutputWriter {
     address private _rewardTokenAddress;
@@ -79,9 +79,6 @@ contract Deploy is Broadcaster, OutputWriter {
             address(_governanceManagerProxy),
             address(_gaugeFactory),
             address(_rewardDistributorProxy),
-            _cycleDuration,
-            _cycleStartOffset,
-            _distributionDuration,
             _rewardPercentageCooldown
         );
         saveWithProxy(
@@ -90,7 +87,13 @@ contract Deploy is Broadcaster, OutputWriter {
 
         (BackersManagerRootstockCollective _backersManagerProxy, BackersManagerRootstockCollective _backersManagerImpl)
         = new BackersManagerRootstockCollectiveDeployer().run(
-            address(_builderRegistryProxy), _rewardTokenAddress, _stakingTokenAddress
+            address(_governanceManagerProxy),
+            address(_builderRegistryProxy),
+            _rewardTokenAddress,
+            _stakingTokenAddress,
+            _cycleDuration,
+            _cycleStartOffset,
+            _distributionDuration
         );
         saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
         _builderRegistryProxy.setBackersManager(_backersManagerProxy);

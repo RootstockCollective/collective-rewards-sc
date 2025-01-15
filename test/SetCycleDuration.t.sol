@@ -42,15 +42,15 @@ contract SetCycleDurationTest is BaseTest {
 
         vm.prank(alice);
         vm.expectRevert(CycleTimeKeeperRootstockCollective.NotValidChangerOrFoundation.selector);
-        builderRegistry.setCycleDuration(3 weeks, 0 days);
+        backersManager.setCycleDuration(3 weeks, 0 days);
 
         // GIVEN accounts with permissions to change the cycle duration
         //  WHEN authorized account calls setCycleDuration
         //   THEN NewCycleDurationScheduled event is emitted
         vm.prank(foundation);
-        builderRegistry.setCycleDuration(3 weeks, 0 days);
+        backersManager.setCycleDuration(3 weeks, 0 days);
         vm.prank(governor);
-        builderRegistry.setCycleDuration(2 weeks, 0 days);
+        backersManager.setCycleDuration(2 weeks, 0 days);
     }
 
     /**
@@ -62,7 +62,7 @@ contract SetCycleDurationTest is BaseTest {
         //   THEN tx reverts because is too short
         vm.prank(governor);
         vm.expectRevert(CycleTimeKeeperRootstockCollective.CycleDurationTooShort.selector);
-        builderRegistry.setCycleDuration(distributionDuration, 0 days);
+        backersManager.setCycleDuration(distributionDuration, 0 days);
     }
 
     /**
@@ -73,14 +73,14 @@ contract SetCycleDurationTest is BaseTest {
         //  WHEN calls setCycleDuration
         //   THEN NewCycleDurationScheduled event is emitted
         (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart,) =
-            builderRegistry.cycleData();
+            backersManager.cycleData();
         uint256 _nextCycle = UtilsLib._calcCycleNext(_previousStart, 1 weeks, block.timestamp);
         vm.prank(governor);
         vm.expectEmit();
         emit NewCycleDurationScheduled(3 weeks, _nextCycle);
-        builderRegistry.setCycleDuration(3 weeks, 0 days);
+        backersManager.setCycleDuration(3 weeks, 0 days);
 
-        (_previousDuration, _nextDuration, _previousStart, _nextStart,) = builderRegistry.cycleData();
+        (_previousDuration, _nextDuration, _previousStart, _nextStart,) = backersManager.cycleData();
         // THEN previous cycle duration is 1 week
         assertEq(_previousDuration, 1 weeks);
         // THEN next cycle duration is 3 weeks
@@ -90,17 +90,17 @@ contract SetCycleDurationTest is BaseTest {
         // THEN next cycle starts in 1 weeks from now
         assertEq(_nextStart, block.timestamp + 1 weeks);
 
-        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle start is now
         assertEq(_cycleStart, block.timestamp);
         // THEN cycle duration is 1 week
         assertEq(_cycleDuration, 1 weeks);
         // THEN cycle finishes in 1 week
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 1 weeks);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
-        (_previousDuration, _nextDuration, _previousStart, _nextStart,) = builderRegistry.cycleData();
+        (_previousDuration, _nextDuration, _previousStart, _nextStart,) = backersManager.cycleData();
         // THEN previous cycle duration is 1 week
         assertEq(_previousDuration, 1 weeks);
         // THEN next cycle duration is 3 weeks
@@ -112,8 +112,8 @@ contract SetCycleDurationTest is BaseTest {
 
         // AND governor sets a new cycle duration of 6 weeks
         vm.prank(governor);
-        builderRegistry.setCycleDuration(6 weeks, 0 days);
-        (_previousDuration, _nextDuration, _previousStart, _nextStart,) = builderRegistry.cycleData();
+        backersManager.setCycleDuration(6 weeks, 0 days);
+        (_previousDuration, _nextDuration, _previousStart, _nextStart,) = backersManager.cycleData();
         // THEN previous cycle duration is 3 week
         assertEq(_previousDuration, 3 weeks);
         // THEN next cycle duration is 6 weeks
@@ -123,13 +123,13 @@ contract SetCycleDurationTest is BaseTest {
         // THEN next cycle starts in 3 weeks from now
         assertEq(_nextStart, block.timestamp + 3 weeks);
 
-        (_cycleStart, _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle start is now
         assertEq(_cycleStart, block.timestamp);
         // THEN cycle duration is 3 week
         assertEq(_cycleDuration, 3 weeks);
         // THEN cycle finishes in 3 week
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 3 weeks);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 3 weeks);
     }
 
     /**
@@ -139,9 +139,9 @@ contract SetCycleDurationTest is BaseTest {
         // GIVEN an cycle duration of 1 week
         //  WHEN calls setCycleDuration again with 1 week
         vm.prank(governor);
-        builderRegistry.setCycleDuration(1 weeks, 0 days);
+        backersManager.setCycleDuration(1 weeks, 0 days);
 
-        (uint32 _previousDuration, uint32 _nextDuration,,,) = builderRegistry.cycleData();
+        (uint32 _previousDuration, uint32 _nextDuration,,,) = backersManager.cycleData();
         // THEN previous and next cycle durations are the same
         assertEq(_previousDuration, _nextDuration);
     }
@@ -155,16 +155,16 @@ contract SetCycleDurationTest is BaseTest {
         _initialState();
         // AND governor sets a new cycle duration of 3 weeks
         vm.prank(governor);
-        builderRegistry.setCycleDuration(3 weeks, 0 days);
+        backersManager.setCycleDuration(3 weeks, 0 days);
 
-        (uint32 _previousDuration, uint32 _nextDuration,, uint64 _nextStart,) = builderRegistry.cycleData();
+        (uint32 _previousDuration, uint32 _nextDuration,, uint64 _nextStart,) = backersManager.cycleData();
         // AND cycle didn't finish, 1 sec is remaining
         vm.warp(block.timestamp + 1 weeks - 1);
 
         // AND governor sets a new cycle duration of 4 weeks
         vm.prank(governor);
-        builderRegistry.setCycleDuration(4 weeks, 0 days);
-        (_previousDuration, _nextDuration,, _nextStart,) = builderRegistry.cycleData();
+        backersManager.setCycleDuration(4 weeks, 0 days);
+        (_previousDuration, _nextDuration,, _nextStart,) = backersManager.cycleData();
         // THEN previous cycle duration is 1 week
         assertEq(_previousDuration, 1 weeks);
         // THEN next cycle duration is 4 weeks
@@ -172,7 +172,7 @@ contract SetCycleDurationTest is BaseTest {
         // THEN next cycle starts in 1 sec
         assertEq(_nextStart, block.timestamp + 1);
 
-        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1 week
         assertEq(_cycleDuration, 1 weeks);
         // THEN cycle started 1 week ago
@@ -181,7 +181,7 @@ contract SetCycleDurationTest is BaseTest {
         // AND cycle finishes
         _skipAndStartNewCycle();
 
-        (_cycleStart, _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 4 weeks
         assertEq(_cycleDuration, 4 weeks);
         // THEN cycle starts now
@@ -198,11 +198,11 @@ contract SetCycleDurationTest is BaseTest {
         _distribute(100 ether, 10 ether);
         // AND governor sets a new cycle duration of 3 weeks
         vm.prank(governor);
-        builderRegistry.setCycleDuration(3 weeks, 0 days);
+        backersManager.setCycleDuration(3 weeks, 0 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 3 weeks
         assertEq(_cycleDuration, 3 weeks);
         // AND 100 rewardToken and 10 coinbase are distributed
@@ -211,11 +211,11 @@ contract SetCycleDurationTest is BaseTest {
         // THEN cycles start time is 3 weeks ago
         assertEq(_cycleStart, block.timestamp - 3 weeks);
         // THEN cycle starts now
-        assertEq(builderRegistry.cycleStart(block.timestamp), block.timestamp);
+        assertEq(backersManager.cycleStart(block.timestamp), block.timestamp);
         // THEN distribution window ends in 1 hour
-        assertEq(builderRegistry.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
+        assertEq(backersManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
         // THEN next cycle is in 3 weeks
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 3 weeks);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 3 weeks);
 
         // THEN period finish in 3 weeks
         assertEq(backersManager.periodFinish(), block.timestamp + 3 weeks);
@@ -267,12 +267,12 @@ contract SetCycleDurationTest is BaseTest {
         _distribute(100 ether, 10 ether);
         // AND governor sets a new cycle duration of 0.5 weeks
         vm.prank(governor);
-        builderRegistry.setCycleDuration(0.5 weeks, 0 days);
+        backersManager.setCycleDuration(0.5 weeks, 0 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
         // THEN cycle duration is 0.5 week
-        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         assertEq(_cycleDuration, 0.5 weeks);
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -280,11 +280,11 @@ contract SetCycleDurationTest is BaseTest {
         // THEN cycles start time is 0.5 weeks ago
         assertEq(_cycleStart, block.timestamp - 0.5 weeks);
         // THEN cycle starts now
-        assertEq(builderRegistry.cycleStart(block.timestamp), block.timestamp);
+        assertEq(backersManager.cycleStart(block.timestamp), block.timestamp);
         // THEN distribution window ends in 1 hour
-        assertEq(builderRegistry.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
+        assertEq(backersManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
         // THEN next cycle is in 0.5 weeks
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 0.5 weeks);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 0.5 weeks);
 
         // THEN period finish in 0.5 weeks
         assertEq(backersManager.periodFinish(), block.timestamp + 0.5 weeks);
@@ -336,31 +336,31 @@ contract SetCycleDurationTest is BaseTest {
         _distribute(100 ether, 10 ether);
         // AND governor sets a same cycle duration of 1 weeks adding an offset of 3 days
         vm.prank(governor);
-        builderRegistry.setCycleDuration(1 weeks, 3 days);
+        backersManager.setCycleDuration(1 weeks, 3 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1 week + 3 days
         assertEq(_cycleDuration, 1 weeks + 3 days);
         // THEN cycles start time is now
         assertEq(_cycleStart, block.timestamp);
         // THEN distribution window ends in 1 hour
-        assertEq(builderRegistry.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
+        assertEq(backersManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
         // THEN next cycle is in 1 week + 3 days
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 1 weeks + 3 days);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks + 3 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        (_cycleStart, _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1 week
         assertEq(_cycleDuration, 1 weeks);
         // THEN cycles start time is 1 week ago
         assertEq(_cycleStart, block.timestamp - 1 weeks);
         // THEN distribution window ends in 1 hour
-        assertEq(builderRegistry.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
+        assertEq(backersManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
         // THEN next cycle is in 1 week
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 1 weeks);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -391,31 +391,31 @@ contract SetCycleDurationTest is BaseTest {
         _distribute(100 ether, 10 ether);
         // AND governor sets a longer cycle duration of 1.5 weeks adding an offset of 3 days
         vm.prank(governor);
-        builderRegistry.setCycleDuration(1.5 weeks, 3 days);
+        backersManager.setCycleDuration(1.5 weeks, 3 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1.5 week + 3 days
         assertEq(_cycleDuration, 1.5 weeks + 3 days);
         // THEN cycles start time is now
         assertEq(_cycleStart, block.timestamp);
         // THEN distribution window ends in 1 hour
-        assertEq(builderRegistry.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
+        assertEq(backersManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
         // THEN next cycle is in 1.5 week + 3 days
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 1.5 weeks + 3 days);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1.5 weeks + 3 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        (_cycleStart, _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1.5 week
         assertEq(_cycleDuration, 1.5 weeks);
         // THEN cycles start time is 1.5 week ago
         assertEq(_cycleStart, block.timestamp - 1.5 weeks);
         // THEN distribution window ends in 1 hour
-        assertEq(builderRegistry.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
+        assertEq(backersManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
         // THEN next cycle is in 1.5 week
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 1.5 weeks);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1.5 weeks);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -446,31 +446,31 @@ contract SetCycleDurationTest is BaseTest {
         _distribute(100 ether, 10 ether);
         // AND governor sets a shorter cycle duration of 0.75 weeks adding an offset of 3 days
         vm.prank(governor);
-        builderRegistry.setCycleDuration(0.75 weeks, 3 days);
+        backersManager.setCycleDuration(0.75 weeks, 3 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        (uint256 _cycleStart, uint256 _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 0.75 week + 3 days
         assertEq(_cycleDuration, 0.75 weeks + 3 days);
         // THEN cycles start time is now
         assertEq(_cycleStart, block.timestamp);
         // THEN distribution window ends in 1 hour
-        assertEq(builderRegistry.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
+        assertEq(backersManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
         // THEN next cycle is in 0.75 week + 3 days
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 0.75 weeks + 3 days);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 0.75 weeks + 3 days);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
-        (_cycleStart, _cycleDuration) = builderRegistry.getCycleStartAndDuration();
+        (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 0.75 week
         assertEq(_cycleDuration, 0.75 weeks);
         // THEN cycles start time is 0.75 week ago
         assertEq(_cycleStart, block.timestamp - 0.75 weeks);
         // THEN distribution window ends in 1 hour
-        assertEq(builderRegistry.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
+        assertEq(backersManager.endDistributionWindow(block.timestamp), block.timestamp + 1 hours);
         // THEN next cycle is in 0.75 week
-        assertEq(builderRegistry.cycleNext(block.timestamp), block.timestamp + 0.75 weeks);
+        assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 0.75 weeks);
 
         // AND cycle finishes
         _skipAndStartNewCycle();

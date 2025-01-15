@@ -14,6 +14,6 @@ contract DistributionDurationHandler is BaseHandler {
 
     function setDistributionDuration(uint32 newDuration_) external {
         vm.prank(baseTest.governanceManager().governor());
-        builderRegistry.setDistributionDuration(newDuration_);
+        backersManager.setDistributionDuration(newDuration_);
     }
 }

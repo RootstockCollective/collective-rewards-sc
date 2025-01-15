@@ -76,17 +76,17 @@ contract BaseTest is Test {
             new RewardDistributorRootstockCollectiveDeployer().run(address(governanceManager));
 
         (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer().run(
-            address(governanceManager),
-            address(gaugeFactory),
-            address(rewardDistributor),
-            cycleDuration,
-            cycleStartOffset,
-            distributionDuration,
-            rewardPercentageCooldown
+            address(governanceManager), address(gaugeFactory), address(rewardDistributor), rewardPercentageCooldown
         );
 
         (backersManager, backersManagerImpl) = new BackersManagerRootstockCollectiveDeployer().run(
-            address(builderRegistry), address(rewardToken), address(stakingToken)
+            address(governanceManager),
+            address(builderRegistry),
+            address(rewardToken),
+            address(stakingToken),
+            cycleDuration,
+            cycleStartOffset,
+            distributionDuration
         );
 
         builderRegistry.setBackersManager(backersManager);
@@ -113,12 +113,12 @@ contract BaseTest is Test {
     function _setUp() internal virtual { }
 
     function _skipAndStartNewCycle() internal {
-        uint256 _currentCycleRemaining = builderRegistry.cycleNext(block.timestamp) - block.timestamp;
+        uint256 _currentCycleRemaining = backersManager.cycleNext(block.timestamp) - block.timestamp;
         skip(_currentCycleRemaining);
     }
 
     function _skipRemainingCycleFraction(uint256 fraction_) internal {
-        uint256 _currentCycleRemaining = builderRegistry.cycleNext(block.timestamp) - block.timestamp;
+        uint256 _currentCycleRemaining = backersManager.cycleNext(block.timestamp) - block.timestamp;
         skip(_currentCycleRemaining / fraction_);
     }
 
@@ -128,7 +128,7 @@ contract BaseTest is Test {
 
     function _skipToEndDistributionWindow() internal {
         _skipAndStartNewCycle();
-        uint256 _currentCycleRemaining = builderRegistry.endDistributionWindow(block.timestamp) - block.timestamp;
+        uint256 _currentCycleRemaining = backersManager.endDistributionWindow(block.timestamp) - block.timestamp;
         skip(_currentCycleRemaining);
     }
 

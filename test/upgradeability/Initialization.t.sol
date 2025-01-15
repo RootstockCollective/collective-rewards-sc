@@ -13,7 +13,15 @@ contract InitializationTest is BaseTest {
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        backersManager.initialize(address(builderRegistry), address(rewardToken), address(stakingToken));
+        backersManager.initialize(
+            governanceManager,
+            address(builderRegistry),
+            address(rewardToken),
+            address(stakingToken),
+            cycleDuration,
+            cycleStartOffset,
+            distributionDuration
+        );
     }
 
     /**
