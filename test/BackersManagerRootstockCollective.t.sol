@@ -1795,6 +1795,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN distribution finished
         assertEq(backersManager.onDistributionPeriod(), false);
         // THEN periodFinish is 0
-        assertEq(backersManager.periodFinish(), builderRegistry.cycleNext(block.timestamp));
+        assertEq(backersManager.periodFinish(), backersManager.builderRegistry().cycleNext(block.timestamp));
     }
 }

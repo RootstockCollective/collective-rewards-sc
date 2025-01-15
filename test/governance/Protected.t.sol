@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest, BackersManagerRootstockCollective, BuilderRegistryRootstockCollective } from "../BaseTest.sol";
+import { BaseTest, BuilderRegistryRootstockCollective } from "../BaseTest.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 
