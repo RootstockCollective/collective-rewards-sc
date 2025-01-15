@@ -3,20 +3,17 @@ pragma solidity 0.8.20;
 
 import { CycleTimeKeeperRootstockCollective } from "./CycleTimeKeeperRootstockCollective.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
-import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { BackersManagerRootstockCollective } from "./BackersManagerRootstockCollective.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "../gauge/GaugeFactoryRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
-import { ICollectiveRewardsCheckRootstockCollective } from
-    "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol"; //def not
 
 /**
  * @title BuilderRegistryRootstockCollective
  * @notice Keeps registers of the builders
  */
-contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollective, ERC165Upgradeable {
+contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollective {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_REWARD_PERCENTAGE = UtilsLib._PRECISION;
@@ -163,7 +160,6 @@ contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollectiv
         __CycleTimeKeeperRootstockCollective_init(
             governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
         );
-        __ERC165_init();
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
         rewardPercentageCooldown = rewardPercentageCooldown_;
@@ -187,15 +183,6 @@ contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstockCollectiv
         onlyBackersManager
     {
         haltedGaugeLastPeriodFinish[gauge_] = periodFinish_;
-    }
-
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId_) public view override returns (bool) {
-        return interfaceId_ == type(ICollectiveRewardsCheckRootstockCollective).interfaceId // change to some other
-            // interface presumably
-            || super.supportsInterface(interfaceId_);
     }
 
     /**
