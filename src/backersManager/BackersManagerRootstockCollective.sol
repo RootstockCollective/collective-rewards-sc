@@ -177,7 +177,8 @@ contract BackersManagerRootstockCollective is
             allocation_,
             backerTotalAllocation[msg.sender],
             totalPotentialReward,
-            timeUntilNextCycle(block.timestamp)
+            timeUntilNextCycle(block.timestamp),
+            builderRegistry
         );
 
         _updateAllocation(msg.sender, _newbackerTotalAllocation, _newTotalPotentialReward);
@@ -203,9 +204,15 @@ contract BackersManagerRootstockCollective is
         uint256 _backerTotalAllocation = backerTotalAllocation[msg.sender];
         uint256 _totalPotentialReward = totalPotentialReward;
         uint256 _timeUntilNextCycle = timeUntilNextCycle(block.timestamp);
+        BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             (uint256 _newbackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
-                gauges_[i], allocations_[i], _backerTotalAllocation, _totalPotentialReward, _timeUntilNextCycle
+                gauges_[i],
+                allocations_[i],
+                _backerTotalAllocation,
+                _totalPotentialReward,
+                _timeUntilNextCycle,
+                _builderRegistry
             );
             _backerTotalAllocation = _newbackerTotalAllocation;
             _totalPotentialReward = _newTotalPotentialReward;
@@ -311,6 +318,7 @@ contract BackersManagerRootstockCollective is
      * @param backerTotalAllocation_ current backer total allocation
      * @param totalPotentialReward_ current total potential reward
      * @param timeUntilNextCycle_ time until next cycle
+     * @param builderRegistry_ address of the builder registry contract, passed as parameter to avoid storage reads
      * @return newbackerTotalAllocation_ backer total allocation after new the allocation
      * @return newTotalPotentialReward_ total potential reward  after the new allocation
      */
@@ -319,19 +327,20 @@ contract BackersManagerRootstockCollective is
         uint256 allocation_,
         uint256 backerTotalAllocation_,
         uint256 totalPotentialReward_,
-        uint256 timeUntilNextCycle_
+        uint256 timeUntilNextCycle_,
+        BuilderRegistryRootstockCollective builderRegistry_
     )
         internal
         returns (uint256 newbackerTotalAllocation_, uint256 newTotalPotentialReward_)
     {
         // reverts if builder was not activated or approved by the community
-        builderRegistry.validateWhitelisted(gauge_);
+        builderRegistry_.validateWhitelisted(gauge_);
 
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
             gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
 
         // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
-        if (builderRegistry.isGaugeHalted(address(gauge_))) {
+        if (builderRegistry_.isGaugeHalted(address(gauge_))) {
             if (!_isNegative) {
                 revert PositiveAllocationOnHaltedGauge();
             }
