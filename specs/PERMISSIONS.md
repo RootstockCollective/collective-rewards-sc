@@ -6,7 +6,7 @@ You can find bellow the permissions, roles, and functionalities within the `Gove
 - Who: Defined by the `governor` state variable.
 - Permissions and Capabilities:
     + Can call `Execute` from contracts implementing the `IChangeContractRootstockCollective` interface through `executeChange`.
-    + View validation of their role using `validateGovernor`.
+    + Validate if actual caller is the governor using `validateGovernor`.
     + Upgrade the contract as defined in `validateAuthorizedUpgrader` function.
     + Update the `governor`, `foundationTreasury`, and `kycApprover` addresses as defined in `isAuthorizedChanger` function.
 
