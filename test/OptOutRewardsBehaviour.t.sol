@@ -29,7 +29,7 @@ contract OptOutRewardsBehaviour is BaseTest {
      * SCENARIO: Can only OptIn if already opted out
      */
     function test_OptInWhileNotOptedOutRevert() public {
-        // GIVEN alicetries to OptIn
+        // GIVEN alice tries to OptIn
         vm.startPrank(alice);
         //   THEN tx reverts because is not opted out
         vm.expectRevert(BackersManagerRootstockCollective.AlreadyOptedInRewards.selector);
