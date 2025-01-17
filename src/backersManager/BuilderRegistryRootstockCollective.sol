@@ -17,6 +17,12 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_REWARD_PERCENTAGE = UtilsLib._PRECISION;
+
+    //TODO: See if possible to aglutinate all related status in a single one
+    uint8 internal constant BUILDER_PERMITTED = uint8(1);
+    uint8 internal constant BUILDER_REVOKED = uint8(1);
+    uint8 internal constant BUILDER_OPERATIONAL = uint8(1);
+
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
@@ -65,9 +71,37 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     }
 
     // -----------------------------
+    // ----------- Enums -----------
+    // -----------------------------
+    enum BuilderBitmapState { 
+        ACTIVATED,
+        KYC_APPROVED,
+        KYC_REVOKED,
+        COMMUNITY_APPROVED,
+        COMMUNITY_REVOKED, // DEWHITELISTED
+        PAUSED,
+        REVOKED,
+        PERMITTED
+    }
+    // -----------------------------
     // ---------- Structs ----------
     // -----------------------------
     struct BuilderState {
+        uint8 bbState;
+        bytes20 pausedReason;
+    }
+
+    struct RewardPercentageData {
+        // previous reward percentage
+        uint64 previous;
+        // next reward percentage
+        uint64 next;
+        // reward percentage cooldown end time. After this time, new reward percentage will be applied
+        uint128 cooldownEndTime;
+    }
+
+    // TODO: remove it - for now just for making the tests pass
+    struct TempBuilderState {
         bool activated;
         bool kycApproved;
         bool communityApproved;
@@ -78,24 +112,12 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     }
 
     // -----------------------------
-    // ---------- Structs ----------
-    // -----------------------------
-    struct RewardPercentageData {
-        // previous reward percentage
-        uint64 previous;
-        // next reward percentage
-        uint64 next;
-        // reward percentage cooldown end time. After this time, new reward percentage will be applied
-        uint128 cooldownEndTime;
-    }
-
-    // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
     /// @notice reward distributor address. If a builder is KYC revoked their unclaimed rewards will sent back here
     address public rewardDistributor;
     /// @notice map of builders state
-    mapping(address builder => BuilderState state) public builderState;
+    mapping(address builder => BuilderState state) public builderStateBitmap;
     /// @notice map of builders reward receiver
     mapping(address builder => address rewardReceiver) public builderRewardReceiver;
     /// @notice map of builders reward receiver replacement, used as a buffer until the new address is accepted
@@ -240,10 +262,8 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     function approveBuilderKYC(address builder_) external onlyKycApprover {
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[builder_].activated) revert NotActivated();
-        if (builderState[builder_].kycApproved) revert AlreadyKYCApproved();
 
-        builderState[builder_].kycApproved = true;
+        setBuilderState(builder_, BuilderBitmapState.KYC_APPROVED);
 
         _resumeGauge(_gauge);
 
@@ -257,10 +277,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @param builder_ address of the builder
      */
     function revokeBuilderKYC(address builder_) external onlyKycApprover {
-        if (!builderState[builder_].kycApproved) revert NotKYCApproved();
-
-        builderState[builder_].kycApproved = false;
-
+        setBuilderState(builder_, BuilderBitmapState.KYC_REVOKED);
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
         // if builder is community approved, it has a gauge associated
         if (address(_gauge) != address(0)) {
@@ -297,9 +314,8 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     function dewhitelistBuilder(address builder_) external onlyValidChanger {
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[builder_].communityApproved) revert NotCommunityApproved();
 
-        builderState[builder_].communityApproved = false;
+        setBuilderState(builder_, BuilderBitmapState.COMMUNITY_REVOKED); // DEWHITELISTED
 
         _haltGauge(_gauge);
         _rewardTokenApprove(address(_gauge), 0);
@@ -315,8 +331,9 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      */
     function pauseBuilder(address builder_, bytes20 reason_) external onlyKycApprover {
         // pause can be overwritten to change the reason
-        builderState[builder_].paused = true;
-        builderState[builder_].pausedReason = reason_;
+        setBuilderState(builder_, BuilderBitmapState.PAUSED);
+        builderStateBitmap[builder_].pausedReason = reason_;
+
         emit Paused(builder_, reason_);
     }
 
@@ -327,10 +344,9 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @param builder_ address of the builder
      */
     function unpauseBuilder(address builder_) external onlyKycApprover {
-        if (!builderState[builder_].paused) revert NotPaused();
-
-        builderState[builder_].paused = false;
-        builderState[builder_].pausedReason = "";
+        if(!isStateTrue(builder_, BuilderBitmapState.PAUSED)) revert NotPaused();
+        disableState(builder_, BuilderBitmapState.PAUSED); //TODO: Review how to refator it
+        builderStateBitmap[builder_].pausedReason = "";
 
         emit Unpaused(builder_);
     }
@@ -348,16 +364,13 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     function permitBuilder(uint64 rewardPercentage_) external {
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
-        if (!builderState[msg.sender].communityApproved) revert NotCommunityApproved();
-        if (!builderState[msg.sender].revoked) revert NotRevoked();
 
         // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
             revert InvalidBackerRewardPercentage();
         }
 
-        builderState[msg.sender].revoked = false;
+        setBuilderState(msg.sender, BuilderBitmapState.PERMITTED);
 
         // read from storage
         RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[msg.sender];
@@ -385,11 +398,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     function revokeBuilder() external {
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
-        if (!builderState[msg.sender].communityApproved) revert NotCommunityApproved();
-        if (builderState[msg.sender].revoked) revert AlreadyRevoked();
-
-        builderState[msg.sender].revoked = true;
+        setBuilderState(msg.sender, BuilderBitmapState.REVOKED);
         // when revoked builder wants to come back, it can set a new reward percentage. So, the cooldown time starts
         // here
         backerRewardPercentage[msg.sender].cooldownEndTime = uint128(block.timestamp + rewardPercentageCooldown);
@@ -466,15 +475,18 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      *  paused == false
      */
     function isBuilderOperational(address builder_) public view returns (bool) {
-        BuilderState memory _builderState = builderState[builder_];
-        return _builderState.kycApproved && _builderState.communityApproved && !_builderState.paused;
+        // BuilderState memory _builderState = builderStateBitmap[builder_];
+        bool operational = isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED) &&
+            isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED) &&
+            !isStateTrue(builder_, BuilderBitmapState.PAUSED);
+        return operational;
     }
 
     /**
      * @notice return true if builder is paused
      */
     function isBuilderPaused(address builder_) public view returns (bool) {
-        return builderState[builder_].paused;
+        return isStateTrue(builder_, BuilderBitmapState.PAUSED);
     }
 
     /**
@@ -566,7 +578,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     function _validateWhitelisted(GaugeRootstockCollective gauge_) internal view {
         address _builder = gaugeToBuilder[gauge_];
         if (_builder == address(0)) revert GaugeDoesNotExist();
-        if (!builderState[_builder].activated) revert NotActivated();
+        if(!isStateTrue(_builder, BuilderBitmapState.ACTIVATED)) revert NotActivated();
     }
 
     /**
@@ -602,8 +614,11 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @param gauge_ gauge contract to be resumed
      */
     function _canBeResumed(GaugeRootstockCollective gauge_) internal view returns (bool) {
-        BuilderState memory _builderState = builderState[gaugeToBuilder[gauge_]];
-        return _builderState.kycApproved && _builderState.communityApproved && !_builderState.revoked;
+        // BuilderState memory _builderState = builderStateBitmap[gaugeToBuilder[gauge_]];
+        bool resumable = isStateTrue(gaugeToBuilder[gauge_], BuilderBitmapState.KYC_APPROVED) &&
+            isStateTrue(gaugeToBuilder[gauge_], BuilderBitmapState.COMMUNITY_APPROVED) &&
+            !isStateTrue(gaugeToBuilder[gauge_], BuilderBitmapState.REVOKED);
+        return resumable;
     }
 
     /**
@@ -612,9 +627,9 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      *  See {activateBuilder} for details.
      */
     function _activateBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
-        if (builderState[builder_].activated) revert AlreadyActivated();
-        builderState[builder_].activated = true;
-        builderState[builder_].kycApproved = true;
+        setBuilderState(builder_, BuilderBitmapState.ACTIVATED);
+        // setBuilderState(builder_, BuilderBitmapState.KYC_APPROVED); // TODO: Check again how to make it more standard
+        enableState(builder_, BuilderBitmapState.KYC_APPROVED);
         builderRewardReceiver[builder_] = rewardReceiver_;
         // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
@@ -639,10 +654,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      *  See {communityApproveBuilder} for details.
      */
     function _communityApproveBuilder(address builder_) private returns (GaugeRootstockCollective gauge_) {
-        if (builderState[builder_].communityApproved) revert AlreadyCommunityApproved();
-        if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
-
-        builderState[builder_].communityApproved = true;
+        setBuilderState(builder_, BuilderBitmapState.COMMUNITY_APPROVED);
         gauge_ = _createGauge(builder_);
 
         _rewardTokenApprove(address(gauge_), type(uint256).max);
@@ -667,6 +679,102 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @param gauge_ gauge contract to be resumed
      */
     function _resumeGaugeShares(GaugeRootstockCollective gauge_) internal virtual { }
+
+    /**
+     * functions bellow to handle bitmap status
+     */
+
+     function setBuilderState(address builder_, BuilderBitmapState bbState_) internal {
+        if(bbState_ == BuilderBitmapState.ACTIVATED) {
+            if(isStateTrue(builder_, BuilderBitmapState.ACTIVATED)) revert AlreadyActivated();
+            enableState(builder_, BuilderBitmapState.ACTIVATED);
+        
+        } else if(bbState_ == BuilderBitmapState.KYC_APPROVED) {
+            if(!isStateTrue(builder_, BuilderBitmapState.ACTIVATED)) revert NotActivated();
+            if(isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert AlreadyKYCApproved();
+            enableState(builder_, BuilderBitmapState.KYC_APPROVED);
+        
+        } else if(bbState_ == BuilderBitmapState.KYC_REVOKED) {
+            if(!isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert NotKYCApproved();
+            disableState(builder_, BuilderBitmapState.KYC_APPROVED);
+        
+        } else if(bbState_ == BuilderBitmapState.COMMUNITY_APPROVED) {
+            if(isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED)) revert AlreadyCommunityApproved();
+            if(address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
+            enableState(builder_, BuilderBitmapState.COMMUNITY_APPROVED);
+        
+        } else if(bbState_ == BuilderBitmapState.COMMUNITY_REVOKED) {
+            if(!isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED)) revert NotCommunityApproved();
+            disableState(builder_, BuilderBitmapState.COMMUNITY_APPROVED);
+        
+        } else if(bbState_ == BuilderBitmapState.PAUSED) {
+            enableState(builder_, BuilderBitmapState.PAUSED);
+        
+        } else if(bbState_ == BuilderBitmapState.PERMITTED) {
+            if(!isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert NotKYCApproved();
+            if(!isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED)) revert NotCommunityApproved();
+            if(!isStateTrue(builder_, BuilderBitmapState.REVOKED)) revert NotRevoked();
+            disableState(builder_, BuilderBitmapState.REVOKED);
+        
+        } else if(bbState_ == BuilderBitmapState.REVOKED) {
+            if(!isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert NotKYCApproved();
+            if(!isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED)) revert NotCommunityApproved();
+            if(isStateTrue(builder_, BuilderBitmapState.REVOKED)) revert AlreadyRevoked();
+            enableState(builder_, BuilderBitmapState.REVOKED);
+        }                
+     }
+
+    function enableState(address builder_, BuilderBitmapState bbState_) internal {
+        builderStateBitmap[builder_].bbState |= (uint8(1) << uint8(bbState_));
+    }
+
+    function disableState(address builder_, BuilderBitmapState bbState_) internal {
+        builderStateBitmap[builder_].bbState &= ~(uint8(1) << uint8(bbState_));
+    }
+
+    function isStateTrue(address builder_, BuilderBitmapState bbState_) internal view returns (bool) {
+        return (builderStateBitmap[builder_].bbState & (1 << uint8(bbState_))) != 0;
+    }
+
+    //TODO: See if this function can help to a better reading
+    // function isStateFalse(address builder_, BuilderBitmapState bbState_) internal view returns (bool) {
+    //     return (builderState[builder_].bbState & (1 << uint8(bbState_))) == 0;
+    // }
+
+    function toggleState(address builder_, BuilderBitmapState bbState_) internal {
+        builderStateBitmap[builder_].bbState ^= (uint8(1) << uint8(bbState_));
+    }
+
+    //TODO: Remove it - this is temp just for making tests to not screaming
+    function builderState(address builder_) public view returns (bool, bool, bool, bool, bool, bytes7, bytes20) {
+        return (
+            isStateTrue(builder_, BuilderBitmapState.ACTIVATED),
+            isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED),
+            isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED),
+            isStateTrue(builder_, BuilderBitmapState.PAUSED),
+            isStateTrue(builder_, BuilderBitmapState.REVOKED),
+            0,
+            builderStateBitmap[builder_].pausedReason
+        );
+        // return TempBuilderState({
+        //     activated: isStateTrue(builder_, BuilderBitmapState.ACTIVATED),
+        //     kycApproved: isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED),
+        //     communityApproved: isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED),
+        //     paused: isStateTrue(builder_, BuilderBitmapState.PAUSED),
+        //     revoked: isStateTrue(builder_, BuilderBitmapState.REVOKED),
+        //     reserved: 0,
+        //     pausedReason: builderStateBitmap[builder_].pausedReason
+        // });
+        // struct BuilderState {
+        //     bool activated;
+        //     bool kycApproved;
+        //     bool communityApproved;
+        //     bool paused;
+        //     bool revoked;
+        //     bytes7 reserved; // for future upgrades
+        //     bytes20 pausedReason;
+        // }
+    }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
