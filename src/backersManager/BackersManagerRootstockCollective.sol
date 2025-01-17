@@ -379,6 +379,13 @@ contract BackersManagerRootstockCollective is
         uint256 _totalPotentialReward = totalPotentialReward;
         uint256 __periodFinish = _periodFinish;
         (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
+
+        // no rewards to distribute since there are no allocations
+        if (_totalPotentialReward == 0) {
+            _finishDistribution();
+            return true;
+        }
+
         // loop through all pending distributions
         while (_gaugeIndex < _lastDistribution) {
             _newTotalPotentialReward += _gaugeDistribute(
@@ -393,21 +400,26 @@ contract BackersManagerRootstockCollective is
             _gaugeIndex = UtilsLib._uncheckedInc(_gaugeIndex);
         }
         emit RewardDistributed(msg.sender);
+
         // all the gauges were distributed, so distribution period is finished
         if (_lastDistribution == _gaugesLength) {
-            emit RewardDistributionFinished(msg.sender);
-            indexLastGaugeDistributed = 0;
-            rewardsERC20 = rewardsCoinbase = 0;
-            onDistributionPeriod = false;
-            tempTotalPotentialReward = 0;
+            _finishDistribution();
             totalPotentialReward = _newTotalPotentialReward;
-            _periodFinish = cycleNext(block.timestamp);
+            rewardsERC20 = rewardsCoinbase = 0;
             return true;
         }
+
         // Define new reference to batch beginning
         indexLastGaugeDistributed = _gaugeIndex;
         tempTotalPotentialReward = _newTotalPotentialReward;
         return false;
+    }
+
+    function _finishDistribution() internal {
+        emit RewardDistributionFinished(msg.sender);
+        indexLastGaugeDistributed = 0;
+        tempTotalPotentialReward = 0;
+        _periodFinish = cycleNext(block.timestamp);
     }
 
     /**
