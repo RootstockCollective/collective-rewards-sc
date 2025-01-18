@@ -97,6 +97,51 @@ contract BackersManagerRootstockCollective is
     /// @notice address of the builder registry contract
     BuilderRegistryRootstockCollective public builderRegistry;
 
+    address public nftContractBoost;
+    uint256 public nftContractBoostPct; // 1 = 1%, 100 = 100%
+    mapping(address nftContract => mapping(address backer => bool hasNftBoost)) public hasNftBoost;
+
+    /**
+     * @dev This function will set the NFT contract address and the boost percentage
+     * @dev setNftContract should be called before calling updateBackerNftBoost, both when the NFT campaign starts or
+     * finishes
+     * @dev POC: for simplicity, only one NFT contract can be set at a time, and no safety checks are performed
+     */
+    function setNftContract(address nftContractBoost_, uint256 boostPct_) external onlyValidChangerOrFoundation {
+        governanceManager.validateAuthorizedChanger(msg.sender);
+        require(boostPct_ <= 100, "invalid boost percentage");
+
+        nftContractBoost = nftContractBoost_;
+        nftContractBoostPct = boostPct_;
+    }
+
+    /**
+     * @dev This function will increase the rewards based on the boost while keeping the same amount of stRif allocated
+     * @dev     - Call for each backer that has allocations AND has a NFT
+     * @dev     - Should be called after NFT contract address and boost is updated
+     * @dev POC: for simplicity no safety checks are performed (ie. backer has allocation, owns the NFT, does not apply
+     * 2 times the boost, etc)
+     */
+    function updateBackerNftBoost(
+        address backer_,
+        GaugeRootstockCollective[] memory allocatedGauges_
+    )
+        external
+        onlyValidChangerOrFoundation
+    {
+        governanceManager.validateAuthorizedChanger(msg.sender);
+
+        hasNftBoost[nftContractBoost][backer_] = nftContractBoostPct > 0;
+        for (uint256 i = 0; i < allocatedGauges_.length; i++) {
+            uint256 _allocationOfBacker = allocatedGauges_[i].allocationOf(backer_);
+            uint256 _gaugeBoostedAllocation = _allocationOfBacker + _allocationOfBacker * nftContractBoostPct / 100;
+
+            (, uint256 _rewardSharesDeviation,) =
+                allocatedGauges_[i].allocate(backer_, _gaugeBoostedAllocation, timeUntilNextCycle(block.timestamp));
+            totalPotentialReward += _rewardSharesDeviation;
+        }
+    }
+
     // -----------------------------
     // ------- Initializer ---------
     // -----------------------------
@@ -336,11 +381,19 @@ contract BackersManagerRootstockCollective is
         internal
         returns (uint256 newBackerTotalAllocation_, uint256 newTotalPotentialReward_)
     {
+        uint256 _allocationWithBoost = allocation_;
+        if (hasNftBoost[nftContractBoost][msg.sender]) {
+            _allocationWithBoost = _allocationWithBoost + _allocationWithBoost * nftContractBoostPct / 100;
+        }
+
         // reverts if builder was not activated or approved by the community
         builderRegistry_.validateWhitelisted(gauge_);
 
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
-            gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
+            gauge_.allocate(msg.sender, _allocationWithBoost, timeUntilNextCycle_);
+        if (hasNftBoost[nftContractBoost][msg.sender]) {
+            _allocationDeviation = _allocationDeviation * 100 / (100 + nftContractBoostPct);
+        }
 
         // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
         if (builderRegistry_.isGaugeHalted(address(gauge_))) {

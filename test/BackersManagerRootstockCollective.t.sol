@@ -1083,6 +1083,61 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
+     * SCENARIO: alice claims all the rewards in a single tx with boost
+     */
+    function test_ClaimBackersRewardsWithBoost() public {
+        // GIVEN builder and builder2 which reward percentage is 50%
+        //  AND the same backers allocations
+        allocationsArray[0] = 4 ether;
+        allocationsArray[1] = 6 ether;
+        // AND alice allocates the same amounts as bob
+        assertEq(backersManager.backerTotalAllocation(alice), 0);
+        assertEq(backersManager.backerTotalAllocation(bob), 0);
+
+        // AND alice has an NFT boost of 10%
+        address _nftContract = makeAddr("nftContract");
+        vm.startPrank(governor);
+        uint256 _nftBoostPct = 10;
+        backersManager.setNftContract(_nftContract, _nftBoostPct);
+        backersManager.updateBackerNftBoost(alice, gaugesArray);
+        vm.stopPrank();
+        assertEq(backersManager.backerTotalAllocation(alice), 0);
+        assertEq(backersManager.backerTotalAllocation(bob), 0);
+
+        vm.prank(alice);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.prank(bob);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // AND 100 ether reward are added
+        backersManager.notifyRewardAmount(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        // AND distribute is executed
+        backersManager.startDistribution();
+
+        // AND cycle finish
+        _skipAndStartNewCycle();
+
+        // WHEN alice and bob claim rewards
+        vm.prank(alice);
+        backersManager.claimBackerRewards(gaugesArray);
+        vm.prank(bob);
+        backersManager.claimBackerRewards(gaugesArray);
+
+        // THEN alice receives more rewards due to having the NFT boost
+        // Alice's reward amount = (Alice's allocations / Total allocations) * (Total prize * backers percentage)
+        // (11 ether / 21 ether) * (100 ether * 50 / 100) = (11/ 21) * 50 ether = 26,190476190476190471 ether
+        assertEq(rewardToken.balanceOf(alice), 26_190_476_190_476_190_471);
+        // AND bob receives less rewards as it does not have the boost
+        // Bob's reward amount = 50 ether - 26,190476190476190471 ether = 23,809523809523809529 ether
+        assertEq(rewardToken.balanceOf(bob), 23_809_523_809_523_809_520);
+        assertEq(backersManager.backerTotalAllocation(alice), backersManager.backerTotalAllocation(bob));
+        assertGt(rewardToken.balanceOf(alice), rewardToken.balanceOf(bob));
+    }
+
+    /**
      * SCENARIO: alice claims all the rewards in a single tx
      */
     function test_ClaimBackerRewards() public {
