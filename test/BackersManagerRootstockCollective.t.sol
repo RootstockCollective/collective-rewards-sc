@@ -1090,17 +1090,13 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  AND the same backers allocations
         allocationsArray[0] = 4 ether;
         allocationsArray[1] = 6 ether;
-        // AND alice allocates the same amounts as bob
-        assertEq(backersManager.backerTotalAllocation(alice), 0);
-        assertEq(backersManager.backerTotalAllocation(bob), 0);
 
         // AND alice has an NFT boost of 10%
         vm.prank(governor);
         uint256 _nftBoostPct = 10;
         backersManager.updateBackerNftBoost(alice, gaugesArray, _nftBoostPct);
-        assertEq(backersManager.backerTotalAllocation(alice), 0);
-        assertEq(backersManager.backerTotalAllocation(bob), 0);
 
+        // AND alice allocates the same amounts as bob
         vm.prank(alice);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
         vm.prank(bob);
@@ -1130,8 +1126,37 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // AND bob receives less rewards as it does not have the boost
         // Bob's reward amount = 50 ether - 26,190476190476190471 ether = 23,809523809523809529 ether
         assertEq(rewardToken.balanceOf(bob), 23_809_523_809_523_809_520);
+        // AND alice and bob have the same total allocation, since they allocated the same amounts
         assertEq(backersManager.backerTotalAllocation(alice), backersManager.backerTotalAllocation(bob));
-        assertGt(rewardToken.balanceOf(alice), rewardToken.balanceOf(bob));
+
+        // GIVEN alice boost is reset to 0
+        vm.prank(governor);
+        backersManager.updateBackerNftBoost(alice, gaugesArray, 0);
+        // AND alice and bob transfer their tokens to simplify the next test balance check
+        rewardToken.burn(alice, rewardToken.balanceOf(alice));
+        assertEq(rewardToken.balanceOf(alice), 0);
+        rewardToken.burn(bob, rewardToken.balanceOf(bob));
+        assertEq(rewardToken.balanceOf(bob), 0);
+
+        // AND 100 ether reward are added
+        backersManager.notifyRewardAmount(100 ether);
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        // AND distribute is executed
+        backersManager.startDistribution();
+
+        // AND cycle finish
+        _skipAndStartNewCycle();
+
+        // AND alice and bob claim the backer rewards
+        vm.prank(alice);
+        backersManager.claimBackerRewards(gaugesArray);
+        vm.prank(bob);
+        backersManager.claimBackerRewards(gaugesArray);
+
+        // THEN alice and bob receive the same rewards
+        assertEq(rewardToken.balanceOf(alice), rewardToken.balanceOf(bob));
     }
 
     /**
