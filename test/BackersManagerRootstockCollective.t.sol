@@ -1095,12 +1095,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(backersManager.backerTotalAllocation(bob), 0);
 
         // AND alice has an NFT boost of 10%
-        address _nftContract = makeAddr("nftContract");
-        vm.startPrank(governor);
+        vm.prank(governor);
         uint256 _nftBoostPct = 10;
-        backersManager.setNftContract(_nftContract, _nftBoostPct);
-        backersManager.updateBackerNftBoost(alice, gaugesArray);
-        vm.stopPrank();
+        backersManager.updateBackerNftBoost(alice, gaugesArray, _nftBoostPct);
         assertEq(backersManager.backerTotalAllocation(alice), 0);
         assertEq(backersManager.backerTotalAllocation(bob), 0);
 
