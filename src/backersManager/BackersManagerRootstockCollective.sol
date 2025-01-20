@@ -172,7 +172,7 @@ contract BackersManagerRootstockCollective is
      * @param allocation_ amount of votes to allocate
      */
     function allocate(GaugeRootstockCollective gauge_, uint256 allocation_) external notInDistributionPeriod {
-        (uint256 _newbackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
+        (uint256 _newBackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
             gauge_,
             allocation_,
             backerTotalAllocation[msg.sender],
@@ -181,7 +181,7 @@ contract BackersManagerRootstockCollective is
             builderRegistry
         );
 
-        _updateAllocation(msg.sender, _newbackerTotalAllocation, _newTotalPotentialReward);
+        _updateAllocation(msg.sender, _newBackerTotalAllocation, _newTotalPotentialReward);
     }
 
     /**
@@ -206,7 +206,7 @@ contract BackersManagerRootstockCollective is
         uint256 _timeUntilNextCycle = timeUntilNextCycle(block.timestamp);
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-            (uint256 _newbackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
+            (uint256 _newBackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
                 gauges_[i],
                 allocations_[i],
                 _backerTotalAllocation,
@@ -214,7 +214,7 @@ contract BackersManagerRootstockCollective is
                 _timeUntilNextCycle,
                 _builderRegistry
             );
-            _backerTotalAllocation = _newbackerTotalAllocation;
+            _backerTotalAllocation = _newBackerTotalAllocation;
             _totalPotentialReward = _newTotalPotentialReward;
         }
         _updateAllocation(msg.sender, _backerTotalAllocation, _totalPotentialReward);
@@ -321,7 +321,7 @@ contract BackersManagerRootstockCollective is
      * @param totalPotentialReward_ current total potential reward
      * @param timeUntilNextCycle_ time until next cycle
      * @param builderRegistry_ address of the builder registry contract, passed as parameter to avoid storage reads
-     * @return newbackerTotalAllocation_ backer total allocation after new the allocation
+     * @return newBackerTotalAllocation_ backer total allocation after new the allocation
      * @return newTotalPotentialReward_ total potential reward  after the new allocation
      */
     function _allocate(
@@ -333,7 +333,7 @@ contract BackersManagerRootstockCollective is
         BuilderRegistryRootstockCollective builderRegistry_
     )
         internal
-        returns (uint256 newbackerTotalAllocation_, uint256 newTotalPotentialReward_)
+        returns (uint256 newBackerTotalAllocation_, uint256 newTotalPotentialReward_)
     {
         // reverts if builder was not activated or approved by the community
         builderRegistry_.validateWhitelisted(gauge_);
@@ -346,40 +346,40 @@ contract BackersManagerRootstockCollective is
             if (!_isNegative) {
                 revert PositiveAllocationOnHaltedGauge();
             }
-            newbackerTotalAllocation_ = backerTotalAllocation_ - _allocationDeviation;
-            return (newbackerTotalAllocation_, totalPotentialReward_);
+            newBackerTotalAllocation_ = backerTotalAllocation_ - _allocationDeviation;
+            return (newBackerTotalAllocation_, totalPotentialReward_);
         }
 
         if (_isNegative) {
-            newbackerTotalAllocation_ = backerTotalAllocation_ - _allocationDeviation;
+            newBackerTotalAllocation_ = backerTotalAllocation_ - _allocationDeviation;
             newTotalPotentialReward_ = totalPotentialReward_ - _rewardSharesDeviation;
         } else {
-            newbackerTotalAllocation_ = backerTotalAllocation_ + _allocationDeviation;
+            newBackerTotalAllocation_ = backerTotalAllocation_ + _allocationDeviation;
             newTotalPotentialReward_ = totalPotentialReward_ + _rewardSharesDeviation;
         }
 
         emit NewAllocation(msg.sender, address(gauge_), allocation_);
-        return (newbackerTotalAllocation_, newTotalPotentialReward_);
+        return (newBackerTotalAllocation_, newTotalPotentialReward_);
     }
 
     /**
      * @notice internal function used to update allocation variables
      * @dev reverts if backer doesn't have enough staking token balance
      * @param backer_ address of the backer who allocates
-     * @param newbackerTotalAllocation_ backer total allocation after new the allocation
+     * @param newBackerTotalAllocation_ backer total allocation after new the allocation
      * @param newTotalPotentialReward_ total potential reward after the new allocation
      */
     function _updateAllocation(
         address backer_,
-        uint256 newbackerTotalAllocation_,
+        uint256 newBackerTotalAllocation_,
         uint256 newTotalPotentialReward_
     )
         internal
     {
-        backerTotalAllocation[backer_] = newbackerTotalAllocation_;
+        backerTotalAllocation[backer_] = newBackerTotalAllocation_;
         totalPotentialReward = newTotalPotentialReward_;
 
-        if (newbackerTotalAllocation_ > stakingToken.balanceOf(backer_)) revert NotEnoughStaking();
+        if (newBackerTotalAllocation_ > stakingToken.balanceOf(backer_)) revert NotEnoughStaking();
     }
 
     /**
