@@ -687,40 +687,48 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      function _setBuilderState(address builder_, BuilderBitmapState bbState_) internal {
         if(bbState_ == BuilderBitmapState.ACTIVATED) {
             if(_isStateTrue(builder_, BuilderBitmapState.ACTIVATED)) revert AlreadyActivated();
-            _enableState(builder_, BuilderBitmapState.ACTIVATED);        
+            _enableState(builder_, BuilderBitmapState.ACTIVATED);
+            return;        
         } 
         if(bbState_ == BuilderBitmapState.KYC_APPROVED) {
             if(!_isStateTrue(builder_, BuilderBitmapState.ACTIVATED)) revert NotActivated();
             if(_isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert AlreadyKYCApproved();
-            _enableState(builder_, BuilderBitmapState.KYC_APPROVED);        
+            _enableState(builder_, BuilderBitmapState.KYC_APPROVED);
+            return;        
         } 
         if(bbState_ == BuilderBitmapState.KYC_REVOKED) {
             if(!_isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert NotKYCApproved();
-            _disableState(builder_, BuilderBitmapState.KYC_APPROVED);        
+            _disableState(builder_, BuilderBitmapState.KYC_APPROVED);
+            return;
         } 
         if(bbState_ == BuilderBitmapState.COMMUNITY_APPROVED) {
             if(_isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED)) revert AlreadyCommunityApproved();
             if(address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
-            _enableState(builder_, BuilderBitmapState.COMMUNITY_APPROVED);        
+            _enableState(builder_, BuilderBitmapState.COMMUNITY_APPROVED);
+            return;        
         } 
         if(bbState_ == BuilderBitmapState.COMMUNITY_REVOKED) {
             if(!_isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED)) revert NotCommunityApproved();
-            _disableState(builder_, BuilderBitmapState.COMMUNITY_APPROVED);        
+            _disableState(builder_, BuilderBitmapState.COMMUNITY_APPROVED);
+            return;        
         } 
         if(bbState_ == BuilderBitmapState.PAUSED) {
-            _enableState(builder_, BuilderBitmapState.PAUSED);        
+            _enableState(builder_, BuilderBitmapState.PAUSED);
+            return;        
         } 
         if(bbState_ == BuilderBitmapState.PERMITTED) {
             if(!_isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert NotKYCApproved();
             if(!_isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED)) revert NotCommunityApproved();
             if(!_isStateTrue(builder_, BuilderBitmapState.REVOKED)) revert NotRevoked();
-            _disableState(builder_, BuilderBitmapState.REVOKED);        
+            _disableState(builder_, BuilderBitmapState.REVOKED);
+            return;        
         } 
         if(bbState_ == BuilderBitmapState.REVOKED) {
             if(!_isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert NotKYCApproved();
             if(!_isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED)) revert NotCommunityApproved();
             if(_isStateTrue(builder_, BuilderBitmapState.REVOKED)) revert AlreadyRevoked();
             _enableState(builder_, BuilderBitmapState.REVOKED);
+            return;
         }                
      }
 
