@@ -73,7 +73,6 @@ contract BackersManagerRootstockCollective is
     // ---------- Storage ----------
     // -----------------------------
 
-    BuilderRegistryRootstockCollective public builderRegistry;
     /// @notice address of the token used to stake
     IERC20 public stakingToken;
     /// @notice address of the token rewarded to builder and voters
@@ -93,6 +92,8 @@ contract BackersManagerRootstockCollective is
     /// @notice true if distribution period started. Allocations remain blocked until it finishes
     bool public onDistributionPeriod;
 
+    /// @notice address of the builder registry contract
+    BuilderRegistryRootstockCollective public builderRegistry;
     /// @notice total amount of stakingToken allocated by a backer
     mapping(address backer => uint256 allocation) public backerTotalAllocation;
 
