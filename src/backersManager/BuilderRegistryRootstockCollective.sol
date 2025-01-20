@@ -684,6 +684,7 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * functions bellow to handle bitmap status
      */
 
+     // eslint-disable-next-line complexity
      function _setBuilderState(address builder_, BuilderBitmapState bbState_) internal {
         if(bbState_ == BuilderBitmapState.ACTIVATED) {
             if(_isStateTrue(builder_, BuilderBitmapState.ACTIVATED)) revert AlreadyActivated();
