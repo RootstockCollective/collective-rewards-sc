@@ -686,14 +686,15 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
 
      // eslint-disable-next-line complexity
      function _setBuilderState(address builder_, BuilderBitmapState bbState_) internal {
+
         _setBuilderStateActivated(builder_, bbState_);
         _setBuilderStateKycApproved(builder_, bbState_);
         _setBuilderStateKycRevoked(builder_, bbState_);
         _setBuilderStateCommunityApproved(builder_, bbState_);
         _setBuilderStateCommunityRevoked(builder_, bbState_);
         _setBuilderStatePaused(builder_, bbState_);
-        _setBuilderStatePermitted(builder_, bbState_);
         _setBuilderStateRevoked(builder_, bbState_);
+        _setBuilderStatePermitted(builder_, bbState_);
         // if(bbState_ == BuilderBitmapState.ACTIVATED) {
         //     if(_isStateTrue(builder_, BuilderBitmapState.ACTIVATED)) revert AlreadyActivated();
         //     _enableState(builder_, BuilderBitmapState.ACTIVATED);
