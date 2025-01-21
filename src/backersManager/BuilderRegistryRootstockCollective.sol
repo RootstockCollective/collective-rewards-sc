@@ -693,8 +693,8 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         _setBuilderStateCommunityApproved(builder_, bbState_);
         _setBuilderStateCommunityRevoked(builder_, bbState_);
         _setBuilderStatePaused(builder_, bbState_);
-        _setBuilderStateRevoked(builder_, bbState_);
         _setBuilderStatePermitted(builder_, bbState_);
+        _setBuilderStateRevoked(builder_, bbState_);
 
         // if(bbState_ == BuilderBitmapState.ACTIVATED) {
         //     if(_isStateTrue(builder_, BuilderBitmapState.ACTIVATED)) revert AlreadyActivated();
@@ -771,8 +771,8 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     }
     function _setBuilderStateCommunityRevoked(address builder_, BuilderBitmapState bbState_) internal {
         if(bbState_ == BuilderBitmapState.COMMUNITY_REVOKED) {
-            if(!_isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert NotKYCApproved();
-            _disableState(builder_, BuilderBitmapState.KYC_APPROVED);
+            if(!_isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED)) revert NotCommunityApproved();
+            _disableState(builder_, BuilderBitmapState.COMMUNITY_APPROVED);
         }
     }
     function _setBuilderStatePaused(address builder_, BuilderBitmapState bbState_) internal {
