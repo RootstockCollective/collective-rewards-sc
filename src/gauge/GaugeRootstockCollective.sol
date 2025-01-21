@@ -381,7 +381,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             0, /*builderAmount_*/
             amount_,
             backersManager.periodFinish(),
-            backersManager.timeUntilNextCycle(block.timestamp)
+            backersManager.timeUntilNextCycle(block.timestamp),
+            false /*resetRewardMissing_*/
         );
 
         SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
@@ -405,7 +406,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             0, /*builderAmount_*/
             msg.value,
             backersManager.periodFinish(),
-            backersManager.timeUntilNextCycle(block.timestamp)
+            backersManager.timeUntilNextCycle(block.timestamp),
+            false /*resetRewardMissing_*/
         );
     }
 
@@ -435,15 +437,23 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountERC20_);
         uint256 _backerAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
         uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
+        // On a distribution, we include any reward missing into the new reward rate and reset it
+        bool _resetRewardMissing = true;
         _notifyRewardAmount(
-            _rewardToken, amountERC20_ - _backerAmountERC20, _backerAmountERC20, periodFinish_, _timeUntilNextCycle
+            _rewardToken,
+            amountERC20_ - _backerAmountERC20,
+            _backerAmountERC20,
+            periodFinish_,
+            _timeUntilNextCycle,
+            _resetRewardMissing
         );
         _notifyRewardAmount(
             UtilsLib._COINBASE_ADDRESS,
             msg.value - _backerAmountCoinbase,
             _backerAmountCoinbase,
             periodFinish_,
-            _timeUntilNextCycle
+            _timeUntilNextCycle,
+            _resetRewardMissing
         );
 
         newGaugeRewardShares_ = totalAllocation * cycleDuration_;
@@ -526,13 +536,15 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param backersAmount_ amount of rewards for the backers
      * @param periodFinish_ timestamp end of current rewards period
      * @param timeUntilNextCycle_ time until next cycle
+     * @param resetRewardMissing_ true if reward missing accounted for new rewardRate, and be reset
      */
     function _notifyRewardAmount(
         address rewardToken_,
         uint256 builderAmount_,
         uint256 backersAmount_,
         uint256 periodFinish_,
-        uint256 timeUntilNextCycle_
+        uint256 timeUntilNextCycle_,
+        bool resetRewardMissing_
     )
         internal
     {
@@ -552,14 +564,21 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             _updateRewardMissing(rewardToken_, periodFinish_);
         }
 
-        // [PREC] = ([N] * [PREC] + [PREC] + [PREC]) / [N]
-        _rewardRate =
-            (backersAmount_ * UtilsLib._PRECISION + _rewardData.rewardMissing + _leftover) / timeUntilNextCycle_;
+        // [PREC] = ([N] * [PREC] + [PREC])
+        uint256 _rateNumerator = backersAmount_ * UtilsLib._PRECISION + _leftover;
+        if (resetRewardMissing_) {
+            // [PREC] += [PREC]
+            _rateNumerator += _rewardData.rewardMissing;
+            // As rewardMissing are now accounted on the rate, we can reset them
+            _rewardData.rewardMissing = 0;
+        }
+
+        // [PREC] = [PREC] / [N]
+        _rewardRate = _rateNumerator / timeUntilNextCycle_;
 
         _rewardData.builderRewards += builderAmount_;
         _rewardData.rewardPerTokenStored = _rewardPerToken(rewardToken_, periodFinish_);
         _rewardData.lastUpdateTime = block.timestamp;
-        _rewardData.rewardMissing = 0;
         _rewardData.rewardRate = _rewardRate;
 
         emit NotifyReward(rewardToken_, builderAmount_, backersAmount_);
