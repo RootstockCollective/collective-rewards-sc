@@ -71,11 +71,12 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
     enum BuilderBitmapState { 
         ACTIVATED,
         KYC_APPROVED,
-        KYC_REVOKED,
         COMMUNITY_APPROVED,
-        COMMUNITY_REVOKED, // DEWHITELISTED
         PAUSED,
+        KYC_REVOKED,
         REVOKED,
+        COMMUNITY_REVOKED, // DEWHITELISTED
+        UNPAUSED,
         PERMITTED
     }
     // -----------------------------
@@ -328,8 +329,9 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * @param builder_ address of the builder
      */
     function unpauseBuilder(address builder_) external onlyKycApprover {
-        if(!_isStateTrue(builder_, BuilderBitmapState.PAUSED)) revert NotPaused();
-        _disableState(builder_, BuilderBitmapState.PAUSED); //TODO: Review how to refator it
+        // if(!_isStateTrue(builder_, BuilderBitmapState.PAUSED)) revert NotPaused();
+        // _disableState(builder_, BuilderBitmapState.PAUSED); //TODO: Review how to refator it
+        _setBuilderState(builder_, BuilderBitmapState.UNPAUSED);
         builderStateBitmap[builder_].pausedReason = "";
 
         emit Unpaused(builder_);
@@ -667,24 +669,41 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
      * functions bellow to handle bitmap status
      */
 
+     /**
+     * @notice Sets the builder state based on the provided state.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to set for the builder.
+     */
      function _setBuilderState(address builder_, BuilderBitmapState bbState_) internal {
-
         _setBuilderStateActivated(builder_, bbState_);
         _setBuilderStateKycApproved(builder_, bbState_);
         _setBuilderStateKycRevoked(builder_, bbState_);
         _setBuilderStateCommunityApproved(builder_, bbState_);
         _setBuilderStateCommunityRevoked(builder_, bbState_);
         _setBuilderStatePaused(builder_, bbState_);
+        _setBuilderStateUnpaused(builder_, bbState_);
         _setBuilderStatePermitted(builder_, bbState_);
         _setBuilderStateRevoked(builder_, bbState_);               
      }
 
+     /**
+     * @notice Sets the builder state to activated if the provided state is ACTIVATED.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to set for the builder.
+     */
     function _setBuilderStateActivated(address builder_, BuilderBitmapState bbState_) internal {
         if(bbState_ == BuilderBitmapState.ACTIVATED) {
             if(_isStateTrue(builder_, BuilderBitmapState.ACTIVATED)) revert AlreadyActivated();
             _enableState(builder_, BuilderBitmapState.ACTIVATED);      
         } 
     }
+
+    /**
+     * @notice Sets the builder state to KYC approved if the provided state is KYC_APPROVED.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to set for the builder.
+     * @dev KYC Approved/Revoked are mutually exclusive and they share the same bit - BuilderBitmapState.KYC_APPROVED
+     */    
     function _setBuilderStateKycApproved(address builder_, BuilderBitmapState bbState_) internal {
         if(bbState_ == BuilderBitmapState.KYC_APPROVED) {
             if(!_isStateTrue(builder_, BuilderBitmapState.ACTIVATED)) revert NotActivated();
@@ -692,12 +711,26 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
             _enableState(builder_, BuilderBitmapState.KYC_APPROVED);
         }
     }
+
+    /**
+     * @notice Sets the builder state to KYC revoked if the provided state is KYC_REVOKED.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to set for the builder.
+     * @dev KYC Approved/Revoked are mutually exclusive and they share the same bit - BuilderBitmapState.KYC_APPROVED
+     */    
     function _setBuilderStateKycRevoked(address builder_, BuilderBitmapState bbState_) internal {
         if(bbState_ == BuilderBitmapState.KYC_REVOKED) {
             if(!_isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert NotKYCApproved();
             _disableState(builder_, BuilderBitmapState.KYC_APPROVED);
         }
     }
+
+    /**
+     * @notice Sets the builder state to community approved if the provided state is COMMUNITY_APPROVED.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to set for the builder.
+     * @dev Community Approved/Revoked are mutually exclusive and they share the same bit - BuilderBitmapState.COMMUNITY_APPROVED
+     */
     function _setBuilderStateCommunityApproved(address builder_, BuilderBitmapState bbState_) internal {
         if(bbState_ == BuilderBitmapState.COMMUNITY_APPROVED) {
             if(_isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED)) revert AlreadyCommunityApproved();
@@ -705,17 +738,51 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
             _enableState(builder_, BuilderBitmapState.COMMUNITY_APPROVED);
         }
     }
+
+    /**
+     * @notice Sets the builder state to community revoked if the provided state is COMMUNITY_REVOKED.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to set for the builder.
+     * @dev Community Approved/Revoked are mutually exclusive and they share the same bit - BuilderBitmapState.COMMUNITY_APPROVED
+     */    
     function _setBuilderStateCommunityRevoked(address builder_, BuilderBitmapState bbState_) internal {
         if(bbState_ == BuilderBitmapState.COMMUNITY_REVOKED) {
             if(!_isStateTrue(builder_, BuilderBitmapState.COMMUNITY_APPROVED)) revert NotCommunityApproved();
             _disableState(builder_, BuilderBitmapState.COMMUNITY_APPROVED);
         }
     }
+
+    /**
+     * @notice Sets the builder state to paused if the provided state is PAUSED.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to set for the builder.
+     * @dev PAUSED AND UNPAUSED are mutually exclusive and they share the same bit - BuilderBitmapState.PAUSED
+     */    
     function _setBuilderStatePaused(address builder_, BuilderBitmapState bbState_) internal {
         if(bbState_ == BuilderBitmapState.PAUSED) {
             _enableState(builder_, BuilderBitmapState.PAUSED);
         }
     }
+
+    /**
+     * @notice Sets the builder state to unpaused if the provided state is UNPAUSED.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to set for the builder.
+     * @dev PAUSED AND UNPAUSED are mutually exclusive and they share the same bit - BuilderBitmapState.PAUSED
+     */    
+    function _setBuilderStateUnpaused(address builder_, BuilderBitmapState bbState_) internal {
+        if(bbState_ == BuilderBitmapState.UNPAUSED) {
+            if(!_isStateTrue(builder_, BuilderBitmapState.PAUSED)) revert NotPaused();
+            _disableState(builder_, BuilderBitmapState.PAUSED); 
+        }
+    }
+
+    /**
+     * @notice Sets the builder state to permitted if the provided state is PERMITTED.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to set for the builder.
+     * @dev REVOKED AND PERMITTED are mutually exclusive and they share the same bit - BuilderBitmapState.REVOKED
+     */    
     function _setBuilderStatePermitted(address builder_, BuilderBitmapState bbState_) internal {
         if(bbState_ == BuilderBitmapState.PERMITTED) {
             if(!_isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert NotKYCApproved();
@@ -724,6 +791,13 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
             _disableState(builder_, BuilderBitmapState.REVOKED);
         }
     }
+
+    /**
+     * @notice Sets the builder state to revoked if the provided state is REVOKED.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to set for the builder.
+     * @dev REVOKED AND PERMITTED are mutually exclusive and they share the same bit - BuilderBitmapState.REVOKED
+     */    
     function _setBuilderStateRevoked(address builder_, BuilderBitmapState bbState_) internal {
         if(bbState_ == BuilderBitmapState.REVOKED) {
             if(!_isStateTrue(builder_, BuilderBitmapState.KYC_APPROVED)) revert NotKYCApproved();
@@ -733,18 +807,39 @@ abstract contract BuilderRegistryRootstockCollective is CycleTimeKeeperRootstock
         }
     }
 
+    /**
+     * @notice Enables the specified state for the builder.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to enable for the builder.
+     */
     function _enableState(address builder_, BuilderBitmapState bbState_) internal {
         builderStateBitmap[builder_].bbState |= (uint8(1) << uint8(bbState_));
     }
 
+    /**
+     * @notice Disables the specified state for the builder.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to disable for the builder.
+     */
     function _disableState(address builder_, BuilderBitmapState bbState_) internal {
         builderStateBitmap[builder_].bbState &= ~(uint8(1) << uint8(bbState_));
     }
 
+    /**
+     * @notice Checks if the specified state is true for the builder.
+     * @param builder_ The address of the builder.
+     * @param bbState_ The state to check for the builder.
+     * @return True if the state is true for the builder, false otherwise.
+     */
     function _isStateTrue(address builder_, BuilderBitmapState bbState_) internal view returns (bool) {
         return (builderStateBitmap[builder_].bbState & (1 << uint8(bbState_))) != 0;
     }
 
+    /**
+     * @notice Returns the state of the builder.
+     * @param builder_ The address of the builder.
+     * @return activated, kycApproved, communityApproved, paused, revoked, reserved, pausedReason
+     */
     function builderState(address builder_) public view returns (bool, bool, bool, bool, bool, bytes7, bytes20) {
         return (
             _isStateTrue(builder_, BuilderBitmapState.ACTIVATED),
