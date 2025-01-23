@@ -89,7 +89,7 @@ contract BaseTest is Test {
             distributionDuration
         );
 
-        builderRegistry.setBackersManager(backersManager);
+        builderRegistry.initializeBackersManager(backersManager);
 
         rewardDistributor.initializeCollectiveRewardsAddresses(address(backersManager));
 

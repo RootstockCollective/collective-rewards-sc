@@ -36,7 +36,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error BuilderAlreadyExists();
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
-    error NotAuthorised();
+    error NotAuthorized();
 
     // -----------------------------
     // ----------- Events ----------
@@ -67,7 +67,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     modifier onlyBackersManager() {
         if (msg.sender != address(backersManager)) {
-            revert NotAuthorised();
+            revert NotAuthorized();
         }
         _;
     }
@@ -157,7 +157,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         rewardPercentageCooldown = rewardPercentageCooldown_;
     }
 
-    function setBackersManager(BackersManagerRootstockCollective backersManager_) external {
+    function initializeBackersManager(BackersManagerRootstockCollective backersManager_) external {
         require(address(backersManager) == address(0), "Already set");
         require(address(backersManager_) != address(0), "Must set backers manager");
         backersManager = backersManager_;

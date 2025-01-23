@@ -35,7 +35,7 @@ contract Deploy is Broadcaster {
             run(_governanceManager, _gaugeFactoryAddress, _rewardDistributorAddress, _rewardPercentageCooldown);
 
         if (_backersManager != address(0)) {
-            BuilderRegistryRootstockCollective(proxy_).setBackersManager(
+            BuilderRegistryRootstockCollective(proxy_).initializeBackersManager(
                 BackersManagerRootstockCollective(_backersManager)
             );
         }

@@ -36,7 +36,7 @@ contract BackersManagerRootstockCollective is
     error BeforeDistribution();
     error PositiveAllocationOnHaltedGauge();
     error NoGaugesForDistribution();
-    error NotAuthorised();
+    error NotAuthorized();
 
     // -----------------------------
     // ----------- Events ----------
@@ -64,7 +64,7 @@ contract BackersManagerRootstockCollective is
 
     modifier onlyBuilderRegistry() {
         if (msg.sender != address(builderRegistry)) {
-            revert NotAuthorised();
+            revert NotAuthorized();
         }
         _;
     }

@@ -36,7 +36,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
-    modifier onlyAuthorisedContract() {
+    modifier onlyAuthorizedContract() {
         if (msg.sender != address(builderRegistry) && msg.sender != address(backersManager)) revert NotAuthorized();
         _;
     }
@@ -308,7 +308,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev reverts if caller is not the backersManager contract
      * @param to_ address who receives the rewards
      */
-    function moveBuilderUnclaimedRewards(address to_) external onlyAuthorisedContract {
+    function moveBuilderUnclaimedRewards(address to_) external onlyAuthorizedContract {
         _moveBuilderUnclaimedRewards(rewardToken, to_);
         _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
     }
@@ -329,7 +329,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         uint256 timeUntilNextCycle_
     )
         external
-        onlyAuthorisedContract
+        onlyAuthorizedContract
         returns (uint256 allocationDeviation_, uint256 rewardSharesDeviation_, bool isNegative_)
     {
         uint256 _periodFinish = backersManager.periodFinish();
@@ -433,7 +433,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     )
         external
         payable
-        onlyAuthorisedContract
+        onlyAuthorizedContract
         returns (uint256 newGaugeRewardShares_)
     {
         address _rewardToken = rewardToken;
