@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BackersManagerRootstockCollective } from "../../src/backersManager/BackersManagerRootstockCollective.sol";
-import { BuilderRegistryRootstockCollective } from "../../src/backersManager/BuilderRegistryRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "../../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { RewardDistributorRootstockCollective } from "../../src/RewardDistributorRootstockCollective.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";

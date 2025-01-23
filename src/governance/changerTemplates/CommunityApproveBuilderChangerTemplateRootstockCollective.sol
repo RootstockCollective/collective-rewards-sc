@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { IChangeContractRootstockCollective } from "../../interfaces/IChangeContractRootstockCollective.sol";
-import { BuilderRegistryRootstockCollective } from "../../backersManager/BuilderRegistryRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "../../builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { GaugeRootstockCollective } from "../../gauge/GaugeRootstockCollective.sol";
 
 /**

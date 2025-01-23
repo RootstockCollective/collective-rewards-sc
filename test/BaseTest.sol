@@ -16,7 +16,7 @@ import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCo
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
-import { BuilderRegistryRootstockCollective } from "src/backersManager/BuilderRegistryRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from

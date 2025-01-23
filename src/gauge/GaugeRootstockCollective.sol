@@ -7,7 +7,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
-import { BuilderRegistryRootstockCollective } from "../backersManager/BuilderRegistryRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "../builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { BackersManagerRootstockCollective } from "../backersManager/BackersManagerRootstockCollective.sol";
 
 /**

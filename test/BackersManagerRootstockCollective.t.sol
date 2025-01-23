@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 import { BaseTest, BackersManagerRootstockCollective, GaugeRootstockCollective } from "./BaseTest.sol";
-import { BuilderRegistryRootstockCollective } from "../src/backersManager/BuilderRegistryRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 
 contract BackersManagerRootstockCollectiveTest is BaseTest {

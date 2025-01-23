@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { BackersManagerRootstockCollective } from "./BackersManagerRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "../backersManager/BackersManagerRootstockCollective.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "../gauge/GaugeFactoryRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
