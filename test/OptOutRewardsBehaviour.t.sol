@@ -37,7 +37,7 @@ contract OptOutRewardsBehaviour is BaseTest {
     }
 
     /**
-     * SCENARIO: Only foundation or the backer itself can OptOut
+     * SCENARIO: Only KYC approver or the backer itself can OptOut
      */
     function test_OptOutAuthorization() public {
         //  GIVEN alice tries to OptOut Bob
@@ -46,8 +46,8 @@ contract OptOutRewardsBehaviour is BaseTest {
         vm.expectRevert(BackersManagerRootstockCollective.NotAuthorized.selector);
         backersManager.optOutRewards(bob);
 
-        //  GIVEN foundation tries to OptOut Bob
-        vm.prank(foundation);
+        //  GIVEN KYC approver tries to OptOut Bob
+        vm.prank(kycApprover);
         //   THEN tx is successful
         vm.expectEmit();
         emit BackerRewardsOptedOut(bob);
