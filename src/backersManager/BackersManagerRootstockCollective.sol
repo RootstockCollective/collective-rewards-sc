@@ -81,8 +81,8 @@ contract BackersManagerRootstockCollective is
         _;
     }
 
-    modifier onlyOptedInBacker(address account_) {
-        if (rewardsOptedOut[account_]) {
+    modifier onlyOptedInBacker() {
+        if (rewardsOptedOut[msg.sender]) {
             revert BackerOptedOutRewards();
         }
         _;
