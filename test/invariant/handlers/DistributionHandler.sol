@@ -30,7 +30,7 @@ contract DistributionHandler is BaseHandler {
         amountCoinbase_ = bound(amountCoinbase_, 0, type(uint64).max);
 
         timeManager.increaseTimestamp(
-            backersManager.cycleNext(block.timestamp) - block.timestamp + timeToSkip_ % 0.99 hours
+            backersManager.cycleNext(block.timestamp) - block.timestamp + (timeToSkip_ % 0.99 hours)
         );
 
         totalAmountDistributed += amountERC20_;

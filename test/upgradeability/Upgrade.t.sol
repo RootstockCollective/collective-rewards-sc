@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { BaseTest } from "../BaseTest.sol";
 import {
-    BackersManagerRootstockCollectiveUpgradeMock,
+    BuilderRegistryRootstockCollectiveUpgradeMock,
     RewardDistributorRootstockCollectiveUpgradeMock,
     GaugeUpgradeMock,
     GovernanceManagerRootstockCollectiveUpgradeMock
@@ -11,20 +11,20 @@ import {
 
 contract UpgradeTest is BaseTest {
     /**
-     * SCENARIO: BackersManagerRootstockCollective is upgraded
+     * SCENARIO: BuilderRegistryRootstockCollective is upgraded
      */
-    function test_UpgradeBackersManagerRootstockCollective() public {
-        // GIVEN a BackersManagerRootstockCollective proxy with an implementation
+    function test_UpgradeBuilderRegistryRootstockCollective() public {
+        // GIVEN a BuilderRegistryRootstockCollective proxy with an implementation
         // AND a new implementation
-        BackersManagerRootstockCollectiveUpgradeMock _backersManagerNewImpl =
-            new BackersManagerRootstockCollectiveUpgradeMock();
+        BuilderRegistryRootstockCollectiveUpgradeMock _builderRegistryNewImpl =
+            new BuilderRegistryRootstockCollectiveUpgradeMock();
         //WHEN the proxy is upgraded and initialized
         vm.prank(governor);
-        backersManager.upgradeToAndCall(
-            address(_backersManagerNewImpl), abi.encodeCall(_backersManagerNewImpl.initializeMock, (42))
+        builderRegistry.upgradeToAndCall(
+            address(_builderRegistryNewImpl), abi.encodeCall(_builderRegistryNewImpl.initializeMock, (42))
         );
         // THEN getCustomMockValue is 44 = 2 gaugeLength + 42 newVariable
-        assertEq(BackersManagerRootstockCollectiveUpgradeMock(address(backersManager)).getCustomMockValue(), 44);
+        assertEq(BuilderRegistryRootstockCollectiveUpgradeMock(address(builderRegistry)).getCustomMockValue(), 44);
     }
 
     /**

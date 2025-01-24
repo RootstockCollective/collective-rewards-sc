@@ -43,16 +43,16 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // WHEN alice calls allocate
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
         uint256 _timeUntilNextCycle = backersManager.timeUntilNextCycle(block.timestamp);
-        vm.expectRevert(GaugeRootstockCollective.NotBackersManager.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         gauge.allocate(alice, 1 ether, _timeUntilNextCycle);
         // WHEN alice calls notifyRewardAmountAndUpdateShares
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
-        vm.expectRevert(GaugeRootstockCollective.NotBackersManager.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         gauge.notifyRewardAmountAndUpdateShares(1 ether, 1 ether, block.timestamp, _cycleStart, _cycleDuration);
         // WHEN alice calls moveBuilderUnclaimedRewards
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
-        vm.expectRevert(GaugeRootstockCollective.NotBackersManager.selector);
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         gauge.moveBuilderUnclaimedRewards(alice);
     }
 
@@ -188,7 +188,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_NotifyRewardAmountWithStrategy() public {
         // GIVEN a builder with 70% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.7 ether);
+        builderRegistry.setBackerRewardPercentage(0.7 ether);
         skip(rewardPercentageCooldown);
 
         // AND 6 ether are allocated to alice
@@ -859,10 +859,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderWrongGauge() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         // GIVEN a builder2 with 15% of reward percentage for backers
         vm.startPrank(builder2);
-        backersManager.setBackerRewardPercentage(0.15 ether);
+        builderRegistry.setBackerRewardPercentage(0.15 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge and gauge2
         vm.startPrank(alice);
@@ -899,7 +899,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsBuilder() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
@@ -933,7 +933,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsRewardToken() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
@@ -969,7 +969,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsCoinbase() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
@@ -1004,7 +1004,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsRewardReceiver() public {
         // GIVEN a builder2 with 30% of reward percentage for backers
         vm.startPrank(builder2);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge2
         vm.startPrank(alice);
@@ -1049,7 +1049,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewardsRewardReceiverWithReplacement() public {
         // GIVEN a builder2 with 30% of reward percentage
         vm.prank(builder2);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge2
         vm.startPrank(alice);
@@ -1070,7 +1070,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND Builder submits a Reward Receiver Replacement Request
         vm.prank(builder2);
         address _newRewardReceiver = makeAddr("newRewardReceiver");
-        backersManager.submitRewardReceiverReplacementRequest(_newRewardReceiver);
+        builderRegistry.submitRewardReceiverReplacementRequest(_newRewardReceiver);
 
         // WHEN newRewardReceiver tries to claim rewards
         // THEN it fails as there is an active reward receiver replacement request
@@ -1086,7 +1086,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN KYCApprover approved his Reward Receiver Replacement Request
         vm.prank(kycApprover);
-        backersManager.approveBuilderRewardReceiverReplacement(builder2, _newRewardReceiver);
+        builderRegistry.approveBuilderRewardReceiverReplacement(builder2, _newRewardReceiver);
 
         // AND 100 rewardToken and 100 coinbase are distributed
         _distribute(100 ether, 100 ether);
@@ -1104,7 +1104,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewards2Distributions() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);
@@ -1149,7 +1149,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_ClaimBuilderRewards2Cycles() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
-        backersManager.setBackerRewardPercentage(0.3 ether);
+        builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
         // AND alice allocates to gauge
         vm.startPrank(alice);

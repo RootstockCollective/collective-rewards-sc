@@ -71,5 +71,6 @@
     "test:coverage:report": "sh ./coverage.sh",
     "prepare": "husky",
     "docgen": "forge doc && bun run prettier:write"
-  }
+  },
+  "packageManager": "bun@1.1.30"
 }

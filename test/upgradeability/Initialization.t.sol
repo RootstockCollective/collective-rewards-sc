@@ -12,21 +12,15 @@ contract InitializationTest is BaseTest {
         // GIVEN a BackersManagerRootstockCollective initialized
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
-        uint32 _cycleDuration = 1 weeks;
-        uint24 _cycleStartOffset = 1 days;
-        uint32 _distributionDuration = 1 hours;
-        uint128 _rewardPercentageCooldown = 2 weeks;
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         backersManager.initialize(
             governanceManager,
+            address(builderRegistry),
             address(rewardToken),
             address(stakingToken),
-            address(gaugeFactory),
-            address(rewardDistributor),
-            _cycleDuration,
-            _cycleStartOffset,
-            _distributionDuration,
-            _rewardPercentageCooldown
+            cycleDuration,
+            cycleStartOffset,
+            distributionDuration
         );
     }
 

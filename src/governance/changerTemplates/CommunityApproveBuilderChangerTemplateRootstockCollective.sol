@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { IChangeContractRootstockCollective } from "../../interfaces/IChangeContractRootstockCollective.sol";
-import { BackersManagerRootstockCollective } from "../../backersManager/BackersManagerRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "../../builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { GaugeRootstockCollective } from "../../gauge/GaugeRootstockCollective.sol";
 
 /**
@@ -10,8 +10,8 @@ import { GaugeRootstockCollective } from "../../gauge/GaugeRootstockCollective.s
  *   @notice ChangeContract used to community approve a builder and create its Gauger contract
  */
 contract CommunityApproveBuilderChangerTemplateRootstockCollective is IChangeContractRootstockCollective {
-    /// @notice BackersManagerRootstockCollective contract address
-    BackersManagerRootstockCollective public immutable backersManager;
+    /// @notice BuilderRegistryRootstockCollective contract address
+    BuilderRegistryRootstockCollective public immutable builderRegistry;
     /// @notice builder address to be community approved
     address public immutable builder;
     /// @notice new Gauge created;
@@ -19,11 +19,11 @@ contract CommunityApproveBuilderChangerTemplateRootstockCollective is IChangeCon
 
     /**
      * @notice Constructor
-     * @param backersManager_ Address of the BackersManger contract
+     * @param builderRegistry_ Address of the BackersManger contract
      * @param builder_ Address of the builder
      */
-    constructor(BackersManagerRootstockCollective backersManager_, address builder_) {
-        backersManager = backersManager_;
+    constructor(BuilderRegistryRootstockCollective builderRegistry_, address builder_) {
+        builderRegistry = builderRegistry_;
         builder = builder_;
     }
 
@@ -33,6 +33,6 @@ contract CommunityApproveBuilderChangerTemplateRootstockCollective is IChangeCon
      * because it is not its responsibility in the current architecture
      */
     function execute() external {
-        newGauge = backersManager.communityApproveBuilder(builder);
+        newGauge = builderRegistry.communityApproveBuilder(builder);
     }
 }

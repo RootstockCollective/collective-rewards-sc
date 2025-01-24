@@ -4,17 +4,19 @@ pragma solidity 0.8.20;
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { Deploy as BackersManagerRootstockCollectiveDeployer } from "script/BackersManagerRootstockCollective.s.sol";
+import { Deploy as BuilderRegistryRootstockCollectiveDeployer } from "script/BuilderRegistryRootstockCollective.s.sol";
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
 import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/GaugeBeaconRootstockCollective.s.sol";
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
 import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
+import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 import { Deploy as RewardDistributorRootstockCollectiveDeployer } from
     "script/RewardDistributorRootstockCollective.s.sol";
 import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
     "script/governance/GovernanceManagerRootstockCollective.s.sol";
-import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster, OutputWriter {
     address private _rewardTokenAddress;
@@ -70,19 +72,32 @@ contract Deploy is Broadcaster, OutputWriter {
             "RewardDistributorRootstockCollective", address(_rewardDistributorImpl), address(_rewardDistributorProxy)
         );
 
+        (
+            BuilderRegistryRootstockCollective _builderRegistryProxy,
+            BuilderRegistryRootstockCollective _builderRegistryImpl
+        ) = new BuilderRegistryRootstockCollectiveDeployer().run(
+            address(_governanceManagerProxy),
+            address(_gaugeFactory),
+            address(_rewardDistributorProxy),
+            _rewardPercentageCooldown
+        );
+        saveWithProxy(
+            "BuilderRegistryRootstockCollective", address(_builderRegistryImpl), address(_builderRegistryProxy)
+        );
+
         (BackersManagerRootstockCollective _backersManagerProxy, BackersManagerRootstockCollective _backersManagerImpl)
         = new BackersManagerRootstockCollectiveDeployer().run(
             address(_governanceManagerProxy),
+            address(_builderRegistryProxy),
             _rewardTokenAddress,
             _stakingTokenAddress,
-            address(_gaugeFactory),
-            address(_rewardDistributorProxy),
             _cycleDuration,
             _cycleStartOffset,
-            _distributionDuration,
-            _rewardPercentageCooldown
+            _distributionDuration
         );
         saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
+        vm.broadcast();
+        _builderRegistryProxy.initializeBackersManager(_backersManagerProxy);
 
         vm.broadcast();
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));

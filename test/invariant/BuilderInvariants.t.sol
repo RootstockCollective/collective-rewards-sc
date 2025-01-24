@@ -10,14 +10,14 @@ contract BuilderInvariants is BaseInvariants {
     function invariant_HaltedGauge() public useTime {
         for (uint256 i = 0; i < builders.length; i++) {
             address _builder = builders[i];
-            (, bool _kycApproved, bool _communityApproved,, bool _revoked,,) = backersManager.builderState(_builder);
-            address _gauge = address(backersManager.builderToGauge(_builder));
+            (, bool _kycApproved, bool _communityApproved,, bool _revoked,,) = builderRegistry.builderState(_builder);
+            address _gauge = address(builderRegistry.builderToGauge(_builder));
 
             bool _expectedIsHalted = !_kycApproved || !_communityApproved || _revoked;
 
-            assertEq(backersManager.isGaugeHalted(_gauge), _gauge != address(0) && _expectedIsHalted);
+            assertEq(builderRegistry.isGaugeHalted(_gauge), _gauge != address(0) && _expectedIsHalted);
 
-            assertEq(backersManager.isGaugeRewarded(_gauge), _gauge != address(0) && !_expectedIsHalted);
+            assertEq(builderRegistry.isGaugeRewarded(_gauge), _gauge != address(0) && !_expectedIsHalted);
         }
     }
 }

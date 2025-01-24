@@ -4,16 +4,19 @@ pragma solidity 0.8.20;
 import { Test } from "forge-std/src/Test.sol";
 import { BaseTest } from "../../BaseTest.sol";
 import { TimeManager } from "./TimeManager.sol";
+import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
 
 contract BaseHandler is Test {
     BaseTest public baseTest;
     TimeManager public timeManager;
+    BuilderRegistryRootstockCollective public builderRegistry;
     BackersManagerRootstockCollective public backersManager;
 
     constructor(BaseTest baseTest_, TimeManager timeManager_) {
         baseTest = baseTest_;
         timeManager = timeManager_;
+        builderRegistry = baseTest_.builderRegistry();
         backersManager = baseTest_.backersManager();
     }
 
