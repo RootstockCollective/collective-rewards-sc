@@ -37,6 +37,9 @@ contract BackersManagerRootstockCollective is
     error PositiveAllocationOnHaltedGauge();
     error NoGaugesForDistribution();
     error NotAuthorized();
+    error BackerOptedOutRewards();
+    error AlreadyOptedInRewards();
+    error BackerHasAllocations();
 
     // -----------------------------
     // ----------- Events ----------
@@ -46,6 +49,8 @@ contract BackersManagerRootstockCollective is
     event RewardDistributionStarted(address indexed sender_);
     event RewardDistributed(address indexed sender_);
     event RewardDistributionFinished(address indexed sender_);
+    event BackerRewardsOptedOut(address indexed backer_);
+    event BackerRewardsOptedIn(address indexed backer_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -62,9 +67,23 @@ contract BackersManagerRootstockCollective is
         _;
     }
 
+    modifier onlyBackerOrKycApprover(address account_) {
+        if (msg.sender != account_ && msg.sender != governanceManager.kycApprover()) {
+            revert NotAuthorized();
+        }
+        _;
+    }
+
     modifier onlyBuilderRegistry() {
         if (msg.sender != address(builderRegistry)) {
             revert NotAuthorized();
+        }
+        _;
+    }
+
+    modifier onlyOptedInBacker() {
+        if (rewardsOptedOut[msg.sender]) {
+            revert BackerOptedOutRewards();
         }
         _;
     }
@@ -96,6 +115,8 @@ contract BackersManagerRootstockCollective is
     mapping(address backer => uint256 allocation) public backerTotalAllocation;
     /// @notice address of the builder registry contract
     BuilderRegistryRootstockCollective public builderRegistry;
+    /// @notice Tracks whether a backer has opted out from rewards, disabling the allocation to builders if true
+    mapping(address backer => bool hasOptedOut) public rewardsOptedOut;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -172,7 +193,14 @@ contract BackersManagerRootstockCollective is
      * @param gauge_ address of the gauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
      */
-    function allocate(GaugeRootstockCollective gauge_, uint256 allocation_) external notInDistributionPeriod {
+    function allocate(
+        GaugeRootstockCollective gauge_,
+        uint256 allocation_
+    )
+        external
+        notInDistributionPeriod
+        onlyOptedInBacker
+    {
         (uint256 _newBackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
             gauge_,
             allocation_,
@@ -198,6 +226,7 @@ contract BackersManagerRootstockCollective is
     )
         external
         notInDistributionPeriod
+        onlyOptedInBacker
     {
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
@@ -308,6 +337,35 @@ contract BackersManagerRootstockCollective is
             return builderRegistry.haltedGaugeLastPeriodFinish(GaugeRootstockCollective(msg.sender));
         }
         return _periodFinish;
+    }
+
+    /**
+     * @notice Allows a backer to opt out of rewards, preventing them from allocating votes
+     *         and claiming rewards in the future.
+     *         This action can only be performed by the backer themselves or by the foundation.
+     */
+    function optOutRewards(address backer_) external onlyBackerOrKycApprover(backer_) {
+        if (backerTotalAllocation[backer_] != 0) {
+            revert BackerHasAllocations();
+        }
+        if (rewardsOptedOut[backer_]) {
+            revert BackerOptedOutRewards();
+        }
+        rewardsOptedOut[backer_] = true;
+        emit BackerRewardsOptedOut(backer_);
+    }
+
+    /**
+     * @notice Enables a backer to opt in for rewards, allowing them to allocate votes and claim rewards.
+     *         Backers are opted in by default; only those who have opted out can choose to opt in again.
+     *         This action can be performed only by the backer themselves or by the foundation.
+     */
+    function optInRewards(address backer_) external onlyBackerOrKycApprover(backer_) {
+        if (!rewardsOptedOut[backer_]) {
+            revert AlreadyOptedInRewards();
+        }
+        rewardsOptedOut[backer_] = false;
+        emit BackerRewardsOptedIn(backer_);
     }
 
     // -----------------------------
