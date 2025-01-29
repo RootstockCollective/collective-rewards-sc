@@ -105,7 +105,7 @@ The leftover is 0 because the reward rate is initially 0.\
 The reward missing is initially 0.\
 The reward per token stored is currently 0, because no time has passed.\
 The reward rate at time 0 is 1000/100 = 10. 10 tokens will be distributed for each second.\
-Last time update = 0.\
+Last time update = 0.
 
 Alice allocates 100 votes at time 10.\
 The reward missing is updated to 10 seconds (now - last time update) multiplied by reward rate 10 = 100\
@@ -114,15 +114,15 @@ Last time update = 10.\
 Alice reward per token paid is 0.\
 Alice rewards is set to 0, because her allocation is updated at the end.\
 Alice allocation is set to 100.\
-Total allocation is updated to 100.\
+Total allocation is updated to 100.
 
 Alice claims at time 90.\
-The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation ((90-10)$\times$10)/90 =~ 8.9.\
+The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation ((90-10)$\times$ 10)/90 =~ 8.9.\
 Last time update = 90.\
 Alice rewards = Alice allocation $\times$ (reward per token stored - Alice reward per token paid) = 100 $\times$ 8.9 = 890.\
 Alice per token paid is set to reward per token stored that is equal to 8.9.\
 Token is transferred to Alice address.\
-Alice reward is set to 0.\
+Alice reward is set to 0.
 
 ### Scenario 2: multiple Backers
 
@@ -131,7 +131,7 @@ The leftover is 0 because the reward rate is initially 0.\
 The reward per token stored is currently 0, because no time has passed.\
 The reward missing is initially 0.\
 The reward rate at time 0 is 1000/100 = 10. 10 tokens will be distributed for each second.\
-Last time update = 0.\
+Last time update = 0.
 
 Alice allocates 100 votes at time 10.\
 The reward missing is updated to 10 seconds (now - last time update) multiplied by reward rate 10 = 100.\
@@ -139,33 +139,44 @@ The reward per token stored is 0, because the total allocation hasn't been updat
 Alice reward per token paid is 0.\
 Alice rewards is set to 0, because her allocation is updated at the end.\
 Alice allocation so as the total allocation is updated.\
-Last time update = 10.\
+Last time update = 10.
 
 Bob allocates 50 votes at time 50.\
 Reward missing isn't updated because total allocation is greater than 0.\
-The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation ((50-10)$\times$10)/100 = 4\
+The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation ((50-10) $\times$ 10)/100 = 4\
 Last time update = 50.\
 Bob rewards = Bob allocation $\times$ (reward per token stored - Bob reward per token paid) = 0 $\times$ 4 = 0\
 Bob per token paid is set to reward per token stored that is equal to 4.\
 Bob allocation is updated to 50.\
-Total allocation is updated to 150.\
+Total allocation is updated to 150.
 
 Bob claims at time 100\
-The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation ((100-50)$\times$10)/150 =~ 7.3.\
+The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation ((100-50)$\times$ 10)/150 =~ 7.3.\
 Last time update = 100.\
 Bob rewards = old value + (Bob allocation $\times$ (reward per token stored - Bob reward per token paid)) = 50 $\times$ (7.3 - 4) = 165.\
 Bob per token paid is set to reward per token stored that is equal to 7.3.\
 Token is transferred to Bob address.\
-Bob reward is set to 0.\
+Bob reward is set to 0.
 
 Alice claims at time 100.\
-The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation ((100-50)$\times$10)/150 =~ 7.3, no time has passed.\
+The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation ((100-50)$\times$ 10)/150 =~ 7.3, no time has passed.\
 Last time update = 100.\
 Alice rewards = old value + (Alice allocation $\times$ (reward per token stored - Alice reward per token paid)) = 100 $\times$ (7.3 - 0) = 730.\
 Alice per token paid is set to reward per token stored that is equal to 7.3.\
 Token is transferred to Bob address.\
-Alice reward is set to 0.\
+Alice reward is set to 0.
 
 ## Builder incentivization
 
 In order for the Builder to receive rewards, they need to capture Backers attention and votes. Beside the Builder network community value itself, and setting a compelling backers reward, Builders could also pump their rewards up on theirs Gauge contracts by means of `Gauge#incentivizeWithRewardToken()` and `Gauge#incentivizeWithCoinbase()`. Those rewards will be available only for the Backers who vote for the Builder on the ongoing cycle and they'll be undistinguishable from the rewards gained by votes.
+
+## Missing rewards
+
+In the current implementation, the rewards are allocated for a Gauge at cycle X, while are distributed to Backers at cycle X+1. What happens if there are not Backers at cycle X+1? Or what happens if in the middle of cycle X+1, all the Backers change their vote for another Builders?\
+The Gauge would have some of the rewards that won't be assigned to anyone. Example:
+
+A Gauge has 1000 tokens to distribute to Backers over a cycle of 100 seconds.\
+Alice allocates 100 votes for the 50 seconds.\
+Alice rewards are 500 tokens.\
+The remaining rewards are called `rewardsMissing` and they will be distributed to the next cycle.\
+When it's time to distribute, the `rewardsMissing` is taken into account to calculate the reward rate.
