@@ -11,13 +11,21 @@ if [[ -z "${NO_DD}" || "${NO_DD}" == "false" ]] && [[ $(cast codesize 0x4e59b448
 fi
 echo "CREATE2 deployed"
 
+# Define common arguments for forge commands
+FORGE_ARGS="--rpc-url $RPC_URL --legacy --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --with-gas-price $GAS_PRICE"
+
+# Add --broadcast only if NO_BROADCAST is not set to "true"
+if [[ "${NO_BROADCAST:-false}" != "true" ]]; then
+  FORGE_ARGS+=" --broadcast"
+fi
+
 # Deploy contracts
-forge script script/Deploy.s.sol --rpc-url $RPC_URL --legacy --private-key $PRIVATE_KEY --broadcast --chain-id $CHAIN_ID --with-gas-price $GAS_PRICE || exit $?
+forge script script/Deploy.s.sol $FORGE_ARGS  || exit $?
 # Reload env with contract addresses
 direnv allow
 
 # Create hardhat artifacts
 if [[ ! -n "${OMIT_HARDHAT_ARTIFACTS:-}" || "${OMIT_HARDHAT_ARTIFACTS}" == "false" ]]; then
   echo "> Generating hardhat artifacts"
-  forge script script/Deploy.s.sol --sig "createHardhatArtifacts()" --rpc-url $RPC_URL --legacy --private-key $PRIVATE_KEY --broadcast --chain-id $CHAIN_ID --with-gas-price $GAS_PRICE || exit $?
+  forge script script/Deploy.s.sol --sig "createHardhatArtifacts()" $FORGE_ARGS || exit $?
 fi

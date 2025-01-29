@@ -120,7 +120,9 @@ abstract contract OutputWriter is Script {
             Executables._JQ,
             " -r '.transactions[] | select(.contractAddress == ",
             "\"",
-            vm.toString(addr_),
+            // This is required in the latest foundry version
+            vm.toLowercase(vm.toString(addr_)),
+            // vm.toString(addr_),
             "\"",
             ") | select(.transactionType == \"CREATE\"",
             " or .transactionType == \"CREATE2\"",
@@ -269,6 +271,7 @@ abstract contract OutputWriter is Script {
         _cmd[0] = Executables._BASH;
         _cmd[1] = "-c";
         _cmd[2] = string.concat(Executables._JQ, " -r '.abi' < ", _getForgeArtifactPath(name_));
+        console.log("Getting ABI for %s, %s", name_, _cmd[2]);
         bytes memory _res = vm.ffi(_cmd);
         abi_ = string(_res);
     }
@@ -373,8 +376,12 @@ abstract contract OutputWriter is Script {
                 userdoc: _getUserDoc(_contractName)
             });
 
-            string memory _json = _serializeArtifact(_artifact);
+            console.log("#### ABI %s", _artifact.abi);
+            console.log("#### userdoc %s", _artifact.userdoc);
 
+            string memory _json = _serializeArtifact(_artifact);
+            
+            console.log("Final json", _json);
             vm.writeJson({ json: _json, path: _artifactPath });
         }
 
