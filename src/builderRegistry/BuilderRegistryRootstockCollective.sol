@@ -7,7 +7,7 @@ import { BackersManagerRootstockCollective } from "../backersManager/BackersMana
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "../gauge/GaugeFactoryRootstockCollective.sol";
 import { UpgradeableRootstockCollective } from "../governance/UpgradeableRootstockCollective.sol";
-import { IBackersManagerV1 } from "../interfaces/v1/IBackersManagerV1.sol";
+import { IBackersManagerV1 } from "../interfaces/V1/IBackersManagerV1.sol";
 
 /**
  * @title BuilderRegistryRootstockCollective
