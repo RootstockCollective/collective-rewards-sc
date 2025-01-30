@@ -7,7 +7,6 @@ import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
-import { IGovernanceManagerRootstockCollective } from "../src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
     function run()
@@ -18,31 +17,22 @@ contract Deploy is Broadcaster {
         if (_backersManager == address(0)) {
             _backersManager = vm.envAddress("BACKERS_MANAGER_ADDRESS");
         }
-        address _governanceManager = vm.envOr("GovernanceManagerRootstockCollective", address(0));
-        if (_governanceManager == address(0)) {
-            _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
-        }
         address _gaugeFactoryAddress = vm.envOr("GaugeFactoryRootstockCollective", address(0));
         if (_gaugeFactoryAddress == address(0)) {
             _gaugeFactoryAddress = vm.envAddress("GAUGE_FACTORY_ADDRESS");
         }
-        address _rewardDistributorAddress = vm.envOr("RewardDistributorRootstockCollective", address(0));
+        address _rewardDistributorAddress =
+            vm.envOr("RewardDistributorRootstockCollective", vm.envAddress("REWARD_DISTRIBUTOR_ADDRESS"));
         if (_rewardDistributorAddress == address(0)) {
             _rewardDistributorAddress = vm.envAddress("REWARD_DISTRIBUTOR_ADDRESS");
         }
         uint128 _rewardPercentageCooldown = uint128(vm.envUint("REWARD_PERCENTAGE_COOLDOWN"));
         (proxy_, implementation_) =
-            run(_governanceManager, _gaugeFactoryAddress, _rewardDistributorAddress, _rewardPercentageCooldown);
-
-        if (_backersManager != address(0)) {
-            BuilderRegistryRootstockCollective(proxy_).initializeBackersManager(
-                BackersManagerRootstockCollective(_backersManager)
-            );
-        }
+            run(_backersManager, _gaugeFactoryAddress, _rewardDistributorAddress, _rewardPercentageCooldown);
     }
 
     function run(
-        address governanceManager_,
+        address backersManager_,
         address gaugeFactory_,
         address rewardDistributor_,
         uint128 rewardPercentageCooldown_
@@ -51,14 +41,14 @@ contract Deploy is Broadcaster {
         broadcast
         returns (BuilderRegistryRootstockCollective, BuilderRegistryRootstockCollective)
     {
-        require(governanceManager_ != address(0), "Access control address cannot be empty");
+        require(backersManager_ != address(0), "Backers Manager address cannot be empty");
         require(gaugeFactory_ != address(0), "Gauge factory address cannot be empty");
         require(rewardDistributor_ != address(0), "Reward Distributor address cannot be empty");
 
         bytes memory _initializerData = abi.encodeCall(
             BuilderRegistryRootstockCollective.initialize,
             (
-                IGovernanceManagerRootstockCollective(governanceManager_),
+                BackersManagerRootstockCollective(backersManager_),
                 gaugeFactory_,
                 rewardDistributor_,
                 rewardPercentageCooldown_

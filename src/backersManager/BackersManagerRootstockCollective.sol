@@ -40,6 +40,7 @@ contract BackersManagerRootstockCollective is
     error BackerOptedOutRewards();
     error AlreadyOptedInRewards();
     error BackerHasAllocations();
+    error InvalidAddress();
 
     // -----------------------------
     // ----------- Events ----------
@@ -92,6 +93,7 @@ contract BackersManagerRootstockCollective is
     // ---------- Storage ----------
     // -----------------------------
 
+    uint256[64] private __gapUpgrade;
     /// @notice address of the token used to stake
     IERC20 public stakingToken;
     /// @notice address of the token rewarded to builder and voters
@@ -130,7 +132,6 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice contract initializer
      * @param governanceManager_ contract with permissioned roles
-     * @param builderRegistry_ address of the builder registry contract
      * @param rewardToken_ address of the token rewarded to builder and voters, only standard ERC20 MUST be used
      * @param stakingToken_ address of the staking token for builder and voters
      * @param cycleDuration_ Collective Rewards cycle time duration
@@ -139,7 +140,6 @@ contract BackersManagerRootstockCollective is
      */
     function initialize(
         IGovernanceManagerRootstockCollective governanceManager_,
-        address builderRegistry_,
         address rewardToken_,
         address stakingToken_,
         uint32 cycleDuration_,
@@ -152,12 +152,19 @@ contract BackersManagerRootstockCollective is
         __CycleTimeKeeperRootstockCollective_init(
             governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
         );
-
-        require(address(builderRegistry_) != address(0), "Must set builder registry");
-        builderRegistry = BuilderRegistryRootstockCollective(builderRegistry_);
         rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
         _periodFinish = cycleNext(block.timestamp);
+    }
+
+    /**
+     * @notice contract version 2 initializer
+     * @param builderRegistry_ address of the builder registry contract
+     */
+    function initializeV2(BuilderRegistryRootstockCollective builderRegistry_) external reinitializer(2) {
+        if (address(builderRegistry_) == address(0)) revert InvalidAddress();
+
+        builderRegistry = builderRegistry_;
     }
 
     // -----------------------------

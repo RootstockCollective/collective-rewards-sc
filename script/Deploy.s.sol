@@ -72,11 +72,22 @@ contract Deploy is Broadcaster, OutputWriter {
             "RewardDistributorRootstockCollective", address(_rewardDistributorImpl), address(_rewardDistributorProxy)
         );
 
+        (BackersManagerRootstockCollective _backersManagerProxy, BackersManagerRootstockCollective _backersManagerImpl)
+        = new BackersManagerRootstockCollectiveDeployer().run(
+            address(_governanceManagerProxy),
+            _rewardTokenAddress,
+            _stakingTokenAddress,
+            _cycleDuration,
+            _cycleStartOffset,
+            _distributionDuration
+        );
+        saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
+
         (
             BuilderRegistryRootstockCollective _builderRegistryProxy,
             BuilderRegistryRootstockCollective _builderRegistryImpl
         ) = new BuilderRegistryRootstockCollectiveDeployer().run(
-            address(_governanceManagerProxy),
+            address(_backersManagerProxy),
             address(_gaugeFactory),
             address(_rewardDistributorProxy),
             _rewardPercentageCooldown
@@ -85,19 +96,8 @@ contract Deploy is Broadcaster, OutputWriter {
             "BuilderRegistryRootstockCollective", address(_builderRegistryImpl), address(_builderRegistryProxy)
         );
 
-        (BackersManagerRootstockCollective _backersManagerProxy, BackersManagerRootstockCollective _backersManagerImpl)
-        = new BackersManagerRootstockCollectiveDeployer().run(
-            address(_governanceManagerProxy),
-            address(_builderRegistryProxy),
-            _rewardTokenAddress,
-            _stakingTokenAddress,
-            _cycleDuration,
-            _cycleStartOffset,
-            _distributionDuration
-        );
-        saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
         vm.broadcast();
-        _builderRegistryProxy.initializeBackersManager(_backersManagerProxy);
+        _backersManagerProxy.initializeV2(_builderRegistryProxy);
 
         vm.broadcast();
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));

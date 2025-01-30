@@ -24,6 +24,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     error GaugeHalted();
     error BeforeDistribution();
     error NotEnoughAmount();
+    error InvalidAddress();
 
     // -----------------------------
     // ----------- Events ----------
@@ -78,8 +79,6 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     address public rewardToken;
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
-    /// @notice BuilderRegistryRootstockCollective contract address
-    BuilderRegistryRootstockCollective public builderRegistry;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
     /// @notice cycle rewards shares, optimistically tracking the time weighted votes allocations for this gauge
@@ -89,6 +88,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /// @notice rewards data to each token
     /// @dev address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
     mapping(address rewardToken => RewardData rewardData) public rewardData;
+    /// @notice BuilderRegistryRootstockCollective contract address
+    BuilderRegistryRootstockCollective public builderRegistry;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -102,13 +103,21 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice contract initializer
      * @param rewardToken_ address of the token rewarded to builder and voters, only standard ERC20 MUST be used
-     * @param builderRegistry_ address of the BackersManagerRootstockCollective contract
+     * @param builderRegistry_ address of the builder registry contract
      */
     function initialize(address rewardToken_, address builderRegistry_) external initializer {
         __ReentrancyGuard_init();
         rewardToken = rewardToken_;
+
         builderRegistry = BuilderRegistryRootstockCollective(builderRegistry_);
         backersManager = BackersManagerRootstockCollective(builderRegistry.backersManager());
+    }
+
+    /**
+     * @notice contract version 2 initializer
+     */
+    function initializeV2() public reinitializer(2) {
+        builderRegistry = BuilderRegistryRootstockCollective(backersManager.builderRegistry());
     }
 
     // -----------------------------

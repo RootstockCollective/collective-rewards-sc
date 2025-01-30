@@ -6,8 +6,8 @@ import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableS
 import { BackersManagerRootstockCollective } from "../backersManager/BackersManagerRootstockCollective.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "../gauge/GaugeFactoryRootstockCollective.sol";
-import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
 import { UpgradeableRootstockCollective } from "../governance/UpgradeableRootstockCollective.sol";
+import { IBackersManagerV1 } from "../interfaces/v1/IBackersManagerV1.sol";
 
 /**
  * @title BuilderRegistryRootstockCollective
@@ -37,6 +37,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
     error NotAuthorized();
+    error InvalidAddress();
 
     // -----------------------------
     // ----------- Events ----------
@@ -55,13 +56,17 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     event BuilderRewardReceiverReplacementCancelled(address indexed builder_, address newRewardReceiver_);
     event BuilderRewardReceiverReplacementApproved(address indexed builder_, address newRewardReceiver_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
-    event BuilderMigrated(address indexed builder_, address indexed migrator_);
 
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyKycApprover() {
         governanceManager.validateKycApprover(msg.sender);
+        _;
+    }
+
+    modifier onlyUpgrader() {
+        governanceManager.validateAuthorizedUpgrader(msg.sender);
         _;
     }
 
@@ -124,6 +129,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     mapping(GaugeRootstockCollective gauge => uint256 lastPeriodFinish) public haltedGaugeLastPeriodFinish;
     /// @notice time that must elapse for a new reward percentage from a builder to be applied
     uint128 public rewardPercentageCooldown;
+    /// @notice address of the BackersManagerRootstockCollective contract
     BackersManagerRootstockCollective public backersManager;
 
     // -----------------------------
@@ -137,13 +143,13 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     /**
      * @notice contract initializer
-     * @param governanceManager_ contract with permissioned roles
+     * @param backersManager_ address of the BackersManagerRootstockCollective contract
      * @param gaugeFactory_ address of the GaugeFactoryRootstockCollective contract
      * @param rewardDistributor_ address of the rewardDistributor contract
      * @param rewardPercentageCooldown_ time that must elapse for a new reward percentage from a builder to be applied
      */
     function initialize(
-        IGovernanceManagerRootstockCollective governanceManager_,
+        BackersManagerRootstockCollective backersManager_,
         address gaugeFactory_,
         address rewardDistributor_,
         uint128 rewardPercentageCooldown_
@@ -151,16 +157,13 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         external
         initializer
     {
-        __Upgradeable_init(governanceManager_);
+        if (address(backersManager_) == address(0)) revert InvalidAddress();
+        if (gaugeFactory_ == address(0)) revert InvalidAddress();
+        __Upgradeable_init(backersManager_.governanceManager());
+        backersManager = backersManager_;
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
         rewardPercentageCooldown = rewardPercentageCooldown_;
-    }
-
-    function initializeBackersManager(BackersManagerRootstockCollective backersManager_) external {
-        require(address(backersManager) == address(0), "Already set");
-        require(address(backersManager_) != address(0), "Must set backers manager");
-        backersManager = backersManager_;
     }
 
     // -----------------------------
@@ -446,25 +449,60 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         backerRewardPercentage[msg.sender] = _rewardPercentageData;
     }
 
-    /**
-     * @notice migrate v1 builder to the new builder registry
-     * @param builder_ address of the builder whitelisted on the V1's SimplifiedRewardDistributor contract
-     * @param rewardAddress_ address of the builder reward receiver whitelisted on the V1's SimplifiedRewardDistributor
-     * contract
-     * @param rewardPercentage_ reward percentage(100% == 1 ether)
-     */
-    function migrateBuilder(
-        address builder_,
-        address rewardAddress_,
-        uint64 rewardPercentage_
-    )
-        public
-        onlyKycApprover
-    {
-        _communityApproveBuilder(builder_);
-        _activateBuilder(builder_, rewardAddress_, rewardPercentage_);
+    function migrateAllBuildersV2() public onlyUpgrader {
+        IBackersManagerV1 _buildersRegistryV1 = IBackersManagerV1(address(backersManager));
+        uint256 _gaugesLength = _buildersRegistryV1.getGaugesLength();
+        for (uint256 i = 0; i < _gaugesLength; i++) {
+            address _gauge = _buildersRegistryV1.getGaugeAt(i);
+            address _builder = _buildersRegistryV1.gaugeToBuilder(_gauge);
+            _migrateBuilderV2(_builder);
+        }
+    }
 
-        emit BuilderMigrated(builder_, msg.sender);
+    /**
+     * @notice migrate v2 builder to the new builder registry after the contract split
+     * @param builder_ address of the builder whitelisted on the V1's SimplifiedRewardDistributor contract
+     */
+    function _migrateBuilderV2(address builder_) internal {
+        IBackersManagerV1 _backersManagerV1 = IBackersManagerV1(address(backersManager));
+
+        (
+            bool _activated,
+            bool _kycApproved,
+            bool _communityApproved,
+            bool _paused,
+            bool _revoked,
+            bytes7 _reserved,
+            bytes20 _pausedReason
+        ) = _backersManagerV1.builderState(builder_);
+        builderState[builder_] = BuilderState({
+            activated: _activated,
+            kycApproved: _kycApproved,
+            communityApproved: _communityApproved,
+            paused: _paused,
+            revoked: _revoked,
+            reserved: _reserved,
+            pausedReason: _pausedReason
+        });
+
+        builderRewardReceiver[builder_] = _backersManagerV1.builderRewardReceiver(builder_);
+        builderRewardReceiverReplacement[builder_] = _backersManagerV1.builderRewardReceiverReplacement(builder_);
+
+        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = _backersManagerV1.backerRewardPercentage(builder_);
+        backerRewardPercentage[builder_] =
+            RewardPercentageData({ previous: _previous, next: _next, cooldownEndTime: _cooldownEndTime });
+
+        address _gauge = _backersManagerV1.builderToGauge(builder_);
+        builderToGauge[builder_] = GaugeRootstockCollective(_gauge);
+        gaugeToBuilder[GaugeRootstockCollective(_gauge)] = builder_;
+
+        if (_backersManagerV1.isGaugeHalted(_gauge)) {
+            _haltedGauges.add(_gauge);
+            haltedGaugeLastPeriodFinish[GaugeRootstockCollective(_gauge)] =
+                _backersManagerV1.haltedGaugeLastPeriodFinish(_gauge);
+        } else {
+            _gauges.add(_gauge);
+        }
     }
 
     /**
