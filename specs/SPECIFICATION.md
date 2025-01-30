@@ -173,10 +173,11 @@ In order for the Builder to receive rewards, they need to capture Backers attent
 ## Missing rewards
 
 In the current implementation, the rewards are allocated for a Gauge at cycle X, while are distributed to Backers at cycle X+1. What happens if there are not Backers at cycle X+1? Or what happens if in the middle of cycle X+1, all the Backers change their vote for another Builders?\
-The Gauge would have some of the rewards that won't be assigned to anyone. Example:
+The Gauge would have some of the rewards that won't be assigned to anyone.\
+Example:
 
 A Gauge has 1000 tokens to distribute to Backers over a cycle of 100 seconds.\
-Alice allocates 100 votes for the 50 seconds.\
+Alice allocates 100 votes the 50 seconds.\
 Alice rewards are 500 tokens.\
 The remaining rewards are called `rewardsMissing` and they will be distributed to the next cycle.\
 When it's time to distribute, the `rewardsMissing` is taken into account to calculate the reward rate.
