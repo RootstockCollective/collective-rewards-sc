@@ -3,13 +3,13 @@ pragma solidity 0.8.20;
 
 import { Test } from "forge-std/src/Test.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
-import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
-import { IBackersManagerV1 } from "src/interfaces/v1/IBackersManagerV1.sol";
-import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
-import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
-import { MigrationV2 } from "script/upgrade/MigrationV2.sol";
-import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "../../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
+import { IGovernanceManagerRootstockCollective } from "../../src/interfaces/IGovernanceManagerRootstockCollective.sol";
+import { IBackersManagerV1 } from "../../src/interfaces/v1/IBackersManagerV1.sol";
+import { GaugeRootstockCollective } from "../../src/gauge/GaugeRootstockCollective.sol";
+import { GaugeFactoryRootstockCollective } from "../../src/gauge/GaugeFactoryRootstockCollective.sol";
+import { MigrationV2 } from "../../src/upgrade/MigrationV2.sol";
+import { BackersManagerRootstockCollective } from "../../src/backersManager/BackersManagerRootstockCollective.sol";
 
 using EnumerableSet for EnumerableSet.AddressSet;
 

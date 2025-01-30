@@ -4,7 +4,7 @@
 pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
-import { MigrationV2 } from "script/upgrade/MigrationV2.sol";
+import { MigrationV2 } from "../../src/upgrade/MigrationV2.sol";
 
 contract Deploy is Broadcaster {
     function run() public returns (MigrationV2 migrationV2_) {

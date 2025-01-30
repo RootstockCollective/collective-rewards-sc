@@ -2,13 +2,13 @@
 pragma solidity 0.8.20;
 
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
-import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
-import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
-import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
-import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
-import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
-import { IBackersManagerV1 } from "src/interfaces/V1/IBackersManagerV1.sol";
+import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
+import { GaugeBeaconRootstockCollective } from "../gauge/GaugeBeaconRootstockCollective.sol";
+import { GaugeFactoryRootstockCollective } from "../gauge/GaugeFactoryRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "../builderRegistry/BuilderRegistryRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "../backersManager/BackersManagerRootstockCollective.sol";
+import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
+import { IBackersManagerV1 } from "../interfaces/V1/IBackersManagerV1.sol";
 
 /**
  * @title MigrationV2

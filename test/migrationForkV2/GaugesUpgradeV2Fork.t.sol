@@ -2,11 +2,11 @@
 pragma solidity 0.8.20;
 
 import { Test } from "forge-std/src/Test.sol";
-import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
-import { IBackersManagerV1 } from "src/interfaces/v1/IBackersManagerV1.sol";
-import { MigrationV2 } from "script/upgrade/MigrationV2.sol";
-import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
-import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
+import { IGovernanceManagerRootstockCollective } from "../../src/interfaces/IGovernanceManagerRootstockCollective.sol";
+import { IBackersManagerV1 } from "../../src/interfaces/v1/IBackersManagerV1.sol";
+import { MigrationV2 } from "../../src/upgrade/MigrationV2.sol";
+import { BuilderRegistryRootstockCollective } from "../../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
+import { GaugeRootstockCollective } from "../../src/gauge/GaugeRootstockCollective.sol";
 
 struct RewardData {
     uint256 rewardRate;
