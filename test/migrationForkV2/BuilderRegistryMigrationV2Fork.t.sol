@@ -8,9 +8,9 @@ import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanc
 import { IBackersManagerV1 } from "src/interfaces/V1/IBackersManagerV1.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstockCollective.sol";
-import { MigrationV2 } from "src/upgrade/MigrationV2.sol";
+import { MigrationV2 } from "src/migrations/v2/MigrationV2.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
-import { MigrationV2Deployer } from "script/upgrade/MigrationV2.s.sol";
+import { MigrationV2Deployer } from "script/migrations/v2/MigrationV2.s.sol";
 
 using EnumerableSet for EnumerableSet.AddressSet;
 

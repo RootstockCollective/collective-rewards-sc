@@ -4,7 +4,7 @@
 pragma solidity 0.8.20;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
-import { MigrationV2 } from "src/upgrade/MigrationV2.sol";
+import { MigrationV2 } from "src/migrations/v2/MigrationV2.sol";
 import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
 

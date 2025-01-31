@@ -93,6 +93,7 @@ contract BackersManagerRootstockCollective is
     // ---------- Storage ----------
     // -----------------------------
 
+    /// @notice gap to preserve storage layout after removing builder registry from the inheritance tree
     uint256[64] private __gapUpgrade;
     /// @notice address of the token used to stake
     IERC20 public stakingToken;

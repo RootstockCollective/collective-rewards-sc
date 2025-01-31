@@ -4,10 +4,10 @@ pragma solidity 0.8.20;
 import { Test } from "forge-std/src/Test.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 import { IBackersManagerV1 } from "src/interfaces/V1/IBackersManagerV1.sol";
-import { MigrationV2 } from "src/upgrade/MigrationV2.sol";
+import { MigrationV2 } from "src/migrations/v2/MigrationV2.sol";
 import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
-import { MigrationV2Deployer } from "script/upgrade/MigrationV2.s.sol";
+import { MigrationV2Deployer } from "script/migrations/v2/MigrationV2.s.sol";
 
 struct CycleData {
     uint32 previousDuration;
