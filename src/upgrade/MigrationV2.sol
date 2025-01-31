@@ -18,15 +18,21 @@ contract MigrationV2 {
     error NotUpgrader();
 
     IBackersManagerV1 public backersManagerV1;
+    BackersManagerRootstockCollective public backersManagerV2Implementation;
+    BuilderRegistryRootstockCollective public builderRegistry;
+    BuilderRegistryRootstockCollective public builderRegistryImplementation;
     IGovernanceManagerRootstockCollective public governanceManager;
     GaugeBeaconRootstockCollective public gaugeBeacon;
     address public upgrader;
     address public gaugeFactory;
     address public rewardDistributor;
     uint128 public rewardPercentageCooldown;
-    BuilderRegistryRootstockCollective public builderRegistry;
 
-    constructor(address backersManagerV1_) {
+    constructor(
+        address backersManagerV1_,
+        BuilderRegistryRootstockCollective builderRegistryImplementation_,
+        BackersManagerRootstockCollective backersManagerV2Implementation_
+    ) {
         backersManagerV1 = IBackersManagerV1(backersManagerV1_);
         governanceManager = backersManagerV1.governanceManager();
         gaugeBeacon =
@@ -35,6 +41,8 @@ contract MigrationV2 {
         gaugeFactory = backersManagerV1.gaugeFactory();
         rewardDistributor = backersManagerV1.rewardDistributor();
         rewardPercentageCooldown = backersManagerV1.rewardPercentageCooldown();
+        builderRegistryImplementation = builderRegistryImplementation_;
+        backersManagerV2Implementation = backersManagerV2Implementation_;
     }
 
     function run() public returns (BuilderRegistryRootstockCollective builderRegistry_) {
@@ -62,9 +70,8 @@ contract MigrationV2 {
                 rewardPercentageCooldown
             )
         );
-        BuilderRegistryRootstockCollective _builderRegistryImp = new BuilderRegistryRootstockCollective();
         builderRegistry_ = BuilderRegistryRootstockCollective(
-            address(new ERC1967Proxy(address(_builderRegistryImp), _builderRegistryInitializerData))
+            address(new ERC1967Proxy(address(builderRegistryImplementation), _builderRegistryInitializerData))
         );
         builderRegistry = builderRegistry_;
     }
@@ -73,8 +80,8 @@ contract MigrationV2 {
         bytes memory _backersManagerInitializeData = abi.encodeCall(
             BackersManagerRootstockCollective.initializeV2, (BuilderRegistryRootstockCollective(builderRegistry_))
         );
-        BackersManagerRootstockCollective _backersManagerImp = new BackersManagerRootstockCollective();
-        backersManagerV1.upgradeToAndCall(address(_backersManagerImp), _backersManagerInitializeData);
+
+        backersManagerV1.upgradeToAndCall(address(backersManagerV2Implementation), _backersManagerInitializeData);
     }
 
     function _upgradeGauges() internal {

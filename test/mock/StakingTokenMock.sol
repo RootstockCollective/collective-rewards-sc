@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { ICollectiveRewardsCheckRootstockCollective } from
-    "../../src/interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
+    "src/interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
 
 string constant DEFAULT_NAME = "ERC20Mock";
 string constant DEFAULT_SYMBOL = "E20M";

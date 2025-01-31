@@ -2,11 +2,12 @@
 pragma solidity 0.8.20;
 
 import { Test } from "forge-std/src/Test.sol";
-import { IGovernanceManagerRootstockCollective } from "../../src/interfaces/IGovernanceManagerRootstockCollective.sol";
-import { IBackersManagerV1 } from "../../src/interfaces/V1/IBackersManagerV1.sol";
-import { MigrationV2 } from "../../src/upgrade/MigrationV2.sol";
-import { BuilderRegistryRootstockCollective } from "../../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
-import { BackersManagerRootstockCollective } from "../../src/backersManager/BackersManagerRootstockCollective.sol";
+import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
+import { IBackersManagerV1 } from "src/interfaces/V1/IBackersManagerV1.sol";
+import { MigrationV2 } from "src/upgrade/MigrationV2.sol";
+import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
+import { MigrationV2Deployer } from "script/upgrade/MigrationV2.s.sol";
 
 struct CycleData {
     uint32 previousDuration;
@@ -37,10 +38,8 @@ struct BackersManagerData {
 contract BackersManagerUpgradeV2Fork is Test {
     address public backersManager;
     IGovernanceManagerRootstockCollective public governanceManager;
-    MigrationV2 public migrationV2;
     BuilderRegistryRootstockCollective public builderRegistry;
     address public governor;
-    address public upgrader;
     // Random backer with allocations
     address public backer = 0xb0F0D0e27BF82236E01d8FaB590b46A470F45cfF;
     BackersManagerData public backersManagerDataV1;
@@ -49,17 +48,16 @@ contract BackersManagerUpgradeV2Fork is Test {
         backersManager = vm.envAddress("BACKERS_MANAGER_ADDRESS");
         IBackersManagerV1 _backersManagerV1 = IBackersManagerV1(backersManager);
         governanceManager = _backersManagerV1.governanceManager();
-        upgrader = governanceManager.upgrader();
         governor = IBackersManagerV1(backersManager).governanceManager().governor();
-
-        migrationV2 = new MigrationV2(backersManager);
 
         backersManagerDataV1 = _getBackersManagerData();
 
         // migrate
-        vm.prank(upgrader);
-        governanceManager.updateUpgrader(address(migrationV2));
-        builderRegistry = migrationV2.run();
+        MigrationV2Deployer _migrationV2Deployer = new MigrationV2Deployer();
+        MigrationV2 _migrationV2 = _migrationV2Deployer.run(backersManager);
+        vm.prank(governanceManager.upgrader());
+        governanceManager.updateUpgrader(address(_migrationV2));
+        builderRegistry = _migrationV2.run();
     }
 
     /**

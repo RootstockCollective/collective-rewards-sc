@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, BackersManagerRootstockCollective, GaugeRootstockCollective } from "../BaseTest.sol";
-import { UtilsLib } from "../../src/libraries/UtilsLib.sol";
+import { UtilsLib } from "src/libraries/UtilsLib.sol";
 import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
 contract SkipDistribution is BaseTest {

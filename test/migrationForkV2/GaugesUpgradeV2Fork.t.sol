@@ -2,11 +2,12 @@
 pragma solidity 0.8.20;
 
 import { Test } from "forge-std/src/Test.sol";
-import { IGovernanceManagerRootstockCollective } from "../../src/interfaces/IGovernanceManagerRootstockCollective.sol";
-import { IBackersManagerV1 } from "../../src/interfaces/V1/IBackersManagerV1.sol";
-import { MigrationV2 } from "../../src/upgrade/MigrationV2.sol";
-import { BuilderRegistryRootstockCollective } from "../../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
-import { GaugeRootstockCollective } from "../../src/gauge/GaugeRootstockCollective.sol";
+import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
+import { IBackersManagerV1 } from "src/interfaces/V1/IBackersManagerV1.sol";
+import { MigrationV2 } from "src/upgrade/MigrationV2.sol";
+import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
+import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
+import { MigrationV2Deployer } from "script/upgrade/MigrationV2.s.sol";
 
 struct RewardData {
     uint256 rewardRate;
@@ -30,9 +31,8 @@ struct GaugesData {
 contract GaugesUpgradeV2Fork is Test {
     IBackersManagerV1 public backersManagerV1;
     IGovernanceManagerRootstockCollective public governanceManager;
-    MigrationV2 public migrationV2;
     BuilderRegistryRootstockCollective public builderRegistry;
-    address public upgrader;
+    MigrationV2 public migrationV2;
     address public backer = 0xb0F0D0e27BF82236E01d8FaB590b46A470F45cfF;
 
     address[] public gauges;
@@ -50,11 +50,9 @@ contract GaugesUpgradeV2Fork is Test {
 
         _setGaugesDataV1();
 
-        migrationV2 = new MigrationV2(_backersManager);
-
-        // Migrate to V2
-        upgrader = governanceManager.upgrader();
-        vm.prank(upgrader);
+        MigrationV2Deployer _migrationV2Deployer = new MigrationV2Deployer();
+        migrationV2 = _migrationV2Deployer.run(_backersManager);
+        vm.prank(governanceManager.upgrader());
         governanceManager.updateUpgrader(address(migrationV2));
         builderRegistry = migrationV2.run();
     }

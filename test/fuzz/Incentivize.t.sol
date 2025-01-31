@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseFuzz, GaugeRootstockCollective } from "./BaseFuzz.sol";
-import { UtilsLib } from "../../src/libraries/UtilsLib.sol";
+import { UtilsLib } from "src/libraries/UtilsLib.sol";
 
 contract IncentivizeFuzzTest is BaseFuzz {
     uint256 public constant MAX_INCENTIVES = 10;
