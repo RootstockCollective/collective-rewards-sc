@@ -2,8 +2,8 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, GaugeRootstockCollective } from "../../BaseTest.sol";
-import { CommunityApproveBuilderChangerTemplateRootstockCollective } from
-    "../../../src/governance/changerTemplates/CommunityApproveBuilderChangerTemplateRootstockCollective.sol";
+import { BuilderState } from "../../../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
+import { CommunityApproveBuilderChangerTemplateRootstockCollective } from "../../../src/governance/changerTemplates/CommunityApproveBuilderChangerTemplateRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract CommunityApproveBuilderChangerTest is BaseTest {
@@ -50,7 +50,7 @@ contract CommunityApproveBuilderChangerTest is BaseTest {
         //  THEN gauge is added on BackersManagerRootstockCollective
         assertEq(address(builderRegistry.builderToGauge(_newBuilder)), address(_newGauge));
         //  THEN the new builder is community approved
-        (,, bool _communityApproved,,,,) = builderRegistry.builderState(_newBuilder);
-        assertEq(_communityApproved, true);
+        BuilderState builderState = builderRegistry.builderState(_newBuilder);
+        assertEq(uint8(BuilderState.CommunityApproved), uint8(builderState));
     }
 }

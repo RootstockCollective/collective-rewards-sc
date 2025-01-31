@@ -9,18 +9,36 @@ import { GaugeFactoryRootstockCollective } from "../gauge/GaugeFactoryRootstockC
 import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
 import { UpgradeableRootstockCollective } from "../governance/UpgradeableRootstockCollective.sol";
 
-/**
- * @title BuilderRegistryRootstockCollective
- * @notice Keeps registers of the builders
- */
-contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
-    using EnumerableSet for EnumerableSet.AddressSet;
+enum BuilderState {
+    Inactive,
+    CommunityApproved,
+    KYCApproved,
+    Active,
+    Paused,
+    DEAD // Marks the end for iterations over State
+}
 
-    uint256 internal constant _MAX_REWARD_PERCENTAGE = UtilsLib._PRECISION;
-    // -----------------------------
-    // ------- Custom Errors -------
-    // -----------------------------
+interface StateMachineErrors {
+    error NoSuchTransition(BuilderState originalState_, BuilderState targetState_);
+}
 
+interface BuilderEvents {
+    event BuilderStateChange(address indexed builder_, BuilderState prevState_, BuilderState newState_);
+    event BuilderActivated(address indexed builder_, address rewardReceiver_, uint64 rewardPercentage_);
+    event Dewhitelisted(address indexed builder_);
+    event Paused(address indexed builder_, bytes20 reason_);
+    event Unpaused(address indexed builder_);
+    event Revoked(address indexed builder_);
+    event Permitted(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
+    event BackerRewardPercentageUpdateScheduled(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
+    event BuilderRewardReceiverReplacementRequested(address indexed builder_, address newRewardReceiver_);
+    event BuilderRewardReceiverReplacementCancelled(address indexed builder_, address newRewardReceiver_);
+    event BuilderRewardReceiverReplacementApproved(address indexed builder_, address newRewardReceiver_);
+    event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
+    event BuilderMigrated(address indexed builder_, address indexed migrator_);
+}
+
+interface BuilderErrors {
     error AlreadyActivated();
     error AlreadyKYCApproved();
     error AlreadyCommunityApproved();
@@ -37,25 +55,16 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
     error NotAuthorized();
+}
 
-    // -----------------------------
-    // ----------- Events ----------
-    // -----------------------------
-    event BuilderActivated(address indexed builder_, address rewardReceiver_, uint64 rewardPercentage_);
-    event KYCApproved(address indexed builder_);
-    event KYCRevoked(address indexed builder_);
-    event CommunityApproved(address indexed builder_);
-    event Dewhitelisted(address indexed builder_);
-    event Paused(address indexed builder_, bytes20 reason_);
-    event Unpaused(address indexed builder_);
-    event Revoked(address indexed builder_);
-    event Permitted(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
-    event BackerRewardPercentageUpdateScheduled(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
-    event BuilderRewardReceiverReplacementRequested(address indexed builder_, address newRewardReceiver_);
-    event BuilderRewardReceiverReplacementCancelled(address indexed builder_, address newRewardReceiver_);
-    event BuilderRewardReceiverReplacementApproved(address indexed builder_, address newRewardReceiver_);
-    event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
-    event BuilderMigrated(address indexed builder_, address indexed migrator_);
+/**
+ * @title BuilderRegistryRootstockCollective
+ * @notice Keeps registers of the builders
+ */
+contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, BuilderEvents, BuilderErrors {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
+    uint256 internal constant _MAX_REWARD_PERCENTAGE = UtilsLib._PRECISION;
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -72,17 +81,17 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         _;
     }
 
-    // -----------------------------
-    // ---------- Structs ----------
-    // -----------------------------
-    struct BuilderState {
-        bool activated;
-        bool kycApproved;
-        bool communityApproved;
-        bool paused;
-        bool revoked;
-        bytes7 reserved; // for future upgrades
-        bytes20 pausedReason;
+    modifier transition(
+        address builder_,
+        BuilderState requiredState_,
+        BuilderState targetState_
+    ) {
+        if (builderState[builder_] != requiredState_) {
+            revert StateMachineErrors.NoSuchTransition(builderState[builder_], targetState_);
+        }
+        _;
+        builderState[builder_] = targetState_;
+        emit BuilderStateChange(builder_, requiredState_, targetState_);
     }
 
     // -----------------------------
@@ -147,10 +156,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         address gaugeFactory_,
         address rewardDistributor_,
         uint128 rewardPercentageCooldown_
-    )
-        external
-        initializer
-    {
+    ) external initializer {
         __Upgradeable_init(governanceManager_);
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
@@ -170,10 +176,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function setHaltedGaugeLastPeriodFinish(
         GaugeRootstockCollective gauge_,
         uint256 periodFinish_
-    )
-        external
-        onlyBackersManager
-    {
+    ) external onlyBackersManager {
         haltedGaugeLastPeriodFinish[gauge_] = periodFinish_;
     }
 
@@ -208,10 +211,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function approveBuilderRewardReceiverReplacement(
         address builder_,
         address rewardReceiverReplacement_
-    )
-        external
-        onlyKycApprover
-    {
+    ) external onlyKycApprover {
         // Only an operational builder can be approved
         if (!isBuilderOperational(builder_)) revert NotOperational();
 
@@ -226,8 +226,9 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param builder_ address of the builder
      */
     function hasBuilderRewardReceiverPendingApproval(address builder_) external view returns (bool) {
-        return builderRewardReceiverReplacement[builder_] != address(0)
-            && builderRewardReceiver[builder_] != builderRewardReceiverReplacement[builder_];
+        return
+            builderRewardReceiverReplacement[builder_] != address(0) &&
+            builderRewardReceiver[builder_] != builderRewardReceiverReplacement[builder_];
     }
 
     /**
@@ -243,32 +244,49 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         address builder_,
         address rewardReceiver_,
         uint64 rewardPercentage_
-    )
-        external
-        onlyKycApprover
-    {
+    ) external onlyKycApprover {
         _activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
     }
 
     /**
      * @notice approves builder's KYC after a revocation
      * @dev reverts if it is not called by the owner address
-     * reverts if it is not activated
-     * reverts if it is already KYC approved
-     * reverts if it does not have a gauge associated
      * @param builder_ address of the builder
      */
     function approveBuilderKYC(address builder_) external onlyKycApprover {
+        /**
+         *
+         *         enum BuilderState {
+         *             Inactive = 0
+         *             CommunityApproved = 1
+         *             KYCApproved = 2
+         *             Active = 3
+         *             Paused = 4
+         *             DEAD = 5
+         *         }
+         *
+         *         0 -> 2 Inactive -> KYCApproved
+         *         1 -> 3 CommunityApproved -> Active
+         */
+        BuilderState _state = builderState[builder_];
+        BuilderState _targetState = BuilderState(uint8(_state) + 2);
+
+        if (backerRewardPercentage[builder_].cooldownEndTime == 0) {
+            revert NotActivated(); // the initial kyc builder acitvation sets always cooldownEndTime to non-zero value
+        }
+
+        if (uint8(_state) > uint8(BuilderState.CommunityApproved)) {
+            // same as != Inactive || CommunityApproved
+            revert StateMachineErrors.NoSuchTransition(_state, _targetState);
+        }
+
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[builder_].activated) revert NotActivated();
-        if (builderState[builder_].kycApproved) revert AlreadyKYCApproved();
-
-        builderState[builder_].kycApproved = true;
 
         _resumeGauge(_gauge);
 
-        emit KYCApproved(builder_);
+        builderState[builder_] = _targetState;
+        emit BuilderStateChange(builder_, _state, _targetState);
     }
 
     /**
@@ -278,9 +296,32 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param builder_ address of the builder
      */
     function revokeBuilderKYC(address builder_) external onlyKycApprover {
-        if (!builderState[builder_].kycApproved) revert NotKYCApproved();
+        /**
+         *
+         *         enum BuilderState {
+         *             Inactive = 0
+         *             CommunityApproved = 1
+         *             KYCApproved = 2
+         *             Active = 3
+         *             Paused = 4
+         *             DEAD = 5
+         *         }
+         *
+         *         2 -> 0 KYCApproved -> Inactive
+         *         3 -> 1 Active -> CommunityApproved
+         *         4 -> 1 Paused -> CommunityApproved
+         */
+        BuilderState _state = builderState[builder_];
+        BuilderState _targetState;
 
-        builderState[builder_].kycApproved = false;
+        if (_state == BuilderState.KYCApproved) {
+            _targetState = BuilderState.Inactive;
+        } else if (_state == BuilderState.Active || _state == BuilderState.Paused) {
+            _targetState = BuilderState.CommunityApproved;
+        } else {
+            revert StateMachineErrors.NoSuchTransition(_state, BuilderState.DEAD); // the DEAD state is not accurate but
+            // for PoC it's ok
+        }
 
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
         // if builder is community approved, it has a gauge associated
@@ -289,7 +330,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
             _gauge.moveBuilderUnclaimedRewards(rewardDistributor);
         }
 
-        emit KYCRevoked(builder_);
+        builderState[builder_] = _targetState;
+        emit BuilderStateChange(builder_, _state, _targetState);
     }
 
     /**
@@ -300,11 +342,9 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param builder_ address of the builder
      * @return gauge_ gauge contract
      */
-    function communityApproveBuilder(address builder_)
-        external
-        onlyValidChanger
-        returns (GaugeRootstockCollective gauge_)
-    {
+    function communityApproveBuilder(
+        address builder_
+    ) external onlyValidChanger returns (GaugeRootstockCollective gauge_) {
         return _communityApproveBuilder(builder_);
     }
 
@@ -316,16 +356,33 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param builder_ address of the builder
      */
     function dewhitelistBuilder(address builder_) external onlyValidChanger {
+        /**
+         *
+         *         enum BuilderState {
+         *             Inactive = 0
+         *             CommunityApproved = 1
+         *             KYCApproved = 2
+         *             Active = 3
+         *             Paused = 4
+         *             DEAD = 5
+         *         }
+         *
+         *         1 -> 5 CommunityApproved -> DEAD
+         *         2 -> 5 KYCApproved -> DEAD
+         *         3 -> 5 Active -> DEAD
+         *         4 -> 5 Paused -> DEAD
+         */
+        BuilderState _state = builderState[builder_];
+        if (_state == BuilderState.Inactive) revert StateMachineErrors.NoSuchTransition(_state, BuilderState.DEAD);
+
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[builder_].communityApproved) revert NotCommunityApproved();
-
-        builderState[builder_].communityApproved = false;
 
         _haltGauge(_gauge);
         backersManager.rewardTokenApprove(address(_gauge), 0);
 
         emit Dewhitelisted(builder_);
+        builderState[builder_] = BuilderState.DEAD;
     }
 
     /**
@@ -334,10 +391,21 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param builder_ address of the builder
      * @param reason_ reason for the pause
      */
-    function pauseBuilder(address builder_, bytes20 reason_) external onlyKycApprover {
-        // pause can be overwritten to change the reason
-        builderState[builder_].paused = true;
-        builderState[builder_].pausedReason = reason_;
+    function pauseBuilder(
+        address builder_,
+        bytes20 reason_
+    ) external onlyKycApprover transition(builder_, BuilderState.Active, BuilderState.Paused) {
+        emit Paused(builder_, reason_);
+    }
+
+    /**
+     * @notice change the paused reason of a paused builder
+     * @param builder_ address of the paused builder
+     * @param reason_ the new reason for being paused
+     *
+     */
+    function changePausedReason(address builder_, bytes20 reason_) external onlyKycApprover {
+        require(builderState[builder_] == BuilderState.Paused, "Builder not paused");
         emit Paused(builder_, reason_);
     }
 
@@ -347,38 +415,29 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * reverts if it is not paused
      * @param builder_ address of the builder
      */
-    function unpauseBuilder(address builder_) external onlyKycApprover {
-        if (!builderState[builder_].paused) revert NotPaused();
-
-        builderState[builder_].paused = false;
-        builderState[builder_].pausedReason = "";
-
-        emit Unpaused(builder_);
+    function unpauseBuilder(
+        address builder_
+    ) external onlyKycApprover transition(builder_, BuilderState.Paused, BuilderState.Active) {
+        emit Unpaused(builder_); // could be not needed
     }
 
     /**
-     * @notice permit builder
+     * @notice unpause thyself
      * @dev reverts if it does not have a gauge associated
-     *  reverts if it is not KYC approved
-     *  reverts if it is not community approved
-     *  reverts if it is not revoked
      *  reverts if it is executed in distribution period because changing the totalPotentialReward produce a
      * miscalculation of rewards
      * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
-    function permitBuilder(uint64 rewardPercentage_) external {
+    function permitBuilder(
+        uint64 rewardPercentage_
+    ) external transition(msg.sender, BuilderState.Paused, BuilderState.Active) {
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
-        if (!builderState[msg.sender].communityApproved) revert NotCommunityApproved();
-        if (!builderState[msg.sender].revoked) revert NotRevoked();
 
         // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
             revert InvalidBackerRewardPercentage();
         }
-
-        builderState[msg.sender].revoked = false;
 
         // read from storage
         RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[msg.sender];
@@ -395,29 +454,22 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @notice revoke builder
+     * @notice pause thyself
      * @dev reverts if it does not have a gauge associated
-     *  reverts if it is not KYC approved
-     *  reverts if it is not community approved
-     *  reverts if it is already revoked
      *  reverts if it is executed in distribution period because changing the totalPotentialReward produce a
      * miscalculation of rewards
      */
-    function revokeBuilder() external {
+    function revokeBuilder() external transition(msg.sender, BuilderState.Active, BuilderState.Paused) {
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
-        if (!builderState[msg.sender].communityApproved) revert NotCommunityApproved();
-        if (builderState[msg.sender].revoked) revert AlreadyRevoked();
 
-        builderState[msg.sender].revoked = true;
         // when revoked builder wants to come back, it can set a new reward percentage. So, the cooldown time starts
         // here
         backerRewardPercentage[msg.sender].cooldownEndTime = uint128(block.timestamp + rewardPercentageCooldown);
 
         _haltGauge(_gauge);
 
-        emit Revoked(msg.sender);
+        emit Revoked(msg.sender); // TODO: could be not needed
     }
 
     /**
@@ -440,7 +492,11 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         _rewardPercentageData.next = rewardPercentage_;
         _rewardPercentageData.cooldownEndTime = uint128(block.timestamp) + rewardPercentageCooldown;
 
-        emit BackerRewardPercentageUpdateScheduled(msg.sender, rewardPercentage_, _rewardPercentageData.cooldownEndTime);
+        emit BackerRewardPercentageUpdateScheduled(
+            msg.sender,
+            rewardPercentage_,
+            _rewardPercentageData.cooldownEndTime
+        );
 
         // write to storage
         backerRewardPercentage[msg.sender] = _rewardPercentageData;
@@ -453,14 +509,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * contract
      * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
-    function migrateBuilder(
-        address builder_,
-        address rewardAddress_,
-        uint64 rewardPercentage_
-    )
-        public
-        onlyKycApprover
-    {
+    function migrateBuilder(address builder_, address rewardAddress_, uint64 rewardPercentage_) public onlyKycApprover {
         _communityApproveBuilder(builder_);
         _activateBuilder(builder_, rewardAddress_, rewardPercentage_);
 
@@ -487,15 +536,16 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      *  paused == false
      */
     function isBuilderOperational(address builder_) public view returns (bool) {
-        BuilderState memory _builderState = builderState[builder_];
-        return _builderState.kycApproved && _builderState.communityApproved && !_builderState.paused;
+        BuilderState _builderState = builderState[builder_];
+        return _builderState > BuilderState.Inactive && _builderState < BuilderState.Paused;
     }
 
     /**
+     * @dev could be removed with state machine
      * @notice return true if builder is paused
      */
     function isBuilderPaused(address builder_) public view returns (bool) {
-        return builderState[builder_].paused;
+        return builderState[builder_] == BuilderState.Paused;
     }
 
     /**
@@ -587,7 +637,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function validateWhitelisted(GaugeRootstockCollective gauge_) external view onlyBackersManager {
         address _builder = gaugeToBuilder[gauge_];
         if (_builder == address(0)) revert GaugeDoesNotExist();
-        if (!builderState[_builder].activated) revert NotActivated();
+        if (builderState[_builder] != BuilderState.Active) revert NotActivated();
     }
 
     /**
@@ -608,23 +658,9 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param gauge_ gauge contract to be resumed
      */
     function _resumeGauge(GaugeRootstockCollective gauge_) internal {
-        if (_canBeResumed(gauge_)) {
-            _gauges.add(address(gauge_));
-            _haltedGauges.remove(address(gauge_));
-            backersManager.resumeGaugeShares(gauge_);
-        }
-    }
-
-    /**
-     * @notice returns true if gauge can be resumed
-     * @dev kycApproved == true &&
-     *  communityApproved == true &&
-     *  revoked == false
-     * @param gauge_ gauge contract to be resumed
-     */
-    function _canBeResumed(GaugeRootstockCollective gauge_) internal view returns (bool) {
-        BuilderState memory _builderState = builderState[gaugeToBuilder[gauge_]];
-        return _builderState.kycApproved && _builderState.communityApproved && !_builderState.revoked;
+        _gauges.add(address(gauge_));
+        _haltedGauges.remove(address(gauge_));
+        backersManager.resumeGaugeShares(gauge_);
     }
 
     /**
@@ -633,9 +669,20 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      *  See {activateBuilder} for details.
      */
     function _activateBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
-        if (builderState[builder_].activated) revert AlreadyActivated();
-        builderState[builder_].activated = true;
-        builderState[builder_].kycApproved = true;
+        /**
+         *
+         *         enum BuilderState {
+         *             Inactive = 0
+         *             CommunityApproved = 1
+         *             KYCApproved = 2
+         *             Active = 3
+         *             Paused = 4
+         *             DEAD = 5
+         *         }
+         *
+         *         0 -> 2 Inactive -> KYCApproved
+         *         1 -> 3 CommunityApproved -> Active
+         */
         builderRewardReceiver[builder_] = rewardReceiver_;
         // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
@@ -660,15 +707,35 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      *  See {communityApproveBuilder} for details.
      */
     function _communityApproveBuilder(address builder_) private returns (GaugeRootstockCollective gauge_) {
-        if (builderState[builder_].communityApproved) revert AlreadyCommunityApproved();
+        BuilderState _state = builderState[builder_];
+
+        /**
+         *
+         *         enum BuilderState {
+         *             Inactive = 0
+         *             CommunityApproved = 1
+         *             KYCApproved = 2
+         *             Active = 3
+         *             Paused = 4
+         *             DEAD = 5
+         *         }
+         *
+         *         0 -> 1 Inactive -> CommunityApproved
+         *         2 -> 3 KYCApproved -> Active
+         */
+        BuilderState _targetState = BuilderState(uint8(_state) + 1);
+
+        if (_state != BuilderState.Inactive || _state != BuilderState.KYCApproved) {
+            revert StateMachineErrors.NoSuchTransition(_state, _targetState);
+        }
         if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
 
-        builderState[builder_].communityApproved = true;
         gauge_ = _createGauge(builder_);
 
         backersManager.rewardTokenApprove(address(gauge_), type(uint256).max);
 
-        emit CommunityApproved(builder_);
+        builderState[builder_] = _targetState;
+        emit BuilderStateChange(builder_, _state, _targetState);
     }
 
     /**

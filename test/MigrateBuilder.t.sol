@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseTest } from "./BaseTest.sol";
-import { BuilderRegistryRootstockCollective } from "../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
+import { BuilderErrors, BuilderState } from "../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract MigrateBuilderTest is BaseTest {
@@ -35,7 +35,7 @@ contract MigrateBuilderTest is BaseTest {
         _validateIsWhitelisted(_v1Builder01);
 
         // AND reward receiver and percentage are set correctly
-        (, uint64 next,) = builderRegistry.backerRewardPercentage(_v1Builder01);
+        (, uint64 next, ) = builderRegistry.backerRewardPercentage(_v1Builder01);
         vm.assertEq(builderRegistry.builderRewardReceiver(_v1Builder01), _v1Builder01);
         vm.assertEq(next, _validRewardPercentage);
     }
@@ -86,7 +86,7 @@ contract MigrateBuilderTest is BaseTest {
 
         //  WHEN kyc approver attempts to migrate the same builder again
         //   THEN the transaction reverts with AlreadyCommunityApproved error
-        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyCommunityApproved.selector);
+        vm.expectRevert(BuilderErrors.AlreadyCommunityApproved.selector);
         builderRegistry.migrateBuilder(_v1Builder01, _v1Builder01, _validRewardPercentage);
 
         vm.stopPrank();
@@ -103,7 +103,7 @@ contract MigrateBuilderTest is BaseTest {
         //  WHEN kyc approver attempts to migrate the community approved builder
         //   THEN the transaction reverts with AlreadyCommunityApproved error
         vm.prank(kycApprover);
-        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyCommunityApproved.selector);
+        vm.expectRevert(BuilderErrors.AlreadyCommunityApproved.selector);
         builderRegistry.migrateBuilder(_v1Builder01, _v1Builder01, _validRewardPercentage);
     }
 
@@ -120,7 +120,7 @@ contract MigrateBuilderTest is BaseTest {
         //  WHEN kyc approver attempts to migrate the activated builder
         //   THEN the transaction reverts with AlreadyCommunityApproved error
         vm.prank(kycApprover);
-        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyCommunityApproved.selector);
+        vm.expectRevert(BuilderErrors.AlreadyCommunityApproved.selector);
         builderRegistry.migrateBuilder(_v1Builder01, _v1Builder01, _validRewardPercentage);
     }
 
@@ -133,7 +133,7 @@ contract MigrateBuilderTest is BaseTest {
 
         //  WHEN kyc approver attempts to migrate a builder with the invalid percentage
         //   THEN the transaction reverts with InvalidBackerRewardPercentage error
-        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBackerRewardPercentage.selector);
+        vm.expectRevert(BuilderErrors.InvalidBackerRewardPercentage.selector);
         vm.prank(kycApprover);
         builderRegistry.migrateBuilder(_v1Builder01, _v1Builder01, _invalidRewardPercentage);
     }
@@ -154,14 +154,12 @@ contract MigrateBuilderTest is BaseTest {
         builderRegistry.dewhitelistBuilder(_v1Builder01);
 
         // THEN the builder is no longer community approved
-        (,, bool _communityApproved,,,,) = builderRegistry.builderState(_v1Builder01);
-        vm.assertFalse(_communityApproved);
+        BuilderState _builderState = builderRegistry.builderState(_v1Builder01);
+        vm.assertTrue(_builderState != BuilderState.Active);
     }
 
     function _validateIsWhitelisted(address builder_) private view {
-        (bool _activated, bool _kycApproved, bool _communityApproved,,,,) = builderRegistry.builderState(builder_);
-        vm.assertTrue(_communityApproved);
-        vm.assertTrue(_activated);
-        vm.assertTrue(_kycApproved);
+        BuilderState _builderState = builderRegistry.builderState(builder_);
+        vm.assertTrue(_builderState == BuilderState.Active);
     }
 }

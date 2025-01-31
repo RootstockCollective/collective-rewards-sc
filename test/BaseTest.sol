@@ -8,8 +8,7 @@ import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/G
 import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
 import { Deploy as BackersManagerRootstockCollectiveDeployer } from "script/BackersManagerRootstockCollective.s.sol";
 import { Deploy as BuilderRegistryRootstockCollectiveDeployer } from "script/BuilderRegistryRootstockCollective.s.sol";
-import { Deploy as RewardDistributorRootstockCollectiveDeployer } from
-    "script/RewardDistributorRootstockCollective.s.sol";
+import { Deploy as RewardDistributorRootstockCollectiveDeployer } from "script/RewardDistributorRootstockCollective.s.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { StakingTokenMock } from "./mock/StakingTokenMock.sol";
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
@@ -19,8 +18,7 @@ import { BackersManagerRootstockCollective } from "src/backersManager/BackersMan
 import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
-    "script/governance/GovernanceManagerRootstockCollective.s.sol";
+import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from "script/governance/GovernanceManagerRootstockCollective.s.sol";
 import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 
 contract BaseTest is Test {
@@ -62,8 +60,12 @@ contract BaseTest is Test {
     /* solhint-enable private-vars-leading-underscore */
 
     function setUp() public {
-        (governanceManager,) =
-            new GovernanceManagerRootstockCollectiveDeployer().run(governor, foundation, kycApprover, upgrader);
+        (governanceManager, ) = new GovernanceManagerRootstockCollectiveDeployer().run(
+            governor,
+            foundation,
+            kycApprover,
+            upgrader
+        );
 
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         MockStakingTokenDeployer _mockStakingTokenDeployer = new MockStakingTokenDeployer();
@@ -72,11 +74,15 @@ contract BaseTest is Test {
         gaugeBeacon = new GaugeBeaconRootstockCollectiveDeployer().run(address(governanceManager));
         gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(address(gaugeBeacon), address(rewardToken));
 
-        (rewardDistributor, rewardDistributorImpl) =
-            new RewardDistributorRootstockCollectiveDeployer().run(address(governanceManager));
+        (rewardDistributor, rewardDistributorImpl) = new RewardDistributorRootstockCollectiveDeployer().run(
+            address(governanceManager)
+        );
 
         (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer().run(
-            address(governanceManager), address(gaugeFactory), address(rewardDistributor), rewardPercentageCooldown
+            address(governanceManager),
+            address(gaugeFactory),
+            address(rewardDistributor),
+            rewardPercentageCooldown
         );
 
         (backersManager, backersManagerImpl) = new BackersManagerRootstockCollectiveDeployer().run(
@@ -110,7 +116,7 @@ contract BaseTest is Test {
     }
 
     /// @dev Implement this if you want a custom configured deployment
-    function _setUp() internal virtual { }
+    function _setUp() internal virtual {}
 
     function _skipAndStartNewCycle() internal {
         uint256 _currentCycleRemaining = backersManager.cycleNext(block.timestamp) - block.timestamp;
@@ -136,10 +142,7 @@ contract BaseTest is Test {
         address builder_,
         address rewardReceiver_,
         uint64 rewardPercentage_
-    )
-        internal
-        returns (GaugeRootstockCollective newGauge_)
-    {
+    ) internal returns (GaugeRootstockCollective newGauge_) {
         vm.prank(kycApprover);
         builderRegistry.activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
         builders.push(builder_);
@@ -251,5 +254,5 @@ contract BaseTest is Test {
         builders.push(builder_);
     }
 
-    receive() external payable { }
+    receive() external payable {}
 }
