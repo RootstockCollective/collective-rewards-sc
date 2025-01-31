@@ -6,7 +6,10 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
-import { BuilderRegistryRootstockCollective } from "../builderRegistry/BuilderRegistryRootstockCollective.sol";
+import {
+    BuilderRegistryRootstockCollective,
+    BuilderErrors
+} from "../builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { ICollectiveRewardsCheckRootstockCollective } from
     "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
@@ -320,7 +323,7 @@ contract BackersManagerRootstockCollective is
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             if (_builderRegistry.gaugeToBuilder(gauges_[i]) == address(0)) {
-                revert BuilderRegistryRootstockCollective.GaugeDoesNotExist();
+                revert BuilderErrors.GaugeDoesNotExist();
             }
             gauges_[i].claimBackerReward(rewardToken_, msg.sender);
         }
