@@ -120,9 +120,7 @@ abstract contract OutputWriter is Script {
             Executables._JQ,
             " -r '.transactions[] | select(.contractAddress == ",
             "\"",
-            // This is required in the latest foundry version
             vm.toLowercase(vm.toString(addr_)),
-            // vm.toString(addr_),
             "\"",
             ") | select(.transactionType == \"CREATE\"",
             " or .transactionType == \"CREATE2\"",
@@ -138,21 +136,6 @@ abstract contract OutputWriter is Script {
         return stdJson.readString(deployTx_, ".contractName");
     }
 
-    /// @notice Returns the constructor arguent of a deployment transaction given a transaction json.
-    function _getDeployTransactionConstructorArguments(string memory transaction_) internal returns (string[] memory) {
-        string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables._BASH;
-        _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables._JQ, " -r '.arguments' <<< '", transaction_, "'");
-        bytes memory _res = vm.ffi(_cmd);
-
-        string[] memory _args = new string[](0);
-        if (keccak256(bytes("null")) != keccak256(_res)) {
-            _args = stdJson.readStringArray(string(_res), "");
-        }
-        return _args;
-    }
-
     /// @notice Removes the semantic versioning from a contract name. The semver will exist if the contract is compiled
     /// more than once with different versions of the compiler.
     function _stripSemver(string memory name_) internal returns (string memory) {
@@ -164,46 +147,6 @@ abstract contract OutputWriter is Script {
         );
         bytes memory _res = vm.ffi(_cmd);
         return string(_res);
-    }
-
-    /// @notice Builds the fully qualified name of a contract. Assumes that the
-    ///         file name is the same as the contract name but strips semver for the file name.
-    function _getFullyQualifiedName(string memory name_) internal returns (string memory) {
-        string memory _sanitized = _stripSemver(name_);
-        return string.concat(_sanitized, ".sol:", name_);
-    }
-
-    /// @notice Wrapper for vm.getCode that handles semver in the name.
-    function _getCode(string memory name_) internal returns (bytes memory) {
-        string memory _fqn = _getFullyQualifiedName(name_);
-        bytes memory _code = vm.getCode(_fqn);
-        return _code;
-    }
-
-    /// @notice Wrapper for vm.getDeployedCode that handles semver in the name.
-    function _getDeployedCode(string memory name_) internal returns (bytes memory) {
-        string memory _fqn = _getFullyQualifiedName(name_);
-        bytes memory _code = vm.getDeployedCode(_fqn);
-        return _code;
-    }
-
-    /// @notice Returns the receipt of a deployment transaction.
-    function _getDeployReceiptByContractAddress(address addr_) internal returns (string memory receipt_) {
-        string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables._BASH;
-        _cmd[1] = "-c";
-        _cmd[2] = string.concat(
-            Executables._JQ,
-            " -r '.receipts[] | select(.contractAddress == ",
-            "\"",
-            vm.toString(addr_),
-            "\"",
-            ")' < ",
-            _deployPath
-        );
-        bytes memory _res = vm.ffi(_cmd);
-        string memory _receipt = string(_res);
-        receipt_ = _receipt;
     }
 
     function _getForgeArtifactDirectory(string memory name_) internal returns (string memory dir_) {
@@ -245,91 +188,16 @@ abstract contract OutputWriter is Script {
         return vm.readFile(_forgeArtifactPath);
     }
 
-    /// @notice Returns the devdoc for a deployed contract.
-    function _getDevDoc(string memory name_) internal returns (string memory doc_) {
-        string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables._BASH;
-        _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables._JQ, " -r '.devdoc' < ", _getForgeArtifactPath(name_));
-        bytes memory _res = vm.ffi(_cmd);
-        doc_ = string(_res);
+    function _getAbiFile(string memory name_) internal returns (string memory) {
+        return string.concat(_getForgeArtifactDirectory(name_), "/", name_, ".abi.json");
     }
 
-    /// @notice Returns the storage layout for a deployed contract.
-    function _getStorageLayout(string memory name_) internal returns (string memory layout_) {
-        string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables._BASH;
-        _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables._JQ, " -r '.storageLayout' < ", _getForgeArtifactPath(name_));
-        bytes memory _res = vm.ffi(_cmd);
-        layout_ = string(_res);
+    function _copyFile(string memory input_, string memory output_) internal {
+        vm.copyFile(input_, output_);
     }
 
-    /// @notice Returns the abi for a deployed contract.
-    function getAbi(string memory name_) public returns (string memory abi_) {
-        string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables._BASH;
-        _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables._JQ, " -r '.abi' < ", _getForgeArtifactPath(name_));
-        console.log("Getting ABI for %s, %s", name_, _cmd[2]);
-        bytes memory _res = vm.ffi(_cmd);
-        abi_ = string(_res);
-    }
-
-    /// @notice
-    function getMethodIdentifiers(string memory name_) public returns (string[] memory ids_) {
-        string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables._BASH;
-        _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables._JQ, " '.methodIdentifiers | keys' < ", _getForgeArtifactPath(name_));
-        bytes memory _res = vm.ffi(_cmd);
-        ids_ = stdJson.readStringArray(string(_res), "");
-    }
-
-    /// @notice Returns the userdoc for a deployed contract.
-    function _getUserDoc(string memory name_) internal returns (string memory doc_) {
-        string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables._BASH;
-        _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables._JQ, " -r '.userdoc' < ", _getForgeArtifactPath(name_));
-        bytes memory _res = vm.ffi(_cmd);
-        doc_ = string(_res);
-    }
-
-    /// @notice
-    function _getMetadata(string memory name_) internal returns (string memory metadata_) {
-        string[] memory _cmd = new string[](3);
-        _cmd[0] = Executables._BASH;
-        _cmd[1] = "-c";
-        _cmd[2] = string.concat(Executables._JQ, " '.metadata | tostring' < ", _getForgeArtifactPath(name_));
-        bytes memory _res = vm.ffi(_cmd);
-        metadata_ = string(_res);
-    }
-
-    /// @notice Turns an Artifact into a json serialized string
-    /// @param artifact_ The artifact to serialize
-    /// @return The json serialized string
-    function _serializeArtifact(Artifact memory artifact_) internal returns (string memory) {
-        string memory _json = "";
-        _json = stdJson.serialize("", "address", artifact_.addr);
-        _json = stdJson.serialize("", "abi", artifact_.abi);
-        _json = stdJson.serialize("", "args", artifact_.args);
-        _json = stdJson.serialize("", "bytecode", artifact_.bytecode);
-        _json = stdJson.serialize("", "deployedBytecode", artifact_.deployedBytecode);
-        _json = stdJson.serialize("", "devdoc", artifact_.devdoc);
-        _json = stdJson.serialize("", "metadata", artifact_.metadata);
-        _json = stdJson.serialize("", "numDeployments", artifact_.numDeployments);
-        _json = stdJson.serialize("", "receipt", artifact_.receipt);
-        _json = stdJson.serialize("", "solcInputHash", artifact_.solcInputHash);
-        _json = stdJson.serialize("", "storageLayout", artifact_.storageLayout);
-        _json = stdJson.serialize("", "transactionHash", artifact_.transactionHash);
-        _json = stdJson.serialize("", "userdoc", artifact_.userdoc);
-        return _json;
-    }
-
-    /// @notice Call this function to sync the deployment artifacts such that
-    ///         hardhat deploy style artifacts are created.
-    function createHardhatArtifacts() public {
+    /// @notice Call this function to copy the ABI files to the deployment folder.
+    function copyAbis() public {
         Deployment[] memory _deployments = _getDeployments();
         console.log("Syncing %s deployments", _deployments.length);
         console.log("Using deployment artifact %s", _deployPath);
@@ -346,46 +214,13 @@ abstract contract OutputWriter is Script {
             string memory _contractName = _getContractNameFromDeployTransaction(_deployTx);
             console.log("Syncing deployment %s: contract %s", _deploymentName, _contractName);
 
-            string[] memory _args = _getDeployTransactionConstructorArguments(_deployTx);
-            bytes memory _code = _getCode(_contractName);
-            bytes memory _deployedCode = _getDeployedCode(_contractName);
-            string memory _receipt = _getDeployReceiptByContractAddress(_addr);
+            string memory _copyInput = _getAbiFile(_contractName);
+            string memory _copyOutput = string.concat(_deploymentsDir, "/", _deploymentName, ".abi" ".json");
 
-            string memory _artifactPath = string.concat(_deploymentsDir, "/", _deploymentName, ".json");
-
-            uint256 _numDeployments = 0;
-            try vm.readFile(_artifactPath) returns (string memory _res) {
-                _numDeployments = stdJson.readUint(string(_res), "$.numDeployments");
-                vm.removeFile(_artifactPath);
-            } catch { }
-            _numDeployments++;
-
-            Artifact memory _artifact = Artifact({
-                abi: getAbi(_contractName),
-                addr: _addr,
-                args: _args,
-                bytecode: _code,
-                deployedBytecode: _deployedCode,
-                devdoc: _getDevDoc(_contractName),
-                metadata: _getMetadata(_contractName),
-                numDeployments: _numDeployments,
-                receipt: _receipt,
-                solcInputHash: bytes32(0),
-                storageLayout: _getStorageLayout(_contractName),
-                transactionHash: stdJson.readBytes32(_deployTx, "$.hash"),
-                userdoc: _getUserDoc(_contractName)
-            });
-
-            console.log("#### ABI %s", _artifact.abi);
-            console.log("#### userdoc %s", _artifact.userdoc);
-
-            string memory _json = _serializeArtifact(_artifact);
-            
-            console.log("Final json", _json);
-            vm.writeJson({ json: _json, path: _artifactPath });
+            _copyFile(_copyInput, _copyOutput);
         }
 
-        console.log("Created hard-hat deploy files");
+        console.log("ABI files copied");
     }
 
     /// @notice Writes a deployment to disk.

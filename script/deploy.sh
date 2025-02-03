@@ -12,7 +12,7 @@ fi
 echo "CREATE2 deployed"
 
 # Define common arguments for forge commands
-FORGE_ARGS="--rpc-url $RPC_URL --legacy --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --with-gas-price $GAS_PRICE"
+FORGE_ARGS="--rpc-url $RPC_URL --legacy --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --with-gas-price $GAS_PRICE --extra-output-files abi"
 
 # Add --broadcast only if NO_BROADCAST is not set to "true"
 if [[ "${NO_BROADCAST:-false}" != "true" ]]; then
@@ -24,8 +24,8 @@ forge script script/Deploy.s.sol $FORGE_ARGS  || exit $?
 # Reload env with contract addresses
 direnv allow
 
-# Create hardhat artifacts
-if [[ ! -n "${OMIT_HARDHAT_ARTIFACTS:-}" || "${OMIT_HARDHAT_ARTIFACTS}" == "false" ]]; then
-  echo "> Generating hardhat artifacts"
-  forge script script/Deploy.s.sol --sig "createHardhatArtifacts()" $FORGE_ARGS || exit $?
+# Copy ABI outputs to deployment directory
+if [[ ! -n "${OMIT_ABI_COPY:-}" || "${OMIT_ABI_COPY}" == "false" ]]; then
+  echo "> Copying ABIs to deployment directory"
+  forge script script/Deploy.s.sol --sig "copyAbis()" $FORGE_ARGS || exit $?
 fi
