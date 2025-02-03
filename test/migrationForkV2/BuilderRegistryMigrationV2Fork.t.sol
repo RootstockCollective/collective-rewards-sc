@@ -49,6 +49,8 @@ struct BuilderRegistryData {
 }
 
 contract BuilderRegistryMigrationV2Fork is Test {
+    event BuilderMigratedV2(address indexed builder_, address indexed migrator_);
+
     address public backersManager;
     IGovernanceManagerRootstockCollective public governanceManager;
     address public upgrader;
@@ -79,6 +81,11 @@ contract BuilderRegistryMigrationV2Fork is Test {
         vm.prank(upgrader);
         governanceManager.updateUpgrader(address(migrationV2));
         // AND the builders are migrated
+        for (uint256 i = 0; i < _buildersDataV1.builders.length; i++) {
+            address _builder = _buildersDataV1.builders[i];
+            vm.expectEmit();
+            emit BuilderMigratedV2(_builder, address(migrationV2));
+        }
         builderRegistry = migrationV2.run();
 
         // THEM the builderRegistry is set to the migrated builderRegistry

@@ -56,6 +56,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     event BuilderRewardReceiverReplacementCancelled(address indexed builder_, address newRewardReceiver_);
     event BuilderRewardReceiverReplacementApproved(address indexed builder_, address newRewardReceiver_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
+    event BuilderMigratedV2(address indexed builder_, address indexed migrator_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -503,6 +504,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         } else {
             _gauges.add(_gauge);
         }
+        emit BuilderMigratedV2(builder_, msg.sender);
     }
 
     /**
