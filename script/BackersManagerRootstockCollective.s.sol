@@ -13,7 +13,7 @@ contract Deploy is Broadcaster {
         public
         returns (BackersManagerRootstockCollective proxy_, BackersManagerRootstockCollective implementation_)
     {
-        address _governanceManager = vm.envAddress("BACKERS_MANAGER_ADDRESS");
+        address _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
         address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
 
