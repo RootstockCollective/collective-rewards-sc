@@ -1,5 +1,6 @@
-# Contents
 
+
+# Contents
 - [IBackersManagerRootstockCollective](IBackersManagerRootstockCollective.sol/interface.IBackersManagerRootstockCollective.md)
 - [IChangeContractRootstockCollective](IChangeContractRootstockCollective.sol/interface.IChangeContractRootstockCollective.md)
 - [ICollectiveRewardsCheckRootstockCollective](ICollectiveRewardsCheckRootstockCollective.sol/interface.ICollectiveRewardsCheckRootstockCollective.md)

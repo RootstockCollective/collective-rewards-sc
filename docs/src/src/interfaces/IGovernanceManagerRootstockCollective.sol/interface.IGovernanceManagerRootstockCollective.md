@@ -1,256 +1,269 @@
 # IGovernanceManagerRootstockCollective
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/99cb2d8ed5962fe0d1a12a5277c2e7b1068aeff8/src/interfaces/IGovernanceManagerRootstockCollective.sol)
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/6d0eca4e2c61e833bcb70c54d8668e5644ba180e/src/interfaces/IGovernanceManagerRootstockCollective.sol)
 
 ## Functions
-
 ### initialize
 
 Initializes the contract with the initial governor, foundation treasury, and KYC approver.
 
-_Used instead of a constructor for upgradeable contracts._
+*Used instead of a constructor for upgradeable contracts.*
+
 
 ```solidity
 function initialize(address governor_, address foundationTreasury_, address kycApprover_, address upgrader_) external;
 ```
-
 **Parameters**
 
-| Name                  | Type      | Description                                                                                  |
-| --------------------- | --------- | -------------------------------------------------------------------------------------------- |
-| `governor_`           | `address` | The initial governor address.                                                                |
-| `foundationTreasury_` | `address` | The initial foundation treasury address.                                                     |
-| `kycApprover_`        | `address` | account responsible of approving Builder's Know you Costumer policies and Legal requirements |
-| `upgrader_`           | `address` | The initial upgrader address.                                                                |
+|Name|Type|Description|
+|----|----|-----------|
+|`governor_`|`address`|The initial governor address.|
+|`foundationTreasury_`|`address`|The initial foundation treasury address.|
+|`kycApprover_`|`address`|account responsible of approving Builder's Know you Costumer policies and Legal requirements|
+|`upgrader_`|`address`|The initial upgrader address.|
+
 
 ### executeChange
 
 Function to be called to execute the changes in changeContract
 
-_reverts if is not called by the Governor_
+*reverts if is not called by the Governor*
+
 
 ```solidity
 function executeChange(IChangeContractRootstockCollective changeContract_) external;
 ```
-
 **Parameters**
 
-| Name              | Type                                 | Description                                           |
-| ----------------- | ------------------------------------ | ----------------------------------------------------- |
-| `changeContract_` | `IChangeContractRootstockCollective` | Address of the contract that will execute the changes |
+|Name|Type|Description|
+|----|----|-----------|
+|`changeContract_`|`IChangeContractRootstockCollective`|Address of the contract that will execute the changes|
+
 
 ### governor
 
 Returns the address of the current governor.
 
+
 ```solidity
 function governor() external view returns (address);
 ```
-
 **Returns**
 
-| Name     | Type      | Description           |
-| -------- | --------- | --------------------- |
-| `<none>` | `address` | The governor address. |
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|The governor address.|
+
 
 ### foundationTreasury
 
 Returns the address of the foundation treasury.
 
+
 ```solidity
 function foundationTreasury() external view returns (address);
 ```
-
 **Returns**
 
-| Name     | Type      | Description                      |
-| -------- | --------- | -------------------------------- |
-| `<none>` | `address` | The foundation treasury address. |
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|The foundation treasury address.|
+
 
 ### kycApprover
 
 Returns the address of the KYC approver.
 
+
 ```solidity
 function kycApprover() external view returns (address);
 ```
-
 **Returns**
 
-| Name     | Type      | Description               |
-| -------- | --------- | ------------------------- |
-| `<none>` | `address` | The KYC approver address. |
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|The KYC approver address.|
+
 
 ### validateAuthorizedChanger
 
 Validates if the given account is authorized as a changer
 
-_Reverts with `NotAuthorizedChanger` if the account is not the authorized changer._
+*Reverts with `NotAuthorizedChanger` if the account is not the authorized changer.*
+
 
 ```solidity
 function validateAuthorizedChanger(address account_) external view;
 ```
-
 **Parameters**
 
-| Name       | Type      | Description                                 |
-| ---------- | --------- | ------------------------------------------- |
-| `account_` | `address` | The address to be validated as the changer. |
+|Name|Type|Description|
+|----|----|-----------|
+|`account_`|`address`|The address to be validated as the changer.|
+
 
 ### validateGovernor
 
 Validates if the given account is authorized as the governor.
 
-_Reverts with `NotGovernor` if the account is not the governor._
+*Reverts with `NotGovernor` if the account is not the governor.*
+
 
 ```solidity
 function validateGovernor(address account_) external view;
 ```
-
 **Parameters**
 
-| Name       | Type      | Description                                  |
-| ---------- | --------- | -------------------------------------------- |
-| `account_` | `address` | The address to be validated as the governor. |
+|Name|Type|Description|
+|----|----|-----------|
+|`account_`|`address`|The address to be validated as the governor.|
+
 
 ### validateKycApprover
 
 Validates if the given account is authorized as the KYC approver.
 
-_Reverts with `NotKycApprover` if the account is not the KYC approver._
+*Reverts with `NotKycApprover` if the account is not the KYC approver.*
+
 
 ```solidity
 function validateKycApprover(address account_) external view;
 ```
-
 **Parameters**
 
-| Name       | Type      | Description                                      |
-| ---------- | --------- | ------------------------------------------------ |
-| `account_` | `address` | The address to be validated as the KYC approver. |
+|Name|Type|Description|
+|----|----|-----------|
+|`account_`|`address`|The address to be validated as the KYC approver.|
+
 
 ### validateFoundationTreasury
 
 Validates if the given account is the foundation treasury.
 
-_Reverts with `NotFoundationTreasury` if the caller is not the foundation treasury._
+*Reverts with `NotFoundationTreasury` if the caller is not the foundation treasury.*
+
 
 ```solidity
 function validateFoundationTreasury(address account_) external view;
 ```
-
 **Parameters**
 
-| Name       | Type      | Description                                             |
-| ---------- | --------- | ------------------------------------------------------- |
-| `account_` | `address` | The address to be validated as the foundation treasury. |
+|Name|Type|Description|
+|----|----|-----------|
+|`account_`|`address`|The address to be validated as the foundation treasury.|
+
 
 ### validateAuthorizedUpgrader
 
 Validates if the given account is authorized to upgrade the contracts.
 
-_Reverts with `NotAuthorizedUpgrader` if the account is not the upgrader._
+*Reverts with `NotAuthorizedUpgrader` if the account is not the upgrader.*
+
 
 ```solidity
 function validateAuthorizedUpgrader(address account_) external view;
 ```
-
 **Parameters**
 
-| Name       | Type      | Description                  |
-| ---------- | --------- | ---------------------------- |
-| `account_` | `address` | The address to be validated. |
+|Name|Type|Description|
+|----|----|-----------|
+|`account_`|`address`|The address to be validated.|
+
 
 ### updateGovernor
 
 Updates the governor address
 
-_Reverts if caller is not a valid changer._
+*Reverts if caller is not a valid changer.*
 
-_Reverts if the new address is zero._
+*Reverts if the new address is zero.*
+
 
 ```solidity
 function updateGovernor(address governor_) external;
 ```
-
 **Parameters**
 
-| Name        | Type      | Description               |
-| ----------- | --------- | ------------------------- |
-| `governor_` | `address` | The new governor address. |
+|Name|Type|Description|
+|----|----|-----------|
+|`governor_`|`address`|The new governor address.|
+
 
 ### updateFoundationTreasury
 
 Updates the foundation treasury address
 
-_Reverts if caller is not a valid changer._
+*Reverts if caller is not a valid changer.*
 
-_Reverts if the new address is zero._
+*Reverts if the new address is zero.*
+
 
 ```solidity
 function updateFoundationTreasury(address foundationTreasury_) external;
 ```
-
 **Parameters**
 
-| Name                  | Type      | Description                          |
-| --------------------- | --------- | ------------------------------------ |
-| `foundationTreasury_` | `address` | The new foundation treasury address. |
+|Name|Type|Description|
+|----|----|-----------|
+|`foundationTreasury_`|`address`|The new foundation treasury address.|
+
 
 ### updateKYCApprover
 
 Updates the KYC approver address
 
-_Reverts if caller is not a valid changer._
+*Reverts if caller is not a valid changer.*
 
-_Reverts if the new address is zero._
+*Reverts if the new address is zero.*
+
 
 ```solidity
 function updateKYCApprover(address kycApprover_) external;
 ```
-
 **Parameters**
 
-| Name           | Type      | Description                                    |
-| -------------- | --------- | ---------------------------------------------- |
-| `kycApprover_` | `address` | The new address to be set as the KYC approver. |
+|Name|Type|Description|
+|----|----|-----------|
+|`kycApprover_`|`address`|The new address to be set as the KYC approver.|
+
 
 ### isAuthorizedChanger
 
 Validates if the given account is authorized as a changer
 
-_Reverts with `NotAuthorizedChanger` if the account is not the authorized changer._
+*Reverts with `NotAuthorizedChanger` if the account is not the authorized changer.*
+
 
 ```solidity
 function isAuthorizedChanger(address account_) external view returns (bool);
 ```
-
 **Parameters**
 
-| Name       | Type      | Description                                 |
-| ---------- | --------- | ------------------------------------------- |
-| `account_` | `address` | The address to be validated as the changer. |
+|Name|Type|Description|
+|----|----|-----------|
+|`account_`|`address`|The address to be validated as the changer.|
+
 
 ### updateUpgrader
 
-_Updates the account authorized to upgrade the contracts_
+*Updates the account authorized to upgrade the contracts*
 
-_Reverts if caller is the upgrader._
+*Reverts if caller is the upgrader.*
 
-_allow update to zero address to disable the upgrader role_
+*allow update to zero address to disable the upgrader role*
+
 
 ```solidity
 function updateUpgrader(address upgrader_) external;
 ```
-
 **Parameters**
 
-| Name        | Type      | Description               |
-| ----------- | --------- | ------------------------- |
-| `upgrader_` | `address` | The new upgrader address. |
+|Name|Type|Description|
+|----|----|-----------|
+|`upgrader_`|`address`|The new upgrader address.|
+
 
 ## Events
-
 ### GovernorUpdated
 
 ```solidity
@@ -282,10 +295,9 @@ event ChangeExecuted(IChangeContractRootstockCollective changeContract_, address
 ```
 
 ## Errors
-
 ### InvalidAddress
-
 Thrown when an invalid address is provided.
+
 
 ```solidity
 error InvalidAddress(address account_);
@@ -293,54 +305,55 @@ error InvalidAddress(address account_);
 
 **Parameters**
 
-| Name       | Type      | Description                   |
-| ---------- | --------- | ----------------------------- |
-| `account_` | `address` | The invalid address provided. |
+|Name|Type|Description|
+|----|----|-----------|
+|`account_`|`address`|The invalid address provided.|
 
 ### NotAuthorizedChanger
-
 Thrown when the caller is not authorized as a changer.
+
 
 ```solidity
 error NotAuthorizedChanger();
 ```
 
 ### NotFoundationTreasury
-
 Thrown when the caller is not the foundation treasury.
+
 
 ```solidity
 error NotFoundationTreasury();
 ```
 
 ### NotGovernor
-
 Thrown when the caller is not the governor.
+
 
 ```solidity
 error NotGovernor();
 ```
 
 ### NotKycApprover
-
 Thrown when the caller is not the KYC approver.
+
 
 ```solidity
 error NotKycApprover();
 ```
 
 ### NotAuthorizedUpgrader
-
 Thrown when the caller is not authorized to upgrade the contracts
+
 
 ```solidity
 error NotAuthorizedUpgrader();
 ```
 
 ### NotUpgrader
-
 Thrown when the caller is not the upgrader.
+
 
 ```solidity
 error NotUpgrader();
 ```
+
