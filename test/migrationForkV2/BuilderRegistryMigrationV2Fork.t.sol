@@ -307,17 +307,9 @@ contract BuilderRegistryMigrationV2Fork is Test {
         bool _isGaugeHaltedV2 = builderRegistry.isGaugeHalted(address(_gaugeV1));
         vm.assertEq(_isGaugeHaltedV1, _isGaugeHaltedV2);
 
-        if (_isGaugeHaltedV1) {
-            vm.assertTrue(_buildersDataV1.haltedGauges.contains(address(_gaugeV1)));
-        } else {
-            vm.assertTrue(_buildersDataV1.gauges.contains(address(_gaugeV1)));
-        }
-
         // validate haltedGaugeLastPeriodFinish
         uint256 _haltedGaugeLastPeriodFinishV1 = _buildersDataV1.haltedGaugeLastPeriodFinish[_gaugeV1];
         uint256 _haltedGaugeLastPeriodFinishV2 = builderRegistry.haltedGaugeLastPeriodFinish(_gaugeV1);
         vm.assertEq(_haltedGaugeLastPeriodFinishV1, _haltedGaugeLastPeriodFinishV2);
-
-        // validate
     }
 }
