@@ -29,6 +29,7 @@ struct GaugesData {
 }
 
 contract GaugesUpgradeV2Fork is Test {
+    address public constant COINBASE_ADDRESS = address(uint160(uint256(keccak256("COINBASE_ADDRESS"))));
     IBackersManagerV1 public backersManagerV1;
     IGovernanceManagerRootstockCollective public governanceManager;
     BuilderRegistryRootstockCollective public builderRegistry;
@@ -87,39 +88,46 @@ contract GaugesUpgradeV2Fork is Test {
         vm.assertEq(gaugesDataV1[gauge_].allocationOf[backer], _gaugeV2.allocationOf(backer));
 
         // Validate reward data
-        _validateRewardData(gaugesDataV1[gauge_].rewardData[gaugesDataV1[gauge_].rewardToken], _gaugeV2);
+        _validateRewardData(gaugesDataV1[gauge_].rewardToken, _gaugeV2);
+        _validateRewardData(COINBASE_ADDRESS, _gaugeV2);
     }
 
-    function _validateRewardData(RewardData storage rewardData_, GaugeRootstockCollective gauge_) internal view {
-        address _rewardToken = gaugesDataV1[gauge_].rewardToken;
-        vm.assertEq(rewardData_.rewardRate, gauge_.rewardRate(_rewardToken));
-        vm.assertEq(rewardData_.rewardPerTokenStored, gauge_.rewardPerTokenStored(_rewardToken));
-        vm.assertEq(rewardData_.rewardMissing, gauge_.rewardMissing(_rewardToken));
-        vm.assertEq(rewardData_.lastUpdateTime, gauge_.lastUpdateTime(_rewardToken));
-        vm.assertEq(rewardData_.builderRewards, gauge_.builderRewards(_rewardToken));
-        vm.assertEq(rewardData_.backerRewardPerTokenPaid[backer], gauge_.backerRewardPerTokenPaid(_rewardToken, backer));
-        vm.assertEq(rewardData_.rewards[backer], gauge_.rewards(_rewardToken, backer));
+    function _validateRewardData(address rewardToken_, GaugeRootstockCollective gauge_) internal view {
+        RewardData storage _rewardData = gaugesDataV1[gauge_].rewardData[rewardToken_];
+        vm.assertEq(_rewardData.rewardRate, gauge_.rewardRate(rewardToken_));
+        vm.assertEq(_rewardData.rewardPerTokenStored, gauge_.rewardPerTokenStored(rewardToken_));
+        vm.assertEq(_rewardData.rewardMissing, gauge_.rewardMissing(rewardToken_));
+        vm.assertEq(_rewardData.lastUpdateTime, gauge_.lastUpdateTime(rewardToken_));
+        vm.assertEq(_rewardData.builderRewards, gauge_.builderRewards(rewardToken_));
+        vm.assertEq(_rewardData.backerRewardPerTokenPaid[backer], gauge_.backerRewardPerTokenPaid(rewardToken_, backer));
+        vm.assertEq(_rewardData.rewards[backer], gauge_.rewards(rewardToken_, backer));
     }
 
     function _setGaugesDataV1() internal {
         for (uint256 i = 0; i < gauges.length; i++) {
             GaugeRootstockCollective _gaugeV1 = GaugeRootstockCollective(gauges[i]);
-            address _rewardToken = _gaugeV1.rewardToken();
-            gaugesDataV1[_gaugeV1].rewardToken = _rewardToken;
             gaugesDataV1[_gaugeV1].backersManager = address(backersManagerV1);
             gaugesDataV1[_gaugeV1].totalAllocation = _gaugeV1.totalAllocation();
             gaugesDataV1[_gaugeV1].rewardShares = _gaugeV1.rewardShares();
             gaugesDataV1[_gaugeV1].allocationOf[backer] = _gaugeV1.allocationOf(backer);
 
-            gaugesDataV1[_gaugeV1].rewardData[_rewardToken].rewardRate = _gaugeV1.rewardRate(_rewardToken);
-            gaugesDataV1[_gaugeV1].rewardData[_rewardToken].rewardPerTokenStored =
-                _gaugeV1.rewardPerTokenStored(_rewardToken);
-            gaugesDataV1[_gaugeV1].rewardData[_rewardToken].rewardMissing = _gaugeV1.rewardMissing(_rewardToken);
-            gaugesDataV1[_gaugeV1].rewardData[_rewardToken].lastUpdateTime = _gaugeV1.lastUpdateTime(_rewardToken);
-            gaugesDataV1[_gaugeV1].rewardData[_rewardToken].builderRewards = _gaugeV1.builderRewards(_rewardToken);
-            gaugesDataV1[_gaugeV1].rewardData[_rewardToken].backerRewardPerTokenPaid[backer] =
-                _gaugeV1.backerRewardPerTokenPaid(_rewardToken, backer);
-            gaugesDataV1[_gaugeV1].rewardData[_rewardToken].rewards[backer] = _gaugeV1.rewards(_rewardToken, backer);
+            address _rewardToken = _gaugeV1.rewardToken();
+            gaugesDataV1[_gaugeV1].rewardToken = _rewardToken;
+            _setRewardData(_gaugeV1, _rewardToken);
+
+            _setRewardData(_gaugeV1, COINBASE_ADDRESS);
         }
+    }
+
+    function _setRewardData(GaugeRootstockCollective gaugeV1_, address rewardToken_) internal {
+        gaugesDataV1[gaugeV1_].rewardData[rewardToken_].rewardRate = gaugeV1_.rewardRate(rewardToken_);
+        gaugesDataV1[gaugeV1_].rewardData[rewardToken_].rewardPerTokenStored =
+            gaugeV1_.rewardPerTokenStored(rewardToken_);
+        gaugesDataV1[gaugeV1_].rewardData[rewardToken_].rewardMissing = gaugeV1_.rewardMissing(rewardToken_);
+        gaugesDataV1[gaugeV1_].rewardData[rewardToken_].lastUpdateTime = gaugeV1_.lastUpdateTime(rewardToken_);
+        gaugesDataV1[gaugeV1_].rewardData[rewardToken_].builderRewards = gaugeV1_.builderRewards(rewardToken_);
+        gaugesDataV1[gaugeV1_].rewardData[rewardToken_].backerRewardPerTokenPaid[backer] =
+            gaugeV1_.backerRewardPerTokenPaid(rewardToken_, backer);
+        gaugesDataV1[gaugeV1_].rewardData[rewardToken_].rewards[backer] = gaugeV1_.rewards(rewardToken_, backer);
     }
 }
