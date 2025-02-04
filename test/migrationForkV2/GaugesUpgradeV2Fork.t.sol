@@ -76,7 +76,7 @@ contract GaugesUpgradeV2Fork is Test {
         vm.assertEq(gaugesDataV1[gauge_].rewardToken, _gaugeV2.rewardToken());
 
         // Validate backers manager
-        vm.assertEq(gaugesDataV1[gauge_].backersManager, address(backersManagerV1));
+        vm.assertEq(gaugesDataV1[gauge_].backersManager, address(_gaugeV2.backersManager()));
 
         // Validate total allocation
         vm.assertEq(gaugesDataV1[gauge_].totalAllocation, _gaugeV2.totalAllocation());

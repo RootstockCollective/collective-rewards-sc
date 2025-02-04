@@ -300,7 +300,7 @@ contract BuilderRegistryMigrationV2Fork is Test {
         vm.assertEq(address(_gaugeV1), address(builderRegistry.builderToGauge(builder_)));
 
         // validate gaugeToBuilder
-        vm.assertEq(_buildersDataV1.gaugeToBuilder[_gaugeV1], builder_);
+        vm.assertEq(builderRegistry.gaugeToBuilder(_gaugeV1), builder_);
 
         // validate isGaugeHalted
         bool _isGaugeHaltedV1 = _buildersDataV1.haltedGauges.contains(address(_gaugeV1));
