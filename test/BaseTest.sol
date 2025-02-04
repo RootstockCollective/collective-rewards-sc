@@ -75,13 +75,8 @@ contract BaseTest is Test {
         (rewardDistributor, rewardDistributorImpl) =
             new RewardDistributorRootstockCollectiveDeployer().run(address(governanceManager));
 
-        (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer().run(
-            address(governanceManager), address(gaugeFactory), address(rewardDistributor), rewardPercentageCooldown
-        );
-
         (backersManager, backersManagerImpl) = new BackersManagerRootstockCollectiveDeployer().run(
             address(governanceManager),
-            address(builderRegistry),
             address(rewardToken),
             address(stakingToken),
             cycleDuration,
@@ -89,9 +84,13 @@ contract BaseTest is Test {
             distributionDuration
         );
 
-        builderRegistry.initializeBackersManager(backersManager);
-
         rewardDistributor.initializeCollectiveRewardsAddresses(address(backersManager));
+
+        (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer().run(
+            address(backersManager), address(gaugeFactory), address(rewardDistributor), rewardPercentageCooldown
+        );
+
+        backersManager.initializeV2(builderRegistry);
 
         // allow to execute all the functions protected by governance
 

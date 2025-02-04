@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
-import { IGovernanceManagerRootstockCollective } from "../../src/interfaces/IGovernanceManagerRootstockCollective.sol";
+import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract Deploy is Broadcaster {
     function run() public returns (GaugeBeaconRootstockCollective) {

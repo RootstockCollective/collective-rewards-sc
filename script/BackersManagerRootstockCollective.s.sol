@@ -13,8 +13,7 @@ contract Deploy is Broadcaster {
         public
         returns (BackersManagerRootstockCollective proxy_, BackersManagerRootstockCollective implementation_)
     {
-        address _governanceManager = vm.envAddress("BACKERS_MANAGER_ADDRESS");
-        address _builderRegistry = vm.envAddress("BUILDER_REGISTRY");
+        address _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
         address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
 
@@ -24,7 +23,6 @@ contract Deploy is Broadcaster {
 
         (proxy_, implementation_) = run(
             _governanceManager,
-            _builderRegistry,
             _rewardTokenAddress,
             _stakingTokenAddress,
             _cycleDuration,
@@ -35,7 +33,6 @@ contract Deploy is Broadcaster {
 
     function run(
         address governanceManager_,
-        address builderRegistry_,
         address rewardToken_,
         address stakingToken_,
         uint32 cycleDuration_,
@@ -47,7 +44,6 @@ contract Deploy is Broadcaster {
         returns (BackersManagerRootstockCollective, BackersManagerRootstockCollective)
     {
         require(governanceManager_ != address(0), "Governance Manager address cannot be empty");
-        require(builderRegistry_ != address(0), "Builder Registry address cannot be empty");
         require(rewardToken_ != address(0), "Reward token address cannot be empty");
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
 
@@ -55,7 +51,6 @@ contract Deploy is Broadcaster {
             BackersManagerRootstockCollective.initialize,
             (
                 IGovernanceManagerRootstockCollective(governanceManager_),
-                builderRegistry_,
                 rewardToken_,
                 stakingToken_,
                 cycleDuration_,

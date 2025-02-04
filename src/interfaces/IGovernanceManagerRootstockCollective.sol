@@ -100,6 +100,12 @@ interface IGovernanceManagerRootstockCollective {
     function kycApprover() external view returns (address);
 
     /**
+     * @notice The upgrader address with contract upgradeability permissions.
+     * @return The upgrader address.
+     */
+    function upgrader() external view returns (address);
+
+    /**
      * @notice Validates if the given account is authorized as a changer
      * @param account_ The address to be validated as the changer.
      * @dev Reverts with `NotAuthorizedChanger` if the account is not the authorized changer.
