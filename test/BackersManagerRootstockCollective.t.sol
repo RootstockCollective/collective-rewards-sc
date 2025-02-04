@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 import { BaseTest, BackersManagerRootstockCollective, GaugeRootstockCollective } from "./BaseTest.sol";
-import { BuilderRegistryRootstockCollective } from "../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
+import { BuilderErrors } from "../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 
 contract BackersManagerRootstockCollectiveTest is BaseTest {
@@ -43,30 +43,30 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  WHEN alice calls allocate using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderErrors.GaugeDoesNotExist.selector);
         backersManager.allocate(_wrongGauge, 100 ether);
         //  WHEN alice calls allocateBatch using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderErrors.GaugeDoesNotExist.selector);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         //  WHEN alice calls claimBackerRewards using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderErrors.GaugeDoesNotExist.selector);
         backersManager.claimBackerRewards(gaugesArray);
 
         //  WHEN alice calls claimBackerRewards using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderErrors.GaugeDoesNotExist.selector);
         backersManager.claimBackerRewards(address(rewardToken), gaugesArray);
 
         //  WHEN alice calls claimBackerRewards using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
+        vm.expectRevert(BuilderErrors.GaugeDoesNotExist.selector);
         backersManager.claimBackerRewards(UtilsLib._COINBASE_ADDRESS, gaugesArray);
     }
 
@@ -85,18 +85,18 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  WHEN alice calls allocate using the new gauge
         //   THEN tx reverts because NotActivated
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
+        vm.expectRevert(BuilderErrors.NotActivated.selector);
         backersManager.allocate(_newGauge, 100 ether);
         //  WHEN alice calls allocateBatch using the new gauge
         //   THEN tx reverts because NotActivated
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
+        vm.expectRevert(BuilderErrors.NotActivated.selector);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         //  WHEN alice calls claimBackerRewards using the new gauge
         //   THEN tx reverts because NotActivated
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
+        vm.expectRevert(BuilderErrors.NotActivated.selector);
         backersManager.claimBackerRewards(gaugesArray);
     }
 
@@ -483,8 +483,11 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
-            GaugeRootstockCollective _newGauge =
-                _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
+            GaugeRootstockCollective _newGauge = _whitelistBuilder(
+                makeAddr(string(abi.encode(i + 10))),
+                builder,
+                1 ether
+            );
             allocationsArray.push(1 ether);
 
             // THEN gauges length increase
@@ -1551,8 +1554,13 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
             _newOffset
         );
 
-        (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart, uint24 _offset) =
-            backersManager.cycleData();
+        (
+            uint32 _previousDuration,
+            uint32 _nextDuration,
+            uint64 _previousStart,
+            uint64 _nextStart,
+            uint24 _offset
+        ) = backersManager.cycleData();
 
         // THEN previous cycle duration is 1 week
         assertEq(_previousDuration, 1 weeks);
