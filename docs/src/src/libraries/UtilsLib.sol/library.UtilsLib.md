@@ -1,20 +1,21 @@
 # UtilsLib
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/99cb2d8ed5962fe0d1a12a5277c2e7b1068aeff8/src/libraries/UtilsLib.sol)
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/6d0eca4e2c61e833bcb70c54d8668e5644ba180e/src/libraries/UtilsLib.sol)
 
 ## State Variables
-
-### \_PRECISION
+### _PRECISION
 
 ```solidity
 uint256 internal constant _PRECISION = 10 ** 18;
 ```
 
-### \_COINBASE_ADDRESS
+
+### _COINBASE_ADDRESS
 
 ```solidity
 address internal constant _COINBASE_ADDRESS = address(uint160(uint256(keccak256("COINBASE_ADDRESS"))));
 ```
+
 
 ### MIN_AMOUNT_INCENTIVES
 
@@ -22,59 +23,63 @@ address internal constant _COINBASE_ADDRESS = address(uint160(uint256(keccak256(
 uint256 public constant MIN_AMOUNT_INCENTIVES = 100;
 ```
 
-## Functions
 
-### \_uncheckedInc
+## Functions
+### _uncheckedInc
+
 
 ```solidity
 function _uncheckedInc(uint256 i_) internal pure returns (uint256);
 ```
 
-### \_divPrec
+### _divPrec
 
 add precision and div two number
+
 
 ```solidity
 function _divPrec(uint256 a_, uint256 b_) internal pure returns (uint256);
 ```
-
 **Parameters**
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| `a_` | `uint256` | numerator   |
-| `b_` | `uint256` | denominator |
+|Name|Type|Description|
+|----|----|-----------|
+|`a_`|`uint256`|numerator|
+|`b_`|`uint256`|denominator|
 
 **Returns**
 
-| Name     | Type      | Description              |
-| -------- | --------- | ------------------------ |
-| `<none>` | `uint256` | `a_` \* PRECISION / `b_` |
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`uint256`|`a_` * PRECISION / `b_`|
 
-### \_mulPrec
+
+### _mulPrec
 
 multiply two number and remove precision
+
 
 ```solidity
 function _mulPrec(uint256 a_, uint256 b_) internal pure returns (uint256);
 ```
-
 **Parameters**
 
-| Name | Type      | Description |
-| ---- | --------- | ----------- |
-| `a_` | `uint256` | term 1      |
-| `b_` | `uint256` | term 2      |
+|Name|Type|Description|
+|----|----|-----------|
+|`a_`|`uint256`|term 1|
+|`b_`|`uint256`|term 2|
 
 **Returns**
 
-| Name     | Type      | Description              |
-| -------- | --------- | ------------------------ |
-| `<none>` | `uint256` | `a_` \* `b_` / PRECISION |
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`uint256`|`a_` * `b_` / PRECISION|
 
-### \_calcCycleNext
+
+### _calcCycleNext
 
 calculates when an cycle ends or the next one starts based on given `cycleDuration_` and a `timestamp_`
+
 
 ```solidity
 function _calcCycleNext(
@@ -86,24 +91,25 @@ function _calcCycleNext(
     pure
     returns (uint256);
 ```
-
 **Parameters**
 
-| Name             | Type      | Description                              |
-| ---------------- | --------- | ---------------------------------------- |
-| `cycleStart_`    | `uint256` | Collective Rewards cycle start timestamp |
-| `cycleDuration_` | `uint256` | Collective Rewards cycle time duration   |
-| `timestamp_`     | `uint256` | timestamp to calculate                   |
+|Name|Type|Description|
+|----|----|-----------|
+|`cycleStart_`|`uint256`|Collective Rewards cycle start timestamp|
+|`cycleDuration_`|`uint256`|Collective Rewards cycle time duration|
+|`timestamp_`|`uint256`|timestamp to calculate|
 
 **Returns**
 
-| Name     | Type      | Description                                                |
-| -------- | --------- | ---------------------------------------------------------- |
-| `<none>` | `uint256` | cycleNext timestamp when the cycle ends or the next starts |
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`uint256`|cycleNext timestamp when the cycle ends or the next starts|
 
-### \_calcTimeUntilNextCycle
+
+### _calcTimeUntilNextCycle
 
 calculates the time left until the next cycle based on given `cycleDuration_` and a `timestamp_`
+
 
 ```solidity
 function _calcTimeUntilNextCycle(
@@ -115,17 +121,18 @@ function _calcTimeUntilNextCycle(
     pure
     returns (uint256);
 ```
-
 **Parameters**
 
-| Name             | Type      | Description                              |
-| ---------------- | --------- | ---------------------------------------- |
-| `cycleStart_`    | `uint256` | Collective Rewards cycle start timestamp |
-| `cycleDuration_` | `uint256` | Collective Rewards cycle time duration   |
-| `timestamp_`     | `uint256` | timestamp to calculate                   |
+|Name|Type|Description|
+|----|----|-----------|
+|`cycleStart_`|`uint256`|Collective Rewards cycle start timestamp|
+|`cycleDuration_`|`uint256`|Collective Rewards cycle time duration|
+|`timestamp_`|`uint256`|timestamp to calculate|
 
 **Returns**
 
-| Name     | Type      | Description                                        |
-| -------- | --------- | -------------------------------------------------- |
-| `<none>` | `uint256` | timeUntilNextCycle amount of time until next cycle |
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`uint256`|timeUntilNextCycle amount of time until next cycle|
+
+

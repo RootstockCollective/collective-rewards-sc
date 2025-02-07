@@ -1,3 +1,4 @@
-# Contents
 
+
+# Contents
 - [CommunityApproveBuilderChangerTemplateRootstockCollective](CommunityApproveBuilderChangerTemplateRootstockCollective.sol/contract.CommunityApproveBuilderChangerTemplateRootstockCollective.md)

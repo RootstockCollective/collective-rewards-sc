@@ -7,8 +7,7 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-A set of Solidity smart contracts, to implement builder incentives and staker rewards mechanisms to be integrated with
-the DAO.
+A set of Solidity smart [contracts](./specs/CONTRACTS.md), to implement builder incentives and staker rewards mechanisms to be integrated with the DAO. For technical detail, please refer to the [specifications](./specs/SPECIFICATION.md).
 
 ## What's Inside
 
@@ -32,23 +31,6 @@ The following tools are required to be installed:
 - [jq](https://jqlang.github.io/jq/download/) - Again, this is packaged to a variety of OSs, but if you don't have it
   follow the link to install it for your system
 
-> [!IMPORTANT] Please make sure to install foundry using the branch `f625d0fa7c51e65b4bf1e8f7931cd1c6e2e285e9`. By using
-> the latest version we experienced the following error on RSKj:
-> `... deserialization error: missing field ``effectiveGasPrice`` ...`
-
-That foundry branch works with cargo >=1.76.0 or <= 1.79.0. So first, switch the version
-
-```sh
-rustup default 1.79.0
-```
-
-```sh
-foundryup --branch f625d0fa7c51e65b4bf1e8f7931cd1c6e2e285e9
-```
-
-If this is your first time with Foundry, check out the
-[installation](https://github.com/foundry-rs/foundry#installation) instructions.
-
 ## Getting Started
 
 Clone the repo and install the dependencies
@@ -59,7 +41,8 @@ cd collective-rewards-sc
 bun install # install Solhint, Prettier, Hardhat and other Node.js deps
 ```
 
-> [!WARNING] `.env.<chain_id>` could be public, don't put your private key or mnemonic there. Use `.env` for that.
+> [!WARNING]
+> `.env.<chain_id>` could be public, don't put your private key or mnemonic there. Use `.env` for that.
 
 ```sh
 cp .env.private.example .env
@@ -81,10 +64,23 @@ direnv allow
 
 upon which you'll be asked to present the chain id of the network you wish to use. This will be written in a file called
 `.chain_id`. Alternatively, you can create this file yourself (content of which is only the chain id number itself)
-before calling `direnv allow`. This will subsequently create environment variables (will unload after exiting the
-directory; for more info see [direnv docs](https://direnv.net)) specified for given network inside the `.env.<chain_id>`
-file. If such file does not exist you will be asked to create one for your network. This can be done by copying/moving
-the `.env.example` file and changing the example vars to match your desired network. For example:
+before calling `direnv allow`. This could be particularly useful when wishing to load configs for and to deploy to
+multiple networks.
+
+```sh
+echo "31" > .chain_id && direnv allow
+```
+
+Or non-persistently (deleted upon reboot) with:
+
+```sh
+echo "31" > $(mktemp .chain_id) && direnv allow
+```
+
+This will subsequently create environment variables (will unload after exiting the directory; for more info see
+[direnv docs](https://direnv.net)) specified for given network inside the `.env.<chain_id>` file. If such file does not
+exist you will be asked to create one for your network. This can be done by copying/moving the `.env.example` file and
+changing the example vars to match your desired network. For example:
 
 ```sh
 mv .env.example .env.42
@@ -111,7 +107,7 @@ export DEPLOYER_ADDRESS="0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
 export RPC_KEY="someRandomJWTToken" # if any
 ```
 
-after changing these, the shell should remind you to re-run `direnv allow`, again. Do it even if it doesn't.
+Then re-run `direnv allow` to load the new env vars.
 
 If for development purposes you'd like to avoid using the deterministic deployer (CREATE2), so that your node doesn't
 need to be restarted every time you want to redeploy, you can use `NO_DD=true` environment variable to deploy using
@@ -211,10 +207,10 @@ The simples way to deploy is to use the command
 bun run deploy
 ```
 
-This will also generate hardhat-style artifacts unless `OMIT_HARDHAT_ARTIFACTS` is set to `true`:
+This will also copy the ABI files unless `OMIT_ABI_COPY` is set to `true`:
 
 ```sh
-OMIT_HARDHAT_ARTIFACTS=true bun run deploy
+OMIT_ABI_COPY=true bun run deploy
 ```
 
 When deploying the contracts to RSKj locally, one of the unlocked accounts can be used:

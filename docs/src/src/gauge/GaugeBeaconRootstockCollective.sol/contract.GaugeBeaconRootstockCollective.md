@@ -1,22 +1,23 @@
 # GaugeBeaconRootstockCollective
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/99cb2d8ed5962fe0d1a12a5277c2e7b1068aeff8/src/gauge/GaugeBeaconRootstockCollective.sol)
 
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/6d0eca4e2c61e833bcb70c54d8668e5644ba180e/src/gauge/GaugeBeaconRootstockCollective.sol)
+**Inherits:**
+UpgradeableBeacon
 
-**Inherits:** UpgradeableBeacon
 
 ## State Variables
-
 ### governanceManager
 
 ```solidity
 IGovernanceManagerRootstockCollective public governanceManager;
 ```
 
-## Functions
 
+## Functions
 ### constructor
 
 constructor
+
 
 ```solidity
 constructor(
@@ -25,20 +26,22 @@ constructor(
 )
     UpgradeableBeacon(gaugeImplementation_, governanceManager_.governor());
 ```
-
 **Parameters**
 
-| Name                   | Type                                    | Description                                 |
-| ---------------------- | --------------------------------------- | ------------------------------------------- |
-| `governanceManager_`   | `IGovernanceManagerRootstockCollective` | contract with permissioned roles            |
-| `gaugeImplementation_` | `address`                               | address of the Gauge initial implementation |
+|Name|Type|Description|
+|----|----|-----------|
+|`governanceManager_`|`IGovernanceManagerRootstockCollective`|contract with permissioned roles|
+|`gaugeImplementation_`|`address`|address of the Gauge initial implementation|
 
-### \_checkOwner
+
+### _checkOwner
 
 The owner is the governor but we need more flexibility to allow changes.
 
-_We override \_checkOwner so that OnlyOwner modifier uses governanceManager to authorize the caller_
+*We override _checkOwner so that OnlyOwner modifier uses governanceManager to authorize the caller*
+
 
 ```solidity
 function _checkOwner() internal view override;
 ```
+

@@ -207,10 +207,10 @@ The simples way to deploy is to use the command
 bun run deploy
 ```
 
-This will also generate hardhat-style artifacts unless `OMIT_HARDHAT_ARTIFACTS` is set to `true`:
+This will also copy the ABI files unless `OMIT_ABI_COPY` is set to `true`:
 
 ```sh
-OMIT_HARDHAT_ARTIFACTS=true bun run deploy
+OMIT_ABI_COPY=true bun run deploy
 ```
 
 When deploying the contracts to RSKj locally, one of the unlocked accounts can be used:
