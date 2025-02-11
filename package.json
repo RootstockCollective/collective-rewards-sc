@@ -72,7 +72,8 @@
     "test:coverage": "forge coverage",
     "test:coverage:report": "sh ./coverage.sh",
     "prepare": "husky",
-    "docgen": "forge doc && bun run prettier:write"
+    "docgen": "forge doc && bun run prettier:write",
+    "validateMigration": "./script/migrations/v2/run_migration_validation.sh"
   },
   "packageManager": "bun@1.1.30"
 }
