@@ -56,7 +56,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
 
         // WHEN alice calls communityApproveBuilder
         //  THEN tx reverts because caller is not the Governor
-        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotAuthorized.selector);
         builderRegistry.communityApproveBuilder(builder);
 
         // WHEN alice calls dewhitelistBuilder

@@ -8,6 +8,7 @@ import { MigrationV2 } from "src/migrations/v2/MigrationV2.sol";
 import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
 import { MigrationV2Deployer } from "script/migrations/v2/MigrationV2.s.sol";
+import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 
 struct CycleData {
     uint32 previousDuration;
@@ -75,6 +76,40 @@ contract BackersManagerUpgradeV2Fork is Test {
         BackersManagerData memory _backersManagerDataV2 = _getBackersManagerData();
         // THEN it should match the previous v1 data
         _validateBackersManagerMigration(backersManagerDataV1, _backersManagerDataV2);
+    }
+
+    /**
+     * SCENARIO: BackersManager continues to be able to execute builders community approvals after upgrade and migration
+     */
+    function test_fork_communityApproveBuilderV2() public {
+        // GIVEN the upgraded backers manager
+        BackersManagerRootstockCollective _backersManager = BackersManagerRootstockCollective(backersManager);
+        // WHEN governor executes a community approval
+        address _builder = makeAddr("builder");
+        vm.prank(governor);
+        GaugeRootstockCollective _newGauge = _backersManager.communityApproveBuilder(_builder);
+
+        // THEN new gauge is assigned to the new builder
+        assertEq(address(builderRegistry.builderToGauge(_builder)), address(_newGauge));
+        // THEN new builder is assigned to the new gauge
+        assertEq(builderRegistry.gaugeToBuilder(_newGauge), _builder);
+        // THEN builder is community approved
+        (,, bool _communityApproved,,,,) = builderRegistry.builderState(_builder);
+        assertTrue(_communityApproved);
+    }
+
+    /**
+     * SCENARIO: BackersManager community approval fails if not authorized
+     */
+    function test_fork_communityApproveBuilderV2_NotAuthorized() public {
+        // GIVEN the upgraded backers manager
+        BackersManagerRootstockCollective _backersManager = BackersManagerRootstockCollective(backersManager);
+        // WHEN non permissioned address executes a community approval
+        address _builder = makeAddr("builder");
+        vm.prank(_builder);
+        // THEN it should revert with NotAuthorized error
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
+        _backersManager.communityApproveBuilder(_builder);
     }
 
     /**

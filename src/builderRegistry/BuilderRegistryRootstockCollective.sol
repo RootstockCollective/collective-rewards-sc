@@ -71,6 +71,13 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         _;
     }
 
+    modifier onlyValidChangerOrBackersManager() {
+        if (!governanceManager.isAuthorizedChanger(msg.sender) && msg.sender != address(backersManager)) {
+            revert NotAuthorized();
+        }
+        _;
+    }
+
     modifier onlyBackersManager() {
         if (msg.sender != address(backersManager)) {
             revert NotAuthorized();
@@ -298,7 +305,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     /**
      * @notice community approve builder and create its gauge
-     * @dev reverts if it is not called by the governor address or authorized changer
+     * @dev reverts if it is not called by the governor, authorized changer nor the backers manager
      * reverts if is already community approved
      * reverts if it has a gauge associated
      * @param builder_ address of the builder
@@ -306,7 +313,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      */
     function communityApproveBuilder(address builder_)
         external
-        onlyValidChanger
+        onlyValidChangerOrBackersManager
         returns (GaugeRootstockCollective gauge_)
     {
         return _communityApproveBuilder(builder_);
