@@ -64,7 +64,7 @@ contract BuilderRegistrySnapshot is Script, MigrationV2Utils {
         // Serialize BuilderState mappings for each builder
         for (uint256 i = 0; i < _buildersData.builders.length; i++) {
             address _builder = _buildersData.builders[i];
-            string memory _builderStr = toString(_builder);
+            string memory _builderStr = vm.toString(_builder);
 
             BuilderState storage _state = _buildersData.builderState[_builder];
             string memory _builderJson =

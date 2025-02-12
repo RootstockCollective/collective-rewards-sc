@@ -23,23 +23,6 @@ contract MigrationV2Utils is Script {
         }
     }
 
-    // Helper function to convert address to string
-    function toString(address address_) public pure returns (string memory) {
-        bytes32 _value = bytes32(uint256(uint160(address_)));
-        bytes memory _alphabet = "0123456789abcdef";
-        bytes memory _str = new bytes(42); // 2 characters for "0x" + 40 for the address
-
-        _str[0] = "0";
-        _str[1] = "x";
-
-        for (uint256 i = 0; i < 20; i++) {
-            _str[2 + i * 2] = _alphabet[uint8(_value[i + 12] >> 4)];
-            _str[3 + i * 2] = _alphabet[uint8(_value[i + 12] & 0x0f)];
-        }
-
-        return string(_str);
-    }
-
     function getPath(string memory fileName_) public pure returns (string memory) {
         return string.concat(dataPath, "/", fileName_, ".json");
     }

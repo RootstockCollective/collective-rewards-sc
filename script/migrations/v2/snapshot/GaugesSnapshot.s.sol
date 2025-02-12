@@ -29,7 +29,7 @@ contract GaugesSnapshot is MigrationV2Utils {
             _gaugeJson = vm.serializeString("gauge", "rif", _getRewardDataJson(_gauge, _rif));
             _gaugeJson = vm.serializeString("gauge", "rbtc", _getRewardDataJson(_gauge, COINBASE_ADDRESS));
 
-            _json = vm.serializeString("gauges", toString(address(_gauge)), _gaugeJson);
+            _json = vm.serializeString("gauges", vm.toString(address(_gauge)), _gaugeJson);
         }
 
         _json = vm.serializeAddress("gauges", "gauges", _gauges);

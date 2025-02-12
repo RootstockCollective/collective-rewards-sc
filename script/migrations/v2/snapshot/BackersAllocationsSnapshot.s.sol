@@ -45,10 +45,10 @@ contract BackersSnapshot is Script, MigrationV2Utils {
                 address _gauge = _gauges[j];
                 uint256 _allocation = GaugeRootstockCollective(_gauge).allocationOf(_backer);
 
-                _backerJson = vm.serializeUint("backer", toString(_gauge), _allocation);
+                _backerJson = vm.serializeUint("backer", vm.toString(_gauge), _allocation);
             }
 
-            _json = vm.serializeString("backersData", toString(_backer), _backerJson);
+            _json = vm.serializeString("backersData", vm.toString(_backer), _backerJson);
         }
 
         // Write JSON to file

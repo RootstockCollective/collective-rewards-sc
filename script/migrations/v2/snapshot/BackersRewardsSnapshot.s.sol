@@ -49,10 +49,10 @@ contract BackersSnapshot is Script, MigrationV2Utils {
                 _gaugeJson = vm.serializeUint("gauge", "rifRewards", _rifRewards);
                 _gaugeJson = vm.serializeUint("gauge", "rbtcRewards", _rbtcRewards);
 
-                _backerJson = vm.serializeString("backer", toString(_gauge), _gaugeJson);
+                _backerJson = vm.serializeString("backer", vm.toString(_gauge), _gaugeJson);
             }
 
-            _json = vm.serializeString("backersData", toString(_backer), _backerJson);
+            _json = vm.serializeString("backersData", vm.toString(_backer), _backerJson);
         }
 
         vm.writeJson(_json, getVersionedPath("backersRewards"));
