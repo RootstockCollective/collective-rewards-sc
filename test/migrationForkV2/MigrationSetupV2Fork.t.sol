@@ -36,11 +36,24 @@ contract MigrationSetupV2Fork is Test {
         vm.assertEq(address(migrationV2.governanceManager()), address(backersManagerV1.governanceManager()));
         vm.assertEq(migrationV2.rewardDistributor(), address(backersManagerV1.rewardDistributor()));
         vm.assertEq(migrationV2.rewardPercentageCooldown(), backersManagerV1.rewardPercentageCooldown());
-        vm.assertEq(migrationV2.upgrader(), address(backersManagerV1.governanceManager().upgrader()));
+        vm.assertEq(migrationV2.upgrader(), address(governanceManager.upgrader()));
         vm.assertEq(migrationV2.gaugeFactory(), address(backersManagerV1.gaugeFactory()));
         vm.assertEq(
             address(migrationV2.gaugeBeacon()),
             address(GaugeFactoryRootstockCollective(backersManagerV1.gaugeFactory()).beacon())
         );
+    }
+
+    function test_fork_migrationV2ResetUpgrader() public {
+        // GIVEN migration v2 is setup
+        address _originalUpgrader = address(backersManagerV1.governanceManager().upgrader());
+        // AND the upgrader is set to migration v2
+        vm.prank(_originalUpgrader);
+        governanceManager.updateUpgrader(address(migrationV2));
+        vm.assertEq(address(migrationV2), address(backersManagerV1.governanceManager().upgrader()));
+        // WHEN the upgrader is reset
+        migrationV2.resetUpgrader();
+        // THEN the upgrader should be reseted to the original upgrader
+        vm.assertEq(_originalUpgrader, address(backersManagerV1.governanceManager().upgrader()));
     }
 }

@@ -62,6 +62,10 @@ contract MigrationV2 {
         return builderRegistry;
     }
 
+    function resetUpgrader() public {
+        _resetUpgrader();
+    }
+
     function _deployBuilderRegistry() internal returns (BuilderRegistryRootstockCollective builderRegistry_) {
         // deploy builders registry v2
         bytes memory _builderRegistryInitializerData = abi.encodeCall(
