@@ -22,6 +22,7 @@ contract MigrationV2 {
     BuilderRegistryRootstockCollective public builderRegistry;
     BuilderRegistryRootstockCollective public builderRegistryImplementation;
     IGovernanceManagerRootstockCollective public governanceManager;
+    GaugeRootstockCollective public gaugeImplementation;
     GaugeBeaconRootstockCollective public gaugeBeacon;
     address public upgrader;
     address public gaugeFactory;
@@ -43,20 +44,22 @@ contract MigrationV2 {
         rewardPercentageCooldown = backersManagerV1.rewardPercentageCooldown();
         builderRegistryImplementation = builderRegistryImplementation_;
         backersManagerV2Implementation = backersManagerV2Implementation_;
+        gaugeImplementation = new GaugeRootstockCollective();
+        _deployBuilderRegistry();
     }
 
-    function run() public returns (BuilderRegistryRootstockCollective builderRegistry_) {
+    function run() public returns (BuilderRegistryRootstockCollective) {
         if (governanceManager.upgrader() != address(this)) revert NotUpgrader();
 
-        builderRegistry_ = _deployBuilderRegistry();
+        builderRegistry.migrateAllBuildersV2();
 
-        builderRegistry_.migrateAllBuildersV2();
-
-        _upgradeBackersManager(builderRegistry_);
+        _upgradeBackersManager(builderRegistry);
 
         _upgradeGauges();
 
         _resetUpgrader();
+
+        return builderRegistry;
     }
 
     function _deployBuilderRegistry() internal returns (BuilderRegistryRootstockCollective builderRegistry_) {
@@ -85,10 +88,8 @@ contract MigrationV2 {
     }
 
     function _upgradeGauges() internal {
-        // deploy gauge implementation v2
-        GaugeRootstockCollective _gaugeImplementation = new GaugeRootstockCollective();
         // upgrade gauge beacon to point to the new v2 implementation
-        gaugeBeacon.upgradeTo(address(_gaugeImplementation));
+        gaugeBeacon.upgradeTo(address(gaugeImplementation));
         // initialize all the gauges proxies to v2
         uint256 _gaugesLength = BuilderRegistryRootstockCollective(builderRegistry).getGaugesLength();
         for (uint256 i = 0; i < _gaugesLength; i++) {
