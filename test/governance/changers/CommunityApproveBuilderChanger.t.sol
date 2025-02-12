@@ -5,6 +5,7 @@ import { BaseTest, GaugeRootstockCollective } from "../../BaseTest.sol";
 import { CommunityApproveBuilderChangerTemplateRootstockCollective } from
     "../../../src/governance/changerTemplates/CommunityApproveBuilderChangerTemplateRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
+import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 
 contract CommunityApproveBuilderChangerTest is BaseTest {
     CommunityApproveBuilderChangerTemplateRootstockCollective internal _changer;
@@ -21,9 +22,9 @@ contract CommunityApproveBuilderChangerTest is BaseTest {
      */
     function test_RevertWhenIsNotAuthorized() public {
         //  WHEN tries to directly execute the changer
-        //   THEN tx reverts because NotGovernorOrAuthorizedChanger
+        //   THEN tx reverts because NotAuthorized
         vm.prank(alice);
-        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.NotAuthorized.selector);
         _changer.execute();
     }
 
