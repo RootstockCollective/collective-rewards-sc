@@ -68,7 +68,7 @@ contract BuilderRegistryMigrationV2Fork is Test {
         upgrader = governanceManager.upgrader();
 
         MigrationV2Deployer _migrationV2Deployer = new MigrationV2Deployer();
-        migrationV2 = _migrationV2Deployer.run(backersManager);
+        migrationV2 = _migrationV2Deployer.run(backersManager, false);
 
         _storeBuildersV1Data();
     }

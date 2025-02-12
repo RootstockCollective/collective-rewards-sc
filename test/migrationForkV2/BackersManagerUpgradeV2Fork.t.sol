@@ -55,7 +55,7 @@ contract BackersManagerUpgradeV2Fork is Test {
 
         // migrate
         MigrationV2Deployer _migrationV2Deployer = new MigrationV2Deployer();
-        MigrationV2 _migrationV2 = _migrationV2Deployer.run(backersManager);
+        MigrationV2 _migrationV2 = _migrationV2Deployer.run(backersManager, false);
         vm.prank(governanceManager.upgrader());
         governanceManager.updateUpgrader(address(_migrationV2));
         builderRegistry = _migrationV2.run();

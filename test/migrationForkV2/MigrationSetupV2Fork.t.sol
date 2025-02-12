@@ -21,7 +21,7 @@ contract MigrationSetupV2Fork is Test {
         governanceManager = backersManagerV1.governanceManager();
 
         MigrationV2Deployer _migrationV2Deployer = new MigrationV2Deployer();
-        migrationV2 = _migrationV2Deployer.run(_backersManager);
+        migrationV2 = _migrationV2Deployer.run(_backersManager, false);
     }
 
     /**
