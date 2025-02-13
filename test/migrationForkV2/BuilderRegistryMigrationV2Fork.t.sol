@@ -95,7 +95,8 @@ contract BuilderRegistryMigrationV2Fork is Test {
         vm.assertEq(upgrader, governanceManager.upgrader());
 
         // AND the migrated data in v2 matches v1 data
-        vm.assertEq(_buildersDataV1.builders.length, builderRegistry.getGaugesLength());
+        uint256 _totalGauges = _buildersDataV1.gauges.length() + _buildersDataV1.haltedGauges.length();
+        vm.assertEq(_buildersDataV1.builders.length, _totalGauges);
         vm.assertEq(_buildersDataV1.gauges.length(), builderRegistry.getGaugesLength());
         vm.assertEq(_buildersDataV1.haltedGauges.length(), builderRegistry.getHaltedGaugesLength());
         vm.assertEq(_buildersDataV1.rewardDistributor, builderRegistry.rewardDistributor());
@@ -187,33 +188,44 @@ contract BuilderRegistryMigrationV2Fork is Test {
 
     function _storeBuildersV1Data() internal {
         IBackersManagerV1 _backersManagerV1 = IBackersManagerV1(backersManager);
-        uint256 _gaugesLength = _backersManagerV1.getGaugesLength();
         _buildersDataV1.rewardDistributor = _backersManagerV1.rewardDistributor();
         _buildersDataV1.rewardPercentageCooldown = _backersManagerV1.rewardPercentageCooldown();
         _buildersDataV1.gaugeFactory = GaugeFactoryRootstockCollective(_backersManagerV1.gaugeFactory());
         _buildersDataV1.backersManager = BackersManagerRootstockCollective(backersManager);
 
+        uint256 _gaugesLength = _backersManagerV1.getGaugesLength();
         for (uint256 i = 0; i < _gaugesLength; i++) {
             address _gauge = _backersManagerV1.getGaugeAt(i);
-            address _builder = _backersManagerV1.gaugeToBuilder(_gauge);
-            _buildersDataV1.builders.push(_builder);
-            _buildersDataV1.builderState[_builder] = _getBuilderStateV1(_builder);
-            _buildersDataV1.builderRewardReceiver[_builder] = _backersManagerV1.builderRewardReceiver(_builder);
-            _buildersDataV1.builderRewardReceiverReplacement[_builder] =
-                _backersManagerV1.builderRewardReceiverReplacement(_builder);
-            _buildersDataV1.hasBuilderRewardReceiverPendingApproval[_builder] =
-                _backersManagerV1.hasBuilderRewardReceiverPendingApproval(_builder);
-            _buildersDataV1.backerRewardPercentage[_builder] = _getBackerRewardPercentageData(_builder);
-            _buildersDataV1.builderToGauge[_builder] = GaugeRootstockCollective(_gauge);
-            _buildersDataV1.gaugeToBuilder[GaugeRootstockCollective(_gauge)] = _builder;
-            _buildersDataV1.haltedGaugeLastPeriodFinish[GaugeRootstockCollective(_gauge)] =
-                _backersManagerV1.haltedGaugeLastPeriodFinish(_gauge);
+            _storeGaugeData(_gauge);
+        }
+        // halted gauges
+        uint256 _haltedGaugesLength = _backersManagerV1.getHaltedGaugesLength();
+        for (uint256 i = 0; i < _haltedGaugesLength; i++) {
+            address _gauge = _backersManagerV1.getHaltedGaugeAt(i);
+            _storeGaugeData(_gauge);
+        }
+    }
 
-            if (_backersManagerV1.isGaugeHalted(_gauge)) {
-                _buildersDataV1.haltedGauges.add(_gauge);
-            } else {
-                _buildersDataV1.gauges.add(_gauge);
-            }
+    function _storeGaugeData(address gauge_) internal {
+        IBackersManagerV1 _backersManagerV1 = IBackersManagerV1(backersManager);
+        address _builder = _backersManagerV1.gaugeToBuilder(gauge_);
+        _buildersDataV1.builders.push(_builder);
+        _buildersDataV1.builderState[_builder] = _getBuilderStateV1(_builder);
+        _buildersDataV1.builderRewardReceiver[_builder] = _backersManagerV1.builderRewardReceiver(_builder);
+        _buildersDataV1.builderRewardReceiverReplacement[_builder] =
+            _backersManagerV1.builderRewardReceiverReplacement(_builder);
+        _buildersDataV1.hasBuilderRewardReceiverPendingApproval[_builder] =
+            _backersManagerV1.hasBuilderRewardReceiverPendingApproval(_builder);
+        _buildersDataV1.backerRewardPercentage[_builder] = _getBackerRewardPercentageData(_builder);
+        _buildersDataV1.builderToGauge[_builder] = GaugeRootstockCollective(gauge_);
+        _buildersDataV1.gaugeToBuilder[GaugeRootstockCollective(gauge_)] = _builder;
+        _buildersDataV1.haltedGaugeLastPeriodFinish[GaugeRootstockCollective(gauge_)] =
+            _backersManagerV1.haltedGaugeLastPeriodFinish(gauge_);
+
+        if (_backersManagerV1.isGaugeHalted(gauge_)) {
+            _buildersDataV1.haltedGauges.add(gauge_);
+        } else {
+            _buildersDataV1.gauges.add(gauge_);
         }
     }
 

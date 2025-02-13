@@ -465,6 +465,12 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
             address _builder = _buildersRegistryV1.gaugeToBuilder(_gauge);
             _migrateBuilderV2(_builder);
         }
+        uint256 _haltedGaugesLength = _buildersRegistryV1.getHaltedGaugesLength();
+        for (uint256 i = 0; i < _haltedGaugesLength; i++) {
+            address _gauge = _buildersRegistryV1.getHaltedGaugeAt(i);
+            address _builder = _buildersRegistryV1.gaugeToBuilder(_gauge);
+            _migrateBuilderV2(_builder);
+        }
     }
 
     /**
