@@ -117,32 +117,41 @@ contract BuilderRegistrySnapshot is Script, MigrationV2Utils {
     }
 
     function _storeBuildersV1Data() internal {
-        uint256 _gaugesLength = builderRegistry.getGaugesLength();
         _buildersData.rewardDistributor = builderRegistry.rewardDistributor();
         _buildersData.rewardPercentageCooldown = builderRegistry.rewardPercentageCooldown();
         _buildersData.gaugeFactory = GaugeFactoryRootstockCollective(builderRegistry.gaugeFactory());
 
+        uint256 _gaugesLength = builderRegistry.getGaugesLength();
         for (uint256 i = 0; i < _gaugesLength; i++) {
             address _gauge = builderRegistry.getGaugeAt(i);
-            address _builder = builderRegistry.gaugeToBuilder(GaugeRootstockCollective(_gauge));
-            _buildersData.builders.push(_builder);
-            _buildersData.builderState[_builder] = _getBuilderStateV1(_builder);
-            _buildersData.builderRewardReceiver[_builder] = builderRegistry.builderRewardReceiver(_builder);
-            _buildersData.builderRewardReceiverReplacement[_builder] =
-                builderRegistry.builderRewardReceiverReplacement(_builder);
-            _buildersData.hasBuilderRewardReceiverPendingApproval[_builder] =
-                builderRegistry.hasBuilderRewardReceiverPendingApproval(_builder);
-            _buildersData.backerRewardPercentage[_builder] = _getBackerRewardPercentageData(_builder);
-            _buildersData.builderToGauge[_builder] = GaugeRootstockCollective(_gauge);
-            _buildersData.gaugeToBuilder[GaugeRootstockCollective(_gauge)] = _builder;
-            _buildersData.haltedGaugeLastPeriodFinish[GaugeRootstockCollective(_gauge)] =
-                builderRegistry.haltedGaugeLastPeriodFinish(GaugeRootstockCollective(_gauge));
+            _storeGauge(_gauge);
+        }
+        uint256 _haltedGaugesLength = builderRegistry.getHaltedGaugesLength();
+        for (uint256 i = 0; i < _haltedGaugesLength; i++) {
+            address _gauge = builderRegistry.getHaltedGaugeAt(i);
+            _storeGauge(_gauge);
+        }
+    }
 
-            if (builderRegistry.isGaugeHalted(_gauge)) {
-                _buildersData.haltedGauges.add(_gauge);
-            } else {
-                _buildersData.gauges.add(_gauge);
-            }
+    function _storeGauge(address gauge_) internal {
+        address _builder = builderRegistry.gaugeToBuilder(GaugeRootstockCollective(gauge_));
+        _buildersData.builders.push(_builder);
+        _buildersData.builderState[_builder] = _getBuilderStateV1(_builder);
+        _buildersData.builderRewardReceiver[_builder] = builderRegistry.builderRewardReceiver(_builder);
+        _buildersData.builderRewardReceiverReplacement[_builder] =
+            builderRegistry.builderRewardReceiverReplacement(_builder);
+        _buildersData.hasBuilderRewardReceiverPendingApproval[_builder] =
+            builderRegistry.hasBuilderRewardReceiverPendingApproval(_builder);
+        _buildersData.backerRewardPercentage[_builder] = _getBackerRewardPercentageData(_builder);
+        _buildersData.builderToGauge[_builder] = GaugeRootstockCollective(gauge_);
+        _buildersData.gaugeToBuilder[GaugeRootstockCollective(gauge_)] = _builder;
+        _buildersData.haltedGaugeLastPeriodFinish[GaugeRootstockCollective(gauge_)] =
+            builderRegistry.haltedGaugeLastPeriodFinish(GaugeRootstockCollective(gauge_));
+
+        if (builderRegistry.isGaugeHalted(gauge_)) {
+            _buildersData.haltedGauges.add(gauge_);
+        } else {
+            _buildersData.gauges.add(gauge_);
         }
     }
 
