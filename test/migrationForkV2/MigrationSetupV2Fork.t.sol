@@ -52,8 +52,22 @@ contract MigrationSetupV2Fork is Test {
         governanceManager.updateUpgrader(address(migrationV2));
         vm.assertEq(address(migrationV2), address(backersManagerV1.governanceManager().upgrader()));
         // WHEN the upgrader is reset
+        vm.prank(address(_originalUpgrader));
         migrationV2.resetUpgrader();
         // THEN the upgrader should be reseted to the original upgrader
         vm.assertEq(_originalUpgrader, address(backersManagerV1.governanceManager().upgrader()));
+    }
+
+    function test_fork_migrationV2ResetUpgrader_unauthorized() public {
+        // GIVEN migration v2 is setup
+        // AND the upgrader is set to migration v2
+        address _originalUpgrader = address(backersManagerV1.governanceManager().upgrader());
+        vm.prank(_originalUpgrader);
+        governanceManager.updateUpgrader(address(migrationV2));
+        // WHEN the upgrader is reset by an unauthorized address
+        // THEN the upgrader should revert with NotUpgrader error
+        vm.prank(address(this));
+        vm.expectRevert(MigrationV2.NotUpgrader.selector);
+        migrationV2.resetUpgrader();
     }
 }

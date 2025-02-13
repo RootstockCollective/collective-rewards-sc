@@ -63,6 +63,7 @@ contract MigrationV2 {
     }
 
     function resetUpgrader() public {
+        if (msg.sender != upgrader) revert NotUpgrader();
         _resetUpgrader();
     }
 
