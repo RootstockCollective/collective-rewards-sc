@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { GaugeRootstockCollective } from "../../gauge/GaugeRootstockCollective.sol";
 import { GaugeBeaconRootstockCollective } from "../../gauge/GaugeBeaconRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "../../gauge/GaugeFactoryRootstockCollective.sol";
@@ -17,49 +16,46 @@ import { IBackersManagerV1 } from "../../interfaces/V1/IBackersManagerV1.sol";
 contract MigrationV2 {
     error NotUpgrader();
 
-    IBackersManagerV1 public backersManagerV1;
-    BackersManagerRootstockCollective public backersManagerV2Implementation;
-    BuilderRegistryRootstockCollective public builderRegistry;
-    BuilderRegistryRootstockCollective public builderRegistryImplementation;
+    IBackersManagerV1 public backersManagerV1Proxy;
+    BackersManagerRootstockCollective public backersManagerV2Impl;
+    BuilderRegistryRootstockCollective public builderRegistryV2Proxy;
+    BuilderRegistryRootstockCollective public builderRegistryV2Impl;
     IGovernanceManagerRootstockCollective public governanceManager;
-    GaugeRootstockCollective public gaugeImplementation;
+    GaugeRootstockCollective public gaugev2Impl;
     GaugeBeaconRootstockCollective public gaugeBeacon;
     address public upgrader;
-    address public gaugeFactory;
-    address public rewardDistributor;
-    uint128 public rewardPercentageCooldown;
 
     constructor(
-        address backersManagerV1_,
-        BuilderRegistryRootstockCollective builderRegistryImplementation_,
-        BackersManagerRootstockCollective backersManagerV2Implementation_
+        IBackersManagerV1 backersManagerV1Proxy_,
+        BackersManagerRootstockCollective backersManagerV2Impl_,
+        BuilderRegistryRootstockCollective builderRegistryV2Proxy_,
+        BuilderRegistryRootstockCollective builderRegistryV2Impl_,
+        GaugeRootstockCollective gaugeV2Imp_
     ) {
-        backersManagerV1 = IBackersManagerV1(backersManagerV1_);
-        governanceManager = backersManagerV1.governanceManager();
-        gaugeBeacon =
-            GaugeBeaconRootstockCollective(GaugeFactoryRootstockCollective(backersManagerV1.gaugeFactory()).beacon());
+        backersManagerV1Proxy = backersManagerV1Proxy_;
+        builderRegistryV2Proxy = builderRegistryV2Proxy_;
+        backersManagerV2Impl = backersManagerV2Impl_;
+        builderRegistryV2Impl = builderRegistryV2Impl_;
+        governanceManager = backersManagerV1Proxy.governanceManager();
+        gaugev2Impl = gaugeV2Imp_;
+        gaugeBeacon = GaugeBeaconRootstockCollective(
+            GaugeFactoryRootstockCollective(backersManagerV1Proxy.gaugeFactory()).beacon()
+        );
         upgrader = governanceManager.upgrader();
-        gaugeFactory = backersManagerV1.gaugeFactory();
-        rewardDistributor = backersManagerV1.rewardDistributor();
-        rewardPercentageCooldown = backersManagerV1.rewardPercentageCooldown();
-        builderRegistryImplementation = builderRegistryImplementation_;
-        backersManagerV2Implementation = backersManagerV2Implementation_;
-        gaugeImplementation = new GaugeRootstockCollective();
-        _deployBuilderRegistry();
     }
 
     function run() public returns (BuilderRegistryRootstockCollective) {
         if (governanceManager.upgrader() != address(this)) revert NotUpgrader();
 
-        builderRegistry.migrateAllBuildersV2();
+        builderRegistryV2Proxy.migrateAllBuildersV2();
 
-        _upgradeBackersManager(builderRegistry);
+        _upgradeBackersManager(builderRegistryV2Proxy);
 
         _upgradeGauges();
 
         _resetUpgrader();
 
-        return builderRegistry;
+        return builderRegistryV2Proxy;
     }
 
     function resetUpgrader() public {
@@ -67,39 +63,22 @@ contract MigrationV2 {
         _resetUpgrader();
     }
 
-    function _deployBuilderRegistry() internal returns (BuilderRegistryRootstockCollective builderRegistry_) {
-        // deploy builders registry v2
-        bytes memory _builderRegistryInitializerData = abi.encodeCall(
-            BuilderRegistryRootstockCollective.initialize,
-            (
-                BackersManagerRootstockCollective(address(backersManagerV1)),
-                gaugeFactory,
-                rewardDistributor,
-                rewardPercentageCooldown
-            )
-        );
-        builderRegistry_ = BuilderRegistryRootstockCollective(
-            address(new ERC1967Proxy(address(builderRegistryImplementation), _builderRegistryInitializerData))
-        );
-        builderRegistry = builderRegistry_;
-    }
-
     function _upgradeBackersManager(BuilderRegistryRootstockCollective builderRegistry_) internal {
         bytes memory _backersManagerInitializeData = abi.encodeCall(
             BackersManagerRootstockCollective.initializeV2, (BuilderRegistryRootstockCollective(builderRegistry_))
         );
 
-        backersManagerV1.upgradeToAndCall(address(backersManagerV2Implementation), _backersManagerInitializeData);
+        backersManagerV1Proxy.upgradeToAndCall(address(backersManagerV2Impl), _backersManagerInitializeData);
     }
 
     function _upgradeGauges() internal {
         // upgrade gauge beacon to point to the new v2 implementation
-        gaugeBeacon.upgradeTo(address(gaugeImplementation));
+        gaugeBeacon.upgradeTo(address(gaugev2Impl));
         // initialize all the gauges proxies to v2
-        uint256 _gaugesLength = BuilderRegistryRootstockCollective(builderRegistry).getGaugesLength();
+        uint256 _gaugesLength = BuilderRegistryRootstockCollective(builderRegistryV2Proxy).getGaugesLength();
         for (uint256 i = 0; i < _gaugesLength; i++) {
             GaugeRootstockCollective _gauge =
-                GaugeRootstockCollective(BuilderRegistryRootstockCollective(builderRegistry).getGaugeAt(i));
+                GaugeRootstockCollective(BuilderRegistryRootstockCollective(builderRegistryV2Proxy).getGaugeAt(i));
             _gauge.initializeV2();
         }
     }

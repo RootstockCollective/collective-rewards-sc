@@ -30,14 +30,11 @@ contract MigrationSetupV2Fork is Test {
     function test_fork_migrationV2Setup() public view {
         // GIVEN migration v2 is setup
         // THEN migration v2 should have the expected state
-        vm.assertNotEq(address(migrationV2.backersManagerV2Implementation()), address(0));
-        vm.assertNotEq(address(migrationV2.builderRegistryImplementation()), address(0));
-        vm.assertEq(address(migrationV2.backersManagerV1()), address(backersManagerV1));
+        vm.assertNotEq(address(migrationV2.backersManagerV2Impl()), address(0));
+        vm.assertNotEq(address(migrationV2.builderRegistryV2Impl()), address(0));
+        vm.assertEq(address(migrationV2.backersManagerV1Proxy()), address(backersManagerV1));
         vm.assertEq(address(migrationV2.governanceManager()), address(backersManagerV1.governanceManager()));
-        vm.assertEq(migrationV2.rewardDistributor(), address(backersManagerV1.rewardDistributor()));
-        vm.assertEq(migrationV2.rewardPercentageCooldown(), backersManagerV1.rewardPercentageCooldown());
         vm.assertEq(migrationV2.upgrader(), address(governanceManager.upgrader()));
-        vm.assertEq(migrationV2.gaugeFactory(), address(backersManagerV1.gaugeFactory()));
         vm.assertEq(
             address(migrationV2.gaugeBeacon()),
             address(GaugeFactoryRootstockCollective(backersManagerV1.gaugeFactory()).beacon())
