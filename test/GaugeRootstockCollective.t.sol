@@ -356,6 +356,11 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: incentivizer does not have enough balance
      */
+    // With the latest version of foundry we are getting the error
+    // [FAIL: call didn't revert at a lower depth than cheatcode call depth]
+    // It is recommended to review these failing tests and either enable revert on
+    // internal calls or rewrite tests to avoid this.
+    /// forge-config: default.allow_internal_expect_revert = true
     function test_incentivizeWithNotEnoughBalance() public {
         // GIVEN an incentivizer with limited balance
         address _incentivizer2 = makeAddr("incentivizer2");
