@@ -240,6 +240,15 @@ abstract contract OutputWriter is Script {
         vm.writeJson({ json: stdJson.serialize("", contractName_, deployedAt_), path: _outJsonFile });
     }
 
+    /// @notice Calling this function before `save` makes the existent output json data persistent
+    function persistOutputJson() public {
+        Deployment[] memory _deployments = _getDeployments();
+        string memory _json;
+        for (uint256 i; i < _deployments.length; i++) {
+            _json = vm.serializeAddress("", _deployments[i].name, _deployments[i].addr);
+        }
+    }
+
     /// @notice Fetches a deployment by name.
     /// @param contractName_ The name of the deployment.
     /// @return The deployment.

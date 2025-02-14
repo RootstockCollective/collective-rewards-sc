@@ -68,7 +68,7 @@ contract BuilderRegistryMigrationV2Fork is Test {
         upgrader = governanceManager.upgrader();
 
         MigrationV2Deployer _migrationV2Deployer = new MigrationV2Deployer();
-        migrationV2 = _migrationV2Deployer.run(backersManager);
+        migrationV2 = _migrationV2Deployer.run(backersManager, false);
 
         _storeBuildersV1Data();
     }
@@ -89,7 +89,7 @@ contract BuilderRegistryMigrationV2Fork is Test {
         builderRegistry = migrationV2.run();
 
         // THEM the builderRegistry is set to the migrated builderRegistry
-        vm.assertEq(address(builderRegistry), address(migrationV2.builderRegistry()));
+        vm.assertEq(address(builderRegistry), address(migrationV2.builderRegistryV2Proxy()));
 
         // AND upgrader is set back to the original address after the migration
         vm.assertEq(upgrader, governanceManager.upgrader());

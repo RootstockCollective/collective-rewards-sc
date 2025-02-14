@@ -52,7 +52,7 @@ contract GaugesUpgradeV2Fork is Test {
         _setGaugesDataV1();
 
         MigrationV2Deployer _migrationV2Deployer = new MigrationV2Deployer();
-        migrationV2 = _migrationV2Deployer.run(_backersManager);
+        migrationV2 = _migrationV2Deployer.run(_backersManager, false);
         vm.prank(governanceManager.upgrader());
         governanceManager.updateUpgrader(address(migrationV2));
         builderRegistry = migrationV2.run();
