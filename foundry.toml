@@ -18,7 +18,8 @@ build_info = true
 ffi = true # TODO: should we disable this for some envs to prevent arbitrary code execution?
 fs_permissions = [
   { access = "read", path = "./out"},
-  { access = "read-write", path = "./deployments"}
+  { access = "read-write", path = "./deployments"},
+  { access = "read-write", path = "./script/migrations/v2/data"}
 ]
 
 [invariant]
