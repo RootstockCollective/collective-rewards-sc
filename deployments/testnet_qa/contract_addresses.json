@@ -1,10 +1,12 @@
 {
-  "BackersManagerRootstockCollective": "0xeAdca815D145f3E3a69f9d4B086391ECE2CC6fe6",
-  "BackersManagerRootstockCollectiveProxy": "0x65e313474cC038782fF89581eD60bc2431794A33",
-  "GaugeBeaconRootstockCollective": "0xBf45113ac533206ca5bE16f5a500FBf0d9CB95d6",
-  "GaugeFactoryRootstockCollective": "0xa92a5673613361fAc3f93bB90B77744038751a5f",
-  "GovernanceManagerRootstockCollective": "0x97d73578C78CdB9aeb82fB658cBdA6c5a28D7939",
-  "GovernanceManagerRootstockCollectiveProxy": "0xa49Af345c57A303C75183d219232Be7b2d027157",
-  "RewardDistributorRootstockCollective": "0x449B90a14D1C1B9409758Ed2a6d5DB30844AEC4F",
-  "RewardDistributorRootstockCollectiveProxy": "0x21CF4dA4C3059860c9871e31f96AdcFbD0704Ec0"
+  "BackersManagerRootstockCollective": "0xF7ff36D065c8590B9E12633005b1D9ff8e721B71",
+  "BackersManagerRootstockCollectiveProxy": "0x367E7FeE0C9CE45F656BAbBe24Ff40a9B8bc0215",
+  "BuilderRegistryRootstockCollective": "0x89110001FA93A4fc0a68C8E80c74bA4Fe08cBF70",
+  "BuilderRegistryRootstockCollectiveProxy": "0x567F740a99D8a952F219087Bb0cAD8D24649ce34",
+  "GaugeBeaconRootstockCollective": "0x4AEDE8bf46253Fa4657caF15e92210FD1A1FF54B",
+  "GaugeFactoryRootstockCollective": "0xA1E50c74A6617C522dB1904C448562DDb2a9AEd0",
+  "GovernanceManagerRootstockCollective": "0x1Cf4F01E80796D2E85B041e74eEe9cd2A0020B14",
+  "GovernanceManagerRootstockCollectiveProxy": "0x15bB0663180920f26a54aC8dCfA269da3315d4D5",
+  "RewardDistributorRootstockCollective": "0xa413f3fF95C42b7De28a6385B005Bd670483D666",
+  "RewardDistributorRootstockCollectiveProxy": "0x768DF1BF149870DC4eD388A4C85aD30E57b9379D"
 }
