@@ -10,18 +10,24 @@ on:
     branches:
       - "main"
 
+permissions:
+  contents: read
+
 jobs:
   deep-test:
     runs-on: "ubuntu-latest"
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: "Check out the repo"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683" # v4.2.2
 
       - name: "Install Foundry"
-        uses: "foundry-rs/foundry-toolchain@v1"
+        uses: "foundry-rs/foundry-toolchain@de808b1eea699e761c404bda44ba8f21aba30b2c" # v1.3.1
 
       - name: "Install Bun"
-        uses: "oven-sh/setup-bun@v1"
+        uses: "oven-sh/setup-bun@f4d14e03ff726c06358e5557344e1da148b56cf7" # v1.2.2
 
       - name: "Install the Node.js dependencies"
         run: "bun install"
