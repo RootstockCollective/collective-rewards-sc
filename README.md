@@ -6,6 +6,7 @@
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/RootstockCollective/collective-rewards-sc/badge)](https://scorecard.dev/viewer/?uri=github.com/RootstockCollective/collective-rewards-sc)
 
 A set of Solidity smart [contracts](./specs/CONTRACTS.md), to implement builder incentives and staker rewards mechanisms to be integrated with the DAO. For technical detail, please refer to the [specifications](./specs/SPECIFICATION.md).
 
