@@ -102,7 +102,10 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice contract initializer
-     * @param rewardToken_ address of the token rewarded to builder and voters, only standard ERC20 MUST be used
+     * @param rewardToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20
+     * standard are supported.
+     * @notice For more info on supported tokens, see:
+     * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
      * @param builderRegistry_ address of the builder registry contract
      */
     function initialize(address rewardToken_, address builderRegistry_) external initializer {

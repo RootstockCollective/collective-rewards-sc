@@ -133,7 +133,10 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice contract initializer
      * @param governanceManager_ contract with permissioned roles
-     * @param rewardToken_ address of the token rewarded to builder and voters, only standard ERC20 MUST be used
+     * @param rewardToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20
+     * standard are supported.
+     * @notice For more info on supported tokens, see:
+     * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
      * @param stakingToken_ address of the staking token for builder and voters
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
