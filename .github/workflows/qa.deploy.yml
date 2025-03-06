@@ -6,9 +6,7 @@ on:
   pull_request:
     types: [labeled] # Triggered by a label in a PR
 
-permissions:
-  contents: read
-  actions: read
+permissions: read-all
 
 env:
   CHAIN_ID: 31
