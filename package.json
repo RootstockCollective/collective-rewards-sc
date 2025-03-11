@@ -69,7 +69,7 @@
     "test:invariant": "forge test --match-test invariant",
     "test:integration": "hardhat test",
     "test:fork": "forge test --fork-url $RPC_URL_FORK --match-test fork",
-    "test:coverage": "forge coverage",
+    "test:coverage": "forge coverage --no-match-test '(fork)'",
     "test:coverage:report": "sh ./coverage.sh",
     "prepare": "husky",
     "docgen": "forge doc && bun run prettier:write"

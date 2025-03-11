@@ -1,5 +1,5 @@
 # generates lcov.info
-forge coverage --report lcov
+forge coverage --no-match-test '(fork)' --report lcov
 
 EXCLUDE="*test* *mock* *node_modules* *script*"
 lcov \
