@@ -1,0 +1,25 @@
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  # Maintain dependencies for npm
+  - package-ecosystem: "npm"
+    # Look for `package.json` and `lock` files in the `root` directory
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: npm
+    directory: /utils/solhint-plugin
+    schedule:
+      interval: daily
+
+  # Maintain dependencies for Forge
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "daily"
