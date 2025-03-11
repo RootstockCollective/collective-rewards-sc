@@ -368,7 +368,13 @@ Flows covered:
 
 ### Reward token
 
-The reward token for the collective incentives program is `RIF`.
+The reward token for the collective incentives program is `RIF`. Only tokens that adhere to the ERC-20 standard are supported.
+Unsupported Token Types:
+
+- Fee-on-transfer tokens (e.g., those that deduct a fee per transfer).
+- Rebasing tokens (e.g., tokens that dynamically adjust balances).
+
+Using these unsupported token types may disrupt the reward distribution logic, leading to unexpected behavior. Ensure that only standard ERC-20 tokens are used.
 
 ### Staking token
 
