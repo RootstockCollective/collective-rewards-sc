@@ -7,8 +7,7 @@ import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/int
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { BuilderRegistryRootstockCollective } from "../builderRegistry/BuilderRegistryRootstockCollective.sol";
-import { ICollectiveRewardsCheckRootstockCollective } from
-    "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
+import { ICollectiveRewardsCheckRootstockCollective } from "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { CycleTimeKeeperRootstockCollective } from "./CycleTimeKeeperRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
@@ -150,12 +149,12 @@ contract BackersManagerRootstockCollective is
         uint32 cycleDuration_,
         uint24 cycleStartOffset_,
         uint32 distributionDuration_
-    )
-        external
-        initializer
-    {
+    ) external initializer {
         __CycleTimeKeeperRootstockCollective_init(
-            governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
+            governanceManager_,
+            cycleDuration_,
+            cycleStartOffset_,
+            distributionDuration_
         );
         rewardToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
@@ -180,8 +179,9 @@ contract BackersManagerRootstockCollective is
      * @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId_) public view override returns (bool) {
-        return interfaceId_ == type(ICollectiveRewardsCheckRootstockCollective).interfaceId
-            || super.supportsInterface(interfaceId_);
+        return
+            interfaceId_ == type(ICollectiveRewardsCheckRootstockCollective).interfaceId ||
+            super.supportsInterface(interfaceId_);
     }
 
     /**
@@ -191,7 +191,7 @@ contract BackersManagerRootstockCollective is
      * @param targetAddress_ address who wants to withdraw stakingToken
      * param value_ amount of stakingToken to withdraw, not used on current version
      */
-    function canWithdraw(address targetAddress_, uint256 /*value_*/ ) external view returns (bool) {
+    function canWithdraw(address targetAddress_, uint256 /*value_*/) external view returns (bool) {
         uint256 _allocation = backerTotalAllocation[targetAddress_];
         if (_allocation == 0) return true;
 
@@ -208,11 +208,7 @@ contract BackersManagerRootstockCollective is
     function allocate(
         GaugeRootstockCollective gauge_,
         uint256 allocation_
-    )
-        external
-        notInDistributionPeriod
-        onlyOptedInBacker
-    {
+    ) external notInDistributionPeriod onlyOptedInBacker {
         (uint256 _newBackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
             gauge_,
             allocation_,
@@ -235,11 +231,7 @@ contract BackersManagerRootstockCollective is
     function allocateBatch(
         GaugeRootstockCollective[] calldata gauges_,
         uint256[] calldata allocations_
-    )
-        external
-        notInDistributionPeriod
-        onlyOptedInBacker
-    {
+    ) external notInDistributionPeriod onlyOptedInBacker {
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
         // TODO: check length < MAX or let revert by out of gas?
@@ -384,11 +376,9 @@ contract BackersManagerRootstockCollective is
      * @notice This method allows ongoing v1 proposals to be executed after the BackersManager upgrade to v2, by keeping
      * compatibility with the v1 interface.
      */
-    function communityApproveBuilder(address builder_)
-        external
-        onlyValidChanger
-        returns (GaugeRootstockCollective gauge_)
-    {
+    function communityApproveBuilder(
+        address builder_
+    ) external onlyValidChanger returns (GaugeRootstockCollective gauge_) {
         return builderRegistry.communityApproveBuilder(builder_);
     }
 
@@ -414,15 +404,15 @@ contract BackersManagerRootstockCollective is
         uint256 totalPotentialReward_,
         uint256 timeUntilNextCycle_,
         BuilderRegistryRootstockCollective builderRegistry_
-    )
-        internal
-        returns (uint256 newBackerTotalAllocation_, uint256 newTotalPotentialReward_)
-    {
+    ) internal returns (uint256 newBackerTotalAllocation_, uint256 newTotalPotentialReward_) {
         // reverts if builder was not activated or approved by the community
         builderRegistry_.validateWhitelisted(gauge_);
 
-        (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
-            gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
+        (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) = gauge_.allocate(
+            msg.sender,
+            allocation_,
+            timeUntilNextCycle_
+        );
 
         // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
         if (builderRegistry_.isGaugeHalted(address(gauge_))) {
@@ -456,9 +446,7 @@ contract BackersManagerRootstockCollective is
         address backer_,
         uint256 newBackerTotalAllocation_,
         uint256 newTotalPotentialReward_
-    )
-        internal
-    {
+    ) internal {
         backerTotalAllocation[backer_] = newBackerTotalAllocation_;
         totalPotentialReward = newTotalPotentialReward_;
 
@@ -547,20 +535,23 @@ contract BackersManagerRootstockCollective is
         uint256 periodFinish_,
         uint256 cycleStart_,
         uint256 cycleDuration_
-    )
-        internal
-        returns (uint256)
-    {
+    ) internal returns (uint256) {
         uint256 _rewardShares = gauge_.rewardShares();
         // [N] = [N] * [N] / [N]
         uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
         // [N] = [N] * [N] / [N]
         uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
-        uint256 _backerRewardPercentage =
-            builderRegistry.getRewardPercentageToApply(builderRegistry.gaugeToBuilder(gauge_));
-        return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
-            _amountERC20, _backerRewardPercentage, periodFinish_, cycleStart_, cycleDuration_
+        uint256 _backerRewardPercentage = builderRegistry.getRewardPercentageToApply(
+            builderRegistry.gaugeToBuilder(gauge_)
         );
+        return
+            gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
+                _amountERC20,
+                _backerRewardPercentage,
+                periodFinish_,
+                cycleStart_,
+                cycleDuration_
+            );
     }
 
     /**
@@ -586,7 +577,7 @@ contract BackersManagerRootstockCollective is
     function haltGaugeShares(GaugeRootstockCollective gauge_) external onlyBuilderRegistry notInDistributionPeriod {
         // allocations are not considered for the reward's distribution
         totalPotentialReward -= gauge_.rewardShares();
-        builderRegistry.setHaltedGaugeLastPeriodFinish(gauge_, _periodFinish);
+        builderRegistry.setHaltedGaugeLastPeriodFinish(gauge_, _periodFinish); // FIXME: circular calls with builderRegistry. move to builderRegistry
     }
 
     /**
@@ -605,7 +596,11 @@ contract BackersManagerRootstockCollective is
         if (_builderRegistry.haltedGaugeLastPeriodFinish(gauge_) < _periodFinish) {
             (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
             totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-                0, 0, _builderRegistry.haltedGaugeLastPeriodFinish(gauge_), _cycleStart, _cycleDuration
+                0,
+                0,
+                _builderRegistry.haltedGaugeLastPeriodFinish(gauge_),
+                _cycleStart,
+                _cycleDuration
             );
         } else {
             // halt and resume were in the same cycle, we don't update the shares
