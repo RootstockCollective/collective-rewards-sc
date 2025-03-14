@@ -269,8 +269,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
          *         1 -> 3 CommunityApproved -> Active
          */
         BuilderState _state = builderState[builder_];
+        if (_state == BuilderState.KYCApproved || _state == BuilderState.Active) revert AlreadyKYCApproved();
         BuilderState _targetState = BuilderState(uint8(_state) + 2);
-
         if (backerRewardPercentage[builder_].cooldownEndTime == 0) {
             revert NotActivated(); // the initial kyc builder acitvation sets always cooldownEndTime to non-zero value
         }
