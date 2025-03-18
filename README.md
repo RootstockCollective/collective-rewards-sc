@@ -352,19 +352,6 @@ Generate coverage report:
 
 1. Open `coverage/index.html`
 
-#### Fork Tests: migration v1 -> v2
-
-V1 BackersManager contract hit the maximum contract size, and a split between `BackerManager` and `BuilderRegistry` was necessary to
-allow adding new features. Fork tests are run against a snapshot of the RSK Testnet/Mainnet at a specific block. These
-tests ensure that v2 contract deployments behave as expected once deployed on the RSK blockchain and interact correctly
-with existing live components.
-
-Flows covered:
-
-- `BackerManager` Upgrade is successful
-- `BuilderRegistry` Deploy & migration is successful
-- `Gauges` Upgrade is successful
-
 ## Glossary
 
 ### Reward token
