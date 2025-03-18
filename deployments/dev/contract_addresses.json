@@ -8,7 +8,6 @@
     "GaugeRootstockCollectiveImplementation": "0xF7985B227e87FF8f4592D145B9CAf49C354BbF49",
     "GovernanceManagerRootstockCollective": "0x42418ff336BD82347B25371d14D4Cad38f921a09",
     "GovernanceManagerRootstockCollectiveProxy": "0xB2D7838FE4c67480EE3B1C07e6a34f80d12aea1e",
-    "MigrationV2": "0x8c588427A392073b6AbeC246de4b60fCe1Ba5129",
     "RewardDistributorRootstockCollective": "0x314C193620DdD1B25F9753d438C3f7a45C2DBcE4",
     "RewardDistributorRootstockCollectiveProxy": "0x35EB7d3e0907BCB838fbA3b08C4c65DB5431169f"
   }
