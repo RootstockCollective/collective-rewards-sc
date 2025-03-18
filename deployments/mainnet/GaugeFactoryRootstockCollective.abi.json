@@ -1,0 +1,57 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "beacon_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "rewardToken_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "beacon",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "createGauge",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "gauge_",
+        "type": "address",
+        "internalType": "contract GaugeRootstockCollective"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "rewardToken",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  }
+]
