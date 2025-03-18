@@ -21,6 +21,8 @@ jobs:
 
       - name: "Install Foundry"
         uses: "foundry-rs/foundry-toolchain@de808b1eea699e761c404bda44ba8f21aba30b2c" # v1.3.1
+        with:
+          version: stable
 
       - name: "Install Bun"
         uses: "oven-sh/setup-bun@f4d14e03ff726c06358e5557344e1da148b56cf7" # v1.2.2
@@ -44,6 +46,8 @@ jobs:
 
       - name: "Install Foundry"
         uses: "foundry-rs/foundry-toolchain@de808b1eea699e761c404bda44ba8f21aba30b2c" # v1.3.1
+        with:
+          version: stable
 
       - name: "Install Bun"
         uses: "oven-sh/setup-bun@f4d14e03ff726c06358e5557344e1da148b56cf7" # v1.2.2
@@ -68,6 +72,8 @@ jobs:
 
       - name: "Install Foundry"
         uses: "foundry-rs/foundry-toolchain@de808b1eea699e761c404bda44ba8f21aba30b2c" # v1.3.1
+        with:
+          version: stable
 
       - name: "Install Bun"
         uses: "oven-sh/setup-bun@f4d14e03ff726c06358e5557344e1da148b56cf7" # v1.2.2
