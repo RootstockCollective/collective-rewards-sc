@@ -35,7 +35,7 @@
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
-    "@typescript-eslint/parser": "^7.16.0",
+    "@typescript-eslint/parser": "^8.27.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-mocha": "^10.4.3",
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
