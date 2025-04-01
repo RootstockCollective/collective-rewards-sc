@@ -50,7 +50,7 @@ contract CommunityApproveBuilderChangerTest is BaseTest {
         //  THEN gauge is added on BackersManagerRootstockCollective
         assertEq(address(builderRegistry.builderToGauge(_newBuilder)), address(_newGauge));
         //  THEN the new builder is community approved
-        BuilderState builderState = builderRegistry.builderState(_newBuilder);
-        assertEq(uint8(BuilderState.CommunityApproved), uint8(builderState));
+        BuilderState _builderState = builderRegistry.builderState(_newBuilder);
+        assertEq(uint8(BuilderState.CommunityApproved), uint8(_builderState));
     }
 }

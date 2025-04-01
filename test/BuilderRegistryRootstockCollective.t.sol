@@ -821,89 +821,87 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         builderRegistry.permitBuilder(0.1 ether);
     }
 
-    //     /**
-    //      * SCENARIO: de-whitelisted builder can be paused and unpaused
-    //      */
-    //     function test_PauseDewhitelistedBuilder() public {
-    //         // GIVEN a de-whitelisted builder
-    //         vm.prank(governor);
-    //         builderRegistry.dewhitelistBuilder(builder);
+    // /**
+    //  * SCENARIO: de-whitelisted builder can be paused and unpaused // QUESTION: why? if dewhitelisted then it's never going to return so no point in pausing
+    //  */
+    // function test_PauseDewhitelistedBuilder() public {
+    //     // GIVEN a de-whitelisted builder
+    //     vm.prank(governor);
+    //     builderRegistry.dewhitelistBuilder(builder);
 
-    //         // AND kycApprover calls pauseBuilder
-    //         vm.startPrank(kycApprover);
-    //         builderRegistry.pauseBuilder(builder, "paused");
-    //         (, , bool _communityApproved, bool _paused, , , ) = builderRegistry.builderState(builder);
-    //         // THEN builder is not whitelisted
-    //         assertEq(_communityApproved, false);
-    //         // THEN builder is paused
-    //         assertEq(_paused, true);
+    //     // AND kycApprover calls pauseBuilder
+    //     vm.startPrank(kycApprover);
+    //     builderRegistry.pauseBuilder(builder, "paused");
+    //     (, , bool _communityApproved, bool _paused, , , ) = builderRegistry.builderState(builder);
+    //     // THEN builder is not whitelisted
+    //     assertEq(_communityApproved, false);
+    //     // THEN builder is paused
+    //     assertEq(_paused, true);
 
-    //         // AND kycApprover calls unpauseBuilder
-    //         builderRegistry.unpauseBuilder(builder);
-    //         (, , _communityApproved, _paused, , , ) = builderRegistry.builderState(builder);
-    //         // THEN builder is still not community approved
-    //         assertEq(_communityApproved, false);
-    //         // THEN builder is not paused
-    //         assertEq(_paused, false);
-    //     }
+    //     // AND kycApprover calls unpauseBuilder
+    //     builderRegistry.unpauseBuilder(builder);
+    //     (, , _communityApproved, _paused, , , ) = builderRegistry.builderState(builder);
+    //     // THEN builder is still not community approved
+    //     assertEq(_communityApproved, false);
+    //     // THEN builder is not paused
+    //     assertEq(_paused, false);
+    // }
 
-    //     /**
-    //      * SCENARIO: paused builder can be de-whitelisted
-    //      */
-    //     function test_DewhitelistPausedBuilder() public {
-    //         // GIVEN paused builder
-    //         vm.prank(kycApprover);
-    //         builderRegistry.pauseBuilder(builder, "paused");
+    /**
+     * SCENARIO: paused builder can be de-whitelisted
+     */
+    function test_DewhitelistPausedBuilder() public {
+        // GIVEN paused builder
+        vm.prank(kycApprover);
+        builderRegistry.pauseBuilder(builder, "paused reason");
 
-    //         // AND governor calls dewhitelistBuilder
-    //         vm.prank(governor);
-    //         builderRegistry.dewhitelistBuilder(builder);
-    //         (, , bool _communityApproved, bool _paused, , , ) = builderRegistry.builderState(builder);
-    //         // THEN builder is paused
-    //         assertEq(_paused, true);
-    //         // THEN builder is not community approved
-    //         assertEq(_communityApproved, false);
-    //     }
+        // AND governor calls dewhitelistBuilder
+        vm.prank(governor);
+        builderRegistry.dewhitelistBuilder(builder);
+        BuilderState _builderState = builderRegistry.builderState(builder);
+        // THEN builder is paused
+        assertEq(uint8(_builderState), uint8(BuilderState.DEAD));
+    }
 
-    //     /**
-    //      * SCENARIO: de-whitelisted builder can be KYC revoked
-    //      */
-    //     function test_KYCRevokeDewhitelistedBuilder() public {
-    //         // GIVEN a de-whitelisted builder
-    //         vm.prank(governor);
-    //         builderRegistry.dewhitelistBuilder(builder);
+    /**
+     * SCENARIO: de-whitelisted builder can be KYC revoked // QUESTION: why? if dewhitelisted then it's never going to return
+     */
+    // function test_KYCRevokeDewhitelistedBuilder() public {
+    //     // GIVEN a de-whitelisted builder
+    //     vm.prank(governor);
+    //     builderRegistry.dewhitelistBuilder(builder);
 
-    //         // AND kycApprover calls revokeBuilderKYC
-    //         vm.startPrank(kycApprover);
-    //         builderRegistry.revokeBuilderKYC(builder);
-    //         (, bool _kycApproved, bool _communityApproved, , , , ) = builderRegistry.builderState(builder);
-    //         // THEN builder is not community approved
-    //         assertEq(_communityApproved, false);
-    //         // THEN builder is not kyc approved
-    //         assertEq(_kycApproved, false);
-    //     }
+    //     // AND kycApprover calls revokeBuilderKYC
+    //     vm.startPrank(kycApprover);
+    //     builderRegistry.revokeBuilderKYC(builder);
+    //     (, bool _kycApproved, bool _communityApproved, , , , ) = builderRegistry.builderState(builder);
+    //     // THEN builder is not community approved
+    //     assertEq(_communityApproved, false);
+    //     // THEN builder is not kyc approved
+    //     assertEq(_kycApproved, false);
+    // }
 
-    //     /**
-    //      * SCENARIO: de-whitelisted and KYC revoked builder is KYC approved again
-    //      * Its gauge remains halted
-    //      */
-    //     function test_KYCApproveDewhitelistedBuilder() public {
-    //         // GIVEN a de-whitelisted and KYC revoked builder
-    //         vm.prank(governor);
-    //         builderRegistry.dewhitelistBuilder(builder);
-    //         vm.startPrank(kycApprover);
-    //         builderRegistry.revokeBuilderKYC(builder);
+    /**
+     * SCENARIO: de-whitelisted and KYC revoked builder is KYC approved again // QUESTION: afaik this is not part of the flow. dewhitelisting a builder is irreversible
+     * Its gauge remains halted
+     */
+    // function test_KYCApproveDewhitelistedBuilder() public {
+    //     // GIVEN a de-whitelisted and KYC revoked builder
+    //     vm.prank(governor);
+    //     builderRegistry.dewhitelistBuilder(builder);
+    //     vm.startPrank(kycApprover);
+    //     builderRegistry.revokeBuilderKYC(builder);
 
-    //         // AND kycApprover calls approveBuilderKYC
-    //         vm.startPrank(kycApprover);
-    //         builderRegistry.approveBuilderKYC(builder);
+    //     // AND kycApprover calls approveBuilderKYC
+    //     vm.startPrank(kycApprover);
+    //     builderRegistry.approveBuilderKYC(builder);
 
-    //         (, bool _kycApproved, bool _communityApproved, , , , ) = builderRegistry.builderState(builder);
-    //         // THEN builder is not community approved
-    //         assertEq(_communityApproved, false);
-    //         // THEN builder is kyc approved
-    //         assertEq(_kycApproved, true);
-    //         // THEN gauge remains halted
-    //         assertEq(builderRegistry.isGaugeHalted(address(gauge)), true);
-    //     }
+    //     (, bool _kycApproved, bool _communityApproved, , , , ) = builderRegistry.builderState(builder);
+    //     // THEN builder is not community approved
+    //     assertEq(_communityApproved, false);
+    //     // THEN builder is kyc approved
+    //     assertEq(_kycApproved, true);
+    //     // THEN gauge remains halted
+    //     assertEq(builderRegistry.isGaugeHalted(address(gauge)), true);
+    // }
 }

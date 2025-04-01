@@ -2,7 +2,8 @@
 pragma solidity 0.8.20;
 
 import { BaseTest } from "./BaseTest.sol";
-import { BuilderErrors } from "../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
+
+// import { BuilderErrors } from "../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 
 contract SetBackerRewardPercentageTest is BaseTest {
     // // -----------------------------
