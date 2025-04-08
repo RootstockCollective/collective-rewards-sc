@@ -37,7 +37,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
     error NotAuthorized();
-    error InvalidAddress(address addr);
+    error InvalidAddress(address addr_);
 
     // -----------------------------
     // ----------- Events ----------
@@ -123,7 +123,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     /// @notice map of builders reward receiver replacement, used as a buffer until the new address is accepted
     mapping(address builder => address update) public rewardReceiverUpdate;
     /// @notice map of builder's backers reward percentage data
-    mapping(address builder => RewardPercentageData rewardPercentageData) public backerRewardPercentage; // FIXME: should this be in the BackersManager contract insted?
+    mapping(address builder => RewardPercentageData rewardPercentageData) public backerRewardPercentage; // FIXME:
+        // should this be in the BackersManager contract insted?
     /// @notice array of all the operational gauges
     EnumerableSet.AddressSet internal _gauges;
     /// @notice array of all the halted gauges
@@ -162,7 +163,10 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         address gaugeFactory_,
         address rewardDistributor_,
         uint128 rewardPercentageCooldown_
-    ) external initializer {
+    )
+        external
+        initializer
+    {
         if (address(backersManager_) == address(0)) revert InvalidAddress(address(backersManager_));
         if (gaugeFactory_ == address(0)) revert InvalidAddress(gaugeFactory_);
         __Upgradeable_init(backersManager_.governanceManager());
@@ -179,7 +183,10 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function setHaltedGaugeLastPeriodFinish(
         GaugeRootstockCollective gauge_,
         uint256 periodFinish_
-    ) external onlyBackersManager {
+    )
+        external
+        onlyBackersManager
+    {
         haltedGaugeLastPeriodFinish[gauge_] = periodFinish_;
     }
 
@@ -243,7 +250,10 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         address builder_,
         address rewardReceiver_,
         uint64 rewardPercentage_
-    ) external onlyKycApprover {
+    )
+        external
+        onlyKycApprover
+    {
         _intialiseBuilder(builder_, rewardReceiver_, rewardPercentage_);
     }
 
@@ -297,14 +307,17 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param builder_ address of the builder
      * @return gauge_ gauge contract
      */
-    function communityApproveBuilder(
-        address builder_
-    ) external onlyValidChangerOrBackersManager returns (GaugeRootstockCollective gauge_) {
+    function communityApproveBuilder(address builder_)
+        external
+        onlyValidChangerOrBackersManager
+        returns (GaugeRootstockCollective gauge_)
+    {
         return _communityApproveBuilder(builder_);
     }
 
     /**
-     * @notice community ban builder. This process is effectively irreversible, as community approval requires a gauge to not exist fo given builder
+     * @notice community ban builder. This process is effectively irreversible, as community approval requires a gauge
+     * to not exist fo given builder
      * @dev reverts if it is not called by the governor address or authorized changer
      * reverts if it does not have a gauge associated
      * reverts if it is not community approved
@@ -435,11 +448,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         _rewardPercentageData.next = rewardPercentage_;
         _rewardPercentageData.cooldownEndTime = uint128(block.timestamp) + rewardPercentageCooldown;
 
-        emit BackerRewardPercentageUpdateScheduled(
-            msg.sender,
-            rewardPercentage_,
-            _rewardPercentageData.cooldownEndTime
-        );
+        emit BackerRewardPercentageUpdateScheduled(msg.sender, rewardPercentage_, _rewardPercentageData.cooldownEndTime);
 
         // write to storage
         backerRewardPercentage[msg.sender] = _rewardPercentageData;
@@ -491,11 +500,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         builderRewardReceiverReplacement[builder_] = _backersManagerV1.builderRewardReceiverReplacement(builder_);
 
         (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = _backersManagerV1.backerRewardPercentage(builder_);
-        backerRewardPercentage[builder_] = RewardPercentageData({
-            previous: _previous,
-            next: _next,
-            cooldownEndTime: _cooldownEndTime
-        });
+        backerRewardPercentage[builder_] =
+            RewardPercentageData({ previous: _previous, next: _next, cooldownEndTime: _cooldownEndTime });
 
         address _gauge = _backersManagerV1.builderToGauge(builder_);
         builderToGauge[builder_] = GaugeRootstockCollective(_gauge);
@@ -503,8 +509,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
         if (_backersManagerV1.isGaugeHalted(_gauge)) {
             _haltedGauges.add(_gauge);
-            haltedGaugeLastPeriodFinish[GaugeRootstockCollective(_gauge)] = _backersManagerV1
-                .haltedGaugeLastPeriodFinish(_gauge);
+            haltedGaugeLastPeriodFinish[GaugeRootstockCollective(_gauge)] =
+                _backersManagerV1.haltedGaugeLastPeriodFinish(_gauge);
         } else {
             _gauges.add(_gauge);
         }
