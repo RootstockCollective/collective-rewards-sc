@@ -1,9 +1,0 @@
-# directories
-artifacts
-cache
-cache_hardhat
-node_modules
-coverage
-broadcast
-out
-typechain-types
