@@ -41,6 +41,7 @@ contract BackersManagerRootstockCollective is
     error AlreadyOptedInRewards();
     error BackerHasAllocations();
     error InvalidAddress();
+    error RewardTokenNotApproved();
 
     // -----------------------------
     // ----------- Events ----------
@@ -565,11 +566,15 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice approves rewardTokens to a given gauge
      * @dev give full allowance when it is community approved and remove it when it is dewhitelisted
+     * reverts if the reward token contract returns false on the approval
      * @param gauge_ gauge contract to approve rewardTokens
      * @param value_ amount of rewardTokens to approve
      */
     function rewardTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
-        IERC20(rewardToken).approve(gauge_, value_);
+        if(IERC20(rewardToken).approve(gauge_, value_)) {
+            revert RewardTokenNotApproved();
+        }
+        
     }
 
     /**
