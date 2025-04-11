@@ -81,12 +81,6 @@ contract BackersManagerRootstockCollective is
         _;
     }
 
-    modifier onlyOptedInBacker() {
-        if (rewardsOptedOut[msg.sender]) {
-            revert BackerOptedOutRewards();
-        }
-        _;
-    }
 
     modifier onlyConfigurator() {
         governanceManager.validateConfigurator(msg.sender);
@@ -226,14 +220,7 @@ contract BackersManagerRootstockCollective is
      * @param gauge_ address of the gauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
      */
-    function allocate(
-        GaugeRootstockCollective gauge_,
-        uint256 allocation_
-    )
-        external
-        notInDistributionPeriod
-        onlyOptedInBacker
-    {
+    function allocate(GaugeRootstockCollective gauge_, uint256 allocation_) external notInDistributionPeriod {
         (uint256 _newBackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
             gauge_,
             allocation_,
@@ -259,7 +246,6 @@ contract BackersManagerRootstockCollective is
     )
         external
         notInDistributionPeriod
-        onlyOptedInBacker
     {
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
