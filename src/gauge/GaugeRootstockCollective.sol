@@ -263,6 +263,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      */
     function claimBackerReward(address rewardToken_, address backer_) public {
         if (msg.sender != backer_ && msg.sender != address(backersManager)) revert NotAuthorized();
+        if (backersManager.rewardsOptedOut(backer_)) {
+            revert BackersManagerRootstockCollective.BackerOptedOutRewards();
+        }
 
         RewardData storage _rewardData = rewardData[rewardToken_];
 
