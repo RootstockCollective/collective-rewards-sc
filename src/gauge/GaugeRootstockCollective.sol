@@ -57,6 +57,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         uint256 rewardRate;
         /// @notice most recent stored value of rewardPerToken [PREC]
         uint256 rewardPerTokenStored;
+        /// @notice last active cycle start stored value of rewardPerToken [PREC]
+        uint256 cycleRewardPerTokenStored;
         /// @notice missing rewards where there is not allocation [PREC]
         uint256 rewardMissing;
         /// @notice most recent timestamp contract has updated state
@@ -67,6 +69,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         mapping(address backer => uint256 rewardPerTokenPaid) backerRewardPerTokenPaid;
         /// @notice cached amount of rewardToken earned for a backer
         mapping(address backer => uint256 rewards) rewards;
+        /// @notice cached amount of rewardToken earned for a backer until the end of the last cycle
+        mapping(address backer => uint256 rewards) rewardsUntilLastCycle;
     }
 
     // -----------------------------
@@ -150,6 +154,15 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     }
 
     /**
+     * @notice gets cycle reward per token stored
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     */
+    function cycleRewardPerTokenStored(address rewardToken_) external view returns (uint256) {
+        return rewardData[rewardToken_].cycleRewardPerTokenStored;
+    }
+
+    /**
      * @notice gets last update time
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
@@ -174,6 +187,16 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      */
     function backerRewardPerTokenPaid(address rewardToken_, address backer_) external view returns (uint256) {
         return rewardData[rewardToken_].backerRewardPerTokenPaid[backer_];
+    }
+
+    /**
+     * @notice gets rewards until last cycle
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param backer_ address of the backer
+     */
+    function rewardsUntilLastCycle(address rewardToken_, address backer_) external view returns (uint256) {
+        return rewardData[rewardToken_].rewardsUntilLastCycle[backer_];
     }
 
     /**
@@ -238,6 +261,21 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         return _earned(rewardToken_, backer_, backersManager.periodFinish());
     }
 
+    function claimableBackerRewards(address rewardToken_, address backer_) public view returns (uint256) {
+        RewardData storage _rewardData = rewardData[rewardToken_];
+
+        if (_rewardData.cycleRewardPerTokenStored >= _rewardData.backerRewardPerTokenPaid[backer_]) {
+            uint256 _currentReward = UtilsLib._mulPrec(
+                allocationOf[backer_],
+                _rewardData.cycleRewardPerTokenStored - _rewardData.backerRewardPerTokenPaid[backer_]
+            );
+
+            return _rewardData.rewards[backer_] + _currentReward;
+        }
+
+        return _rewardData.rewardsUntilLastCycle[backer_];
+    }
+
     /**
      * @notice claim rewards for a `backer_` address
      * @dev reverts if is not called by the `backer_` or the backersManager
@@ -262,11 +300,13 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
         _updateRewards(rewardToken_, backer_, backersManager.periodFinish());
 
-        uint256 _reward = _rewardData.rewards[backer_];
-        if (_reward > 0) {
-            _rewardData.rewards[backer_] = 0;
-            _transferRewardToken(rewardToken_, backer_, _reward);
-            emit BackerRewardsClaimed(rewardToken_, backer_, _reward);
+        uint256 _rewardsUntilLastCycle = _rewardData.rewardsUntilLastCycle[backer_];
+        uint256 _rewards = _rewardData.rewards[backer_] - _rewardsUntilLastCycle;
+        if (_rewardsUntilLastCycle > 0) {
+            _rewardData.rewards[backer_] = _rewards;
+            _rewardData.rewardsUntilLastCycle[backer_] = 0;
+            _transferRewardToken(rewardToken_, backer_, _rewardsUntilLastCycle);
+            emit BackerRewardsClaimed(rewardToken_, backer_, _rewardsUntilLastCycle);
         }
     }
 
@@ -310,6 +350,15 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     function moveBuilderUnclaimedRewards(address to_) external onlyAuthorizedContract {
         _moveBuilderUnclaimedRewards(rewardToken, to_);
         _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
+    }
+
+    /**
+     * @notice update cycle rewards per token stored
+     * @param periodFinish_ timestamp end of current rewards period
+     */
+    function updateCycleRewardPerTokenStored(uint256 periodFinish_) external {
+        _updateCycleRewardPerTokenStored(rewardToken, periodFinish_);
+        _updateCycleRewardPerTokenStored(UtilsLib._COINBASE_ADDRESS, periodFinish_);
     }
 
     /**
@@ -606,7 +655,34 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         _rewardData.rewardPerTokenStored = _rewardPerToken(rewardToken_, periodFinish_);
         _rewardData.lastUpdateTime = _lastTimeRewardApplicable(periodFinish_);
         _rewardData.rewards[backer_] = _earned(rewardToken_, backer_, periodFinish_);
+
+        if (_rewardData.cycleRewardPerTokenStored >= _rewardData.backerRewardPerTokenPaid[backer_]) {
+            uint256 _currentReward = UtilsLib._mulPrec(
+                allocationOf[backer_], _rewardData.rewardPerTokenStored - _rewardData.cycleRewardPerTokenStored
+            );
+
+            _rewardData.rewardsUntilLastCycle[backer_] = _rewardData.rewards[backer_] - _currentReward;
+        }
+        if (builderRegistry.isGaugeHalted(address(this))) {
+            uint256 haltedGaugeLastPeriodFinish =
+                builderRegistry.haltedGaugeLastPeriodFinish(GaugeRootstockCollective(address(this)));
+            if (block.timestamp >= haltedGaugeLastPeriodFinish) {
+                _rewardData.rewardsUntilLastCycle[backer_] = _rewardData.rewards[backer_];
+            }
+        }
+
         _rewardData.backerRewardPerTokenPaid[backer_] = _rewardData.rewardPerTokenStored;
+    }
+
+    /**
+     * @notice update cycle rewards per token stored
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param periodFinish_ timestamp end of current rewards period
+     */
+    function _updateCycleRewardPerTokenStored(address rewardToken_, uint256 periodFinish_) internal {
+        RewardData storage _rewardData = rewardData[rewardToken_];
+        _rewardData.cycleRewardPerTokenStored = _rewardPerToken(rewardToken_, periodFinish_);
     }
 
     /**
