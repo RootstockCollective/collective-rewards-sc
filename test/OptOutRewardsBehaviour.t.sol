@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest, BackersManagerRootstockCollective } from "./BaseTest.sol";
+import { BaseTest, BackersManagerRootstockCollective, GaugeRootstockCollective } from "./BaseTest.sol";
 
 contract OptOutRewardsBehaviour is BaseTest {
     // -----------------------------
@@ -11,6 +11,10 @@ contract OptOutRewardsBehaviour is BaseTest {
     event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_);
     event BackerRewardsOptedOut(address indexed backer_);
     event BackerRewardsOptedIn(address indexed backer_);
+    event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
+    event OptedOutBackerRewardsCollected(address indexed rewardToken_, address indexed backer_, uint256 amount_);
+
+    GaugeRootstockCollective[] public gauges;
 
     /**
      * SCENARIO: Can only OptOut if not already opted out
@@ -62,19 +66,6 @@ contract OptOutRewardsBehaviour is BaseTest {
     }
 
     /**
-     * SCENARIO: OptOut Backer cannot allocate
-     */
-    function test_OptOutAllocateRevert() public {
-        // GIVEN alice OptOut
-        vm.startPrank(alice);
-        backersManager.optOutRewards(alice);
-        //  WHEN alice tries to allocate
-        //   THEN tx reverts because OptedOut
-        vm.expectRevert(BackersManagerRootstockCollective.BackerOptedOutRewards.selector);
-        backersManager.allocate(gauge, 0.1 ether);
-    }
-
-    /**
      * SCENARIO: Backer can only OptOut if has no allocations
      */
     function test_OptOutWithAllocation() public {
@@ -94,21 +85,48 @@ contract OptOutRewardsBehaviour is BaseTest {
     }
 
     /**
-     * SCENARIO: OptIn Backer can allocate
+     * SCENARIO: OptOut Backer can allocate but not claim
      */
-    function test_OptInAndAllocate() public {
+    function test_OptOutAndClaimReverts() public {
+        gauges.push(gauge);
         // GIVEN alice OptOut
-        vm.startPrank(alice);
+        vm.prank(alice);
         backersManager.optOutRewards(alice);
-        //  WHEN alice tries to allocate
-        //   THEN tx reverts because OptedOut
+        //  AND alice allocates
+        vm.prank(alice);
+        backersManager.allocate(gauge, 0.1 ether);
+        _distribute(100 ether, 10 ether);
+        _skipAndStartNewCycle();
+
+        // THEN alice should not be able to claim
         vm.expectRevert(BackersManagerRootstockCollective.BackerOptedOutRewards.selector);
+        vm.prank(alice);
+        backersManager.claimBackerRewards(gauges);
+    }
+
+    /**
+     * SCENARIO: OptOut Backer rewards can be reused by the backers manager in the next distribution
+     */
+    function test_OptOutRewardsReused() public {
+        // uint256 _aliceRewards = gauge.rewards(address(rewardToken), alice);
+        gauges.push(gauge);
+        // GIVEN alice OptOut
+        vm.prank(alice);
+        backersManager.optOutRewards(alice);
+        //  AND alice allocates
+        vm.prank(alice);
         backersManager.allocate(gauge, 0.1 ether);
-        //  WHEN alice OptIn
-        backersManager.optInRewards(alice);
-        //  THEN alice can allocate
-        vm.expectEmit();
-        emit NewAllocation(alice, address(gauge), 0.1 ether);
-        backersManager.allocate(gauge, 0.1 ether);
+        _distribute(100 ether, 10 ether);
+        _skipAndStartNewCycle();
+
+        // THEN alice rewards should be sent to the backers manager
+        // TODO: improve testing, for POC is ok.
+        vm.assertEq(address(backersManager).balance, 0);
+        vm.assertEq(rewardToken.balanceOf(address(backersManager)), 0);
+
+        backersManager.collectOptedOutRewards(alice, gauges);
+
+        vm.assertGt(address(backersManager).balance, 0);
+        vm.assertGt(rewardToken.balanceOf(address(backersManager)), 0);
     }
 }
