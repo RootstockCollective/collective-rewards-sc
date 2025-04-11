@@ -163,14 +163,18 @@ contract BackersManagerRootstockCollective is
     }
 
     /**
-     * @notice contract version 2 initializer
+     * @notice builder registry contract initializer
      * @param builderRegistry_ address of the builder registry contract
      */
-    function initializeV2(BuilderRegistryRootstockCollective builderRegistry_) external reinitializer(2) {
+    function initializeBuilderRegistry(BuilderRegistryRootstockCollective builderRegistry_) external {
         if (address(builderRegistry_) == address(0)) revert InvalidAddress();
 
         builderRegistry = builderRegistry_;
     }
+
+    // NOTE: This contract previously included an `initializeV2` function protected by `reinitializer(2)`,
+    // used to initialize `builderRegistry` during an upgrade to version 2.
+    // The function has been removed since the upgrade was already executed and it's no longer necessary.
 
     // -----------------------------
     // ---- External Functions -----

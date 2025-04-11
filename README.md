@@ -251,19 +251,19 @@ For development and testing purposes you may like to deploy some of the mock con
 #### mock token
 
 ```sh
-forge script script/MockToken.s.sol #the rest of the command arguments
+forge script script/test_mock/MockToken.s.sol #the rest of the command arguments
 ```
 
 should you like to number the the token in the name (for multiple tokens) use either an env var:
 
 ```sh
-MOCK_TOKEN_COUNTER=42 forge script script/MockToken.s.sol #the rest of the command arguments
+MOCK_TOKEN_COUNTER=42 forge script script/test_mock/MockToken.s.sol #the rest of the command arguments
 ```
 
 or a function signature that accepts this parameter:
 
 ```sh
-forge script script/MockToken.s.sol -s "run(uint)" 42 #the rest of the command arguments
+forge script script/test_mock/MockToken.s.sol -s "run(uint)" 42 #the rest of the command arguments
 ```
 
 #### mock change executor
