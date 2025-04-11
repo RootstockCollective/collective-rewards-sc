@@ -305,6 +305,17 @@ contract BackersManagerRootstockCollective is
         }
     }
 
+    function collectOptedOutRewards(address backer_, GaugeRootstockCollective[] memory gauges_) external {
+        uint256 _length = gauges_.length;
+        BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
+        for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
+            // reverts if builder was not activated or approved by the community
+            _builderRegistry.validateWhitelisted(gauges_[i]);
+
+            gauges_[i].collectOptedOutRewards(backer_);
+        }
+    }
+
     /**
      * @notice claims backer rewards from a batch of gauges
      * @param gauges_ array of gauges to claim

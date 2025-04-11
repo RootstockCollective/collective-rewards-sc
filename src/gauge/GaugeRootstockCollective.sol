@@ -31,6 +31,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
     event BackerRewardsClaimed(address indexed rewardToken_, address indexed backer_, uint256 amount_);
     event BuilderRewardsClaimed(address indexed rewardToken_, address indexed builder_, uint256 amount_);
+    event OptedOutBackerRewardsCollected(address indexed rewardToken_, address indexed backer_, uint256 amount_);
     event NewAllocation(address indexed backer_, uint256 allocation_);
     event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 backersAmount_);
 
@@ -272,6 +273,37 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             _rewardData.rewards[backer_] = 0;
             _transferRewardToken(rewardToken_, backer_, _reward);
             emit BackerRewardsClaimed(rewardToken_, backer_, _reward);
+        }
+    }
+
+    /**
+     * @notice collect rewards for a backer that opted out and sends them to the backersManager, so they are distributed
+     * in the next cycle
+     */
+    function collectOptedOutRewards(address backer_) public {
+        if (msg.sender != address(backersManager)) revert NotAuthorized();
+
+        address _rewardToken = rewardToken;
+        RewardData storage _rewardDataERC20 = rewardData[_rewardToken];
+        _updateRewards(_rewardToken, backer_, backersManager.periodFinish());
+
+        address _coinbase = UtilsLib._COINBASE_ADDRESS;
+        RewardData storage _rewardDataCoinbase = rewardData[_coinbase];
+        _updateRewards(_coinbase, backer_, backersManager.periodFinish());
+
+        uint256 _rewardERC20 = _rewardDataERC20.rewards[backer_];
+        uint256 _rewardCoinbase = _rewardDataCoinbase.rewards[backer_];
+        if (_rewardERC20 > 0) {
+            _rewardDataERC20.rewards[backer_] = 0;
+            IERC20(_rewardToken).approve(address(backersManager), _rewardERC20);
+            emit OptedOutBackerRewardsCollected(_rewardToken, backer_, _rewardERC20);
+        }
+        if (_rewardCoinbase > 0) {
+            _rewardDataCoinbase.rewards[backer_] = 0;
+            emit OptedOutBackerRewardsCollected(_coinbase, backer_, _rewardCoinbase);
+        }
+        if (_rewardERC20 != 0 || _rewardCoinbase != 0) {
+            backersManager.notifyRewardAmount{ value: _rewardCoinbase }(_rewardERC20);
         }
     }
 
