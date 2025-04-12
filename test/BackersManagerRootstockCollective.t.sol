@@ -113,7 +113,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.rewardTokenApprove(address(gauge), type(uint256).max);
 
         // Should revert, as the allowance is not negated before approving a new amount
-        vm.expectRevert(BackersManagerRootstockCollective.RewardTokenNotApproved.selector);
+vm.expectRevert(BackersManagerRootstockCollective.RewardTokenNotApproved.selector);
         backersManager.rewardTokenApprove(address(gauge), type(uint256).max);
     }
 
