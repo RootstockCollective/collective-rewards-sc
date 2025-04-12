@@ -101,6 +101,23 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
+     * SCENARIO: should revert if the reward token approval returns false
+     * @dev during the initial setup, the contract was already approved for a spending allowance greater than zero,
+     * and the mock reward token implements approve() logic which forces users to negate the allowance before approving a new quantity of allowance
+     * The function will revert if called before negating the previous allowance
+     */
+    function test_RevertRewardTokenApprove() public {
+        // Should not revert, as the allowance is negated before approving a new amount
+        vm.startPrank(address(builderRegistry));
+        backersManager.rewardTokenApprove(address(gauge), 0);
+        backersManager.rewardTokenApprove(address(gauge), type(uint256).max);
+
+        // Should revert, as the allowance is not negated before approving a new amount
+        vm.expectRevert(BackersManagerRootstockCollective.RewardTokenNotApproved.selector);
+        backersManager.rewardTokenApprove(address(gauge), type(uint256).max);
+    }
+
+    /**
      * SCENARIO: alice and bob allocate for 2 builders and variables are updated
      */
     function test_AllocateBatch() public {
@@ -483,8 +500,11 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         allocationsArray[1] = 1 ether;
         //  AND 22 gauges created
         for (uint256 i = 0; i < 20; i++) {
-            GaugeRootstockCollective _newGauge =
-                _whitelistBuilder(makeAddr(string(abi.encode(i + 10))), builder, 1 ether);
+            GaugeRootstockCollective _newGauge = _whitelistBuilder(
+                makeAddr(string(abi.encode(i + 10))),
+                builder,
+                1 ether
+            );
             allocationsArray.push(1 ether);
 
             // THEN gauges length increase
@@ -1551,8 +1571,13 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
             _newOffset
         );
 
-        (uint32 _previousDuration, uint32 _nextDuration, uint64 _previousStart, uint64 _nextStart, uint24 _offset) =
-            backersManager.cycleData();
+        (
+            uint32 _previousDuration,
+            uint32 _nextDuration,
+            uint64 _previousStart,
+            uint64 _nextStart,
+            uint24 _offset
+        ) = backersManager.cycleData();
 
         // THEN previous cycle duration is 1 week
         assertEq(_previousDuration, 1 weeks);
