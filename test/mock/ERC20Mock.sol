@@ -7,7 +7,7 @@ string constant DEFAULT_NAME = "ERC20Mock";
 string constant DEFAULT_SYMBOL = "E20M";
 
 contract ERC20Mock is ERC20 {
-    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) {}
+    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) { }
 
     function mint(address account_, uint256 amount_) external {
         _mint(account_, amount_);

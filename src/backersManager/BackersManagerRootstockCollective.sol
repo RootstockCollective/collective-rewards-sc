@@ -571,10 +571,9 @@ contract BackersManagerRootstockCollective is
      * @param value_ amount of rewardTokens to approve
      */
     function rewardTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
-        if(!IERC20(rewardToken).approve(gauge_, value_)) {
+        if (!IERC20(rewardToken).approve(gauge_, value_)) {
             revert RewardTokenNotApproved();
         }
-        
     }
 
     /**
