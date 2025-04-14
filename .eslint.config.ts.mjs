@@ -1,5 +1,4 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import globals from "globals";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import mocha from "eslint-plugin-mocha";
 import tsParser from "@typescript-eslint/parser";
@@ -26,29 +25,7 @@ export default defineConfig([globalIgnores([
     "**/out",
     "**/typechain-types",
     "**/docs"
-]), 
-
-    // JavaScript files
-    {
-        files: ["**/*.js"],
-
-        extends: compat.extends("eslint:recommended", "prettier"),
-
-
-        languageOptions: {
-            globals: {
-                ...globals.node,
-                ...globals.commonjs,
-            },
-
-            ecmaVersion: 2024,
-            sourceType: "module",
-        },
-    },
-
-
-    // TypeScript files
-    {
+]),{
     files: ["**/*.ts"],
 
     extends: compat.extends(
