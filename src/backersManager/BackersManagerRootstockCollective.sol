@@ -571,10 +571,9 @@ contract BackersManagerRootstockCollective is
      * @param value_ amount of rewardTokens to approve
      */
     function rewardTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
-        if(!IERC20(rewardToken).approve(gauge_, value_)) {
+        if (!IERC20(rewardToken).approve(gauge_, value_)) {
             revert RewardTokenNotApproved();
         }
-        
     }
 
     /**
@@ -586,7 +585,8 @@ contract BackersManagerRootstockCollective is
     function haltGaugeShares(GaugeRootstockCollective gauge_) external onlyBuilderRegistry notInDistributionPeriod {
         // allocations are not considered for the reward's distribution
         totalPotentialReward -= gauge_.rewardShares();
-        builderRegistry.setHaltedGaugeLastPeriodFinish(gauge_, _periodFinish);
+        builderRegistry.setHaltedGaugeLastPeriodFinish(gauge_, _periodFinish); // FIXME: circular calls with
+            // builderRegistry. move to builderRegistry
     }
 
     /**
