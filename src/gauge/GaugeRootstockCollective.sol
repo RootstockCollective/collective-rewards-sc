@@ -29,7 +29,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
     event BackerRewardsClaimed(address indexed rewardToken_, address indexed backer_, uint256 amount_);
     event BuilderRewardsClaimed(address indexed rewardToken_, address indexed builder_, uint256 amount_);
-    event NewAllocation(address indexed backer_, uint256 allocation_);
+    event NewAllocation(address indexed backer_, uint256 allocation_, bool isOptedOut_);
     event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 backersAmount_);
 
     // -----------------------------
@@ -79,6 +79,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     BackersManagerRootstockCollective public backersManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
+    /// @notice total amount of stakingToken allocated for rewards from opted out backers
+    uint256 public totalAllocationOptedOut;
     /// @notice cycle rewards shares, optimistically tracking the time weighted votes allocations for this gauge
     uint256 public rewardShares;
     /// @notice amount of stakingToken allocated by a backer
@@ -257,6 +259,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      */
     function claimBackerReward(address rewardToken_, address backer_) public {
         if (msg.sender != backer_ && msg.sender != address(backersManager)) revert NotAuthorized();
+        if (backersManager.rewardsOptedOut(backer_)) revert BackersManagerRootstockCollective.BackerOptedOutRewards();
 
         RewardData storage _rewardData = rewardData[rewardToken_];
 
@@ -338,29 +341,35 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             _updateRewardMissing(rewardToken, _periodFinish);
             _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
-
-        _updateRewards(rewardToken, backer_, _periodFinish);
-        _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
+        bool _isOptedOut = backersManager.rewardsOptedOut(backer_);
+        if (!_isOptedOut) {
+            _updateRewards(rewardToken, backer_, _periodFinish);
+            _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
+        }
 
         // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
         uint256 _previousAllocation = allocationOf[backer_];
         if (allocation_ > _previousAllocation) {
             allocationDeviation_ = allocation_ - _previousAllocation;
             rewardSharesDeviation_ = allocationDeviation_ * timeUntilNextCycle_;
-            totalAllocation += allocationDeviation_;
+            if (!_isOptedOut) {
+                totalAllocation += allocationDeviation_;
+            }
             rewardShares += rewardSharesDeviation_;
         } else {
             allocationDeviation_ = _previousAllocation - allocation_;
             // avoid underflow because rewardShares may not be correctly updated if the distribution was skipped
             rewardSharesDeviation_ = Math.min(rewardShares, allocationDeviation_ * timeUntilNextCycle_);
-            totalAllocation -= allocationDeviation_;
+            if (!_isOptedOut) {
+                totalAllocation -= allocationDeviation_;
+            }
             rewardShares -= rewardSharesDeviation_;
             isNegative_ = true;
         }
 
         allocationOf[backer_] = allocation_;
 
-        emit NewAllocation(backer_, allocation_);
+        emit NewAllocation(backer_, allocation_, _isOptedOut);
         return (allocationDeviation_, rewardSharesDeviation_, isNegative_);
     }
 
