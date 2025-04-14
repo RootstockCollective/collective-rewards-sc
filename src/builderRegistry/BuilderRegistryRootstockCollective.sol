@@ -589,9 +589,12 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @notice reverts if builder was not activated or approved by the community
+     * @notice Ensures the builder associated with the given gauge exists and builder is activated
+     * @dev Reverts if the builder gauge does not exist or if the builder is not activated.
+     * @dev reverts if it is not called by the backers manager
+     * @param gauge_ The gauge to validate.
      */
-    function validateWhitelisted(GaugeRootstockCollective gauge_) external view onlyBackersManager {
+    function requireBuilderActivation(GaugeRootstockCollective gauge_) external view onlyBackersManager {
         address _builder = gaugeToBuilder[gauge_];
         if (_builder == address(0)) revert GaugeDoesNotExist();
         if (!builderState[_builder].activated) revert NotActivated();

@@ -314,8 +314,7 @@ contract BackersManagerRootstockCollective is
         uint256 _length = gauges_.length;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-            // reverts if builder was not activated or approved by the community
-            _builderRegistry.validateWhitelisted(gauges_[i]);
+            _builderRegistry.requireBuilderActivation(gauges_[i]);
 
             gauges_[i].claimBackerReward(msg.sender);
         }
@@ -418,8 +417,7 @@ contract BackersManagerRootstockCollective is
         internal
         returns (uint256 newBackerTotalAllocation_, uint256 newTotalPotentialReward_)
     {
-        // reverts if builder was not activated or approved by the community
-        builderRegistry_.validateWhitelisted(gauge_);
+        builderRegistry_.requireBuilderActivation(gauge_);
 
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
             gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
