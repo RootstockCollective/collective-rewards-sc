@@ -119,15 +119,38 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: Updater can disable the role by updating the upgrader address to zero
+     * SCENARIO: functions should revert by InvalidAddress error when an address is invalid
      */
-    function test_UpdateUpgraderToZeroAddress() public {
-        // WHEN the governor updates the upgrader address to the zero address
-        vm.prank(upgrader);
-        governanceManager.updateUpgrader(address(0));
+    function test_InvalidAddress() public {
+        vm.startPrank(governor);
+        // WHEN governor calls updateGovernor using an invalid address
+        //  THEN tx reverts
+        vm.expectRevert(
+            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.InvalidAddress.selector, address(0))
+        );
+        governanceManager.updateGovernor(address(0));
 
-        // THEN the upgrader address is updated
-        assertEq(governanceManager.upgrader(), address(0));
+        // WHEN governor calls updateGovernor using an invalid address
+        //  THEN tx reverts
+        vm.expectRevert(
+            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.InvalidAddress.selector, address(0))
+        );
+        governanceManager.updateFoundationTreasury(address(0));
+
+        // WHEN governor calls updateKYCApprover using an invalid address
+        //  THEN tx reverts
+        vm.expectRevert(
+            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.InvalidAddress.selector, address(0))
+        );
+        governanceManager.updateKYCApprover(address(0));
+
+        vm.startPrank(upgrader);
+        // WHEN governor calls updateUpgrader using an invalid address
+        //  THEN tx reverts
+        vm.expectRevert(
+            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.InvalidAddress.selector, address(0))
+        );
+        governanceManager.updateUpgrader(address(0));
     }
 
     /**
@@ -226,8 +249,8 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
 
 /**
  * @title SampleChangeContract
- * @notice barebones constract that follows IChangeContractRootstockCollective interface
- * uset to test the execution of changes
+ * @notice barebones contract that follows IChangeContractRootstockCollective interface
+ * used to test the execution of changes
  */
 contract SampleChangeContract is IChangeContractRootstockCollective {
     bool public executed = false;

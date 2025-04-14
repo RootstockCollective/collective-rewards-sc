@@ -152,7 +152,7 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         emit KycApproverUpdated(kycApprover_, msg.sender);
     }
 
-    function _updateUpgrader(address upgrader_) private {
+    function _updateUpgrader(address upgrader_) private onlyValidAddress(upgrader_) {
         upgrader = upgrader_;
         emit UpgraderUpdated(upgrader_, msg.sender);
     }
