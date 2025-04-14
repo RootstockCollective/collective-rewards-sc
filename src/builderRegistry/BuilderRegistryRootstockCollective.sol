@@ -37,7 +37,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
     error NotAuthorized();
-    error InvalidAddress(address addr_);
+    error ZeroAddressNotAllowed();
 
     // -----------------------------
     // ----------- Events ----------
@@ -51,7 +51,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     event KYCResumed(address indexed builder_);
     event SelfPaused(address indexed builder_);
     event SelfResumed(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
-    // FIXME: should the backer reward percentage events be triggered by the BackersManagerRootstockCollective?
     event BackerRewardPercentageUpdateScheduled(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event RewardReceiverUpdateRequested(address indexed builder_, address newRewardReceiver_);
     event RewardReceiverUpdateCancelled(address indexed builder_, address newRewardReceiver_);
@@ -167,8 +166,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         external
         initializer
     {
-        if (address(backersManager_) == address(0)) revert InvalidAddress(address(backersManager_));
-        if (gaugeFactory_ == address(0)) revert InvalidAddress(gaugeFactory_);
+        if (address(backersManager_) == address(0)) revert ZeroAddressNotAllowed();
+        if (gaugeFactory_ == address(0)) revert ZeroAddressNotAllowed();
         __Upgradeable_init(backersManager_.governanceManager());
         backersManager = backersManager_;
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
@@ -192,7 +191,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     /**
      * @notice Builder submits a request to replace their rewardReceiver address,
-     * the request will then need to be approved by `approveBuilderRewardReceiverReplacement`
+     * the request will then need to be approved by `approveNewRewardReceiver`
      * @dev reverts if Builder is not Operational
      * @param newRewardReceiver_ new address the builder is requesting to use
      */
@@ -214,7 +213,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     /**
      * @notice KYCApprover approves Builder's request to replaces their rewardReceiver address
-     * @dev reverts if provided `rewardReceiverReplacement_` doesn't match Builder's request
+     * @dev reverts if provided `newRewardReceiver_` doesn't match Builder's request
      * @param builder_ address of the builder
      * @param newRewardReceiver_ new address the builder is requesting to use
      */
@@ -621,7 +620,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     /**
      * @notice Builder submits a request to replace their rewardReceiver address,
-     * the request will then need to be approved by `approveBuilderRewardReceiverReplacement`
+     * the request will then need to be approved by `approveNewRewardReceiver`
      * @dev reverts if Builder is not Operational
      * @param newRewardReceiver_ new address the builder is requesting to use
      */
