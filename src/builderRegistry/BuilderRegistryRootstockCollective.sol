@@ -232,28 +232,44 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
     }
 
     /**
-     * @notice activates builder for the first time, setting the reward receiver and the reward percentage
-     *  Sets activate flag to true. It cannot be switched to false anymore
-     * @dev reverts if it is not called by the owner address
-     * reverts if it is already activated
-     * @param builder_ address of the builder
-     * @param rewardReceiver_ address of the builder reward receiver
-     * @param rewardPercentage_ reward percentage(100% == 1 ether)
+     * @dev initialises the reward data for builder for the first time, setting
+     *  - reward receiver
+     *  - reward percentage
+     *  - cooldown end time - this value is se to non-0 and should never be set to 0 again as it serves as a flag of builder initialisation as well as 0 cooldown end time has no meaning in real life
+     * @dev reverts if reward percentage is greater than `_MAX_REWARD_PERCENTAGE`
+     *  See {approveBuilderKYC} for details.
      */
-    function activateBuilder(
-        address builder_,
-        address rewardReceiver_,
-        uint64 rewardPercentage_
-    ) external onlyKycApprover {
-        _activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
+    function _initialiseRewardData(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
+        builderRewardReceiver[builder_] = rewardReceiver_;
+        // TODO: should we have a minimal amount?
+        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
+            revert InvalidBackerRewardPercentage();
+        }
+
+        // read from storage
+        RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[builder_];
+
+        _rewardPercentageData.previous = rewardPercentage_;
+        _rewardPercentageData.next = rewardPercentage_;
+        _rewardPercentageData.cooldownEndTime = uint128(block.timestamp);
+
+        // write to storage
+        backerRewardPercentage[builder_] = _rewardPercentageData;
+
+        emit BuilderActivated(builder_, rewardReceiver_, rewardPercentage_);
     }
 
     /**
      * @notice approves builder's KYC after a revocation
      * @dev reverts if it is not called by the owner address
+     * reverts if builder has been initialised already but gauge does not exist
+     * reverts if builder is already KYC approved
+     * reverts if called in non iniactive, non community approved state
      * @param builder_ address of the builder
+     * @param rewardReceiver_ address of the builder reward receiver. This value will be ignored if the builder has already been activated.
+     * @param rewardPercentage_ reward percentage(100% == 1 ether). This value will be ignored if the builder has already been activated.
      */
-    function approveBuilderKYC(address builder_) external onlyKycApprover {
+    function approveBuilderKYC(address builder_, address rewardReceiver_, uint64 rewardPercentage_) external onlyKycApprover {
         /**
          *
          *         enum BuilderState {
@@ -265,25 +281,29 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
          *             DEAD = 5
          *         }
          *
-         *         0 -> 2 Inactive -> KYCApproved
-         *         1 -> 3 CommunityApproved -> Active
+         *         0 -> 2 Inactive (fist-time & uninitialised & nogague) -> KYCApproved (initialised & nogague)
+         *         0 -> 2 Inactive (reapproved & initialised  & nogague) -> KYCApproved (initialised & nogague)
+         *         1 -> 3 CommunityApproved (fist-time & uninitialised & gague) -> Active
+         *         1 -> 3 CommunityApproved (reapproved & initialised & gague) -> Active
          */
         BuilderState _state = builderState[builder_];
-        if (_state == BuilderState.KYCApproved || _state == BuilderState.Active) revert AlreadyKYCApproved();
+        if (_state == BuilderState.KYCApproved || _state == BuilderState.Active) revert AlreadyKYCApproved(); // FIXME: consider removing this as it is somewhat unnecessary as the no such transition covers it. It's only here for backwards compatibility
         BuilderState _targetState = BuilderState(uint8(_state) + 2);
-        if (backerRewardPercentage[builder_].cooldownEndTime == 0) {
-            revert NotActivated(); // the initial kyc builder acitvation sets always cooldownEndTime to non-zero value
-        }
 
         if (uint8(_state) > uint8(BuilderState.CommunityApproved)) {
             // same as != Inactive || CommunityApproved
             revert StateMachineErrors.NoSuchTransition(_state, _targetState);
         }
 
-        GaugeRootstockCollective _gauge = builderToGauge[builder_];
-        if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
+        if (backerRewardPercentage[builder_].cooldownEndTime == 0) { // cooldown time is only ever 0 if the builder is uninitialised
+            _initialiseRewardData(builder_, rewardReceiver_, rewardPercentage_);
+        }
 
-        _resumeGauge(_gauge);
+        GaugeRootstockCollective _gauge = builderToGauge[builder_];
+        if (uint(_state) == uint(BuilderState.CommunityApproved)) {
+            if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
+            _resumeGauge(_gauge);
+        }
 
         builderState[builder_] = _targetState;
         emit BuilderStateChange(builder_, _state, _targetState);
@@ -511,7 +531,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
      */
     function migrateBuilder(address builder_, address rewardAddress_, uint64 rewardPercentage_) public onlyKycApprover {
         _communityApproveBuilder(builder_);
-        _activateBuilder(builder_, rewardAddress_, rewardPercentage_);
+        _initialiseRewardData(builder_, rewardAddress_, rewardPercentage_);
 
         emit BuilderMigrated(builder_, msg.sender);
     }
@@ -661,45 +681,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
         _gauges.add(address(gauge_));
         _haltedGauges.remove(address(gauge_));
         backersManager.resumeGaugeShares(gauge_);
-    }
-
-    /**
-     * @dev activates builder for the first time, setting the reward receiver and the reward percentage
-     *  Sets activate flag to true. It cannot be switched to false anymore
-     *  See {activateBuilder} for details.
-     */
-    function _activateBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
-        /**
-         *
-         *         enum BuilderState {
-         *             Inactive = 0
-         *             CommunityApproved = 1
-         *             KYCApproved = 2
-         *             Active = 3
-         *             Paused = 4
-         *             DEAD = 5
-         *         }
-         *
-         *         0 -> 2 Inactive -> KYCApproved
-         *         1 -> 3 CommunityApproved -> Active
-         */
-        builderRewardReceiver[builder_] = rewardReceiver_;
-        // TODO: should we have a minimal amount?
-        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
-            revert InvalidBackerRewardPercentage();
-        }
-
-        // read from storage
-        RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[builder_];
-
-        _rewardPercentageData.previous = rewardPercentage_;
-        _rewardPercentageData.next = rewardPercentage_;
-        _rewardPercentageData.cooldownEndTime = uint128(block.timestamp);
-
-        // write to storage
-        backerRewardPercentage[builder_] = _rewardPercentageData;
-
-        emit BuilderActivated(builder_, rewardReceiver_, rewardPercentage_);
     }
 
     /**
