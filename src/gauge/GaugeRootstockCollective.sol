@@ -20,7 +20,6 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // ------- Custom Errors -------
     // -----------------------------
     error NotAuthorized();
-    error BuilderRewardsLocked();
     error GaugeHalted();
     error BeforeDistribution();
     error NotEnoughAmount();
@@ -294,15 +293,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
     function claimBuilderReward(address rewardToken_) public {
-        address _builder = builderRegistry.gaugeToBuilder(this);
-        address _rewardReceiver = builderRegistry.builderRewardReceiver(_builder);
-        if (builderRegistry.isBuilderPaused(_builder)) revert BuilderRewardsLocked();
-        if (msg.sender != _builder && msg.sender != _rewardReceiver) revert NotAuthorized();
-        // if Builder uses the rewardReceiver account to claim, there shouldn't be an
-        // open request to replace such address, they need to use the Builder account instead
-        if (msg.sender == _rewardReceiver && builderRegistry.hasBuilderRewardReceiverPendingApproval(_builder)) {
-            revert NotAuthorized();
-        }
+        address _rewardReceiver = builderRegistry.canClaimBuilderReward(msg.sender);
 
         RewardData storage _rewardData = rewardData[rewardToken_];
 
