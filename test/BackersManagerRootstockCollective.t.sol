@@ -71,9 +71,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: should revert if gauge is community approved but not activated
+     * SCENARIO: should revert if gauge is community approved but not initialised
      */
-    function test_RevertGaugeIsCommunityApprovedButNotActivated() public {
+    function test_RevertGaugeIsCommunityApprovedButNotInitialised() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         //  AND is community approved
@@ -83,20 +83,20 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         gaugesArray.push(_newGauge);
         allocationsArray.push(100 ether);
         //  WHEN alice calls allocate using the new gauge
-        //   THEN tx reverts because NotActivated
+        //   THEN tx reverts because BuilderNotInitialised
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotInitialised.selector);
         backersManager.allocate(_newGauge, 100 ether);
         //  WHEN alice calls allocateBatch using the new gauge
-        //   THEN tx reverts because NotActivated
+        //   THEN tx reverts because BuilderNotInitialised
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotInitialised.selector);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         //  WHEN alice calls claimBackerRewards using the new gauge
-        //   THEN tx reverts because NotActivated
+        //   THEN tx reverts because BuilderNotInitialised
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotInitialised.selector);
         backersManager.claimBackerRewards(gaugesArray);
     }
 

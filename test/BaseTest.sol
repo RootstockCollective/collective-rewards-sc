@@ -140,7 +140,7 @@ contract BaseTest is Test {
         returns (GaugeRootstockCollective newGauge_)
     {
         vm.prank(kycApprover);
-        builderRegistry.activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
+        builderRegistry.initialiseBuilder(builder_, rewardReceiver_, rewardPercentage_);
         builders.push(builder_);
         vm.prank(governor);
         newGauge_ = builderRegistry.communityApproveBuilder(builder_);
