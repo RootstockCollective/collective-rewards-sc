@@ -635,7 +635,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @notice reverts if builder was not activated or approved by the community
+     * @notice reverts if builder was not activated or gauge is not assigned to builder
      */
     function validateWhitelisted(GaugeRootstockCollective gauge_) external view onlyBackersManager {
         address _builder = gaugeToBuilder[gauge_];

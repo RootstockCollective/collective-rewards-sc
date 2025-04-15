@@ -314,7 +314,7 @@ contract BackersManagerRootstockCollective is
         uint256 _length = gauges_.length;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-            // reverts if builder was not activated or approved by the community
+            // reverts if builder was not activated or gauge is not assigned to builder
             _builderRegistry.validateWhitelisted(gauges_[i]);
 
             gauges_[i].claimBackerReward(msg.sender);
@@ -467,7 +467,6 @@ contract BackersManagerRootstockCollective is
 
     /**
      * @notice distribute accumulated reward tokens to the gauges
-     * @dev reverts if distribution period has not yet started
      *  This function is paginated and it finishes once all gauges distribution are completed,
      *  ending the distribution period and voting restrictions.
      * @return true if distribution has finished
