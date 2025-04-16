@@ -16,8 +16,8 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     event Dewhitelisted(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
-    event Revoked(address indexed builder_);
-    event Permitted(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
+    event SelfPaused(address indexed builder_);
+    event SelfResumed(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
 
     function test_OnlyKycApprover() public {
@@ -74,15 +74,15 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         //  AND a backer alice
         vm.startPrank(alice);
 
-        // WHEN alice calls revokeBuilder
+        // WHEN alice calls pauseSelf
         //  THEN tx reverts because caller is not a builder
         vm.expectRevert(BuilderRegistryRootstockCollective.BuilderDoesNotExist.selector);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
 
-        // WHEN alice calls permitBuilder
+        // WHEN alice calls unpauseSelf
         //  THEN tx reverts because caller is not a builder
         vm.expectRevert(BuilderRegistryRootstockCollective.BuilderDoesNotExist.selector);
-        builderRegistry.permitBuilder(1 ether);
+        builderRegistry.unpauseSelf(1 ether);
         vm.stopPrank();
 
         // WHEN kycApprover calls approveBuilderKYC for alice
@@ -313,22 +313,22 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: permit a builder
+     * SCENARIO: self unpause a builder
      */
-    function test_PermitBuilder() public {
-        // GIVEN a Revoked builder
+    function test_SelfResumeBuilder() public {
+        // GIVEN a self paused builder
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
 
-        // WHEN calls permitBuilder
-        //  THEN Permitted event is emitted
+        // WHEN calls unpauseSelf
+        //  THEN SelfResumed event is emitted
         vm.expectEmit();
-        emit Permitted(builder, 1 ether, block.timestamp + 2 weeks);
-        builderRegistry.permitBuilder(1 ether);
+        emit SelfResumed(builder, 1 ether, block.timestamp + 2 weeks);
+        builderRegistry.unpauseSelf(1 ether);
 
-        // THEN builder is not revoked
-        (,,,, bool _revoked,,) = builderRegistry.builderState(builder);
-        assertEq(_revoked, false);
+        // THEN builder is not self paused
+        (,,,, bool _selfPaused,,) = builderRegistry.builderState(builder);
+        assertEq(_selfPaused, false);
         // THEN gauge is not halted
         assertEq(builderRegistry.isGaugeHalted(address(gauge)), false);
         // THEN halted gauges array length is 0
@@ -342,54 +342,54 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: permitBuilder should revert if it is not revoked
+     * SCENARIO: unpauseSelf should revert if it is not self paused
      */
-    function test_PermitBuilderRevert() public {
+    function test_UnpauseSelfBuilderRevert() public {
         // GIVEN a builder not paused
         vm.startPrank(builder);
-        // WHEN tries to permitBuilder
-        //  THEN tx reverts because is not revoked
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotRevoked.selector);
-        builderRegistry.permitBuilder(1 ether);
-        // AND the builder is paused but not revoked
+        // WHEN tries to unpauseSelf
+        //  THEN tx reverts because is not self paused
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotSelfPaused.selector);
+        builderRegistry.unpauseSelf(1 ether);
+        // AND the builder is paused but not self paused
         vm.startPrank(kycApprover);
         builderRegistry.pauseBuilder(builder, "paused");
-        // WHEN tries to permitBuilder
-        //  THEN tx reverts because is not revoked
+        // WHEN tries to unpauseSelf
+        //  THEN tx reverts because is not self paused
         vm.startPrank(builder);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotRevoked.selector);
-        builderRegistry.permitBuilder(1 ether);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotSelfPaused.selector);
+        builderRegistry.unpauseSelf(1 ether);
     }
 
     /**
-     * SCENARIO: permitBuilder should revert if reward percentage is higher than 100
+     * SCENARIO: unpauseSelf should revert if reward percentage is higher than 100
      */
-    function test_PermitBuilderInvalidBackerRewardPercentage() public {
-        // GIVEN a revoked builder
+    function test_UnpauseSelfBuilderInvalidBackerRewardPercentage() public {
+        // GIVEN a self paused builder
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
-        //  WHEN tries to permitBuilder with 200% of reward percentage
+        builderRegistry.pauseSelf();
+        //  WHEN tries to unpauseSelf with 200% of reward percentage
         //   THEN tx reverts because is not a valid reward percentage
         vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBackerRewardPercentage.selector);
-        builderRegistry.permitBuilder(2 ether);
+        builderRegistry.unpauseSelf(2 ether);
     }
 
     /**
-     * SCENARIO: Builder revoke itself
+     * SCENARIO: Builder pauses itself
      */
-    function test_RevokeBuilder() public {
+    function test_PauseSelfBuilder() public {
         // GIVEN a whitelisted builder
         vm.startPrank(builder);
 
-        // WHEN calls revokeBuilder
-        //  THEN StateUpdate event is emitted
+        // WHEN calls pauseSelf
+        //  THEN SelfPaused event is emitted
         vm.expectEmit();
-        emit Revoked(builder);
-        builderRegistry.revokeBuilder();
+        emit SelfPaused(builder);
+        builderRegistry.pauseSelf();
 
-        // THEN builder is revoked
-        (,,,, bool _revoked,,) = builderRegistry.builderState(builder);
-        assertEq(_revoked, true);
+        // THEN builder is self paused
+        (,,,, bool _selfPaused,,) = builderRegistry.builderState(builder);
+        assertEq(_selfPaused, true);
         // THEN gauge is halted
         assertEq(builderRegistry.isGaugeHalted(address(gauge)), true);
         // THEN halted gauges array length is 1
@@ -403,16 +403,16 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: revokeBuilder should revert if it is already revoked
+     * SCENARIO: pauseSelf should revert if it is already self paused
      */
-    function test_RevertAlreadyRevoked() public {
-        // GIVEN a revoked builder
+    function test_RevertBuilderAlreadyPausedSelf() public {
+        // GIVEN a self paused builder
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
-        // WHEN tries to revokeBuilder again
-        //  THEN tx reverts because is already revoked
-        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyRevoked.selector);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
+        // WHEN tries to pauseSelf again
+        //  THEN tx reverts because is already self paused
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderAlreadyPausedSelf.selector);
+        builderRegistry.pauseSelf();
     }
 
     /**
@@ -492,36 +492,36 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: revokeBuilder reverts if KYC was revoked
+     * SCENARIO: pauseSelf reverts if KYC was revoked
      */
     function test_RevertRevokeBuilderNotKYCApproved() public {
         // GIVEN a KYC revoked builder
         vm.startPrank(kycApprover);
         builderRegistry.revokeBuilderKYC(builder);
 
-        //  WHEN builders tries to revoke it
+        //  WHEN builders tries to self pause
         //   THEN tx reverts because is not KYC approved
         vm.startPrank(builder);
         vm.expectRevert(BuilderRegistryRootstockCollective.NotKYCApproved.selector);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
     }
 
     /**
-     * SCENARIO: permitBuilder reverts if KYC was revoked
+     * SCENARIO: unpauseSelf reverts if KYC was revoked
      */
-    function test_RevertPermitBuilderNotKYCApproved() public {
-        // GIVEN a revoked builder
+    function test_RevertUnpauseSelfBuilderNotKYCApproved() public {
+        // GIVEN a self paused builder
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
         // AND kycApprover revokes it KYC
         vm.startPrank(kycApprover);
         builderRegistry.revokeBuilderKYC(builder);
 
-        //  WHEN builders tries to permit it
+        //  WHEN builders tries to unpause itself
         //   THEN tx reverts because is not KYC approved
         vm.startPrank(builder);
         vm.expectRevert(BuilderRegistryRootstockCollective.NotKYCApproved.selector);
-        builderRegistry.permitBuilder(0.1 ether);
+        builderRegistry.unpauseSelf(0.1 ether);
     }
 
     /**
@@ -620,53 +620,53 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: revoked builder can be paused and unpaused
+     * SCENARIO: self paused builder can be paused and unpaused by the kycApprover
      */
-    function test_PauseRevokedBuilder() public {
-        // GIVEN a revoked builder
+    function test_PauseSelfPausedBuilder() public {
+        // GIVEN a self paused builder
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
         // AND kycApprover calls pauseBuilder
         vm.startPrank(kycApprover);
         builderRegistry.pauseBuilder(builder, "paused");
-        (,,, bool _paused, bool _revoked,,) = builderRegistry.builderState(builder);
-        // THEN builder is revoked
-        assertEq(_revoked, true);
+        (,,, bool _paused, bool _selfPaused,,) = builderRegistry.builderState(builder);
+        // THEN builder is self paused
+        assertEq(_selfPaused, true);
         // THEN builder is paused
         assertEq(_paused, true);
 
         // AND kycApprover calls unpauseBuilder
         builderRegistry.unpauseBuilder(builder);
-        (,,, _paused, _revoked,,) = builderRegistry.builderState(builder);
-        // THEN builder is still revoked
-        assertEq(_revoked, true);
+        (,,, _paused, _selfPaused,,) = builderRegistry.builderState(builder);
+        // THEN builder is still self paused
+        assertEq(_selfPaused, true);
         // THEN builder is not paused
         assertEq(_paused, false);
     }
 
     /**
-     * SCENARIO: paused builder can be revoked and permitted
+     * SCENARIO: paused builder can be self paused and unpaused
      */
-    function test_RevokePausedBuilder() public {
+    function test_SelfPausePausedBuilder() public {
         // GIVEN paused builder
         vm.startPrank(kycApprover);
         builderRegistry.pauseBuilder(builder, "paused");
-        // AND builder calls revokeBuilder
+        // AND builder pauses himself
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
-        (,,, bool _paused, bool _revoked,,) = builderRegistry.builderState(builder);
+        builderRegistry.pauseSelf();
+        (,,, bool _paused, bool _selfPaused,,) = builderRegistry.builderState(builder);
         // THEN builder is paused
         assertEq(_paused, true);
-        // THEN builder is revoked
-        assertEq(_revoked, true);
+        // THEN builder is self paused
+        assertEq(_selfPaused, true);
 
-        // AND builder calls permitBuilder
-        builderRegistry.permitBuilder(0.1 ether);
-        (,,, _paused, _revoked,,) = builderRegistry.builderState(builder);
+        // AND builder calls unpauseSelf
+        builderRegistry.unpauseSelf(0.1 ether);
+        (,,, _paused, _selfPaused,,) = builderRegistry.builderState(builder);
         // THEN builder is still paused
         assertEq(_paused, true);
-        // THEN builder is not revoked
-        assertEq(_revoked, false);
+        // THEN builder is not self paused
+        assertEq(_selfPaused, false);
     }
 
     /**
@@ -744,33 +744,33 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: revokeBuilder reverts if it is not community approved
+     * SCENARIO: pauseSelf reverts if it is not community approved
      */
-    function test_RevertRevokeBuilderNotWhitelisted() public {
+    function test_RevertSelfPauseBuilderNotWhitelisted() public {
         // GIVEN a de-whitelisted builder
         vm.prank(governor);
         builderRegistry.dewhitelistBuilder(builder);
 
-        //  WHEN builders tries to revoke itself
+        //  WHEN builders tries to pause itself
         //   THEN tx reverts because is not community approved
         vm.startPrank(builder);
         vm.expectRevert(BuilderRegistryRootstockCollective.NotCommunityApproved.selector);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
     }
 
     /**
-     * SCENARIO: permitBuilder reverts if it is not whitelisted
+     * SCENARIO: unpauseSelf reverts if it is not whitelisted
      */
-    function test_RevertPermitBuilderNotWhitelisted() public {
+    function test_RevertUnpauseSelfBuilderNotWhitelisted() public {
         // GIVEN a de-whitelisted builder
         vm.prank(governor);
         builderRegistry.dewhitelistBuilder(builder);
 
-        //  WHEN builders tries to permit it
+        //  WHEN builders tries to unpause itself
         //   THEN tx reverts because is not whitelisted
         vm.prank(builder);
         vm.expectRevert(BuilderRegistryRootstockCollective.NotCommunityApproved.selector);
-        builderRegistry.permitBuilder(0.1 ether);
+        builderRegistry.unpauseSelf(0.1 ether);
     }
 
     /**

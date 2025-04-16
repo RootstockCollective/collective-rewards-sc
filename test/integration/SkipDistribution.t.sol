@@ -503,16 +503,16 @@ contract SkipDistribution is BaseTest {
     }
 
     /**
-     * SCENARIO: if there is a skipped distribution and builder gets revoked and permitted,
+     * SCENARIO: if there is a skipped distribution and builder gets self paused and self unpaused,
      * incentives are not lost
      * - There is a builder with no allocations that receives an incentive
-     * - Builder gets revoked
-     * - A distribution is skipped and builder can't be permitted
-     * - There is a distribution with no rewards and builder gets permitted
+     * - Builder gets self paused
+     * - A distribution is skipped and builder can't self unpause
+     * - There is a distribution with no rewards and builder unpauses himself
      * - There are votes for builder
      * - Rewards are not lost and can be claimed by sponsors and builder
      */
-    function test_integration_NoDistributionAndRevokedIncentivizedBuilder() public {
+    function test_integration_NoDistributionAndSelfPausedIncentivizedBuilder() public {
         // CYCLE 1
         // GIVEN bob allocates to gauge2 - this way there are allocations
         vm.prank(bob);
@@ -528,26 +528,26 @@ contract SkipDistribution is BaseTest {
         // AND half an cycle passes
         _skipRemainingCycleFraction(2);
 
-        // AND builder (gauge) gets revoked
+        // AND builder (gauge) pauses itself
         vm.prank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
 
         // CYCLE 3
         // AND cycle finishes without a distribution
         _skipAndStartNewCycle();
 
-        // THEN builder can't be permitted before distribution
+        // THEN builder can't self unpause before distribution
         vm.expectRevert(BackersManagerRootstockCollective.BeforeDistribution.selector);
         vm.prank(builder);
-        builderRegistry.permitBuilder(0.5 ether);
+        builderRegistry.unpauseSelf(0.5 ether);
 
         // CYCLE 4
         // AND there is a distribution
         _distribute(0, 0);
 
-        // AND builder is permitted again
+        // AND builder unpauses himself again
         vm.prank(builder);
-        builderRegistry.permitBuilder(0.5 ether);
+        builderRegistry.unpauseSelf(0.5 ether);
 
         // AND alice allocates to gauge
         vm.prank(alice);
@@ -576,15 +576,15 @@ contract SkipDistribution is BaseTest {
     }
 
     /**
-     * SCENARIO: if there is a skipped distribution and builder gets revoked and permitted,
+     * SCENARIO: if there is a skipped distribution and builder gets self paused and self unpaused,
      * incentives and rewards from distribution are not lost
-     * - A distribution is skipped and builder can't be permitted
-     * - There is a distribution and builder gets permitted
-     * - There is a distribution with no rewards and builder gets permitted
+     * - A distribution is skipped and builder can't self unpause
+     * - There is a distribution and builder self unpauses
+     * - There is a distribution with no rewards and builder unpauses himself
      * - There are votes for builder
      * - Rewards are not lost and can be claimed by sponsors and builder
      */
-    function test_integration_NoDistributionAndRevokedIncentivizedandRewardsBuilder() public {
+    function test_integration_NoDistributionAndSelfPausedIncentivizedandRewardsBuilder() public {
         // CYCLE 1
         // GIVEN bob allocates to gauge2 - this way there are allocations
         vm.prank(bob);
@@ -600,9 +600,9 @@ contract SkipDistribution is BaseTest {
         // AND half an cycle passes
         _skipRemainingCycleFraction(2);
 
-        // AND builder (gauge) gets revoked
+        // AND builder (gauge) gets self paused
         vm.prank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
 
         // CYCLE 3
         // AND cycle finishes without a distribution
@@ -611,9 +611,9 @@ contract SkipDistribution is BaseTest {
         // AND there is a distribution
         _distribute(0, 0);
 
-        // AND builder is permitted again
+        // AND builder is self unpaused again
         vm.prank(builder);
-        builderRegistry.permitBuilder(0.5 ether);
+        builderRegistry.unpauseSelf(0.5 ether);
 
         // AND alice allocates to gauge
         vm.prank(alice);
