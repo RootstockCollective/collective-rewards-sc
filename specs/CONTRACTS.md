@@ -36,7 +36,7 @@ Its main responsibility is to manage the Builders and their state. It allows to:
 - store Backers reward percentage
 - keep track of the Builder<->Gauge association
 - allow the Builder to change the Backers reward percentage
-- allow the Builder to replace the Builder reward receiver address
+- allow the Builder to update the Builder reward receiver address
 - get the list of gauges
 - allow the Builders to pause themselves.
 
