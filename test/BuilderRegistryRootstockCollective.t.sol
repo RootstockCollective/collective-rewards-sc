@@ -13,7 +13,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     event KYCApproved(address indexed builder_);
     event KYCRevoked(address indexed builder_);
     event CommunityApproved(address indexed builder_);
-    event Dewhitelisted(address indexed builder_);
+    event CommunityRevoked(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
     event SelfPaused(address indexed builder_);
@@ -59,10 +59,10 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         vm.expectRevert(BuilderRegistryRootstockCollective.NotAuthorized.selector);
         builderRegistry.communityApproveBuilder(builder);
 
-        // WHEN alice calls dewhitelistBuilder
+        // WHEN alice calls communityBanBuilder
         //  THEN tx reverts because caller is not the Governor
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
         vm.stopPrank();
     }
 
@@ -91,11 +91,11 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         vm.prank(kycApprover);
         builderRegistry.approveBuilderKYC(alice);
 
-        // WHEN governor calls dewhitelistBuilder for alice
+        // WHEN governor calls communityBanBuilder for alice
         //  THEN tx reverts because caller is not a builder
         vm.expectRevert(BuilderRegistryRootstockCollective.BuilderDoesNotExist.selector);
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(alice);
+        builderRegistry.communityBanBuilder(alice);
     }
 
     /**
@@ -463,9 +463,9 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: community approved builder can be de-whitelisted without being initialized before
+     * SCENARIO: community approved builder can be banned without being activated before
      */
-    function test_CommunityRevokedBuilderNotInitialized() public {
+    function test_communityBanBuilderWithoutActivate() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         //  AND is community approved
@@ -483,9 +483,9 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         // THEN builder is not KYC approved
         assertEq(_kycApproved, false);
 
-        // WHEN new builder is de-whitelisted
+        // WHEN new builder is banned
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(_newBuilder);
+        builderRegistry.communityBanBuilder(_newBuilder);
         (,, _communityApproved,,,,) = builderRegistry.builderState(_newBuilder);
         // THEN builder is not community approved
         assertEq(_communityApproved, false);
@@ -687,16 +687,16 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: governor dewhitelist a builder
+     * SCENARIO: governor bans a builder
      */
-    function test_DewhitelistBuilder() public {
+    function test_CommunityBanBuilder() public {
         // GIVEN a whitelisted builder
-        //  WHEN governor calls dewhitelistBuilder
-        //   THEN Dewhitelisted event is emitted
+        //  WHEN governor calls communityBanBuilder
+        //   THEN CommunityRevoked event is emitted
         vm.expectEmit();
-        emit Dewhitelisted(builder);
+        emit CommunityRevoked(builder);
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
 
         // THEN builder is not community approved
         (,, bool _communityApproved,,,,) = builderRegistry.builderState(builder);
@@ -714,27 +714,27 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: dewhitelist reverts if builder was already de-whitelisted
+     * SCENARIO: communityBanBuilder reverts if builder was already banned
      */
-    function test_RevertsDewhitelistBuilder() public {
-        // GIVEN a de-whitelisted builder
+    function test_RevertsCommunityBanBuilder() public {
+        // GIVEN a banned builder
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
 
-        //  WHEN governor calls dewhitelistBuilder
+        //  WHEN governor calls communityBanBuilder
         //   THEN tx reverts because is not community approved
         vm.expectRevert(BuilderRegistryRootstockCollective.NotCommunityApproved.selector);
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
     }
 
     /**
-     * SCENARIO: whitelisted builder is de-whitelisted. Cannot be community approved again
+     * SCENARIO: whitelisted builder is banned. Cannot be community approved again
      */
     function test_RevertWhitelistingBuilderTwice() public {
-        // GIVEN a de-whitelisted builder
+        // GIVEN a banned builder
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
 
         //  WHEN governor calls communityApproveBuilder
         //  THEN tx reverts because builder already exists
@@ -747,9 +747,9 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
      * SCENARIO: pauseSelf reverts if it is not community approved
      */
     function test_RevertSelfPauseBuilderNotWhitelisted() public {
-        // GIVEN a de-whitelisted builder
+        // GIVEN a banned builder
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
 
         //  WHEN builders tries to pause itself
         //   THEN tx reverts because is not community approved
@@ -762,9 +762,9 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
      * SCENARIO: unpauseSelf reverts if it is not whitelisted
      */
     function test_RevertUnpauseSelfBuilderNotWhitelisted() public {
-        // GIVEN a de-whitelisted builder
+        // GIVEN a banned builder
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
 
         //  WHEN builders tries to unpause itself
         //   THEN tx reverts because is not whitelisted
@@ -774,12 +774,12 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: de-whitelisted builder can be paused and unpaused
+     * SCENARIO: banned builder can be paused and unpaused
      */
-    function test_PauseDewhitelistedBuilder() public {
-        // GIVEN a de-whitelisted builder
+    function test_PauseBannedBuilder() public {
+        // GIVEN a banned builder
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
 
         // AND kycApprover calls pauseBuilder
         vm.startPrank(kycApprover);
@@ -800,16 +800,16 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: paused builder can be de-whitelisted
+     * SCENARIO: paused builder can be banned
      */
-    function test_DewhitelistPausedBuilder() public {
+    function test_BanPausedBuilder() public {
         // GIVEN paused builder
         vm.prank(kycApprover);
         builderRegistry.pauseBuilder(builder, "paused");
 
-        // AND governor calls dewhitelistBuilder
+        // AND governor calls communityBanBuilder
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
         (,, bool _communityApproved, bool _paused,,,) = builderRegistry.builderState(builder);
         // THEN builder is paused
         assertEq(_paused, true);
@@ -818,12 +818,12 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: de-whitelisted builder can be KYC revoked
+     * SCENARIO: banned builder can be KYC revoked
      */
-    function test_KYCRevokeDewhitelistedBuilder() public {
-        // GIVEN a de-whitelisted builder
+    function test_KYCRevokeBannedBuilder() public {
+        // GIVEN a banned builder
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
 
         // AND kycApprover calls revokeBuilderKYC
         vm.startPrank(kycApprover);
@@ -836,13 +836,13 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: de-whitelisted and KYC revoked builder is KYC approved again
+     * SCENARIO: banned and KYC revoked builder is KYC approved again
      * Its gauge remains halted
      */
-    function test_KYCApproveDewhitelistedBuilder() public {
-        // GIVEN a de-whitelisted and KYC revoked builder
+    function test_KYCApproveBannedBuilder() public {
+        // GIVEN a banned and KYC revoked builder
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
         vm.startPrank(kycApprover);
         builderRegistry.revokeBuilderKYC(builder);
 
