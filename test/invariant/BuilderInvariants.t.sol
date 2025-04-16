@@ -5,7 +5,7 @@ import { BaseInvariants } from "./BaseInvariants.sol";
 
 contract BuilderInvariants is BaseInvariants {
     /**
-     * SCENARIO: a builder kycRevoked, dewhitelisted or revoked is halted
+     * SCENARIO: a builder kycRevoked, community banned or revoked is halted
      */
     function invariant_HaltedGauge() public useTime {
         for (uint256 i = 0; i < builders.length; i++) {
