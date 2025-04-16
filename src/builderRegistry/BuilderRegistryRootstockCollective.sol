@@ -47,7 +47,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     event KYCApproved(address indexed builder_);
     event KYCRevoked(address indexed builder_);
     event CommunityApproved(address indexed builder_);
-    event Dewhitelisted(address indexed builder_);
+    event CommunityRevoked(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
     event SelfPaused(address indexed builder_);
@@ -314,13 +314,14 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @notice de-whitelist builder
+     * @notice community ban builder. This process is effectively irreversible, as community approval requires a gauge
+     * to not exist fo given builder
      * @dev reverts if it is not called by the governor address or authorized changer
      * reverts if it does not have a gauge associated
      * reverts if it is not community approved
      * @param builder_ address of the builder
      */
-    function dewhitelistBuilder(address builder_) external onlyValidChanger {
+    function communityBanBuilder(address builder_) external onlyValidChanger {
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[builder_].communityApproved) revert NotCommunityApproved();
@@ -330,7 +331,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         _haltGauge(_gauge);
         backersManager.rewardTokenApprove(address(_gauge), 0);
 
-        emit Dewhitelisted(builder_);
+        emit CommunityRevoked(builder_);
     }
 
     /**
