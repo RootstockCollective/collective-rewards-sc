@@ -38,7 +38,7 @@ Its main responsibility is to manage the Builders and their state. It allows to:
 - allow the Builder to change the Backers reward percentage
 - allow the Builder to replace the Builder reward receiver address
 - get the list of gauges
-- allow the Builders to revoke themselves.
+- allow the Builders to pause themselves.
 
 ## CycleTimeKeeper
 
