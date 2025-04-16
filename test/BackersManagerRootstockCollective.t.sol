@@ -323,7 +323,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // AND first builder gets revoked
         vm.prank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseReceivingRewards();
 
         // WHEN alice moves votes from revoked gauge to the other
         allocationsArray[0] = 0 ether;
@@ -499,7 +499,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         vm.prank(builder2);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseReceivingRewards();
 
         //  AND 2 ether reward are added
         backersManager.notifyRewardAmount(2 ether);
@@ -524,12 +524,12 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  THEN tx reverts because NotInDistributionPeriod
         vm.prank(builder);
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseReceivingRewards();
         // WHEN tries to permit a builder
         //  THEN tx reverts because NotInDistributionPeriod
         vm.prank(builder2);
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
-        builderRegistry.permitBuilder(0.1 ether);
+        builderRegistry.resumeReceivingRewards(0.1 ether);
     }
 
     /**

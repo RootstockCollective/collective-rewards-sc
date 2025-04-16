@@ -42,7 +42,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         // WHEN alice calls unpauseBuilder
         //  THEN tx reverts because caller is not the owner
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
-        builderRegistry.unpauseBuilder(builder);
+        builderRegistry.resumeBuilder(builder);
         vm.stopPrank();
     }
 
@@ -77,12 +77,12 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         // WHEN alice calls revokeBuilder
         //  THEN tx reverts because caller is not a builder
         vm.expectRevert(BuilderErrors.BuilderDoesNotExist.selector);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseReceivingRewards();
 
         // WHEN alice calls permitBuilder
         //  THEN tx reverts because caller is not a builder
         vm.expectRevert(BuilderErrors.BuilderDoesNotExist.selector);
-        builderRegistry.permitBuilder(1 ether);
+        builderRegistry.resumeReceivingRewards(1 ether);
         vm.stopPrank();
 
         // WHEN kycApprover calls approveBuilderKYC for alice
@@ -394,7 +394,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         // WHEN tries to permitBuilder
         //  THEN tx reverts because is not revoked
         vm.expectRevert(BuilderErrors.NotRevoked.selector);
-        builderRegistry.permitBuilder(1 ether);
+        builderRegistry.resumeReceivingRewards(1 ether);
         // AND the builder is paused but not revoked
         vm.startPrank(kycApprover);
         builderRegistry.pauseBuilder(builder, "paused");
@@ -402,7 +402,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         //  THEN tx reverts because is not revoked
         vm.startPrank(builder);
         vm.expectRevert(BuilderErrors.NotRevoked.selector);
-        builderRegistry.permitBuilder(1 ether);
+        builderRegistry.resumeReceivingRewards(1 ether);
     }
 
     /**
@@ -411,11 +411,11 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     function test_PermitBuilderInvalidBackerRewardPercentage() public {
         // GIVEN a revoked builder
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseReceivingRewards();
         //  WHEN tries to permitBuilder with 200% of reward percentage
         //   THEN tx reverts because is not a valid reward percentage
         vm.expectRevert(BuilderErrors.InvalidBackerRewardPercentage.selector);
-        builderRegistry.permitBuilder(2 ether);
+        builderRegistry.resumeReceivingRewards(2 ether);
     }
 
     // /**
@@ -452,11 +452,11 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     function test_RevertAlreadyRevoked() public {
         // GIVEN a revoked builder
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseReceivingRewards();
         // WHEN tries to revokeBuilder again
         //  THEN tx reverts because is already revoked
         vm.expectRevert(BuilderErrors.AlreadyRevoked.selector);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseReceivingRewards();
     }
 
     /**
@@ -551,7 +551,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         //   THEN tx reverts because is not KYC approved
         vm.startPrank(builder);
         vm.expectRevert(BuilderErrors.NotKYCApproved.selector);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseReceivingRewards();
     }
 
     /**
@@ -560,7 +560,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     function test_RevertPermitBuilderNotKYCApproved() public {
         // GIVEN a revoked builder
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseReceivingRewards();
         // AND kycApprover revokes it KYC
         vm.startPrank(kycApprover);
         builderRegistry.revokeBuilderKYC(builder);
@@ -569,7 +569,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         //   THEN tx reverts because is not KYC approved
         vm.startPrank(builder);
         vm.expectRevert(BuilderErrors.NotKYCApproved.selector);
-        builderRegistry.permitBuilder(0.1 ether);
+        builderRegistry.resumeReceivingRewards(0.1 ether);
     }
 
     /**
@@ -803,7 +803,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         //   THEN tx reverts because is not community approved
         vm.startPrank(builder);
         vm.expectRevert(BuilderErrors.NotCommunityApproved.selector);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseReceivingRewards();
     }
 
     /**
@@ -818,7 +818,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         //   THEN tx reverts because is not whitelisted
         vm.prank(builder);
         vm.expectRevert(BuilderErrors.NotCommunityApproved.selector);
-        builderRegistry.permitBuilder(0.1 ether);
+        builderRegistry.resumeReceivingRewards(0.1 ether);
     }
 
     // /**

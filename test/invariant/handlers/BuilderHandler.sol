@@ -14,7 +14,7 @@ contract BuilderHandler is BaseHandler {
         BuilderState _builderState = builderRegistry.builderState(_builder);
         if (_builderState == BuilderState.Active) {
             vm.prank(_builder);
-            builderRegistry.revokeBuilder();
+            builderRegistry.pauseReceivingRewards();
         }
     }
 
@@ -25,7 +25,7 @@ contract BuilderHandler is BaseHandler {
         BuilderState _builderState = builderRegistry.builderState(_builder);
         if (_builderState == BuilderState.Paused) {
             vm.prank(_builder);
-            builderRegistry.permitBuilder(0.4 ether);
+            builderRegistry.resumeReceivingRewards(0.4 ether);
         }
     }
 }

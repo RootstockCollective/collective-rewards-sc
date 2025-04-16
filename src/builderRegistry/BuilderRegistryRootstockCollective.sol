@@ -23,13 +23,13 @@ interface StateMachineErrors {
 }
 
 interface BuilderEvents {
-    event BuilderStateChange(address indexed builder_, BuilderState prevState_, BuilderState newState_);
-    event BuilderActivated(address indexed builder_, address rewardReceiver_, uint64 rewardPercentage_);
-    event Dewhitelisted(address indexed builder_);
+    event BuilderStateChanged(address indexed builder_, BuilderState prevState_, BuilderState newState_);
+    event RewardsInitialized(address indexed builder_, address rewardReceiver_, uint64 rewardPercentage_);
+    event Blacklisted(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
-    event Revoked(address indexed builder_);
-    event Permitted(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
+    event ReceivingRewardsPaused(address indexed builder_);
+    event ReceivingRewardsResumed(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event BackerRewardPercentageUpdateScheduled(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event BuilderRewardReceiverReplacementRequested(address indexed builder_, address newRewardReceiver_);
     event BuilderRewardReceiverReplacementCancelled(address indexed builder_, address newRewardReceiver_);
@@ -39,15 +39,14 @@ interface BuilderEvents {
 }
 
 interface BuilderErrors {
-    error AlreadyActivated();
     error AlreadyKYCApproved();
     error AlreadyCommunityApproved();
-    error AlreadyRevoked();
-    error NotActivated();
+    error AlreadyPausedRewards();
+    error RewardsNotInitialized();
     error NotKYCApproved();
     error NotCommunityApproved();
     error NotPaused();
-    error NotRevoked();
+    error CannotReceiveRewards();
     error NotOperational();
     error InvalidBackerRewardPercentage();
     error InvalidBuilderRewardReceiver();
@@ -91,7 +90,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
         }
         _;
         builderState[builder_] = targetState_;
-        emit BuilderStateChange(builder_, requiredState_, targetState_);
+        emit BuilderStateChanged(builder_, requiredState_, targetState_);
     }
 
     // -----------------------------
@@ -232,37 +231,9 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
     }
 
     /**
-     * @dev initialises the reward data for builder for the first time, setting
-     *  - reward receiver
-     *  - reward percentage
-     *  - cooldown end time - this value is se to non-0 and should never be set to 0 again as it serves as a flag of builder initialisation as well as 0 cooldown end time has no meaning in real life
-     * @dev reverts if reward percentage is greater than `_MAX_REWARD_PERCENTAGE`
-     *  See {approveBuilderKYC} for details.
-     */
-    function _initialiseRewardData(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
-        builderRewardReceiver[builder_] = rewardReceiver_;
-        // TODO: should we have a minimal amount?
-        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
-            revert InvalidBackerRewardPercentage();
-        }
-
-        // read from storage
-        RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[builder_];
-
-        _rewardPercentageData.previous = rewardPercentage_;
-        _rewardPercentageData.next = rewardPercentage_;
-        _rewardPercentageData.cooldownEndTime = uint128(block.timestamp);
-
-        // write to storage
-        backerRewardPercentage[builder_] = _rewardPercentageData;
-
-        emit BuilderActivated(builder_, rewardReceiver_, rewardPercentage_);
-    }
-
-    /**
      * @notice approves builder's KYC after a revocation
      * @dev reverts if it is not called by the owner address
-     * reverts if builder has been initialised already but gauge does not exist
+     * reverts if builder has been initialized already but gauge does not exist
      * reverts if builder is already KYC approved
      * reverts if called in non iniactive, non community approved state
      * @param builder_ address of the builder
@@ -281,13 +252,13 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
          *             DEAD = 5
          *         }
          *
-         *         0 -> 2 Inactive (fist-time & uninitialised & nogague) -> KYCApproved (initialised & nogague)
-         *         0 -> 2 Inactive (reapproved & initialised  & nogague) -> KYCApproved (initialised & nogague)
-         *         1 -> 3 CommunityApproved (fist-time & uninitialised & gague) -> Active
-         *         1 -> 3 CommunityApproved (reapproved & initialised & gague) -> Active
+         *         0 -> 2 Inactive (fist-time & uninitialized & nogague) -> KYCApproved (initialized & nogague)
+         *         0 -> 2 Inactive (reapproved & initialized  & nogague) -> KYCApproved (initialized & nogague)
+         *         1 -> 3 CommunityApproved (fist-time & uninitialized & gague) -> Active
+         *         1 -> 3 CommunityApproved (reapproved & initialized & gague) -> Active
          */
         BuilderState _state = builderState[builder_];
-        if (_state == BuilderState.KYCApproved || _state == BuilderState.Active) revert AlreadyKYCApproved(); // FIXME: consider removing this as it is somewhat unnecessary as the no such transition covers it. It's only here for backwards compatibility
+        if (_state == BuilderState.KYCApproved || _state == BuilderState.Active) revert AlreadyKYCApproved(); // FIXME: make decition on removing this as it is somewhat unnecessary as the no such transition covers it. It's only here for backwards compatibility
         BuilderState _targetState = BuilderState(uint8(_state) + 2);
 
         if (uint8(_state) > uint8(BuilderState.CommunityApproved)) {
@@ -295,8 +266,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
             revert StateMachineErrors.NoSuchTransition(_state, _targetState);
         }
 
-        if (backerRewardPercentage[builder_].cooldownEndTime == 0) { // cooldown time is only ever 0 if the builder is uninitialised
-            _initialiseRewardData(builder_, rewardReceiver_, rewardPercentage_);
+        if (backerRewardPercentage[builder_].cooldownEndTime == 0) { // cooldown time is only ever 0 if the builder is uninitialized
+            _initializeRewardData(builder_, rewardReceiver_, rewardPercentage_);
         }
 
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
@@ -306,7 +277,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
         }
 
         builderState[builder_] = _targetState;
-        emit BuilderStateChange(builder_, _state, _targetState);
+        emit BuilderStateChanged(builder_, _state, _targetState);
     }
 
     /**
@@ -351,7 +322,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
         }
 
         builderState[builder_] = _targetState;
-        emit BuilderStateChange(builder_, _state, _targetState);
+        emit BuilderStateChanged(builder_, _state, _targetState);
     }
 
     /**
@@ -401,7 +372,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
         _haltGauge(_gauge);
         backersManager.rewardTokenApprove(address(_gauge), 0);
 
-        emit Dewhitelisted(builder_);
+        emit Blacklisted(builder_);
         builderState[builder_] = BuilderState.DEAD;
     }
 
@@ -435,9 +406,12 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
      * reverts if it is not paused
      * @param builder_ address of the builder
      */
-    function unpauseBuilder(
+    function resumeBuilder(
         address builder_
     ) external onlyKycApprover transition(builder_, BuilderState.Paused, BuilderState.Active) {
+        GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
+        if (isGaugeHalted(address(_gauge))) revert NotPaused();
+
         emit Unpaused(builder_); // could be not needed
     }
 
@@ -448,11 +422,12 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
      * miscalculation of rewards
      * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
-    function permitBuilder(
+    function resumeReceivingRewards(
         uint64 rewardPercentage_
-    ) external transition(msg.sender, BuilderState.Paused, BuilderState.Active) {
+    ) external {
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
+        if (!isGaugeHalted(address(_gauge))) revert CannotReceiveRewards();
 
         // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
@@ -470,7 +445,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
 
         _resumeGauge(_gauge);
 
-        emit Permitted(msg.sender, rewardPercentage_, _rewardPercentageData.cooldownEndTime);
+        emit ReceivingRewardsResumed(msg.sender, rewardPercentage_, _rewardPercentageData.cooldownEndTime);
     }
 
     /**
@@ -479,17 +454,17 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
      *  reverts if it is executed in distribution period because changing the totalPotentialReward produce a
      * miscalculation of rewards
      */
-    function revokeBuilder() external transition(msg.sender, BuilderState.Active, BuilderState.Paused) {
+    function pauseReceivingRewards() external {
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
 
-        // when revoked builder wants to come back, it can set a new reward percentage. So, the cooldown time starts
-        // here
+        // when opted-out builder wants to start receiving rewards again, they will set a new reward percentage.
+        // So, the cooldown time starts here TODO: I don't get it. why do we need to set cooldownEndTime here?
         backerRewardPercentage[msg.sender].cooldownEndTime = uint128(block.timestamp + rewardPercentageCooldown);
 
         _haltGauge(_gauge);
 
-        emit Revoked(msg.sender); // TODO: could be not needed
+        emit ReceivingRewardsPaused(msg.sender); // TODO: could be not needed
     }
 
     /**
@@ -531,7 +506,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
      */
     function migrateBuilder(address builder_, address rewardAddress_, uint64 rewardPercentage_) public onlyKycApprover {
         _communityApproveBuilder(builder_);
-        _initialiseRewardData(builder_, rewardAddress_, rewardPercentage_);
+        _initializeRewardData(builder_, rewardAddress_, rewardPercentage_);
 
         emit BuilderMigrated(builder_, msg.sender);
     }
@@ -620,6 +595,15 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
         return _haltedGauges.contains(gauge_);
     }
 
+    /**
+     * @notice reverts if builder was not activated or approved by the community
+     */
+    function requireInitializedRewards(GaugeRootstockCollective gauge_) external view onlyBackersManager {
+        address _builder = gaugeToBuilder[gauge_];
+        if (_builder == address(0)) revert GaugeDoesNotExist();
+        if (builderState[_builder] != BuilderState.Active) revert RewardsNotInitialized();
+    }
+
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
@@ -652,15 +636,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
     }
 
     /**
-     * @notice reverts if builder was not activated or approved by the community
-     */
-    function validateWhitelisted(GaugeRootstockCollective gauge_) external view onlyBackersManager {
-        address _builder = gaugeToBuilder[gauge_];
-        if (_builder == address(0)) revert GaugeDoesNotExist();
-        if (builderState[_builder] != BuilderState.Active) revert NotActivated();
-    }
-
-    /**
      * @notice halts a gauge moving it from the active array to the halted one
      * @param gauge_ gauge contract to be halted
      */
@@ -681,6 +656,34 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
         _gauges.add(address(gauge_));
         _haltedGauges.remove(address(gauge_));
         backersManager.resumeGaugeShares(gauge_);
+    }
+
+    /**
+     * @dev initializes the reward data for builder for the first time, setting
+     *  - reward receiver
+     *  - reward percentage
+     *  - cooldown end time - this value is se to non-0 and should never be set to 0 again as it serves as a flag of builder initialisation as well as 0 cooldown end time has no meaning in real life
+     * @dev reverts if reward percentage is greater than `_MAX_REWARD_PERCENTAGE`
+     *  See {approveBuilderKYC} for details.
+     */
+    function _initializeRewardData(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
+        builderRewardReceiver[builder_] = rewardReceiver_;
+        // TODO: should we have a minimal amount?
+        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
+            revert InvalidBackerRewardPercentage();
+        }
+
+        // read from storage
+        RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[builder_];
+
+        _rewardPercentageData.previous = rewardPercentage_;
+        _rewardPercentageData.next = rewardPercentage_;
+        _rewardPercentageData.cooldownEndTime = uint128(block.timestamp);
+
+        // write to storage
+        backerRewardPercentage[builder_] = _rewardPercentageData;
+
+        emit RewardsInitialized(builder_, rewardReceiver_, rewardPercentage_);
     }
 
     /**
@@ -716,7 +719,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective, B
         backersManager.rewardTokenApprove(address(gauge_), type(uint256).max);
 
         builderState[builder_] = _targetState;
-        emit BuilderStateChange(builder_, _state, _targetState);
+        emit BuilderStateChanged(builder_, _state, _targetState);
     }
 
     /**
