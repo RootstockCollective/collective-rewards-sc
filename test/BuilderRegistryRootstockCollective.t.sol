@@ -121,7 +121,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         assertEq(_communityApproved, false);
 
         // THEN builder rewards receiver is set
-        assertEq(builderRegistry.builderRewardReceiver(_newBuilder), _newRewardReceiver);
+        assertEq(builderRegistry.rewardReceiver(_newBuilder), _newRewardReceiver);
 
         (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = builderRegistry.backerRewardPercentage(_newBuilder);
         // THEN previous backer reward percentage is 10%
