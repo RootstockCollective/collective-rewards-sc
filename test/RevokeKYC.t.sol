@@ -160,9 +160,9 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
         _initialDistribution();
-        // AND builder is revoked
+        // AND builder pauses himself
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
         // AND builder is KYC revoked
         vm.startPrank(kycApprover);
         builderRegistry.revokeBuilderKYC(builder);
@@ -200,9 +200,9 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
         _initialDistribution();
-        // AND builder is revoked
+        // AND builder pauses himself
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
         // AND builder is KYC revoked
         vm.startPrank(kycApprover);
         builderRegistry.revokeBuilderKYC(builder);
@@ -223,9 +223,9 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
         assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
 
-        // AND builder is permitted again
+        // AND builder unpauses himself again
         vm.startPrank(builder);
-        builderRegistry.permitBuilder(0.1 ether);
+        builderRegistry.unpauseSelf(0.1 ether);
 
         // THEN gauge is not halted anymore
         assertEq(builderRegistry.isGaugeHalted(address(gauge)), false);

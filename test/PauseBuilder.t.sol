@@ -183,7 +183,7 @@ contract PauseBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: revoked builder is paused
+     * SCENARIO: self paused builder is paused by the kycApprover
      *  If the builder calls claimBuilderReward the tx reverts
      */
     function test_RevokedGaugeIsPaused() public {
@@ -191,9 +191,9 @@ contract PauseBuilderTest is BaseTest {
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
         _initialDistribution();
-        // AND builder is revoked
+        // AND builder pauses himself
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
         // AND builder is paused
         vm.startPrank(kycApprover);
         builderRegistry.pauseBuilder(builder, "paused");
