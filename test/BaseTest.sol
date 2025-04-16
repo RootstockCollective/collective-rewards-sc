@@ -90,7 +90,7 @@ contract BaseTest is Test {
             address(backersManager), address(gaugeFactory), address(rewardDistributor), rewardPercentageCooldown
         );
 
-        backersManager.initializeBuilderRegistry(builderRegistry);
+        backersManager.initializeV2(builderRegistry);
 
         // allow to execute all the functions protected by governance
 
