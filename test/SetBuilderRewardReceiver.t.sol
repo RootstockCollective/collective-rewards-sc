@@ -9,9 +9,9 @@ contract SetBuilderRewardReceiverTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event BuilderRewardReceiverReplacementRequested(address indexed builder_, address newRewardReceiver_);
-    event BuilderRewardReceiverReplacementCancelled(address indexed builder_, address cuuRewardReceiver_);
-    event BuilderRewardReceiverReplacementApproved(address indexed builder_, address newRewardReceiver_);
+    event RewardReceiverUpdateRequested(address indexed builder_, address newRewardReceiver_);
+    event RewardReceiverUpdateCancelled(address indexed builder_, address newRewardReceiver_);
+    event RewardReceiverUpdated(address indexed builder_, address newRewardReceiver_);
 
     address internal _newRewardReceiver = makeAddr("newRewardReceiver");
 
@@ -33,110 +33,110 @@ contract SetBuilderRewardReceiverTest is BaseTest {
     }
 
     /**
-     * SCENARIO: submitRewardReceiverReplacementRequest should revert if is not called by the builder
+     * SCENARIO: requestRewardReceiverUpdate should revert if is not called by the builder
      */
     function test_submitterIsNotABuilder() public {
         // GIVEN a whitelisted builder
-        //  WHEN calls submitRewardReceiverReplacementRequest
+        //  WHEN calls requestRewardReceiverUpdate
         //   THEN tx reverts because caller is not an operational builder
         vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
         vm.prank(alice);
-        builderRegistry.submitRewardReceiverReplacementRequest(alice);
+        builderRegistry.requestRewardReceiverUpdate(alice);
     }
 
     /**
-     * SCENARIO: cancelRewardReceiverReplacementRequest should revert if is not called by the builder
+     * SCENARIO: cancelRewardReceiverUpdate should revert if is not called by the builder
      */
     function test_cancellerIsNotABuilder() public {
         // GIVEN a whitelisted builder
-        //  WHEN calls cancelRewardReceiverReplacementRequest
+        //  WHEN calls cancelRewardReceiverUpdate
         //   THEN tx reverts because caller is not an operational builder
         vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
         vm.prank(alice);
-        builderRegistry.cancelRewardReceiverReplacementRequest();
+        builderRegistry.cancelRewardReceiverUpdate();
     }
 
     /**
-     * SCENARIO: approveBuilderRewardReceiverReplacement should revert if is not called by the kycApprover
+     * SCENARIO: approveNewRewardReceiver should revert if is not called by the kycApprover
      */
     function test_approverIsNotKYCApprover() public {
         // GIVEN a whitelisted builder
-        //  WHEN alice calls approveBuilderRewardReceiverReplacement
+        //  WHEN alice calls approveNewRewardReceiver
         //   THEN tx reverts because caller is not an the KYC Approver
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
         vm.prank(alice);
-        builderRegistry.approveBuilderRewardReceiverReplacement(builder, alice);
+        builderRegistry.approveNewRewardReceiver(builder, alice);
     }
 
     /**
-     * SCENARIO: approveBuilderRewardReceiverReplacement should revert if builder is not Operational
+     * SCENARIO: approveNewRewardReceiver should revert if builder is not Operational
      */
     function test_approveANonOperationalBuilder() public {
         // GIVEN a none existent builder
-        //  WHEN kycApprover calls approveBuilderRewardReceiverReplacement
+        //  WHEN kycApprover calls approveNewRewardReceiver
         //   THEN tx reverts because Builder is not operational
         vm.prank(kycApprover);
         vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
-        builderRegistry.approveBuilderRewardReceiverReplacement(alice, alice);
+        builderRegistry.approveNewRewardReceiver(alice, alice);
     }
 
     /**
-     * SCENARIO: Builder submits a new rewardReceiver replacement request
+     * SCENARIO: Builder submits a new rewardReceiver update request
      */
-    function test_submitRewardReceiverReplacementRequest() public {
+    function test_requestRewardReceiverUpdate() public {
         // GIVEN a Whitelisted builder
-        //  WHEN builder calls submitRewardReceiverReplacementRequest
+        //  WHEN builder calls requestRewardReceiverUpdate
         vm.prank(builder);
-        //   THEN BuilderRewardReceiverReplacementRequested event is emitted
+        //   THEN RewardReceiverUpdateRequested event is emitted
         vm.expectEmit();
-        emit BuilderRewardReceiverReplacementRequested(builder, _newRewardReceiver);
-        builderRegistry.submitRewardReceiverReplacementRequest(_newRewardReceiver);
+        emit RewardReceiverUpdateRequested(builder, _newRewardReceiver);
+        builderRegistry.requestRewardReceiverUpdate(_newRewardReceiver);
 
         //   THEN his original rewardReceiver address is not afected
-        assertEq(builderRegistry.builderRewardReceiver(builder), builder);
-        //   THEN the _newRewardReceiver address is stored on the replacement storage for him
-        assertEq(builderRegistry.builderRewardReceiverReplacement(builder), _newRewardReceiver);
-        //   THEN hasBuilderRewardReceiverPendingApproval returns true
-        assertEq(builderRegistry.hasBuilderRewardReceiverPendingApproval(builder), true);
+        assertEq(builderRegistry.rewardReceiver(builder), builder);
+        //   THEN the _newRewardReceiver address is stored
+        assertEq(builderRegistry.rewardReceiverUpdate(builder), _newRewardReceiver);
+        //   THEN isRewardReceiverUpdatePending returns true
+        assertEq(builderRegistry.isRewardReceiverUpdatePending(builder), true);
     }
 
     /**
-     * SCENARIO: Builder cancels an open rewardReceiver replacement request
+     * SCENARIO: Builder cancels an request rewardReceiver update
      */
-    function test_cancelRewardReceiverReplacementRequest() public {
+    function test_cancelRewardReceiverUpdate() public {
         // GIVEN a Whitelisted builder
-        // AND builder has submitted a RewardReceiverReplacementRequest
+        // AND builder has submitted a RewardReceiverUpdate
         vm.prank(builder);
-        builderRegistry.submitRewardReceiverReplacementRequest(_newRewardReceiver);
+        builderRegistry.requestRewardReceiverUpdate(_newRewardReceiver);
         //  WHEN Builder cancels the request
-        //   THEN BuilderRewardReceiverReplacementCancelled event is emitted
+        //   THEN RewardReceiverUpdateCancelled event is emitted
         vm.prank(builder);
         vm.expectEmit();
-        emit BuilderRewardReceiverReplacementCancelled(builder, builder);
-        builderRegistry.cancelRewardReceiverReplacementRequest();
+        emit RewardReceiverUpdateCancelled(builder, builder);
+        builderRegistry.cancelRewardReceiverUpdate();
         //   THEN the new rewardReceiver address is back to the original
-        assertEq(builderRegistry.builderRewardReceiverReplacement(builder), builder);
-        //   THEN hasBuilderRewardReceiverPendingApproval returns false
-        assertEq(builderRegistry.hasBuilderRewardReceiverPendingApproval(builder), false);
+        assertEq(builderRegistry.rewardReceiverUpdate(builder), builder);
+        //   THEN isRewardReceiverUpdatePending returns false
+        assertEq(builderRegistry.isRewardReceiverUpdatePending(builder), false);
     }
 
     /**
-     * SCENARIO: KYCApprover approves an open rewardReceiver replacement request
+     * SCENARIO: KYCApprover approves an open rewardReceiver update request
      */
-    function test_approveRewardReceiverReplacementRequest() public {
+    function test_approveRewardReceiverUpdate() public {
         // GIVEN a Whitelisted builder
-        // AND builder has submitted a RewardReceiverReplacementRequest
+        // AND builder has submitted a RewardReceiverUpdate
         vm.prank(builder);
-        builderRegistry.submitRewardReceiverReplacementRequest(_newRewardReceiver);
+        builderRegistry.requestRewardReceiverUpdate(_newRewardReceiver);
         //  WHEN kycApprover approves the request, confirming the _newRewardReceiver
-        //   THEN BuilderRewardReceiverReplacementApproved event is emitted
+        //   THEN RewardReceiverUpdated event is emitted
         vm.prank(kycApprover);
         vm.expectEmit();
-        emit BuilderRewardReceiverReplacementApproved(builder, _newRewardReceiver);
-        builderRegistry.approveBuilderRewardReceiverReplacement(builder, _newRewardReceiver);
+        emit RewardReceiverUpdated(builder, _newRewardReceiver);
+        builderRegistry.approveNewRewardReceiver(builder, _newRewardReceiver);
         //   THEN the new rewardReceiver address is official
-        assertEq(builderRegistry.builderRewardReceiver(builder), _newRewardReceiver);
-        //   THEN hasBuilderRewardReceiverPendingApproval returns false
-        assertEq(builderRegistry.hasBuilderRewardReceiverPendingApproval(builder), false);
+        assertEq(builderRegistry.rewardReceiver(builder), _newRewardReceiver);
+        //   THEN isRewardReceiverUpdatePending returns false
+        assertEq(builderRegistry.isRewardReceiverUpdatePending(builder), false);
     }
 }
