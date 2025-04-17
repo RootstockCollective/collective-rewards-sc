@@ -9,7 +9,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event BuilderInitialised(address indexed builder_, address rewardReceiver_, uint64 rewardPercentage_);
+    event BuilderInitialized(address indexed builder_, address rewardReceiver_, uint64 rewardPercentage_);
     event KYCApproved(address indexed builder_);
     event KYCRevoked(address indexed builder_);
     event CommunityApproved(address indexed builder_);
@@ -24,10 +24,10 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         // GIVEN a backer alice
         vm.startPrank(alice);
 
-        // WHEN alice calls initialiseBuilder
+        // WHEN alice calls initializeBuilder
         //  THEN tx reverts because caller is not the owner
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
-        builderRegistry.initialiseBuilder(builder, builder, 0);
+        builderRegistry.initializeBuilder(builder, builder, 0);
 
         // WHEN alice calls revokeBuilderKYC
         //  THEN tx reverts because caller is not the owner
@@ -99,20 +99,20 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: kycApprover initialises a new builder
+     * SCENARIO: kycApprover initializes a new builder
      */
-    function test_InitialiseBuilder() public {
+    function test_InitializeBuilder() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         address _newRewardReceiver = makeAddr("newRewardReceiver");
         uint64 _backerRewardPercentage = 0.1 ether;
         // AND a kycApprover
         vm.prank(kycApprover);
-        // WHEN calls initialiseBuilder
-        //  THEN BuilderInitialised event is emitted
+        // WHEN calls initializeBuilder
+        //  THEN BuilderInitialized event is emitted
         vm.expectEmit();
-        emit BuilderInitialised(_newBuilder, _newRewardReceiver, _backerRewardPercentage);
-        builderRegistry.initialiseBuilder(_newBuilder, _newRewardReceiver, _backerRewardPercentage);
+        emit BuilderInitialized(_newBuilder, _newRewardReceiver, _backerRewardPercentage);
+        builderRegistry.initializeBuilder(_newBuilder, _newRewardReceiver, _backerRewardPercentage);
 
         // THEN builder is kycApproved
         (, bool _kycApproved, bool _communityApproved,,,,) = builderRegistry.builderState(_newBuilder);
@@ -147,23 +147,23 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: initialiseBuilder should revert if it is already initialised
+     * SCENARIO: initializeBuilder should revert if it is already initialized
      */
-    function test_RevertBuilderAlreadyInitialised() public {
+    function test_RevertBuilderAlreadyInitialized() public {
         // GIVEN a builder KYC approved
         //  AND a kycApprover
         vm.startPrank(kycApprover);
 
-        // WHEN tries to initialiseBuilder
-        //  THEN tx reverts because is already initialised
-        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderAlreadyInitialised.selector);
-        builderRegistry.initialiseBuilder(builder, builder, 0);
+        // WHEN tries to initializeBuilder
+        //  THEN tx reverts because is already initialized
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderAlreadyInitialized.selector);
+        builderRegistry.initializeBuilder(builder, builder, 0);
     }
 
     /**
-     * SCENARIO: approveBuilderKYC should revert if it is not initialised
+     * SCENARIO: approveBuilderKYC should revert if it is not initialized
      */
-    function test_RevertNotKYCInitialised() public {
+    function test_RevertNotKYCInitialized() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         //  AND is community approved
@@ -171,25 +171,25 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         builderRegistry.communityApproveBuilder(_newBuilder);
 
         // WHEN tries to approveBuilderKYC
-        //  THEN tx reverts because is not initialised
+        //  THEN tx reverts because is not initialized
         vm.prank(kycApprover);
-        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotInitialised.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotInitialized.selector);
         builderRegistry.approveBuilderKYC(_newBuilder);
     }
 
     /**
-     * SCENARIO: initialiseBuilder should revert if reward percentage is higher than 100
+     * SCENARIO: initializeBuilder should revert if reward percentage is higher than 100
      */
-    function test_InitialiseBuilderInvalidBackerRewardPercentage() public {
+    function test_InitializeBuilderInvalidBackerRewardPercentage() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         // AND a kycApprover
         vm.prank(kycApprover);
 
-        // WHEN tries to initialiseBuilder
+        // WHEN tries to initializeBuilder
         //  THEN tx reverts because is not a valid reward percentage
         vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBackerRewardPercentage.selector);
-        builderRegistry.initialiseBuilder(_newBuilder, _newBuilder, 2 ether);
+        builderRegistry.initializeBuilder(_newBuilder, _newBuilder, 2 ether);
     }
 
     /**
@@ -198,9 +198,9 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     function test_CommunityApproveBuilder() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
-        // AND a KYCApprover initialises a builder
+        // AND a KYCApprover initializes a builder
         vm.prank(kycApprover);
-        builderRegistry.initialiseBuilder(_newBuilder, _newBuilder, 0);
+        builderRegistry.initializeBuilder(_newBuilder, _newBuilder, 0);
 
         // WHEN calls communityApproveBuilder
         //  THEN a GaugeCreated event is emitted
@@ -416,23 +416,23 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is whitelisted and KYC gets revoked. Cannot be initialised anymore
+     * SCENARIO: builder is whitelisted and KYC gets revoked. Cannot be initialized anymore
      */
     function test_RevertActivatingWhitelistedRevokedBuilder() public {
         // GIVEN a KYC revoked builder
         vm.startPrank(kycApprover);
         builderRegistry.revokeBuilderKYC(builder);
 
-        // WHEN kycApprover tries to initialise it again
+        // WHEN kycApprover tries to initialize it again
         //  THEN tx reverts because builder already exists
-        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderAlreadyInitialised.selector);
-        builderRegistry.initialiseBuilder(builder, builder, 0);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderAlreadyInitialized.selector);
+        builderRegistry.initializeBuilder(builder, builder, 0);
     }
 
     /**
-     * SCENARIO: communityApproveBuilder before initialise it
+     * SCENARIO: communityApproveBuilder before initialize it
      */
-    function test_CommunityApproveBuilderBeforeInitialise() public {
+    function test_CommunityApproveBuilderBeforeInitialize() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         //  AND is community approved
@@ -442,30 +442,30 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         assertEq(address(builderRegistry.builderToGauge(_newBuilder)), address(_newGauge));
         // THEN new builder is assigned to the new gauge
         assertEq(builderRegistry.gaugeToBuilder(_newGauge), _newBuilder);
-        (bool _initialised, bool _kycApproved, bool _communityApproved,,,,) = builderRegistry.builderState(_newBuilder);
+        (bool _initialized, bool _kycApproved, bool _communityApproved,,,,) = builderRegistry.builderState(_newBuilder);
         // THEN builder is community approved
         assertEq(_communityApproved, true);
-        // THEN builder is not initialised
-        assertEq(_initialised, false);
+        // THEN builder is not initialized
+        assertEq(_initialized, false);
         // THEN builder is not KYC approved
         assertEq(_kycApproved, false);
 
-        // WHEN new builder is initialised
+        // WHEN new builder is initialized
         vm.prank(kycApprover);
-        builderRegistry.initialiseBuilder(_newBuilder, _newBuilder, 0.1 ether);
-        (_initialised, _kycApproved, _communityApproved,,,,) = builderRegistry.builderState(_newBuilder);
+        builderRegistry.initializeBuilder(_newBuilder, _newBuilder, 0.1 ether);
+        (_initialized, _kycApproved, _communityApproved,,,,) = builderRegistry.builderState(_newBuilder);
         // THEN builder is _community approved
         assertEq(_communityApproved, true);
-        // THEN builder is initialised
-        assertEq(_initialised, true);
+        // THEN builder is initialized
+        assertEq(_initialized, true);
         // THEN builder is KYC approved
         assertEq(_kycApproved, true);
     }
 
     /**
-     * SCENARIO: community approved builder can be de-whitelisted without being initialised before
+     * SCENARIO: community approved builder can be de-whitelisted without being initialized before
      */
-    function test_CommunityRevokedBuilderNotInitialised() public {
+    function test_CommunityRevokedBuilderNotInitialized() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         //  AND is community approved
@@ -475,11 +475,11 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         assertEq(address(builderRegistry.builderToGauge(_newBuilder)), address(_newGauge));
         // THEN new builder is assigned to the new gauge
         assertEq(builderRegistry.gaugeToBuilder(_newGauge), _newBuilder);
-        (bool _initialised, bool _kycApproved, bool _communityApproved,,,,) = builderRegistry.builderState(_newBuilder);
+        (bool _initialized, bool _kycApproved, bool _communityApproved,,,,) = builderRegistry.builderState(_newBuilder);
         // THEN builder is community approved
         assertEq(_communityApproved, true);
-        // THEN builder is not initialised
-        assertEq(_initialised, false);
+        // THEN builder is not initialized
+        assertEq(_initialized, false);
         // THEN builder is not KYC approved
         assertEq(_kycApproved, false);
 
