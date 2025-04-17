@@ -594,7 +594,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @dev reverts if it is not called by the backers manager
      * @param gauge_ The gauge to validate.
      */
-    function requireBuilderActivation(GaugeRootstockCollective gauge_) external view onlyBackersManager {
+    function requireInitializedBuilder(GaugeRootstockCollective gauge_) external view {
         address _builder = gaugeToBuilder[gauge_];
         if (_builder == address(0)) revert GaugeDoesNotExist();
         if (!builderState[_builder].initialized) revert BuilderNotInitialized();
