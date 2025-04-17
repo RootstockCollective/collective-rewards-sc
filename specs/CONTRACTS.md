@@ -32,7 +32,7 @@ Its main responsibility is to manage the Builders and their state. It allows to:
 - revoke Builders KYC
 - community approve Builders
 - remove community approval for the Builders
-- pause/unpause Builders
+- pause/unpause Builders KYC
 - store Backers reward percentage
 - keep track of the Builder<->Gauge association
 - allow the Builder to change the Backers reward percentage
