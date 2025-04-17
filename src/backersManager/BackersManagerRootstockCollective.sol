@@ -417,7 +417,9 @@ contract BackersManagerRootstockCollective is
     function updatemaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_)
         external
     {
-        // TODO: introduce a control modifier
+        if (msg.sender != governanceManager.governor()) {
+            revert NotAuthorized();
+        }
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
     }
 
