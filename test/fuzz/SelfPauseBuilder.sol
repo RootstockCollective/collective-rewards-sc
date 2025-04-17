@@ -4,23 +4,23 @@ pragma solidity 0.8.20;
 import { BaseFuzz } from "./BaseFuzz.sol";
 import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 
-contract RevokeBuilderFuzzTest is BaseFuzz {
+contract SelfPauseBuilderFuzzTest is BaseFuzz {
     using stdStorage for StdStorage;
 
     uint32 public constant MAX_CYCLE_DURATION = 365 days;
-    mapping(address builder_ => RevokeState revokedState_) public revokedBuilders;
+    mapping(address builder_ => SelfPauseState selfPauseState_) public pausedBuilders;
 
-    enum RevokeState {
-        nonRevoked,
-        permitted,
-        revoked
+    enum SelfPauseState {
+        none,
+        unpaused,
+        paused
     }
 
     /**
-     * SCENARIO: In a random time gauges are revoked and permitted again.
-     *  There is a distribution, revoked gauges don't receive rewards
+     * SCENARIO: In a random time gauges are self paused and self unpaused again.
+     *  There is a distribution, self paused gauges don't receive rewards
      */
-    function testFuzz_RevokeBuilderAndPermitWithNewRewardPercentage(
+    function testFuzz_SelfPauseBuilderAndSelfUnpauseWithNewRewardPercentage(
         uint256 buildersAmount_,
         uint256 backersAmount_,
         uint256 seed_,
@@ -44,21 +44,21 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         /// AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
-        // AND revoke randomly
-        _randomRevoke(seed_, backersManager.totalPotentialReward());
-        uint256 _revokeTimestamp = block.timestamp;
+        // AND self pause randomly
+        _randomSelfPause(seed_, backersManager.totalPotentialReward());
+        uint256 _selfPausedTimestamp = block.timestamp;
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
-        // AND permit randomly
-        _randomPermit(seed_, backersManager.totalPotentialReward());
+        // AND self unpause randomly
+        _randomUnpauseSelf(seed_, backersManager.totalPotentialReward());
 
-        // AND permitted builders have the new reward percentage applied if cooldown time has passed
+        // AND self unpaused builders have the new reward percentage applied if cooldown time has passed
         for (uint256 i = 0; i < builders.length; i++) {
             if (
-                revokedBuilders[builders[i]] == RevokeState.permitted
-                    && block.timestamp - _revokeTimestamp >= builderRegistry.rewardPercentageCooldown()
+                pausedBuilders[builders[i]] == SelfPauseState.unpaused
+                    && block.timestamp - _selfPausedTimestamp >= builderRegistry.rewardPercentageCooldown()
             ) {
                 assertEq(builderRegistry.getRewardPercentageToApply(builders[i]), 0.1 ether);
             } else {
@@ -69,10 +69,10 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
-        // AND each not revoked gauge receives its proportional share of rewards based on its allocation
-        // AND revoked gauges don't receive rewards
+        // AND each not self paused gauge receives its proportional share of rewards based on its allocation
+        // AND self paused gauges don't receive rewards
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            if (revokedBuilders[builders[i]] < RevokeState.revoked) {
+            if (pausedBuilders[builders[i]] < SelfPauseState.paused) {
                 assertApproxEqAbs(
                     rewardToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(RT_DISTRIBUTION_AMOUNT, i), 100
                 );
@@ -85,10 +85,10 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
     }
 
     /**
-     * SCENARIO: In a random time gauges are revoked, allocated, and permitted again.
+     * SCENARIO: In a random time gauges are self paused, allocated, and self unpaused again.
      *  Shares are updated correctly
      */
-    function testFuzz_RevokeBuilderAndPermitWithNewAllocations(
+    function testFuzz_SelfPausedBuilderAndSelfUnpausedWithNewAllocations(
         uint256 buildersAmount_,
         uint256 backersAmount_,
         uint256 seed_,
@@ -104,10 +104,10 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
-        // AND revoke randomly
-        uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, backersManager.totalPotentialReward());
+        // AND self pause randomly
+        uint256 _expectedTotalPotentialReward = _randomSelfPause(seed_, backersManager.totalPotentialReward());
 
-        // THEN totalPotentialReward does not consider the revoked gauges
+        // THEN totalPotentialReward does not consider the self paused gauges
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND a random time passes
@@ -118,7 +118,7 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             for (uint256 j = 0; j < backersGauges[i].length; j++) {
                 uint256 _allocationBefore = backersAllocations[i][j];
                 backersAllocations[i][j] = uint256(keccak256(abi.encodePacked(block.timestamp, i, j))) % MAX_VOTE;
-                // revoked gauges don't modify the totalPotentialReward
+                // self paused gauges don't modify the totalPotentialReward
                 if (!builderRegistry.isGaugeHalted(address(backersGauges[i][j]))) {
                     if (backersAllocations[i][j] > _allocationBefore) {
                         _expectedTotalPotentialReward += (backersAllocations[i][j] - _allocationBefore)
@@ -137,39 +137,40 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
             backersManager.allocateBatch(backersGauges[i], backersAllocations[i]);
         }
 
-        // THEN totalPotentialReward does not consider the revoked gauges
+        // THEN totalPotentialReward does not consider the self paused gauges
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
-        // AND permit randomly
-        _expectedTotalPotentialReward = _randomPermit(seed_, _expectedTotalPotentialReward);
+        // AND self unpause randomly
+        _expectedTotalPotentialReward = _randomUnpauseSelf(seed_, _expectedTotalPotentialReward);
 
-        // THEN totalPotentialReward increase by permitted gauges
+        // THEN totalPotentialReward increase by self unpaused gauges
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         _expectedTotalPotentialReward = 0;
-        // THEN rewardShares for each non revoked gauge is the entire cycle
+        // THEN rewardShares for each non self paused gauge is the entire cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            if (revokedBuilders[builders[i]] != RevokeState.revoked) {
+            if (pausedBuilders[builders[i]] != SelfPauseState.paused) {
                 _expectedTotalPotentialReward += gaugesArray[i].totalAllocation() * cycleDuration;
                 assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * cycleDuration);
             }
         }
-        // THEN totalPotentialReward is the entire cycle of non revoked gauges
+        // THEN totalPotentialReward is the entire cycle of non self paused gauge
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
     }
 
     /**
-     * SCENARIO: In a random time gauges are revoked and permitted again. There was an cycle duration change in the
+     * SCENARIO: In a random time gauges are self paused and self unpaused again. There was an cycle duration change in
+     * the
      * middle
      *  Shares are updated correctly
      */
-    function testFuzz_RevokeBuilderAndPermitWithNewCycleDuration(
+    function testFuzz_SelfPauseBuilderAndSelfUnpauseWithNewCycleDuration(
         uint256 buildersAmount_,
         uint256 backersAmount_,
         uint256 seed_,
@@ -187,10 +188,10 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
-        // AND revoke randomly
-        uint256 _expectedTotalPotentialReward = _randomRevoke(seed_, backersManager.totalPotentialReward());
+        // AND self pause randomly
+        uint256 _expectedTotalPotentialReward = _randomSelfPause(seed_, backersManager.totalPotentialReward());
 
-        // THEN totalPotentialReward does not consider the revoked gauges
+        // THEN totalPotentialReward does not consider the self paused gauges
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND a random time passes
@@ -203,32 +204,32 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
-        // AND permit randomly
-        _expectedTotalPotentialReward = _randomPermit(seed_, _expectedTotalPotentialReward);
+        // AND self unpause randomly
+        _expectedTotalPotentialReward = _randomUnpauseSelf(seed_, _expectedTotalPotentialReward);
 
-        // THEN totalPotentialReward increase by permitted gauges
+        // THEN totalPotentialReward increase by self unpaused gauges
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND there is a distribution
         _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         _expectedTotalPotentialReward = 0;
-        // THEN rewardShares for each non revoked gauge is the entire cycle
+        // THEN rewardShares for each non self paused gauge is the entire cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            if (revokedBuilders[builders[i]] != RevokeState.revoked) {
+            if (pausedBuilders[builders[i]] != SelfPauseState.paused) {
                 _expectedTotalPotentialReward += gaugesArray[i].totalAllocation() * newCycleDuration_;
                 assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * newCycleDuration_);
             }
         }
-        // THEN totalPotentialReward is the entire cycle of non revoked gauges
+        // THEN totalPotentialReward is the entire cycle of non self paused gauge
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
     }
 
     /**
-     * SCENARIO: In a random time gauges are revoked and permitted again. There was distribution in the middle
+     * SCENARIO: In a random time gauges are self paused and self unpaused again. There was distribution in the middle
      *  Shares are updated correctly
      */
-    function testFuzz_RevokeBuilderAndPermitWithDistribution(
+    function testFuzzSelfPauseBuilderAndSelfUnpauseWithDistribution(
         uint256 buildersAmount_,
         uint256 backersAmount_,
         uint256 seed_,
@@ -244,8 +245,8 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
-        // AND revoke randomly
-        _randomRevoke(seed_, backersManager.totalPotentialReward());
+        // AND self pause randomly
+        _randomSelfPause(seed_, backersManager.totalPotentialReward());
 
         // AND a random time passes
         skip(randomTime_);
@@ -256,58 +257,58 @@ contract RevokeBuilderFuzzTest is BaseFuzz {
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);
 
-        // AND permit randomly
-        _randomPermit(seed_, backersManager.totalPotentialReward());
+        // AND self unpause randomly
+        _randomUnpauseSelf(seed_, backersManager.totalPotentialReward());
 
         uint256 _expectedTotalPotentialReward;
-        // THEN rewardShares for each non revoked gauge is the entire cycle
+        // THEN rewardShares for each non self paused gauge is the entire cycle
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            if (revokedBuilders[builders[i]] != RevokeState.revoked) {
+            if (pausedBuilders[builders[i]] != SelfPauseState.paused) {
                 _expectedTotalPotentialReward += gaugesArray[i].totalAllocation() * cycleDuration;
                 assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * cycleDuration);
             }
         }
-        // THEN totalPotentialReward is the entire cycle of non revoked gauges
+        // THEN totalPotentialReward is the entire cycle of non self paused gauge
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
     }
 
     /**
      * @notice skip some random time but using the current cycle as a limit
-     *  Used to avoid jump to another cycle because permitBuilder will fail if there is no distribution
+     *  Used to avoid jump to another cycle because unpauseSelf will fail if there is no distribution
      * @param randomTime_ time to skip
      */
     function _skipLimitPeriodFinish(uint256 randomTime_) internal {
         skip(randomTime_ % (backersManager.periodFinish() - block.timestamp - 1));
     }
 
-    function _randomRevoke(uint256 seed_, uint256 expectedTotalPotentialReward_) internal returns (uint256) {
-        bool _skipRevoke = true;
+    function _randomSelfPause(uint256 seed_, uint256 expectedTotalPotentialReward_) internal returns (uint256) {
+        bool _skipPauseSelf = true;
         for (uint256 i = 0; i < builders.length; i++) {
             uint256 _random = uint256(keccak256(abi.encodePacked(seed_, i)));
             // at least one gauge with allocations must be operational
-            if (_skipRevoke && gaugesArray[i].totalAllocation() > 0) {
-                _skipRevoke = false;
+            if (_skipPauseSelf && gaugesArray[i].totalAllocation() > 0) {
+                _skipPauseSelf = false;
             }
-            // 70% chance to revoke
+            // 70% chance to self pause
             else if (_random % 10 > 2) {
                 vm.prank(builders[i]);
-                builderRegistry.revokeBuilder();
-                revokedBuilders[builders[i]] = RevokeState.revoked;
+                builderRegistry.pauseSelf();
+                pausedBuilders[builders[i]] = SelfPauseState.paused;
                 expectedTotalPotentialReward_ -= gaugesArray[i].rewardShares();
             }
         }
         return expectedTotalPotentialReward_;
     }
 
-    function _randomPermit(uint256 seed_, uint256 expectedTotalPotentialReward_) internal returns (uint256) {
+    function _randomUnpauseSelf(uint256 seed_, uint256 expectedTotalPotentialReward_) internal returns (uint256) {
         for (uint256 i = 0; i < builders.length; i++) {
             uint256 _random = uint256(keccak256(abi.encodePacked(seed_, i, i)));
-            // 70% chance to permit
-            if (revokedBuilders[builders[i]] == RevokeState.revoked && _random % 10 > 2) {
+            // 70% chance to self unpause
+            if (pausedBuilders[builders[i]] == SelfPauseState.paused && _random % 10 > 2) {
                 expectedTotalPotentialReward_ += gaugesArray[i].rewardShares();
                 vm.prank(builders[i]);
-                builderRegistry.permitBuilder(0.1 ether /*reward percentage*/ );
-                revokedBuilders[builders[i]] = RevokeState.permitted;
+                builderRegistry.unpauseSelf(0.1 ether /*reward percentage*/ );
+                pausedBuilders[builders[i]] = SelfPauseState.unpaused;
             }
         }
         return expectedTotalPotentialReward_;
