@@ -176,6 +176,16 @@ contract BackersManagerRootstockCollective is
         builderRegistry = builderRegistry_;
     }
 
+    /**
+     * @notice contract version 3 initializer
+     * @param maxDistributionsPerBatch_ maximum number of distributions allowed per batch
+     */
+    function initializeV3(uint256 maxDistributionsPerBatch_) external reinitializer(3) {
+        if (false) revert NotAuthorized();
+
+        maxDistributionsPerBatch = maxDistributionsPerBatch_;
+    }
+
     // -----------------------------
     // ---- External Functions -----
     // -----------------------------
