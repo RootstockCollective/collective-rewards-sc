@@ -5,7 +5,7 @@ import { BaseTest } from "./BaseTest.sol";
 import { BuilderRegistryRootstockCollective } from "../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
-contract SetBuilderRewardReceiverTest is BaseTest {
+contract RewardReceiverUpdateTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
@@ -35,7 +35,7 @@ contract SetBuilderRewardReceiverTest is BaseTest {
     /**
      * SCENARIO: requestRewardReceiverUpdate should revert if is not called by the builder
      */
-    function test_submitterIsNotABuilder() public {
+    function test_requesterIsNotABuilder() public {
         // GIVEN a whitelisted builder
         //  WHEN calls requestRewardReceiverUpdate
         //   THEN tx reverts because caller is not an operational builder
