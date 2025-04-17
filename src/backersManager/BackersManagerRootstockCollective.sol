@@ -412,12 +412,13 @@ contract BackersManagerRootstockCollective is
 
     /**
      * @notice Updates the maximum number of distributions allowed per batch.
-     * @dev reverts if not called by the governor
+     * @dev reverts if not called by the upgrader
+     * @dev permission will be delegated from upgrader to different role once the GovernanceManagerRootStockCollective contract is upgraded
      */
     function updatemaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_)
         external
     {
-        if (msg.sender != governanceManager.governor()) {
+        if (msg.sender != governanceManager.upgrader()) {
             revert NotAuthorized();
         }
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
