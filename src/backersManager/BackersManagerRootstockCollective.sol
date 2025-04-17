@@ -412,6 +412,7 @@ contract BackersManagerRootstockCollective is
 
     /**
      * @notice Updates the maximum number of distributions allowed per batch.
+     * @dev reverts if not called by the governor
      */
     function updatemaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_)
         external
