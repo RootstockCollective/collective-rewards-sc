@@ -22,8 +22,6 @@ contract BackersManagerRootstockCollective is
     ICollectiveRewardsCheckRootstockCollective,
     ERC165Upgradeable
 {
-    // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
-    uint256 internal constant _MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
     // -----------------------------
     // ------- Custom Errors -------
@@ -121,6 +119,12 @@ contract BackersManagerRootstockCollective is
     BuilderRegistryRootstockCollective public builderRegistry;
     /// @notice Tracks whether a backer has opted out from rewards, disabling the allocation to builders if true
     mapping(address backer => bool hasOptedOut) public rewardsOptedOut;
+
+    // -----------------------------
+    // ---------- V3 Storage ----------
+    // -----------------------------
+
+    uint256 internal maxDistributionsPerBatch;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -476,7 +480,7 @@ contract BackersManagerRootstockCollective is
         uint256 _gaugeIndex = indexLastGaugeDistributed;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         uint256 _gaugesLength = _builderRegistry.getGaugesLength();
-        uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
+        uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + maxDistributionsPerBatch);
 
         // cache variables read in the loop
         uint256 _rewardsERC20 = rewardsERC20;
