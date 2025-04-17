@@ -406,6 +406,16 @@ contract BackersManagerRootstockCollective is
         return builderRegistry.communityApproveBuilder(builder_);
     }
 
+    /**
+     * @notice Updates the maximum number of distributions allowed per batch.
+     */
+    function updatemaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_)
+        external
+    {
+        // TODO: introduce a control modifier
+        maxDistributionsPerBatch = maxDistributionsPerBatch_;
+    }
+
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
