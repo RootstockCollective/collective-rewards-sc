@@ -26,7 +26,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error NotActivated();
     error NotKYCApproved();
     error NotCommunityApproved();
-    error NotPaused();
+    error BuilderNotKYCPaused();
     error BuilderNotSelfPaused();
     error NotOperational();
     error InvalidBackerRewardPercentage();
@@ -48,8 +48,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     event KYCRevoked(address indexed builder_);
     event CommunityApproved(address indexed builder_);
     event CommunityBanned(address indexed builder_);
-    event Paused(address indexed builder_, bytes20 reason_);
-    event Unpaused(address indexed builder_);
+    event KYCPaused(address indexed builder_, bytes20 reason_);
+    event KYCResumed(address indexed builder_);
     event SelfPaused(address indexed builder_);
     event SelfResumed(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event BackerRewardPercentageUpdateScheduled(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
@@ -92,7 +92,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         bool initialized;
         bool kycApproved;
         bool communityApproved;
-        bool paused;
+        bool kycPaused;
         bool selfPaused;
         bytes7 reserved; // for future upgrades
         bytes20 pausedReason;
@@ -335,31 +335,31 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @notice pause builder
+     * @notice pause builder KYC
      * @dev reverts if it is not called by the owner address
      * @param builder_ address of the builder
      * @param reason_ reason for the pause
      */
-    function pauseBuilder(address builder_, bytes20 reason_) external onlyKycApprover {
+    function pauseBuilderKYC(address builder_, bytes20 reason_) external onlyKycApprover {
         // pause can be overwritten to change the reason
-        builderState[builder_].paused = true;
+        builderState[builder_].kycPaused = true;
         builderState[builder_].pausedReason = reason_;
-        emit Paused(builder_, reason_);
+        emit KYCPaused(builder_, reason_);
     }
 
     /**
-     * @notice unpause builder
+     * @notice unpause builder KYC
      * @dev reverts if it is not called by the owner address
      * reverts if it is not paused
      * @param builder_ address of the builder
      */
-    function unpauseBuilder(address builder_) external onlyKycApprover {
-        if (!builderState[builder_].paused) revert NotPaused();
+    function unpauseBuilderKYC(address builder_) external onlyKycApprover {
+        if (!builderState[builder_].kycPaused) revert BuilderNotKYCPaused();
 
-        builderState[builder_].paused = false;
+        builderState[builder_].kycPaused = false;
         builderState[builder_].pausedReason = "";
 
-        emit Unpaused(builder_);
+        emit KYCResumed(builder_);
     }
 
     /**
@@ -491,14 +491,14 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      */
     function isBuilderOperational(address builder_) public view returns (bool) {
         BuilderState memory _builderState = builderState[builder_];
-        return _builderState.kycApproved && _builderState.communityApproved && !_builderState.paused;
+        return _builderState.kycApproved && _builderState.communityApproved && !_builderState.kycPaused;
     }
 
     /**
      * @notice return true if builder is paused
      */
     function isBuilderPaused(address builder_) public view returns (bool) {
-        return builderState[builder_].paused;
+        return builderState[builder_].kycPaused;
     }
 
     /**
