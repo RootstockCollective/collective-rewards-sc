@@ -48,7 +48,7 @@ You can find bellow the permissions, roles, and functionalities within the `Buil
     + Revoke builder's KYC using `revokeBuilderKYC`.
     + Approve builder's reward receiver replacement using `approveBuilderRewardReceiverReplacement`.
     + Pause and unpause builder using `pauseBuilder` and `unpauseBuilder`.
-    + Initialise builder using `initialiseBuilder`.
+    + Initialize builder using `initializeBuilder`.
     + Migrate builder using `migrateBuilder`.
 
 ### Authorized Changer

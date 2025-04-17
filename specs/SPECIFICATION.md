@@ -42,7 +42,7 @@ Alice will get 125 RIF.\
 To keep track of the Builder status, the contracts make use of the `BuilderState`
 
 ```solidity
-bool initialised;
+bool initialized;
 bool kycApproved;
 bool communityApproved;
 bool paused;
@@ -55,13 +55,13 @@ bytes20 pausedReason;
 - `communityApproved`: it's set when the Builder is community approved (`BuilderRegistry#communityApproveBuilder()`) and unset when the community approval is removed (`BuilderRegistry#dewhitelistBuilder()`). **Once the flag is unset, it cannot be reset again**.
 - `paused`: this flag can be used by the KYC Approver to temporarily pause a Builder (`BuilderRegistry#pauseBuilder()`) because of additional checks required on that Builder. The KYC approver can specify a reason (`pausedReason`) when pausing the Builder. It's unset by the KYC Approver also (`BuilderRegistry#unpauseBuilder()`) and this flag can be set and unset at any time.
 - `revoked`: this flag is set by the Builders themselves if they don't want to participate to CR (`BuilderRegistry#revokeBuilder()`). It's also unset by the Builders when they want to be part of CR again (`BuilderRegistry#permitBuilder`).
-- `initialised`: it's activated once either when the Builder is KYC approved for the first time (`BuilderRegistry#initialiseBuilder()`). This flag will never be unset.
+- `initialized`: it's activated once either when the Builder is KYC approved for the first time (`BuilderRegistry#initializeBuilder()`). This flag will never be unset.
 
 ### Conditions required to switch the Builder's flags
 
 | Action                    | Paused    | Revoked   | KYC Approved  | Activated | Community Approved    |
 |---------------------------|:---------:|:---------:|:-------------:|:---------:|:---------------------:|
-| InitialiseBuilder         |   -       |   -       |   -           |   False   |   -                   |
+| InitializeBuilder         |   -       |   -       |   -           |   False   |   -                   |
 | CommunityApproveBuilder   |   -       |   -       |   -           |   -       |   False               |
 | ApproveBuilderKYC         |   -       |   -       |   False       |   True    |   -                   |
 | RevokeBuilderKYC          |   -       |   -       |   True        |   -       |   -                   |
