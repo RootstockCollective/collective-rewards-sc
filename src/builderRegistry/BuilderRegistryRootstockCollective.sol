@@ -229,7 +229,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @notice returns true if the builder has an open request to update his receiver address
      * @param builder_ address of the builder
      */
-    function isRewardReceiverUpdatePending(address builder_) external view returns (bool) {
+    function isRewardReceiverUpdatePending(address builder_) public view returns (bool) {
         return
             rewardReceiverUpdate[builder_] != address(0) && rewardReceiver[builder_] != rewardReceiverUpdate[builder_];
     }
@@ -471,12 +471,12 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function canClaimBuilderReward(address claimer_) external view returns (address rewardReceiver_) {
         address _builder = gaugeToBuilder[GaugeRootstockCollective(msg.sender)];
         if (_builder == address(0)) revert BuilderDoesNotExist();
-        rewardReceiver_ = builderRewardReceiver[_builder];
+        rewardReceiver_ = rewardReceiver[_builder];
         if (isBuilderPaused(_builder)) revert BuilderRewardsLocked();
         if (claimer_ != _builder && claimer_ != rewardReceiver_) revert NotAuthorized();
         // if Builder uses the rewardReceiver account to claim, there shouldn't be an
         // open request to replace such address, they need to use the Builder account instead
-        if (claimer_ == rewardReceiver_ && hasBuilderRewardReceiverPendingApproval(_builder)) {
+        if (claimer_ == rewardReceiver_ && isRewardReceiverUpdatePending(_builder)) {
             revert NotAuthorized();
         }
     }
