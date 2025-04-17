@@ -112,7 +112,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is paused and KYC revoked in the middle of an cycle having allocation.
+     * SCENARIO: builder is KYC paused and KYC revoked in the middle of an cycle having allocation.
      *  builder's unclaimed rewards are sent to rewardDistributor
      */
     function test_PausedBuilderIsKYCRevoked() public {
@@ -120,9 +120,9 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
         _initialDistribution();
-        // AND builder is paused
+        // AND builder is KYC paused
         vm.startPrank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilderKYC(builder, "paused");
         // AND builder is KYC revoked
         vm.startPrank(kycApprover);
         builderRegistry.revokeBuilderKYC(builder);
