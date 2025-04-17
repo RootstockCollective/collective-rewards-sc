@@ -1,13 +1,12 @@
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
-import { parse } from 'path';
 
 // Function to read gas values from a .gas-snapshot file content into an object
 function readGasValues(content) {
     const gasValues = {};
     const lines = content.split('\n');
     lines.forEach(line => {
-        const match = line.match(/(.*)\ \(gas:\ ([0-9]+)\)/);
+        const match = line.match(/(.*) \(gas: ([0-9]+)\)/);
         if (match) {
             const testName = match[1];
             const gas = parseInt(match[2], 10);
@@ -16,9 +15,6 @@ function readGasValues(content) {
     });
     return gasValues;
 }
-
-// Get the current commit hash
-const currentCommit = execSync('git rev-parse HEAD').toString().trim();
 
 // Get the previous commit hash
 const previousCommit = execSync('git rev-parse HEAD~1').toString().trim();

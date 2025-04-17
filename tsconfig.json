@@ -1,5 +1,5 @@
 {
   "extends": "@tsconfig/node22/tsconfig.json",
-  "include": ["./test", "./typechain-types"],
+  "include": ["./test", "./typechain-types", "./.commitlintrc.ts"],
   "files": ["./hardhat.config.ts"]
 }
