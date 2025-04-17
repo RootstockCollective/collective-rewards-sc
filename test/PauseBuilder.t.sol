@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseTest, GaugeRootstockCollective } from "./BaseTest.sol";
+import { BaseTest } from "./BaseTest.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
+import { BuilderRegistryRootstockCollective } from "../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 
 contract PauseBuilderTest is BaseTest {
     function _initialState() internal {
@@ -65,7 +66,7 @@ contract PauseBuilderTest is BaseTest {
         // WHEN builder claim rewards
         vm.startPrank(builder);
         // THEN tx reverts because builder rewards are locked
-        vm.expectRevert(GaugeRootstockCollective.BuilderRewardsLocked.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderRewardsLocked.selector);
         gauge.claimBuilderReward();
 
         // THEN builder rewardToken balance is 0
@@ -200,7 +201,7 @@ contract PauseBuilderTest is BaseTest {
         // WHEN builder claim rewards
         vm.startPrank(builder);
         // THEN tx reverts because builder rewards are locked
-        vm.expectRevert(GaugeRootstockCollective.BuilderRewardsLocked.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderRewardsLocked.selector);
         gauge.claimBuilderReward();
     }
 }

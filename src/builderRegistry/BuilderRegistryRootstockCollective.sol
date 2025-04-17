@@ -38,6 +38,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error GaugeDoesNotExist();
     error NotAuthorized();
     error InvalidAddress();
+    error BuilderRewardsLocked();
 
     // -----------------------------
     // ----------- Events ----------
@@ -236,7 +237,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @notice returns true if the builder has an open request to replace his receiver address
      * @param builder_ address of the builder
      */
-    function hasBuilderRewardReceiverPendingApproval(address builder_) external view returns (bool) {
+    function hasBuilderRewardReceiverPendingApproval(address builder_) public view returns (bool) {
         return builderRewardReceiverReplacement[builder_] != address(0)
             && builderRewardReceiver[builder_] != builderRewardReceiverReplacement[builder_];
     }
@@ -531,6 +532,24 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
             return _rewardPercentageData.next;
         }
         return _rewardPercentageData.previous;
+    }
+
+    /**
+     * @notice returns the reward receiver address for a builder
+     * @dev reverts if conditions for the builder to claim are not met
+     * @param claimer_ address of the claimer
+     */
+    function canClaimBuilderReward(address claimer_) external view returns (address rewardReceiver_) {
+        address _builder = gaugeToBuilder[GaugeRootstockCollective(msg.sender)];
+        if (_builder == address(0)) revert BuilderDoesNotExist();
+        rewardReceiver_ = builderRewardReceiver[_builder];
+        if (isBuilderPaused(_builder)) revert BuilderRewardsLocked();
+        if (claimer_ != _builder && claimer_ != rewardReceiver_) revert NotAuthorized();
+        // if Builder uses the rewardReceiver account to claim, there shouldn't be an
+        // open request to replace such address, they need to use the Builder account instead
+        if (claimer_ == rewardReceiver_ && hasBuilderRewardReceiverPendingApproval(_builder)) {
+            revert NotAuthorized();
+        }
     }
 
     /**
