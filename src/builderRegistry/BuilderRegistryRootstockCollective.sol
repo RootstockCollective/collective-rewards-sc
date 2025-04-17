@@ -384,7 +384,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         if (!builderState[msg.sender].communityApproved) revert NotCommunityApproved();
         if (!builderState[msg.sender].revoked) revert NotRevoked();
 
-        // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
             revert InvalidBackerRewardPercentage();
         }
