@@ -12,7 +12,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     // -----------------------------
 
     event BackerRewardsClaimed(address indexed backer_, uint256 amount_);
-    event NewAllocation(address indexed backer_, uint256 allocation_);
+    event NewAllocation(address indexed backer_, uint256 allocation_, bool isOptedOut_);
     event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 backersAmount_);
 
     function _setUp() internal override {
@@ -97,7 +97,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         //  THEN Allocated event is emitted
         vm.startPrank(alice);
         vm.expectEmit();
-        emit NewAllocation(alice, 1 ether);
+        emit NewAllocation(alice, 1 ether, false);
         backersManager.allocate(gauge, 1 ether);
 
         // THEN alice allocation is 1 ether
@@ -135,7 +135,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND alice deallocates all
         //  THEN Allocated event is emitted
         vm.expectEmit();
-        emit NewAllocation(alice, 0 ether);
+        emit NewAllocation(alice, 0 ether, false);
         backersManager.allocate(gauge, 0 ether);
 
         // THEN alice allocation is 0
