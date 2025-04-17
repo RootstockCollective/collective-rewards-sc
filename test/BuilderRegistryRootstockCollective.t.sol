@@ -14,8 +14,8 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     event KYCRevoked(address indexed builder_);
     event CommunityApproved(address indexed builder_);
     event Dewhitelisted(address indexed builder_);
-    event Paused(address indexed builder_, bytes20 reason_);
-    event Unpaused(address indexed builder_);
+    event KYCPaused(address indexed builder_, bytes20 reason_);
+    event KYCResumed(address indexed builder_);
     event Revoked(address indexed builder_);
     event Permitted(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
@@ -34,15 +34,15 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
         builderRegistry.revokeBuilderKYC(builder);
 
-        // WHEN alice calls pauseBuilder
+        // WHEN alice calls pauseBuilderKYC
         //  THEN tx reverts because caller is not the owner
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
-        builderRegistry.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilderKYC(builder, "paused");
 
-        // WHEN alice calls unpauseBuilder
+        // WHEN alice calls unpauseBuilderKYC
         //  THEN tx reverts because caller is not the owner
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotKycApprover.selector);
-        builderRegistry.unpauseBuilder(builder);
+        builderRegistry.unpauseBuilderKYC(builder);
         vm.stopPrank();
     }
 
@@ -236,78 +236,77 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: kycApprover pause a builder
+     * SCENARIO: kycApprover pauses a builder KYC
      */
-    function test_PauseBuilder() public {
+    function test_PauseBuilderKyc() public {
         // GIVEN a whitelisted builder
-        //  WHEN kycApprover calls pauseBuilder
+        //  WHEN kycApprover calls pauseBuilderKYC
         vm.prank(kycApprover);
-        //   THEN Paused event is emitted
+        //   THEN KYCPaused event is emitted
         vm.expectEmit();
-        emit Paused(builder, "paused");
-        builderRegistry.pauseBuilder(builder, "paused");
+        emit KYCPaused(builder, "paused");
+        builderRegistry.pauseBuilderKYC(builder, "paused");
 
         // THEN builder is paused
-        (,,, bool _paused,,, bytes20 _reason) = builderRegistry.builderState(builder);
-        assertEq(_paused, true);
+        (,,, bool _kycPaused,,, bytes20 _reason) = builderRegistry.builderState(builder);
+        assertEq(_kycPaused, true);
         // THEN builder paused reason is "paused"
         assertEq(_reason, "paused");
     }
 
     /**
-     * SCENARIO: pause reason is 20 bytes long
+     * SCENARIO: KYC pause reason is 20 bytes long
      */
     function test_PauseReason20bytes() public {
         // GIVEN a whitelisted builder
-        //  WHEN kycApprover calls pauseBuilder
+        //  WHEN kycApprover calls pauseBuilderKYC
         vm.prank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "This is a short test");
+        builderRegistry.pauseBuilderKYC(builder, "This is a short test");
         // THEN builder is paused
-        (,,, bool _paused,,, bytes20 _reason) = builderRegistry.builderState(builder);
-        assertEq(_paused, true);
+        (,,, bool _kycPaused,,, bytes20 _reason) = builderRegistry.builderState(builder);
+        assertEq(_kycPaused, true);
         // THEN builder paused reason is "This is a short test"
         assertEq(_reason, "This is a short test");
     }
 
     /**
-     * SCENARIO: pauseBuilder again and overwritten the reason
+     * SCENARIO: pauseBuilderKYC again and overwritten the reason
      */
     function test_PauseWithAnotherReason() public {
-        // GIVEN a paused builder
-        //  AND kycApprover calls pauseBuilder
+        // GIVEN a KYC paused builder
         vm.prank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
-        (,,, bool _paused,,, bytes20 _reason) = builderRegistry.builderState(builder);
-        assertEq(_paused, true);
+        builderRegistry.pauseBuilderKYC(builder, "paused");
+        (,,, bool _kycPaused,,, bytes20 _reason) = builderRegistry.builderState(builder);
+        assertEq(_kycPaused, true);
         // THEN builder paused reason is "paused"
         assertEq(_reason, "paused");
 
         // WHEN is paused again with a different reason
         vm.prank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "pausedAgain");
+        builderRegistry.pauseBuilderKYC(builder, "pausedAgain");
         // THEN builder is still paused
-        (,,, _paused,,, _reason) = builderRegistry.builderState(builder);
-        assertEq(_paused, true);
+        (,,, _kycPaused,,, _reason) = builderRegistry.builderState(builder);
+        assertEq(_kycPaused, true);
         // THEN builder paused reason is "pausedAgain"
         assertEq(_reason, "pausedAgain");
     }
 
     /**
-     * SCENARIO: kycApprover unpauseBuilder a builder
+     * SCENARIO: kycApprover unpauses Builder KYC
      */
-    function test_UnpauseBuilder() public {
-        // GIVEN a paused builder
+    function test_UnpauseBuilderKYC() public {
+        // GIVEN a KYC paused builder
         vm.startPrank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
-        // WHEN kycApprover calls unpauseBuilder
-        //  THEN Unpaused event is emitted
+        builderRegistry.pauseBuilderKYC(builder, "paused");
+        // WHEN kycApprover calls unpauseBuilderKYC
+        //  THEN KYCResumed event is emitted
         vm.expectEmit();
-        emit Unpaused(builder);
-        builderRegistry.unpauseBuilder(builder);
+        emit KYCResumed(builder);
+        builderRegistry.unpauseBuilderKYC(builder);
 
         // THEN builder is not paused
-        (,,, bool _paused,,, bytes20 _reason) = builderRegistry.builderState(builder);
-        assertEq(_paused, false);
+        (,,, bool _kycPaused,,, bytes20 _reason) = builderRegistry.builderState(builder);
+        assertEq(_kycPaused, false);
         // THEN builder paused reason is clean
         assertEq(_reason, "");
     }
@@ -351,9 +350,9 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         //  THEN tx reverts because is not revoked
         vm.expectRevert(BuilderRegistryRootstockCollective.NotRevoked.selector);
         builderRegistry.permitBuilder(1 ether);
-        // AND the builder is paused but not revoked
+        // AND the builder KYC is paused but not revoked
         vm.startPrank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilderKYC(builder, "paused");
         // WHEN tries to permitBuilder
         //  THEN tx reverts because is not revoked
         vm.startPrank(builder);
@@ -596,92 +595,92 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: KYC revoked builder can be paused and unpaused
+     * SCENARIO: KYC revoked builder can be KYC paused and unpaused
      */
-    function test_PauseKYCRevokedBuilder() public {
+    function test_PauseKycOnKycRevokedBuilder() public {
         // GIVEN a KYC revoked builder
         vm.startPrank(kycApprover);
         builderRegistry.revokeBuilderKYC(builder);
-        // AND kycApprover calls pauseBuilder
-        builderRegistry.pauseBuilder(builder, "paused");
-        (, bool _kycApproved,, bool _paused,,,) = builderRegistry.builderState(builder);
+        // AND kycApprover calls pauseBuilderKYC
+        builderRegistry.pauseBuilderKYC(builder, "paused");
+        (, bool _kycApproved,, bool _kycPaused,,,) = builderRegistry.builderState(builder);
         // THEN builder is not kycApproved
         assertEq(_kycApproved, false);
         // THEN builder is paused
-        assertEq(_paused, true);
+        assertEq(_kycPaused, true);
 
-        // AND kycApprover calls unpauseBuilder
-        builderRegistry.unpauseBuilder(builder);
-        (, _kycApproved,, _paused,,,) = builderRegistry.builderState(builder);
+        // AND kycApprover calls unpauseBuilderKYC
+        builderRegistry.unpauseBuilderKYC(builder);
+        (, _kycApproved,, _kycPaused,,,) = builderRegistry.builderState(builder);
         // THEN builder is still not kycApproved
         assertEq(_kycApproved, false);
         // THEN builder is not paused
-        assertEq(_paused, false);
+        assertEq(_kycPaused, false);
     }
 
     /**
-     * SCENARIO: revoked builder can be paused and unpaused
+     * SCENARIO: revoked builder can be kyc paused and unpaused
      */
-    function test_PauseRevokedBuilder() public {
+    function test_PauseKYCRevokedBuilder() public {
         // GIVEN a revoked builder
         vm.startPrank(builder);
         builderRegistry.revokeBuilder();
-        // AND kycApprover calls pauseBuilder
+        // AND kycApprover calls pauseBuilderKYC
         vm.startPrank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
-        (,,, bool _paused, bool _revoked,,) = builderRegistry.builderState(builder);
+        builderRegistry.pauseBuilderKYC(builder, "paused");
+        (,,, bool _kycPaused, bool _revoked,,) = builderRegistry.builderState(builder);
         // THEN builder is revoked
         assertEq(_revoked, true);
         // THEN builder is paused
-        assertEq(_paused, true);
+        assertEq(_kycPaused, true);
 
-        // AND kycApprover calls unpauseBuilder
-        builderRegistry.unpauseBuilder(builder);
-        (,,, _paused, _revoked,,) = builderRegistry.builderState(builder);
+        // AND kycApprover calls unpauseBuilderKYC
+        builderRegistry.unpauseBuilderKYC(builder);
+        (,,, _kycPaused, _revoked,,) = builderRegistry.builderState(builder);
         // THEN builder is still revoked
         assertEq(_revoked, true);
         // THEN builder is not paused
-        assertEq(_paused, false);
+        assertEq(_kycPaused, false);
     }
 
     /**
-     * SCENARIO: paused builder can be revoked and permitted
+     * SCENARIO: KYC paused builder can be revoked and permitted
      */
-    function test_RevokePausedBuilder() public {
-        // GIVEN paused builder
+    function test_RevokeKYCPausedBuilder() public {
+        // GIVEN a KYC paused builder
         vm.startPrank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilderKYC(builder, "paused");
         // AND builder calls revokeBuilder
         vm.startPrank(builder);
         builderRegistry.revokeBuilder();
-        (,,, bool _paused, bool _revoked,,) = builderRegistry.builderState(builder);
+        (,,, bool _kycPaused, bool _revoked,,) = builderRegistry.builderState(builder);
         // THEN builder is paused
-        assertEq(_paused, true);
+        assertEq(_kycPaused, true);
         // THEN builder is revoked
         assertEq(_revoked, true);
 
         // AND builder calls permitBuilder
         builderRegistry.permitBuilder(0.1 ether);
-        (,,, _paused, _revoked,,) = builderRegistry.builderState(builder);
+        (,,, _kycPaused, _revoked,,) = builderRegistry.builderState(builder);
         // THEN builder is still paused
-        assertEq(_paused, true);
+        assertEq(_kycPaused, true);
         // THEN builder is not revoked
         assertEq(_revoked, false);
     }
 
     /**
-     * SCENARIO: paused builder can be KYC revoked
+     * SCENARIO: KYC paused builder can be KYC revoked
      */
     function test_KYCRevokePausedBuilder() public {
-        // GIVEN paused builder
+        // GIVEN KYC paused builder
         vm.startPrank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilderKYC(builder, "paused");
 
         // AND kycApprover calls revokeBuilderKYC
         builderRegistry.revokeBuilderKYC(builder);
-        (, bool _kycApproved,, bool _paused,,,) = builderRegistry.builderState(builder);
+        (, bool _kycApproved,, bool _kycPaused,,,) = builderRegistry.builderState(builder);
         // THEN builder is paused
-        assertEq(_paused, true);
+        assertEq(_kycPaused, true);
         // THEN builder is not kyc approved
         assertEq(_kycApproved, false);
     }
@@ -781,38 +780,38 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         vm.prank(governor);
         builderRegistry.dewhitelistBuilder(builder);
 
-        // AND kycApprover calls pauseBuilder
+        // AND kycApprover calls pauseBuilderKYC
         vm.startPrank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
-        (,, bool _communityApproved, bool _paused,,,) = builderRegistry.builderState(builder);
+        builderRegistry.pauseBuilderKYC(builder, "paused");
+        (,, bool _communityApproved, bool _kycPaused,,,) = builderRegistry.builderState(builder);
         // THEN builder is not whitelisted
         assertEq(_communityApproved, false);
         // THEN builder is paused
-        assertEq(_paused, true);
+        assertEq(_kycPaused, true);
 
-        // AND kycApprover calls unpauseBuilder
-        builderRegistry.unpauseBuilder(builder);
-        (,, _communityApproved, _paused,,,) = builderRegistry.builderState(builder);
+        // AND kycApprover calls unpauseBuilderKYC
+        builderRegistry.unpauseBuilderKYC(builder);
+        (,, _communityApproved, _kycPaused,,,) = builderRegistry.builderState(builder);
         // THEN builder is still not community approved
         assertEq(_communityApproved, false);
         // THEN builder is not paused
-        assertEq(_paused, false);
+        assertEq(_kycPaused, false);
     }
 
     /**
-     * SCENARIO: paused builder can be de-whitelisted
+     * SCENARIO: paused KYC builder can be de-whitelisted
      */
     function test_DewhitelistPausedBuilder() public {
-        // GIVEN paused builder
+        // GIVEN a KYC paused builder
         vm.prank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilderKYC(builder, "paused");
 
         // AND governor calls dewhitelistBuilder
         vm.prank(governor);
         builderRegistry.dewhitelistBuilder(builder);
-        (,, bool _communityApproved, bool _paused,,,) = builderRegistry.builderState(builder);
+        (,, bool _communityApproved, bool _kycPaused,,,) = builderRegistry.builderState(builder);
         // THEN builder is paused
-        assertEq(_paused, true);
+        assertEq(_kycPaused, true);
         // THEN builder is not community approved
         assertEq(_communityApproved, false);
     }
