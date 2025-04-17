@@ -589,8 +589,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @notice Ensures the builder associated with the given gauge exists and builder is activated
-     * @dev Reverts if the builder gauge does not exist or if the builder is not activated.
+     * @notice Ensures the builder associated with the given gauge exists and builder is initialised
+     * @dev Reverts if the builder gauge does not exist or if the builder is not initialised.
      * @dev reverts if it is not called by the backers manager
      * @param gauge_ The gauge to validate.
      */
