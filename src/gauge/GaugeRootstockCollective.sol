@@ -115,12 +115,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         backersManager = BackersManagerRootstockCollective(builderRegistry.backersManager());
     }
 
-    /**
-     * @notice contract version 2 initializer
-     */
-    function initializeV2() public reinitializer(2) {
-        builderRegistry = BuilderRegistryRootstockCollective(backersManager.builderRegistry());
-    }
+    // NOTE: This contract previously included an `initializeV2()` function using `reinitializer(2)`
+    // to set the `builderRegistry` from `backersManager.builderRegistry()` during an upgrade to version 2.
+    // The function has been removed since the upgrade was already executed and it's no longer necessary.
 
     // -----------------------------
     // ---- External Functions -----
