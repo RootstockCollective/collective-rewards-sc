@@ -21,22 +21,22 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     // -----------------------------
 
     error AlreadyActivated();
-    error AlreadyKYCApproved();
-    error AlreadyCommunityApproved();
+    error BuilderAlreadyKYCApproved();
+    error BuilderAlreadyCommunityApproved();
     error AlreadyRevoked();
     error NotActivated();
-    error NotKYCApproved();
-    error NotCommunityApproved();
+    error BuilderNotKYCApproved();
+    error BuilderNotCommunityApproved();
     error NotPaused();
     error NotRevoked();
-    error NotOperational();
+    error BuilderNotOperational();
     error InvalidBackerRewardPercentage();
     error InvalidBuilderRewardReceiver();
     error BuilderAlreadyExists();
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
     error NotAuthorized();
-    error InvalidAddress();
+    error ZeroAddressNotAllowed();
     error BuilderRewardsLocked();
 
     // -----------------------------
@@ -164,8 +164,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         external
         initializer
     {
-        if (address(backersManager_) == address(0)) revert InvalidAddress();
-        if (gaugeFactory_ == address(0)) revert InvalidAddress();
+        if (address(backersManager_) == address(0)) revert ZeroAddressNotAllowed();
+        if (gaugeFactory_ == address(0)) revert ZeroAddressNotAllowed();
         __Upgradeable_init(backersManager_.governanceManager());
         backersManager = backersManager_;
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
@@ -223,7 +223,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         onlyKycApprover
     {
         // Only an operational builder can be approved
-        if (!isBuilderOperational(builder_)) revert NotOperational();
+        if (!isBuilderOperational(builder_)) revert BuilderNotOperational();
 
         address _rewardReceiverReplacement = builderRewardReceiverReplacement[builder_];
         if (_rewardReceiverReplacement != rewardReceiverReplacement_) revert InvalidBuilderRewardReceiver();
@@ -272,7 +272,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[builder_].activated) revert NotActivated();
-        if (builderState[builder_].kycApproved) revert AlreadyKYCApproved();
+        if (builderState[builder_].kycApproved) revert BuilderAlreadyKYCApproved();
 
         builderState[builder_].kycApproved = true;
 
@@ -288,7 +288,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param builder_ address of the builder
      */
     function revokeBuilderKYC(address builder_) external onlyKycApprover {
-        if (!builderState[builder_].kycApproved) revert NotKYCApproved();
+        if (!builderState[builder_].kycApproved) revert BuilderNotKYCApproved();
 
         builderState[builder_].kycApproved = false;
 
@@ -328,7 +328,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function dewhitelistBuilder(address builder_) external onlyValidChanger {
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[builder_].communityApproved) revert NotCommunityApproved();
+        if (!builderState[builder_].communityApproved) revert BuilderNotCommunityApproved();
 
         builderState[builder_].communityApproved = false;
 
@@ -379,8 +379,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function permitBuilder(uint64 rewardPercentage_) external {
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
-        if (!builderState[msg.sender].communityApproved) revert NotCommunityApproved();
+        if (!builderState[msg.sender].kycApproved) revert BuilderNotKYCApproved();
+        if (!builderState[msg.sender].communityApproved) revert BuilderNotCommunityApproved();
         if (!builderState[msg.sender].revoked) revert NotRevoked();
 
         // TODO: should we have a minimal amount?
@@ -416,8 +416,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function revokeBuilder() external {
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
-        if (!builderState[msg.sender].communityApproved) revert NotCommunityApproved();
+        if (!builderState[msg.sender].kycApproved) revert BuilderNotKYCApproved();
+        if (!builderState[msg.sender].communityApproved) revert BuilderNotCommunityApproved();
         if (builderState[msg.sender].revoked) revert AlreadyRevoked();
 
         builderState[msg.sender].revoked = true;
@@ -436,7 +436,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
     function setBackerRewardPercentage(uint64 rewardPercentage_) external {
-        if (!isBuilderOperational(msg.sender)) revert NotOperational();
+        if (!isBuilderOperational(msg.sender)) revert BuilderNotOperational();
 
         // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
@@ -544,7 +544,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @notice get halted gauge from array at a given index
+     * @notice get halted gauge by index
      */
     function getHaltedGaugeAt(uint256 index_) public view returns (address) {
         return _haltedGauges.at(index_);
@@ -584,7 +584,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         // Only builder can submit a reward receiver address replacement
         address _builder = msg.sender;
         // Only operational builder can initiate this action
-        if (!isBuilderOperational(_builder)) revert NotOperational();
+        if (!isBuilderOperational(_builder)) revert BuilderNotOperational();
         builderRewardReceiverReplacement[_builder] = newRewardReceiver_;
     }
 
@@ -670,7 +670,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      *  See {communityApproveBuilder} for details.
      */
     function _communityApproveBuilder(address builder_) private returns (GaugeRootstockCollective gauge_) {
-        if (builderState[builder_].communityApproved) revert AlreadyCommunityApproved();
+        if (builderState[builder_].communityApproved) revert BuilderAlreadyCommunityApproved();
         if (address(builderToGauge[builder_]) != address(0)) revert BuilderAlreadyExists();
 
         builderState[builder_].communityApproved = true;
