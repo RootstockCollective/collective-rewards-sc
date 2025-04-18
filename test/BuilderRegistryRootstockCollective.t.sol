@@ -135,14 +135,14 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: approveBuilderKYC should revert if it is already approved
      */
-    function test_RevertAlreadyKYCApproved() public {
+    function test_RevertBuilderAlreadyKYCApproved() public {
         // GIVEN a builder KYC approved
         //  AND a kycApprover
         vm.startPrank(kycApprover);
 
         // WHEN tries to approveBuilderKYC
         //  THEN tx reverts because is already kycApproved
-        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyKYCApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderAlreadyKYCApproved.selector);
         builderRegistry.approveBuilderKYC(builder);
     }
 
@@ -230,7 +230,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         // GIVEN an already community approved builder
         //  WHEN it tries to communityApproveBuilder
         //   THEN tx reverts because is already community approved
-        vm.expectRevert(BuilderRegistryRootstockCollective.AlreadyCommunityApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderAlreadyCommunityApproved.selector);
         vm.prank(governor);
         builderRegistry.communityApproveBuilder(builder);
     }
@@ -502,7 +502,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         //  WHEN builders tries to revoke it
         //   THEN tx reverts because is not KYC approved
         vm.startPrank(builder);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotKYCApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotKYCApproved.selector);
         builderRegistry.revokeBuilder();
     }
 
@@ -520,7 +520,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         //  WHEN builders tries to permit it
         //   THEN tx reverts because is not KYC approved
         vm.startPrank(builder);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotKYCApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotKYCApproved.selector);
         builderRegistry.permitBuilder(0.1 ether);
     }
 
@@ -534,7 +534,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
 
         //  WHEN kycApprover tries to revoke it again
         //   THEN tx reverts because is not KYC approved
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotKYCApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotKYCApproved.selector);
         builderRegistry.revokeBuilderKYC(builder);
     }
 
@@ -723,7 +723,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
 
         //  WHEN governor calls dewhitelistBuilder
         //   THEN tx reverts because is not community approved
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotCommunityApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotCommunityApproved.selector);
         vm.prank(governor);
         builderRegistry.dewhitelistBuilder(builder);
     }
@@ -754,7 +754,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         //  WHEN builders tries to revoke itself
         //   THEN tx reverts because is not community approved
         vm.startPrank(builder);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotCommunityApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotCommunityApproved.selector);
         builderRegistry.revokeBuilder();
     }
 
@@ -769,7 +769,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         //  WHEN builders tries to permit it
         //   THEN tx reverts because is not whitelisted
         vm.prank(builder);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotCommunityApproved.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotCommunityApproved.selector);
         builderRegistry.permitBuilder(0.1 ether);
     }
 
