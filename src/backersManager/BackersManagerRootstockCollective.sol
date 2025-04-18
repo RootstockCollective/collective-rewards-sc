@@ -40,7 +40,7 @@ contract BackersManagerRootstockCollective is
     error BackerOptedOutRewards();
     error AlreadyOptedInRewards();
     error BackerHasAllocations();
-    error InvalidAddress();
+    error ZeroAddressNotAllowed();
     error RewardTokenNotApproved();
 
     // -----------------------------
@@ -167,7 +167,7 @@ contract BackersManagerRootstockCollective is
      * @param builderRegistry_ address of the builder registry contract
      */
     function initializeV2(BuilderRegistryRootstockCollective builderRegistry_) external reinitializer(2) {
-        if (address(builderRegistry_) == address(0)) revert InvalidAddress();
+        if (address(builderRegistry_) == address(0)) revert ZeroAddressNotAllowed();
 
         builderRegistry = builderRegistry_;
     }
