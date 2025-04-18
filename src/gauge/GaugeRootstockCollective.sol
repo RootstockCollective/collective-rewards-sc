@@ -23,7 +23,6 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     error GaugeHalted();
     error BeforeDistribution();
     error NotEnoughAmount();
-    error InvalidAddress();
 
     // -----------------------------
     // ----------- Events ----------
