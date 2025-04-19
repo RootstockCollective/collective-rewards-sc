@@ -1822,4 +1822,32 @@ vm.expectRevert(BackersManagerRootstockCollective.RewardTokenNotApproved.selecto
         // THEN periodFinish is 0
         assertEq(backersManager.periodFinish(), backersManager.cycleNext(block.timestamp));
     }
+    
+    /**
+     * SCENARIO: upgrader can update maxDistributionsPerBatch
+     */
+    function test_UpdateMaxDistributionsPerBatch() public {
+        // GIVEN a new maxDistributionsPerBatch value
+        uint256 newMaxDistributionsPerBatch = 30;
+
+        // WHEN upgrader calls updateMaxDistributionsPerBatch
+        vm.prank(governanceManager.upgrader());
+        backersManager.updateMaxDistributionsPerBatch(newMaxDistributionsPerBatch);
+
+        // THEN maxDistributionsPerBatch is updated
+        assertEq(backersManager.maxDistributionsPerBatch(), newMaxDistributionsPerBatch);
+    }
+
+    /**
+     * SCENARIO: non-upgrader cannot update maxDistributionsPerBatch
+     */
+    function test_RevertUpdateMaxDistributionsPerBatchNotUpgrader() public {
+        // GIVEN a new maxDistributionsPerBatch value
+        uint256 newMaxDistributionsPerBatch = 30;
+
+        // WHEN a non-upgrader tries to update maxDistributionsPerBatch
+        vm.prank(alice);
+        vm.expectRevert(BackersManagerRootstockCollective.NotAuthorized.selector);
+        backersManager.updateMaxDistributionsPerBatch(newMaxDistributionsPerBatch);
+    }
 }
