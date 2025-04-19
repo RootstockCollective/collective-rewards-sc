@@ -40,7 +40,6 @@ contract BackersManagerRootstockCollective is
     error BackerHasAllocations();
     error InvalidAddress();
     error RewardTokenNotApproved();
-    error GaugesLengthMoreThanMaxBatch();
 
     // -----------------------------
     // ----------- Events ----------
@@ -125,7 +124,7 @@ contract BackersManagerRootstockCollective is
     // ---------- V3 Storage ----------
     // -----------------------------
 
-    uint256 internal maxDistributionsPerBatch;
+    uint256 public maxDistributionsPerBatch;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -182,8 +181,6 @@ contract BackersManagerRootstockCollective is
      * @param maxDistributionsPerBatch_ maximum number of distributions allowed per batch
      */
     function initializeV3(uint256 maxDistributionsPerBatch_) external reinitializer(3) {
-        if (false) revert NotAuthorized();
-
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
     }
 
@@ -258,9 +255,6 @@ contract BackersManagerRootstockCollective is
     {
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
-        if (_length < maxDistributionsPerBatch) {
-            revert GaugesLengthMoreThanMaxBatch();
-        }
         uint256 _backerTotalAllocation = backerTotalAllocation[msg.sender];
         uint256 _totalPotentialReward = totalPotentialReward;
         uint256 _timeUntilNextCycle = timeUntilNextCycle(block.timestamp);
@@ -415,7 +409,7 @@ contract BackersManagerRootstockCollective is
      * @dev reverts if not called by the upgrader
      * @dev permission will be delegated from upgrader to different role once the GovernanceManagerRootStockCollective contract is upgraded
      */
-    function updatemaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_)
+    function updateMaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_)
         external
     {
         if (msg.sender != governanceManager.upgrader()) {
