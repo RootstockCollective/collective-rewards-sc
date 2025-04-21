@@ -241,7 +241,6 @@ contract BackersManagerRootstockCollective is
      * @notice allocates votes for a batch of gauges
      * @dev reverts if it is called during the distribution period
      *  reverts if gauge does not have a builder associated
-     * reverts if gauges_ length is more than maximum distributions allowed per batch
      * @param gauges_ array of gauges where the votes will be allocated
      * @param allocations_ array of amount of votes to allocate
      */
