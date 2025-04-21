@@ -377,6 +377,9 @@ contract BackersManagerRootstockCollective is
      *         This action can be performed only by the backer themselves or by the foundation.
      */
     function optInRewards(address backer_) external onlyBackerOrKycApprover(backer_) {
+        if (backerTotalAllocation[backer_] != 0) {
+            revert BackerHasAllocations();
+        }
         if (!rewardsOptedOut[backer_]) {
             revert AlreadyOptedInRewards();
         }
