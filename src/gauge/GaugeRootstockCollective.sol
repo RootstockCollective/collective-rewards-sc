@@ -321,6 +321,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param backer_ address of user who allocates tokens
      * @param allocation_ amount of tokens to allocate
      * @param timeUntilNextCycle_ time until next cycle
+     * @param isOptedOut_ true if backer is opted out of rewards
      * @return allocationDeviation_ deviation between current allocation and the new one
      * @return rewardSharesDeviation_  deviation between current reward shares and the new one
      * @return isNegative_ true if new allocation is lesser than the current one
@@ -328,7 +329,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     function allocate(
         address backer_,
         uint256 allocation_,
-        uint256 timeUntilNextCycle_
+        uint256 timeUntilNextCycle_,
+        bool isOptedOut_
     )
         external
         onlyAuthorizedContract
@@ -341,8 +343,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             _updateRewardMissing(rewardToken, _periodFinish);
             _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
-        bool _isOptedOut = backersManager.rewardsOptedOut(backer_);
-        if (!_isOptedOut) {
+        if (!isOptedOut_) {
             _updateRewards(rewardToken, backer_, _periodFinish);
             _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
         }
@@ -352,7 +353,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         if (allocation_ > _previousAllocation) {
             allocationDeviation_ = allocation_ - _previousAllocation;
             rewardSharesDeviation_ = allocationDeviation_ * timeUntilNextCycle_;
-            if (!_isOptedOut) {
+            if (!isOptedOut_) {
                 totalAllocation += allocationDeviation_;
             }
             rewardShares += rewardSharesDeviation_;
@@ -360,7 +361,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             allocationDeviation_ = _previousAllocation - allocation_;
             // avoid underflow because rewardShares may not be correctly updated if the distribution was skipped
             rewardSharesDeviation_ = Math.min(rewardShares, allocationDeviation_ * timeUntilNextCycle_);
-            if (!_isOptedOut) {
+            if (!isOptedOut_) {
                 totalAllocation -= allocationDeviation_;
             }
             rewardShares -= rewardSharesDeviation_;
@@ -369,7 +370,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
         allocationOf[backer_] = allocation_;
 
-        emit NewAllocation(backer_, allocation_, _isOptedOut);
+        emit NewAllocation(backer_, allocation_, isOptedOut_);
         return (allocationDeviation_, rewardSharesDeviation_, isNegative_);
     }
 

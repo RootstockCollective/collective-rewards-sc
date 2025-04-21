@@ -43,7 +43,7 @@ contract BackersManagerRootstockCollective is
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_);
+    event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_, bool backerOptedOut_);
     event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
     event RewardDistributionStarted(address indexed sender_);
     event RewardDistributed(address indexed sender_);
@@ -424,8 +424,9 @@ contract BackersManagerRootstockCollective is
     {
         builderRegistry_.requireInitializedBuilder(gauge_);
 
+        bool _isOptedOut = rewardsOptedOut[msg.sender];
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
-            gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
+            gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_, _isOptedOut);
 
         // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
         if (builderRegistry_.isGaugeHalted(address(gauge_))) {
@@ -444,7 +445,7 @@ contract BackersManagerRootstockCollective is
             newTotalPotentialReward_ = totalPotentialReward_ + _rewardSharesDeviation;
         }
 
-        emit NewAllocation(msg.sender, address(gauge_), allocation_);
+        emit NewAllocation(msg.sender, address(gauge_), allocation_, _isOptedOut);
         return (newBackerTotalAllocation_, newTotalPotentialReward_);
     }
 

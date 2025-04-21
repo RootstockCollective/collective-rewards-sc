@@ -44,7 +44,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
         uint256 _timeUntilNextCycle = backersManager.timeUntilNextCycle(block.timestamp);
         vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
-        gauge.allocate(alice, 1 ether, _timeUntilNextCycle);
+        gauge.allocate(alice, 1 ether, _timeUntilNextCycle, false);
         // WHEN alice calls notifyRewardAmountAndUpdateShares
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
