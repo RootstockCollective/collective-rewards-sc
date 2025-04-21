@@ -79,8 +79,6 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     BackersManagerRootstockCollective public backersManager;
     /// @notice total amount of stakingToken allocated for rewards
     uint256 public totalAllocation;
-    /// @notice total amount of stakingToken allocated for rewards from opted out backers
-    uint256 public totalAllocationOptedOut;
     /// @notice cycle rewards shares, optimistically tracking the time weighted votes allocations for this gauge
     uint256 public rewardShares;
     /// @notice amount of stakingToken allocated by a backer
