@@ -7,7 +7,6 @@ import { BackersManagerRootstockCollective } from "../backersManager/BackersMana
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { GaugeFactoryRootstockCollective } from "../gauge/GaugeFactoryRootstockCollective.sol";
 import { UpgradeableRootstockCollective } from "../governance/UpgradeableRootstockCollective.sol";
-import { IBackersManagerV1 } from "../interfaces/V1/IBackersManagerV1.sol";
 
 /**
  * @title BuilderRegistryRootstockCollective
@@ -38,6 +37,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error GaugeDoesNotExist();
     error NotAuthorized();
     error InvalidAddress();
+    error BuilderRewardsLocked();
 
     // -----------------------------
     // ----------- Events ----------
@@ -56,7 +56,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     event BuilderRewardReceiverReplacementCancelled(address indexed builder_, address newRewardReceiver_);
     event BuilderRewardReceiverReplacementApproved(address indexed builder_, address newRewardReceiver_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
-    event BuilderMigratedV2(address indexed builder_, address indexed migrator_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -236,7 +235,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @notice returns true if the builder has an open request to replace his receiver address
      * @param builder_ address of the builder
      */
-    function hasBuilderRewardReceiverPendingApproval(address builder_) external view returns (bool) {
+    function hasBuilderRewardReceiverPendingApproval(address builder_) public view returns (bool) {
         return builderRewardReceiverReplacement[builder_] != address(0)
             && builderRewardReceiver[builder_] != builderRewardReceiverReplacement[builder_];
     }
@@ -456,69 +455,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         backerRewardPercentage[msg.sender] = _rewardPercentageData;
     }
 
-    function migrateAllBuildersV2() public onlyUpgrader {
-        IBackersManagerV1 _buildersRegistryV1 = IBackersManagerV1(address(backersManager));
-        uint256 _gaugesLength = _buildersRegistryV1.getGaugesLength();
-        for (uint256 i = 0; i < _gaugesLength; i++) {
-            address _gauge = _buildersRegistryV1.getGaugeAt(i);
-            address _builder = _buildersRegistryV1.gaugeToBuilder(_gauge);
-            _migrateBuilderV2(_builder);
-        }
-        uint256 _haltedGaugesLength = _buildersRegistryV1.getHaltedGaugesLength();
-        for (uint256 i = 0; i < _haltedGaugesLength; i++) {
-            address _gauge = _buildersRegistryV1.getHaltedGaugeAt(i);
-            address _builder = _buildersRegistryV1.gaugeToBuilder(_gauge);
-            _migrateBuilderV2(_builder);
-        }
-    }
-
-    /**
-     * @notice migrate v2 builder to the new builder registry after the contract split
-     * @param builder_ address of the builder whitelisted on the V1's SimplifiedRewardDistributor contract
-     */
-    function _migrateBuilderV2(address builder_) internal {
-        IBackersManagerV1 _backersManagerV1 = IBackersManagerV1(address(backersManager));
-
-        (
-            bool _activated,
-            bool _kycApproved,
-            bool _communityApproved,
-            bool _paused,
-            bool _revoked,
-            bytes7 _reserved,
-            bytes20 _pausedReason
-        ) = _backersManagerV1.builderState(builder_);
-        builderState[builder_] = BuilderState({
-            activated: _activated,
-            kycApproved: _kycApproved,
-            communityApproved: _communityApproved,
-            paused: _paused,
-            revoked: _revoked,
-            reserved: _reserved,
-            pausedReason: _pausedReason
-        });
-
-        builderRewardReceiver[builder_] = _backersManagerV1.builderRewardReceiver(builder_);
-        builderRewardReceiverReplacement[builder_] = _backersManagerV1.builderRewardReceiverReplacement(builder_);
-
-        (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = _backersManagerV1.backerRewardPercentage(builder_);
-        backerRewardPercentage[builder_] =
-            RewardPercentageData({ previous: _previous, next: _next, cooldownEndTime: _cooldownEndTime });
-
-        address _gauge = _backersManagerV1.builderToGauge(builder_);
-        builderToGauge[builder_] = GaugeRootstockCollective(_gauge);
-        gaugeToBuilder[GaugeRootstockCollective(_gauge)] = builder_;
-
-        if (_backersManagerV1.isGaugeHalted(_gauge)) {
-            _haltedGauges.add(_gauge);
-            haltedGaugeLastPeriodFinish[GaugeRootstockCollective(_gauge)] =
-                _backersManagerV1.haltedGaugeLastPeriodFinish(_gauge);
-        } else {
-            _gauges.add(_gauge);
-        }
-        emit BuilderMigratedV2(builder_, msg.sender);
-    }
-
     /**
      * @notice returns reward percentage to apply.
      *  If there is a new one and cooldown time has expired, apply that one; otherwise, apply the previous one
@@ -530,6 +466,24 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
             return _rewardPercentageData.next;
         }
         return _rewardPercentageData.previous;
+    }
+
+    /**
+     * @notice returns the reward receiver address for a builder
+     * @dev reverts if conditions for the builder to claim are not met
+     * @param claimer_ address of the claimer
+     */
+    function canClaimBuilderReward(address claimer_) external view returns (address rewardReceiver_) {
+        address _builder = gaugeToBuilder[GaugeRootstockCollective(msg.sender)];
+        if (_builder == address(0)) revert BuilderDoesNotExist();
+        rewardReceiver_ = builderRewardReceiver[_builder];
+        if (isBuilderPaused(_builder)) revert BuilderRewardsLocked();
+        if (claimer_ != _builder && claimer_ != rewardReceiver_) revert NotAuthorized();
+        // if Builder uses the rewardReceiver account to claim, there shouldn't be an
+        // open request to replace such address, they need to use the Builder account instead
+        if (claimer_ == rewardReceiver_ && hasBuilderRewardReceiverPendingApproval(_builder)) {
+            revert NotAuthorized();
+        }
     }
 
     /**
@@ -634,9 +588,12 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @notice reverts if builder was not activated or gauge is not assigned to builder
+     * @notice Ensures the builder associated with the given gauge exists and builder is activated
+     * @dev Reverts if the builder gauge does not exist or if the builder is not activated.
+     * @dev reverts if it is not called by the backers manager
+     * @param gauge_ The gauge to validate.
      */
-    function validateWhitelisted(GaugeRootstockCollective gauge_) external view onlyBackersManager {
+    function requireBuilderActivation(GaugeRootstockCollective gauge_) external view onlyBackersManager {
         address _builder = gaugeToBuilder[gauge_];
         if (_builder == address(0)) revert GaugeDoesNotExist();
         if (!builderState[_builder].activated) revert NotActivated();

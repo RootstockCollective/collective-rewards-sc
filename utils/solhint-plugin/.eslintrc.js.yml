@@ -1,6 +1,0 @@
-root: true
-extends:
-  - "eslint:recommended"
-  - "prettier"
-env: { "es2024": true, "node": true, "commonjs": true }
-parserOptions: { "parserOptions": { "ecmaVersion": "2024" } }

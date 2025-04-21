@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { BaseFuzz, GaugeRootstockCollective } from "./BaseFuzz.sol";
+import { BaseFuzz } from "./BaseFuzz.sol";
+import { BuilderRegistryRootstockCollective } from "../../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 
 contract PauseBuilderFuzzTest is BaseFuzz {
     mapping(address builder_ => bool paused_) public pausedBuilders;
@@ -51,7 +52,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             } else {
                 vm.prank(builders[i]);
                 // THEN tx reverts because builder rewards are locked
-                vm.expectRevert(GaugeRootstockCollective.BuilderRewardsLocked.selector);
+                vm.expectRevert(BuilderRegistryRootstockCollective.BuilderRewardsLocked.selector);
                 gaugesArray[i].claimBuilderReward();
             }
         }
@@ -120,7 +121,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             } else {
                 vm.prank(builders[i]);
                 // THEN tx reverts because builder rewards are locked
-                vm.expectRevert(GaugeRootstockCollective.BuilderRewardsLocked.selector);
+                vm.expectRevert(BuilderRegistryRootstockCollective.BuilderRewardsLocked.selector);
                 gaugesArray[i].claimBuilderReward();
             }
         }

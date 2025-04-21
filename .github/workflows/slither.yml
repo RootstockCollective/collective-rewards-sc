@@ -34,13 +34,13 @@ jobs:
           version: stable
 
       - name: "Install Bun"
-        uses: "oven-sh/setup-bun@f4d14e03ff726c06358e5557344e1da148b56cf7" # v1.2.2
+        uses: "oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5" # v2.0.1
 
       - name: "Install the Node.js dependencies"
         run: "bun install"
 
       - name: Run Slither
-        uses: crytic/slither-action@f197989dea5b53e986d0f88c60a034ddd77ec9a8 # v0.4.0
+        uses: crytic/slither-action@4fd765aeef19915d04ddf0be90c2930036a774d8 # v0.4.1
         id: slither
         with:
           sarif: results.sarif
