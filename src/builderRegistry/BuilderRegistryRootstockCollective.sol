@@ -517,6 +517,15 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         return _gauges.at(index_);
     }
 
+    function getGaugesInRange(uint256 start_, uint256 end_) public view returns (address[] memory gauges_) {
+        uint256 _gaugesLength = _gauges.length();
+        if (start_ >= _gaugesLength || end_ > _gaugesLength || start_ >= end_) revert InvalidAddress();
+        gauges_ = new address[](end_ - start_);
+        for (uint256 i = start_; i < end_; i++) {
+            gauges_[i - start_] = _gauges.at(i);
+        }
+    }
+
     /**
      * @notice return true is gauge is rewarded
      */
