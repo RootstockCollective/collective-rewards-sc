@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import { BaseTest, BackersManagerRootstockCollective } from "./BaseTest.sol";
+import { GaugeRootstockCollective } from "../src/gauge/GaugeRootstockCollective.sol";
 
 contract OptOutRewardsBehaviour is BaseTest {
     // -----------------------------
@@ -11,6 +12,12 @@ contract OptOutRewardsBehaviour is BaseTest {
     event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_);
     event BackerRewardsOptedOut(address indexed backer_);
     event BackerRewardsOptedIn(address indexed backer_);
+
+    GaugeRootstockCollective[] public firstGaugeArray;
+
+    function _setUp() internal override {
+        firstGaugeArray.push(gauge);
+    }
 
     /**
      * SCENARIO: Can only OptOut if not already opted out
@@ -124,7 +131,7 @@ contract OptOutRewardsBehaviour is BaseTest {
     }
 
     /**
-     * SCENARIO: OptedOut backer allocattions affects builders rewards
+     * SCENARIO: OptedOut backer allocations affect builders rewards
      */
     function test_OptOutAllocationsImpactBuilderRewards() public {
         // GIVEN alice is OptOut
@@ -142,6 +149,7 @@ contract OptOutRewardsBehaviour is BaseTest {
         // WHEN the cycle ends and the rewards are distributed
         uint256 _distributedAmountRif = 10 ether;
         uint256 _distributedAmountCoinbase = 10 ether;
+
         _distribute(_distributedAmountRif, _distributedAmountCoinbase);
         _skipAndStartNewCycle();
 
@@ -156,5 +164,20 @@ contract OptOutRewardsBehaviour is BaseTest {
         // THEN builder should receive 2/3 of all builder rewards, proportional to the total allocations
         assertApproxEqAbs(rewardToken.balanceOf(builder), (_buildersRifReward * 2) / 3, 1);
         assertApproxEqAbs(rewardToken.balanceOf(builder2Receiver), (_buildersCoinbaseReward * 1) / 3, 1);
+
+        // WHEN bob claim their rewards
+        vm.prank(bob);
+        backersManager.claimBackerRewards(firstGaugeArray);
+
+        // THEN bob should receive all the backers of the rewards since alice is opted out
+        uint256 _rifRewardGauge1 = (_distributedAmountRif * 2) / 3;
+        uint256 _coinbaseRewardGauge1 = (_distributedAmountCoinbase * 2) / 3;
+        assertApproxEqAbs(rewardToken.balanceOf(bob), _rifRewardGauge1 / 2, 10);
+        assertApproxEqAbs(bob.balance, _coinbaseRewardGauge1 / 2, 10);
+
+        vm.prank(bob);
+        backersManager.claimBackerRewards(gaugesArray);
+        assertApproxEqAbs(rewardToken.balanceOf(bob), _distributedAmountRif / 2, 10);
+        assertApproxEqAbs(bob.balance, _distributedAmountCoinbase / 2, 10);
     }
 }
