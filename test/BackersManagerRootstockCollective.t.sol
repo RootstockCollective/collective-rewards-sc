@@ -17,7 +17,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     event RewardDistributionStarted(address indexed sender_);
     event RewardDistributed(address indexed sender_);
     event RewardDistributionFinished(address indexed sender_);
-    event MaxDistributionsPerBatchUpdated(uint256 oldMaxDistributionsPerBatch, uint256 newMaxDistributionsPerBatch);
+    event MaxDistributionsPerBatchUpdated(uint256 oldMaxDistributionsPerBatch_, uint256 newMaxDistributionsPerBatch_);
 
     /**
      * SCENARIO: allocate should revert if it is called with arrays with different lengths
@@ -1062,7 +1062,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
      * SCENARIO: distribution occurs on different transactions using pagination and attempts to incentivize
      * BackersManagerRootstockCollective between both transactions should fail
      */
-    function test_DistributeAndIncentivizeBackersManagerRootstockCollectiveDuringPagination() public {       
+    function test_DistributeAndIncentivizeBackersManagerRootstockCollectiveDuringPagination() public {
         _createGaugesAllocateAndStartDistribution(20);
 
         // WHEN there is an attempt to add 100 ether reward in the middle of the distribution
@@ -1822,23 +1822,22 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertTrue(backersManager.onDistributionPeriod());
     }
 
-    
     /**
      * SCENARIO: upgrader can update maxDistributionsPerBatch
      */
     function test_UpdateMaxDistributionsPerBatch() public {
         // GIVEN a new maxDistributionsPerBatch value
-        uint256 newMaxDistributionsPerBatch = 30;
-        uint256 oldMaxDistributionsPerBatch = backersManager.maxDistributionsPerBatch();
+        uint256 _newMaxDistributionsPerBatch = 30;
+        uint256 _oldMaxDistributionsPerBatch = backersManager.maxDistributionsPerBatch();
 
         // WHEN upgrader calls updateMaxDistributionsPerBatch
         vm.prank(governanceManager.upgrader());
         vm.expectEmit();
-        emit MaxDistributionsPerBatchUpdated(oldMaxDistributionsPerBatch, newMaxDistributionsPerBatch);
-        backersManager.updateMaxDistributionsPerBatch(newMaxDistributionsPerBatch);
+        emit MaxDistributionsPerBatchUpdated(_oldMaxDistributionsPerBatch, _newMaxDistributionsPerBatch);
+        backersManager.updateMaxDistributionsPerBatch(_newMaxDistributionsPerBatch);
 
         // THEN maxDistributionsPerBatch is updated
-        assertEq(backersManager.maxDistributionsPerBatch(), newMaxDistributionsPerBatch);
+        assertEq(backersManager.maxDistributionsPerBatch(), _newMaxDistributionsPerBatch);
     }
 
     /**
@@ -1846,46 +1845,45 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
      */
     function test_RevertUpdateMaxDistributionsPerBatchNotUpgrader() public {
         // GIVEN a new maxDistributionsPerBatch value
-        uint256 newMaxDistributionsPerBatch = 30;
+        uint256 _newMaxDistributionsPerBatch = 30;
 
         // WHEN a non-upgrader tries to update maxDistributionsPerBatch
         vm.prank(alice);
         vm.expectRevert(BackersManagerRootstockCollective.NotAuthorized.selector);
-        backersManager.updateMaxDistributionsPerBatch(newMaxDistributionsPerBatch);
+        backersManager.updateMaxDistributionsPerBatch(_newMaxDistributionsPerBatch);
     }
 
     /**
      * SCENARIO: distribution functions work correctly after changing maxDistributionsPerBatch
      */
     function test_DistributeAfterChangingMaxDistributionsPerBatch() public {
-        
         _createGaugesAllocateAndStartDistribution(23);
         // AND indexLastGaugeDistributed is updated to 20
         assertEq(backersManager.indexLastGaugeDistributed(), 20);
-        
+
         // THEN maxDistributionsPerBatch is updated to a smaller value
-        uint256 newMaxDistributionsPerBatch = 3; // Smaller than the number of gauges (20)
+        uint256 _newMaxDistributionsPerBatch = 3; // Smaller than the number of gauges (20)
         vm.prank(governanceManager.upgrader());
-        backersManager.updateMaxDistributionsPerBatch(newMaxDistributionsPerBatch);
-        
+        backersManager.updateMaxDistributionsPerBatch(_newMaxDistributionsPerBatch);
+
         // WHEN distribute is called again
-        bool finished = backersManager.distribute();
-        
+        bool _finished = backersManager.distribute();
+
         // THEN distribution is not finished (since we have 25 gauges but maxDistributionsPerBatch is 3)
-        assertFalse(finished);
-        
+        assertFalse(_finished);
+
         // AND indexLastGaugeDistributed is updated to 23 (3 more gauges were processed)
         assertEq(backersManager.indexLastGaugeDistributed(), 23);
 
         // WHEN distribute is called one more time
-        finished = backersManager.distribute();
-        
+        _finished = backersManager.distribute();
+
         // THEN distribution is finished (all gauges were processed)
-        assertTrue(finished);
-        
+        assertTrue(_finished);
+
         // AND indexLastGaugeDistributed is reset to 0
         assertEq(backersManager.indexLastGaugeDistributed(), 0);
-        
+
         // AND distribution period is over
         assertFalse(backersManager.onDistributionPeriod());
     }

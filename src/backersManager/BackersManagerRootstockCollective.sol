@@ -22,7 +22,6 @@ contract BackersManagerRootstockCollective is
     ICollectiveRewardsCheckRootstockCollective,
     ERC165Upgradeable
 {
-
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
@@ -51,7 +50,7 @@ contract BackersManagerRootstockCollective is
     event RewardDistributionFinished(address indexed sender_);
     event BackerRewardsOptedOut(address indexed backer_);
     event BackerRewardsOptedIn(address indexed backer_);
-    event MaxDistributionsPerBatchUpdated(uint256 oldValue, uint256 newValue);
+    event MaxDistributionsPerBatchUpdated(uint256 oldValue_, uint256 newValue_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -180,7 +179,7 @@ contract BackersManagerRootstockCollective is
     // NOTE: This contract previously included an `initializeV2` function protected by `reinitializer(2)`,
     // used to initialize `builderRegistry` during an upgrade to version 2.
     // The function has been removed since the upgrade was already executed and it's no longer necessary.
-    
+
     /**
      * @notice contract version 3 initializer
      * @param maxDistributionsPerBatch_ maximum number of distributions allowed per batch
@@ -188,7 +187,6 @@ contract BackersManagerRootstockCollective is
     function initializeV3(uint256 maxDistributionsPerBatch_) external reinitializer(3) {
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
     }
-
 
     // -----------------------------
     // ---- External Functions -----
@@ -410,17 +408,16 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice Updates the maximum number of distributions allowed per batch.
      * @dev reverts if not called by the upgrader
-     * @dev permission will be delegated from upgrader to different role once the GovernanceManagerRootStockCollective contract is upgraded
+     * @dev permission will be delegated from upgrader to different role once the GovernanceManagerRootStockCollective
+     * contract is upgraded
      */
-    function updateMaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_)
-        external
-    {
+    function updateMaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_) external {
         if (msg.sender != governanceManager.upgrader()) {
             revert NotAuthorized();
         }
-        uint256 oldValue = maxDistributionsPerBatch;
+        uint256 _oldValue = maxDistributionsPerBatch;
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
-        emit MaxDistributionsPerBatchUpdated(oldValue, maxDistributionsPerBatch_);
+        emit MaxDistributionsPerBatchUpdated(_oldValue, maxDistributionsPerBatch_);
     }
 
     // -----------------------------
