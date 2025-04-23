@@ -606,7 +606,6 @@ contract BackersManagerRootstockCollective is
     function haltGaugeShares(GaugeRootstockCollective gauge_) external onlyBuilderRegistry notInDistributionPeriod {
         // allocations are not considered for the reward's distribution
         totalPotentialReward -= gauge_.rewardShares();
-        builderRegistry.setHaltedGaugeLastPeriodFinish(gauge_, _periodFinish);
     }
 
     /**
@@ -615,23 +614,28 @@ contract BackersManagerRootstockCollective is
      * produce a miscalculation of rewards
      * @param gauge_ gauge contract to be resumed
      */
-    function resumeGaugeShares(GaugeRootstockCollective gauge_) external onlyBuilderRegistry notInDistributionPeriod {
+    function resumeGaugeShares(
+        GaugeRootstockCollective gauge_,
+        uint256 haltedGaugeLastPeriodFinish_
+    )
+        external
+        onlyBuilderRegistry
+        notInDistributionPeriod
+    {
         // gauges cannot be resumed before the distribution,
         // incentives can stay in the gauge because lastUpdateTime > lastTimeRewardApplicable
         if (_periodFinish <= block.timestamp) revert BeforeDistribution();
         // allocations are considered again for the reward's distribution
         // if there was a distribution we need to update the shares with the full cycle duration
-        BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
-        if (_builderRegistry.haltedGaugeLastPeriodFinish(gauge_) < _periodFinish) {
+        if (haltedGaugeLastPeriodFinish_ < _periodFinish) {
             (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
             totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-                0, 0, _builderRegistry.haltedGaugeLastPeriodFinish(gauge_), _cycleStart, _cycleDuration
+                0, 0, haltedGaugeLastPeriodFinish_, _cycleStart, _cycleDuration
             );
         } else {
             // halt and resume were in the same cycle, we don't update the shares
             totalPotentialReward += gauge_.rewardShares();
         }
-        _builderRegistry.setHaltedGaugeLastPeriodFinish(gauge_, 0);
     }
 
     /**

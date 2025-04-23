@@ -172,16 +172,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     // ---- External Functions -----
     // -----------------------------
 
-    function setHaltedGaugeLastPeriodFinish(
-        GaugeRootstockCollective gauge_,
-        uint256 periodFinish_
-    )
-        external
-        onlyBackersManager
-    {
-        haltedGaugeLastPeriodFinish[gauge_] = periodFinish_;
-    }
-
     /**
      * @notice Builder submits a request to update his rewardReceiver address,
      * the request will then need to be approved by `approveNewRewardReceiver`
@@ -623,7 +613,9 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         if (!isGaugeHalted(address(gauge_))) {
             _haltedGauges.add(address(gauge_));
             _gauges.remove(address(gauge_));
-            backersManager.haltGaugeShares(gauge_);
+            BackersManagerRootstockCollective _backersManager = backersManager;
+            _backersManager.haltGaugeShares(gauge_);
+            _setHaltedGaugeLastPeriodFinish(gauge_, _backersManager.periodFinish());
         }
     }
 
@@ -636,7 +628,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         if (_canBeResumed(gauge_)) {
             _gauges.add(address(gauge_));
             _haltedGauges.remove(address(gauge_));
-            backersManager.resumeGaugeShares(gauge_);
+            backersManager.resumeGaugeShares(gauge_, haltedGaugeLastPeriodFinish[gauge_]);
+            _setHaltedGaugeLastPeriodFinish(gauge_, 0);
         }
     }
 
@@ -694,6 +687,10 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         backersManager.rewardTokenApprove(address(gauge_), type(uint256).max);
 
         emit CommunityApproved(builder_);
+    }
+
+    function _setHaltedGaugeLastPeriodFinish(GaugeRootstockCollective gauge_, uint256 periodFinish_) internal {
+        haltedGaugeLastPeriodFinish[gauge_] = periodFinish_;
     }
 
     /**
