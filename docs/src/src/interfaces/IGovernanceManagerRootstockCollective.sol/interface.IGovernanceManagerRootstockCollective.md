@@ -1,5 +1,5 @@
 # IGovernanceManagerRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/99cb2d8ed5962fe0d1a12a5277c2e7b1068aeff8/src/interfaces/IGovernanceManagerRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/interfaces/IGovernanceManagerRootstockCollective.sol)
 
 
 ## Functions
@@ -83,6 +83,21 @@ function kycApprover() external view returns (address);
 |Name|Type|Description|
 |----|----|-----------|
 |`<none>`|`address`|The KYC approver address.|
+
+
+### upgrader
+
+The upgrader address with contract upgradeability permissions.
+
+
+```solidity
+function upgrader() external view returns (address);
+```
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|The upgrader address.|
 
 
 ### validateAuthorizedChanger
@@ -295,19 +310,13 @@ event ChangeExecuted(IChangeContractRootstockCollective changeContract_, address
 ```
 
 ## Errors
-### InvalidAddress
-Thrown when an invalid address is provided.
+### ZeroAddressNotAllowed
+Thrown when a zero address is provided.
 
 
 ```solidity
-error InvalidAddress(address account_);
+error ZeroAddressNotAllowed();
 ```
-
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`account_`|`address`|The invalid address provided.|
 
 ### NotAuthorizedChanger
 Thrown when the caller is not authorized as a changer.

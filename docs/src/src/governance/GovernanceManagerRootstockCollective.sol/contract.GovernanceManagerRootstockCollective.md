@@ -1,5 +1,5 @@
 # GovernanceManagerRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/99cb2d8ed5962fe0d1a12a5277c2e7b1068aeff8/src/governance/GovernanceManagerRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/governance/GovernanceManagerRootstockCollective.sol)
 
 **Inherits:**
 UUPSUpgradeable, [IGovernanceManagerRootstockCollective](/src/interfaces/IGovernanceManagerRootstockCollective.sol/interface.IGovernanceManagerRootstockCollective.md)
@@ -72,11 +72,11 @@ uint256[50] private __gap;
 
 
 ## Functions
-### onlyValidAddress
+### onlyNonZeroAddress
 
 
 ```solidity
-modifier onlyValidAddress(address account_);
+modifier onlyNonZeroAddress(address account_);
 ```
 
 ### onlyGovernor
@@ -207,28 +207,28 @@ function isAuthorizedChanger(address account_) public view returns (bool);
 
 
 ```solidity
-function _updateGovernor(address governor_) private onlyValidAddress(governor_);
+function _updateGovernor(address governor_) private onlyNonZeroAddress(governor_);
 ```
 
 ### _updateFoundationTreasury
 
 
 ```solidity
-function _updateFoundationTreasury(address foundationTreasury_) private onlyValidAddress(foundationTreasury_);
+function _updateFoundationTreasury(address foundationTreasury_) private onlyNonZeroAddress(foundationTreasury_);
 ```
 
 ### _updateKYCApprover
 
 
 ```solidity
-function _updateKYCApprover(address kycApprover_) private onlyValidAddress(kycApprover_);
+function _updateKYCApprover(address kycApprover_) private onlyNonZeroAddress(kycApprover_);
 ```
 
 ### _updateUpgrader
 
 
 ```solidity
-function _updateUpgrader(address upgrader_) private;
+function _updateUpgrader(address upgrader_) private onlyNonZeroAddress(upgrader_);
 ```
 
 ### _authorizeChanger
