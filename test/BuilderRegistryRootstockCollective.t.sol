@@ -405,13 +405,13 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: pauseSelf should revert if it is already self paused
      */
-    function test_RevertBuilderAlreadyPausedSelf() public {
+    function test_RevertBuilderAlreadySelfPaused() public {
         // GIVEN a self paused builder
         vm.startPrank(builder);
         builderRegistry.pauseSelf();
         // WHEN tries to pauseSelf again
         //  THEN tx reverts because is already self paused
-        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderAlreadyPausedSelf.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderAlreadySelfPaused.selector);
         builderRegistry.pauseSelf();
     }
 
