@@ -4,14 +4,14 @@ pragma solidity 0.8.20;
 import { BaseFuzz } from "./BaseFuzz.sol";
 import { BuilderRegistryRootstockCollective } from "../../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 
-contract PauseBuilderFuzzTest is BaseFuzz {
+contract PauseBuilderKYCFuzzTest is BaseFuzz {
     mapping(address builder_ => bool paused_) public pausedBuilders;
 
     /**
-     * SCENARIO: In a random time gauges are paused and unpaused again.
+     * SCENARIO: In a random time gauges are KYC paused and unpaused again.
      *  There is a distribution, all the gauges receive rewards
      */
-    function testFuzz_PauseBuilder(
+    function testFuzz_PauseBuilderKYC(
         uint256 buildersAmount_,
         uint256 backersAmount_,
         uint256 seed_,
@@ -74,10 +74,10 @@ contract PauseBuilderFuzzTest is BaseFuzz {
     }
 
     /**
-     * SCENARIO: In a random time gauges are paused and unpaused again. There is a distribution in the middle
+     * SCENARIO: In a random time gauges are KYC paused and unpaused again. There is a distribution in the middle
      *  There is a distribution, all the gauges receive rewards
      */
-    function testFuzz_PauseBuilderWitDistribution(
+    function testFuzz_PauseBuilderKYCWitDistribution(
         uint256 buildersAmount_,
         uint256 backersAmount_,
         uint256 seed_,
@@ -152,7 +152,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             // 70% chance to pause
             if (_random % 10 > 2) {
                 vm.prank(kycApprover);
-                builderRegistry.pauseBuilder(builders[i], "pause");
+                builderRegistry.pauseBuilderKYC(builders[i], "pause");
                 pausedBuilders[builders[i]] = true;
             }
         }
@@ -164,7 +164,7 @@ contract PauseBuilderFuzzTest is BaseFuzz {
             // 70% chance to unpause
             if (pausedBuilders[builders[i]] && _random % 10 > 2) {
                 vm.prank(kycApprover);
-                builderRegistry.unpauseBuilder(builders[i]);
+                builderRegistry.unpauseBuilderKYC(builders[i]);
                 pausedBuilders[builders[i]] = false;
             }
         }

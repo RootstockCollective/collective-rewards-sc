@@ -87,10 +87,10 @@ contract SetBackerRewardPercentageTest is BaseTest {
     /**
      * SCENARIO: setBackerRewardPercentage reverts if it is not operational
      */
-    function test_RevertsetBackerRewardPercentageWrongStatus() public {
+    function test_RevertSetBackerRewardPercentageWrongStatus() public {
         // GIVEN a Paused builder
         vm.startPrank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilderKYC(builder, "paused");
         // WHEN tries to setBackerRewardPercentage
         //  THEN tx reverts because is not operational
         vm.startPrank(builder);
