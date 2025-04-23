@@ -41,7 +41,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         // GIVEN a whitelisted builder
         //  WHEN calls setBackerRewardPercentage
         //   THEN tx reverts because caller is not an operational builder
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotOperational.selector);
         builderRegistry.setBackerRewardPercentage(0.1 ether);
     }
 
@@ -94,7 +94,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         // WHEN tries to setBackerRewardPercentage
         //  THEN tx reverts because is not operational
         vm.startPrank(builder);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotOperational.selector);
         builderRegistry.setBackerRewardPercentage(0.1 ether);
     }
 

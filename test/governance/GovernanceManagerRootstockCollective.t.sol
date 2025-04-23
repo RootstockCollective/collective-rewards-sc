@@ -119,37 +119,29 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: functions should revert by InvalidAddress error when an address is invalid
+     * SCENARIO: functions should revert by ZeroAddressNotAllowed error when an address is zero
      */
-    function test_InvalidAddress() public {
+    function test_RevertZeroAddress() public {
         vm.startPrank(governor);
-        // WHEN governor calls updateGovernor using an invalid address
+        // WHEN governor calls updateGovernor using an invalid zero address
         //  THEN tx reverts
-        vm.expectRevert(
-            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.InvalidAddress.selector, address(0))
-        );
+        vm.expectRevert(abi.encodeWithSelector(IGovernanceManagerRootstockCollective.ZeroAddressNotAllowed.selector));
         governanceManager.updateGovernor(address(0));
 
-        // WHEN governor calls updateGovernor using an invalid address
+        // WHEN governor calls updateGovernor using an invalid zero address
         //  THEN tx reverts
-        vm.expectRevert(
-            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.InvalidAddress.selector, address(0))
-        );
+        vm.expectRevert(abi.encodeWithSelector(IGovernanceManagerRootstockCollective.ZeroAddressNotAllowed.selector));
         governanceManager.updateFoundationTreasury(address(0));
 
-        // WHEN governor calls updateKYCApprover using an invalid address
+        // WHEN governor calls updateKYCApprover using an invalid zero address
         //  THEN tx reverts
-        vm.expectRevert(
-            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.InvalidAddress.selector, address(0))
-        );
+        vm.expectRevert(abi.encodeWithSelector(IGovernanceManagerRootstockCollective.ZeroAddressNotAllowed.selector));
         governanceManager.updateKYCApprover(address(0));
 
         vm.startPrank(upgrader);
-        // WHEN governor calls updateUpgrader using an invalid address
+        // WHEN governor calls updateUpgrader using an invalid zero address
         //  THEN tx reverts
-        vm.expectRevert(
-            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.InvalidAddress.selector, address(0))
-        );
+        vm.expectRevert(abi.encodeWithSelector(IGovernanceManagerRootstockCollective.ZeroAddressNotAllowed.selector));
         governanceManager.updateUpgrader(address(0));
     }
 
