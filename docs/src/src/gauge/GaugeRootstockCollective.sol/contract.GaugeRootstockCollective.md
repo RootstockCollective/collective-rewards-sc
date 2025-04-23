@@ -1,5 +1,5 @@
 # GaugeRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/99cb2d8ed5962fe0d1a12a5277c2e7b1068aeff8/src/gauge/GaugeRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/gauge/GaugeRootstockCollective.sol)
 
 **Inherits:**
 ReentrancyGuardUpgradeable
@@ -24,15 +24,6 @@ BackersManagerRootstockCollective contract address
 
 ```solidity
 BackersManagerRootstockCollective public backersManager;
-```
-
-
-### builderRegistry
-BuilderRegistryRootstockCollective contract address
-
-
-```solidity
-BuilderRegistryRootstockCollective public builderRegistry;
 ```
 
 
@@ -71,6 +62,15 @@ rewards data to each token
 
 ```solidity
 mapping(address rewardToken => RewardData rewardData) public rewardData;
+```
+
+
+### builderRegistry
+BuilderRegistryRootstockCollective contract address
+
+
+```solidity
+BuilderRegistryRootstockCollective public builderRegistry;
 ```
 
 
@@ -118,6 +118,9 @@ constructor();
 
 contract initializer
 
+For more info on supported tokens, see:
+https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
+
 
 ```solidity
 function initialize(address rewardToken_, address builderRegistry_) external initializer;
@@ -126,8 +129,8 @@ function initialize(address rewardToken_, address builderRegistry_) external ini
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded to builder and voters, only standard ERC20 MUST be used|
-|`builderRegistry_`|`address`|address of the BackersManagerRootstockCollective contract|
+|`rewardToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20 standard are supported.|
+|`builderRegistry_`|`address`|address of the builder registry contract|
 
 
 ### rewardRate
@@ -706,12 +709,6 @@ event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256
 
 ```solidity
 error NotAuthorized();
-```
-
-### BuilderRewardsLocked
-
-```solidity
-error BuilderRewardsLocked();
 ```
 
 ### GaugeHalted

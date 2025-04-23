@@ -72,9 +72,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: should revert if gauge is community approved but not activated
+     * SCENARIO: should revert if gauge is community approved but not initialized
      */
-    function test_RevertGaugeIsCommunityApprovedButNotActivated() public {
+    function test_RevertGaugeIsCommunityApprovedButNotInitialized() public {
         // GIVEN a new builder
         address _newBuilder = makeAddr("newBuilder");
         //  AND is community approved
@@ -84,20 +84,20 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         gaugesArray.push(_newGauge);
         allocationsArray.push(100 ether);
         //  WHEN alice calls allocate using the new gauge
-        //   THEN tx reverts because NotActivated
+        //   THEN tx reverts because BuilderNotInitialized
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotInitialized.selector);
         backersManager.allocate(_newGauge, 100 ether);
         //  WHEN alice calls allocateBatch using the new gauge
-        //   THEN tx reverts because NotActivated
+        //   THEN tx reverts because BuilderNotInitialized
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotInitialized.selector);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         //  WHEN alice calls claimBackerRewards using the new gauge
-        //   THEN tx reverts because NotActivated
+        //   THEN tx reverts because BuilderNotInitialized
         vm.prank(alice);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotActivated.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotInitialized.selector);
         backersManager.claimBackerRewards(gaugesArray);
     }
 
@@ -340,9 +340,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.prank(alice);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
-        // AND first builder gets revoked
+        // AND first builder pauses itself
         vm.prank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
 
         // WHEN alice moves votes from revoked gauge to the other
         allocationsArray[0] = 0 ether;
@@ -515,7 +515,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         vm.prank(builder2);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
 
         //  AND 2 ether reward are added
         backersManager.notifyRewardAmount(2 ether);
@@ -536,16 +536,16 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  THEN tx reverts because NotInDistributionPeriod
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
         backersManager.startDistribution();
-        // WHEN tries to revoke a builder
+        // WHEN builder tries to pause himself
         //  THEN tx reverts because NotInDistributionPeriod
         vm.prank(builder);
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
-        builderRegistry.revokeBuilder();
-        // WHEN tries to permit a builder
+        builderRegistry.pauseSelf();
+        // WHEN tries builder2 tries to unpause himself
         //  THEN tx reverts because NotInDistributionPeriod
         vm.prank(builder2);
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
-        builderRegistry.permitBuilder(0.1 ether);
+        builderRegistry.unpauseSelf(0.1 ether);
     }
 
     /**

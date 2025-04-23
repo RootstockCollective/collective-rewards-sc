@@ -5,28 +5,28 @@ import { BaseTest } from "./BaseTest.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 import { BuilderRegistryRootstockCollective } from "../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 
-contract PauseBuilderTest is BaseTest {
+contract PauseBuilderKYCTest is BaseTest {
     function _initialState() internal {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
         _initialDistribution();
 
-        // AND builder is paused
+        // AND builder is KYC paused
         vm.startPrank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilderKYC(builder, "paused");
         vm.stopPrank();
     }
 
     /**
-     * SCENARIO: builder is paused in the middle of an cycle having allocation.
+     * SCENARIO: builder is KYC paused in the middle of an cycle having allocation.
      *  Backers claim all the rewards
      */
     function test_PausedGaugeBackersReceiveRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is paused
+        //    AND builder is KYC paused
         _initialState();
         // AND cycle finish
         _skipAndStartNewCycle();
@@ -51,14 +51,14 @@ contract PauseBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is paused in the middle of an cycle having allocation.
+     * SCENARIO: builder is KYC paused in the middle of an cycle having allocation.
      *  If the builder calls claimBuilderReward the tx reverts
      */
     function test_PausedGaugeBuilderCannotReceiveRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is paused
+        //    AND builder is KYC paused
         _initialState();
         // AND cycle finish
         _skipAndStartNewCycle();
@@ -89,14 +89,14 @@ contract PauseBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is paused in the middle of an cycle having allocation.
+     * SCENARIO: builder is KYC paused in the middle of an cycle having allocation.
      *  Alice can modify its allocation
      */
     function test_PausedGaugeModifyAllocation() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is paused
+        //    AND builder is KYC paused
         _initialState();
 
         // WHEN alice removes allocations from paused builder
@@ -117,22 +117,22 @@ contract PauseBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is paused in the middle of an cycle having rewards to claim,
+     * SCENARIO: builder is KYC paused in the middle of an cycle having rewards to claim,
      *  is unpaused in the same cycle and can claim them
      */
     function test_ResumeGaugeInSameCycle() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is paused
+        //    AND builder is KYC paused
         _initialState();
 
         // AND 3/4 cycle pass
         _skipRemainingCycleFraction(2);
 
-        // WHEN gauge is unpaused
+        // WHEN builder's gauge is KYC unpaused
         vm.startPrank(kycApprover);
-        builderRegistry.unpauseBuilder(builder);
+        builderRegistry.unpauseBuilderKYC(builder);
 
         // WHEN builder claim rewards
         vm.startPrank(builder);
@@ -149,14 +149,14 @@ contract PauseBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is paused in the middle of an cycle having rewards to claim,
+     * SCENARIO: builder is KYC paused in the middle of an cycle having rewards to claim,
      *  is unpaused in the next cycle and can claim the previous rewards and the new ones
      */
     function test_ResumeGaugeInNextCycle() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is paused
+        //    AND builder is KYC paused
         _initialState();
 
         // AND cycle finish
@@ -164,9 +164,9 @@ contract PauseBuilderTest is BaseTest {
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
 
-        // WHEN gauge is unpaused
+        // WHEN gauge is KYC unpaused
         vm.startPrank(kycApprover);
-        builderRegistry.unpauseBuilder(builder);
+        builderRegistry.unpauseBuilderKYC(builder);
 
         // WHEN builder claim rewards
         vm.startPrank(builder);
@@ -183,7 +183,7 @@ contract PauseBuilderTest is BaseTest {
     }
 
     /**
-     * SCENARIO: revoked builder is paused
+     * SCENARIO: self paused builder is KYC paused
      *  If the builder calls claimBuilderReward the tx reverts
      */
     function test_RevokedGaugeIsPaused() public {
@@ -191,12 +191,12 @@ contract PauseBuilderTest is BaseTest {
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
         _initialDistribution();
-        // AND builder is revoked
+        // AND builder pauses himself
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
-        // AND builder is paused
+        builderRegistry.pauseSelf();
+        // AND builder is KYC paused
         vm.startPrank(kycApprover);
-        builderRegistry.pauseBuilder(builder, "paused");
+        builderRegistry.pauseBuilderKYC(builder, "paused");
 
         // WHEN builder claim rewards
         vm.startPrank(builder);

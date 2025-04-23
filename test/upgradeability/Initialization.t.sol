@@ -23,15 +23,6 @@ contract InitializationTest is BaseTest {
         );
     }
 
-    // TODO: add reinitialization v2 test
-    function test_RevertBackersManagerRootstockCollectiveInitializeV2() public {
-        // GIVEN a BackersManagerRootstockCollective initialized
-        //  WHEN tries to initialize the proxy again
-        //   THEN tx reverts because InvalidInitialization
-        vm.expectRevert(Initializable.InvalidInitialization.selector);
-        backersManager.initializeV2(builderRegistry);
-    }
-
     /**
      * SCENARIO: RewardDistributorRootstockCollective cannot be initialized twice
      */

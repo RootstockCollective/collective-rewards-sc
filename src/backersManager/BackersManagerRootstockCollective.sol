@@ -38,7 +38,7 @@ contract BackersManagerRootstockCollective is
     error BackerOptedOutRewards();
     error AlreadyOptedInRewards();
     error BackerHasAllocations();
-    error InvalidAddress();
+    error ZeroAddressNotAllowed();
     error RewardTokenNotApproved();
 
     // -----------------------------
@@ -168,15 +168,19 @@ contract BackersManagerRootstockCollective is
     }
 
     /**
-     * @notice contract version 2 initializer
+     * @notice builder registry contract initializer
      * @param builderRegistry_ address of the builder registry contract
      */
-    function initializeV2(BuilderRegistryRootstockCollective builderRegistry_) external reinitializer(2) {
-        if (address(builderRegistry_) == address(0)) revert InvalidAddress();
+    function initializeBuilderRegistry(BuilderRegistryRootstockCollective builderRegistry_) external {
+        if (address(builderRegistry_) == address(0)) revert ZeroAddressNotAllowed();
 
         builderRegistry = builderRegistry_;
     }
 
+    // NOTE: This contract previously included an `initializeV2` function protected by `reinitializer(2)`,
+    // used to initialize `builderRegistry` during an upgrade to version 2.
+    // The function has been removed since the upgrade was already executed and it's no longer necessary.
+    
     /**
      * @notice contract version 3 initializer
      * @param maxDistributionsPerBatch_ maximum number of distributions allowed per batch
@@ -184,6 +188,7 @@ contract BackersManagerRootstockCollective is
     function initializeV3(uint256 maxDistributionsPerBatch_) external reinitializer(3) {
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
     }
+
 
     // -----------------------------
     // ---- External Functions -----
@@ -326,9 +331,7 @@ contract BackersManagerRootstockCollective is
         uint256 _length = gauges_.length;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
-
-            _builderRegistry.requireBuilderActivation(gauges_[i]);
-
+            _builderRegistry.requireInitializedBuilder(gauges_[i]);
             gauges_[i].claimBackerReward(msg.sender);
         }
     }
@@ -446,7 +449,7 @@ contract BackersManagerRootstockCollective is
         internal
         returns (uint256 newBackerTotalAllocation_, uint256 newTotalPotentialReward_)
     {
-        builderRegistry_.requireBuilderActivation(gauge_);
+        builderRegistry_.requireInitializedBuilder(gauge_);
 
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
             gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
@@ -591,7 +594,7 @@ contract BackersManagerRootstockCollective is
 
     /**
      * @notice approves rewardTokens to a given gauge
-     * @dev give full allowance when it is community approved and remove it when it is dewhitelisted
+     * @dev give full allowance when it is community approved and remove it when it is community banned
      * reverts if the reward token contract returns false on the approval
      * @param gauge_ gauge contract to approve rewardTokens
      * @param value_ amount of rewardTokens to approve

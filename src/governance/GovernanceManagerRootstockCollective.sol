@@ -18,8 +18,8 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
     // --------- Modifiers ---------
     // -----------------------------
 
-    modifier onlyValidAddress(address account_) {
-        if (account_ == address(0)) revert InvalidAddress(account_);
+    modifier onlyNonZeroAddress(address account_) {
+        if (account_ == address(0)) revert ZeroAddressNotAllowed();
         _;
     }
 
@@ -137,22 +137,22 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
     // ---- Internal Functions -----
     // -----------------------------
 
-    function _updateGovernor(address governor_) private onlyValidAddress(governor_) {
+    function _updateGovernor(address governor_) private onlyNonZeroAddress(governor_) {
         governor = governor_;
         emit GovernorUpdated(governor_, msg.sender);
     }
 
-    function _updateFoundationTreasury(address foundationTreasury_) private onlyValidAddress(foundationTreasury_) {
+    function _updateFoundationTreasury(address foundationTreasury_) private onlyNonZeroAddress(foundationTreasury_) {
         foundationTreasury = foundationTreasury_;
         emit FoundationTreasuryUpdated(foundationTreasury_, msg.sender);
     }
 
-    function _updateKYCApprover(address kycApprover_) private onlyValidAddress(kycApprover_) {
+    function _updateKYCApprover(address kycApprover_) private onlyNonZeroAddress(kycApprover_) {
         kycApprover = kycApprover_;
         emit KycApproverUpdated(kycApprover_, msg.sender);
     }
 
-    function _updateUpgrader(address upgrader_) private onlyValidAddress(upgrader_) {
+    function _updateUpgrader(address upgrader_) private onlyNonZeroAddress(upgrader_) {
         upgrader = upgrader_;
         emit UpgraderUpdated(upgrader_, msg.sender);
     }

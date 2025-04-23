@@ -20,12 +20,12 @@ interface IBackersManagerRootstockCollective {
     /**
      * @notice returns rewards receiver for a given builder
      */
-    function builderRewardReceiver(address builder_) external view returns (address rewardReceiver_);
+    function rewardReceiver(address builder_) external view returns (address rewardReceiver_);
 
     /**
-     * @notice returns true if the builder has an open request to replace his receiver address
+     * @notice returns true if the builder has an open request to update his receiver address
      */
-    function hasBuilderRewardReceiverPendingApproval(address builder_) external view returns (bool);
+    function isRewardReceiverUpdatePending(address builder_) external view returns (bool);
 
     /**
      * @notice return true if builder is paused

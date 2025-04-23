@@ -91,7 +91,7 @@ contract BaseTest is Test {
             address(backersManager), address(gaugeFactory), address(rewardDistributor), rewardPercentageCooldown
         );
 
-        backersManager.initializeV2(builderRegistry);
+        backersManager.initializeBuilderRegistry(builderRegistry);
         backersManager.initializeV3(maxDistributionsPerBatch);
 
         // allow to execute all the functions protected by governance
@@ -142,7 +142,7 @@ contract BaseTest is Test {
         returns (GaugeRootstockCollective newGauge_)
     {
         vm.prank(kycApprover);
-        builderRegistry.activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
+        builderRegistry.initializeBuilder(builder_, rewardReceiver_, rewardPercentage_);
         builders.push(builder_);
         vm.prank(governor);
         newGauge_ = builderRegistry.communityApproveBuilder(builder_);

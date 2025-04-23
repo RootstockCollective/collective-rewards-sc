@@ -20,10 +20,9 @@ interface IGovernanceManagerRootstockCollective {
     // ------- Custom Errors -------
     // -----------------------------
     /**
-     * @notice Thrown when an invalid address is provided.
-     * @param account_ The invalid address provided.
+     * @notice Thrown when a zero address is provided.
      */
-    error InvalidAddress(address account_);
+    error ZeroAddressNotAllowed();
 
     /**
      * @notice Thrown when the caller is not authorized as a changer.

@@ -370,7 +370,7 @@ The staking token is `stRIF`, where the token balance represents the backing pow
 
 ### Governor
 
-The Governor represents the DAO’s governance mechanism and is in charge of the community approval and de-whitelisting of
+The Governor represents the DAO’s governance mechanism and is in charge of the community approval and ban of
 builders.
 
 ### KYC Approver

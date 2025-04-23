@@ -6,6 +6,7 @@
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/RootstockCollective/collective-rewards-sc/badge)](https://scorecard.dev/viewer/?uri=github.com/RootstockCollective/collective-rewards-sc)
 
 A set of Solidity smart [contracts](./specs/CONTRACTS.md), to implement builder incentives and staker rewards mechanisms to be integrated with the DAO. For technical detail, please refer to the [specifications](./specs/SPECIFICATION.md).
 
@@ -250,19 +251,19 @@ For development and testing purposes you may like to deploy some of the mock con
 #### mock token
 
 ```sh
-forge script script/MockToken.s.sol #the rest of the command arguments
+forge script script/test_mock/MockToken.s.sol #the rest of the command arguments
 ```
 
 should you like to number the the token in the name (for multiple tokens) use either an env var:
 
 ```sh
-MOCK_TOKEN_COUNTER=42 forge script script/MockToken.s.sol #the rest of the command arguments
+MOCK_TOKEN_COUNTER=42 forge script script/test_mock/MockToken.s.sol #the rest of the command arguments
 ```
 
 or a function signature that accepts this parameter:
 
 ```sh
-forge script script/MockToken.s.sol -s "run(uint)" 42 #the rest of the command arguments
+forge script script/test_mock/MockToken.s.sol -s "run(uint)" 42 #the rest of the command arguments
 ```
 
 #### mock change executor
@@ -355,7 +356,13 @@ Generate coverage report:
 
 ### Reward token
 
-The reward token for the collective incentives program is `RIF`.
+The reward token for the collective incentives program is `RIF`. Only tokens that adhere to the ERC-20 standard are supported.
+Unsupported Token Types:
+
+- Fee-on-transfer tokens (e.g., those that deduct a fee per transfer).
+- Rebasing tokens (e.g., tokens that dynamically adjust balances).
+
+Using these unsupported token types may disrupt the reward distribution logic, leading to unexpected behavior. Ensure that only standard ERC-20 tokens are used.
 
 ### Staking token
 
@@ -363,7 +370,7 @@ The staking token is `stRIF`, where the token balance represents the backing pow
 
 ### Governor
 
-The Governor represents the DAO’s governance mechanism and is in charge of the community approval and de-whitelisting of
+The Governor represents the DAO’s governance mechanism and is in charge of the community approval and ban of
 builders.
 
 ### KYC Approver

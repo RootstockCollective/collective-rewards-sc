@@ -1051,7 +1051,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
      * SCENARIO: reward receiver tries to claim his rewards with a pending reward receiver address request.
      *           After KYC approval, he can complete the claim.
      */
-    function test_ClaimBuilderRewardsRewardReceiverWithReplacement() public {
+    function test_ClaimBuilderRewardsRewardReceiverWithUpdate() public {
         // GIVEN a builder2 with 30% of reward percentage
         vm.prank(builder2);
         builderRegistry.setBackerRewardPercentage(0.3 ether);
@@ -1072,13 +1072,13 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND another cycle finishes without a new distribution
         _skipAndStartNewCycle();
 
-        // AND Builder submits a Reward Receiver Replacement Request
+        // AND Builder submits a Reward Receiver Request update
         vm.prank(builder2);
         address _newRewardReceiver = makeAddr("newRewardReceiver");
-        builderRegistry.submitRewardReceiverReplacementRequest(_newRewardReceiver);
+        builderRegistry.requestRewardReceiverUpdate(_newRewardReceiver);
 
         // WHEN newRewardReceiver tries to claim rewards
-        // THEN it fails as there is an active reward receiver replacement request
+        // THEN it fails as there is an active reward receiver update request
         vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
         vm.prank(builder2Receiver);
         gauge2.claimBuilderReward();
@@ -1089,9 +1089,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN he receives the reward in the original receiver address
         assertEq(rewardToken.balanceOf(builder2Receiver), 70 ether);
 
-        // WHEN KYCApprover approved his Reward Receiver Replacement Request
+        // WHEN KYCApprover approved his Reward Receiver update Request
         vm.prank(kycApprover);
-        builderRegistry.approveBuilderRewardReceiverReplacement(builder2, _newRewardReceiver);
+        builderRegistry.approveNewRewardReceiver(builder2, _newRewardReceiver);
 
         // AND 100 rewardToken and 100 coinbase are distributed
         _distribute(100 ether, 100 ether);
