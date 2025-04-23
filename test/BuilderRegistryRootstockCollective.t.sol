@@ -13,7 +13,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     event KYCApproved(address indexed builder_);
     event KYCRevoked(address indexed builder_);
     event CommunityApproved(address indexed builder_);
-    event CommunityRevoked(address indexed builder_);
+    event CommunityBanned(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
     event SelfPaused(address indexed builder_);
@@ -692,9 +692,9 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     function test_CommunityBanBuilder() public {
         // GIVEN a whitelisted builder
         //  WHEN governor calls communityBanBuilder
-        //   THEN CommunityRevoked event is emitted
+        //   THEN CommunityBanned event is emitted
         vm.expectEmit();
-        emit CommunityRevoked(builder);
+        emit CommunityBanned(builder);
         vm.prank(governor);
         builderRegistry.communityBanBuilder(builder);
 

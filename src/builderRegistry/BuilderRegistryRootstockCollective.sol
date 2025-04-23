@@ -47,7 +47,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     event KYCApproved(address indexed builder_);
     event KYCRevoked(address indexed builder_);
     event CommunityApproved(address indexed builder_);
-    event CommunityRevoked(address indexed builder_);
+    event CommunityBanned(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
     event SelfPaused(address indexed builder_);
@@ -331,7 +331,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         _haltGauge(_gauge);
         backersManager.rewardTokenApprove(address(_gauge), 0);
 
-        emit CommunityRevoked(builder_);
+        emit CommunityBanned(builder_);
     }
 
     /**
