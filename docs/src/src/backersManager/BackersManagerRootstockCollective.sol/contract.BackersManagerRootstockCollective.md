@@ -1,5 +1,5 @@
 # BackersManagerRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/99cb2d8ed5962fe0d1a12a5277c2e7b1068aeff8/src/backersManager/BackersManagerRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/backersManager/BackersManagerRootstockCollective.sol)
 
 **Inherits:**
 [CycleTimeKeeperRootstockCollective](/src/backersManager/CycleTimeKeeperRootstockCollective.sol/abstract.CycleTimeKeeperRootstockCollective.md), [ICollectiveRewardsCheckRootstockCollective](/src/interfaces/ICollectiveRewardsCheckRootstockCollective.sol/interface.ICollectiveRewardsCheckRootstockCollective.md), ERC165Upgradeable
@@ -12,6 +12,15 @@ Creates gauges, manages backers votes and distribute rewards
 
 ```solidity
 uint256 internal constant _MAX_DISTRIBUTIONS_PER_BATCH = 20;
+```
+
+
+### __gapUpgrade
+gap to preserve storage layout after removing builder registry from the inheritance tree
+
+
+```solidity
+uint256[64] private __gapUpgrade;
 ```
 
 
@@ -184,11 +193,13 @@ constructor();
 
 contract initializer
 
+For more info on supported tokens, see:
+https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
+
 
 ```solidity
 function initialize(
     IGovernanceManagerRootstockCollective governanceManager_,
-    address builderRegistry_,
     address rewardToken_,
     address stakingToken_,
     uint32 cycleDuration_,
@@ -203,17 +214,31 @@ function initialize(
 |Name|Type|Description|
 |----|----|-----------|
 |`governanceManager_`|`IGovernanceManagerRootstockCollective`|contract with permissioned roles|
-|`builderRegistry_`|`address`|address of the builder registry contract|
-|`rewardToken_`|`address`|address of the token rewarded to builder and voters, only standard ERC20 MUST be used|
+|`rewardToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20 standard are supported.|
 |`stakingToken_`|`address`|address of the staking token for builder and voters|
 |`cycleDuration_`|`uint32`|Collective Rewards cycle time duration|
 |`cycleStartOffset_`|`uint24`|offset to add to the first cycle, used to set an specific day to start the cycles|
 |`distributionDuration_`|`uint32`|duration of the distribution window|
 
 
+### initializeBuilderRegistry
+
+builder registry contract initializer
+
+
+```solidity
+function initializeBuilderRegistry(BuilderRegistryRootstockCollective builderRegistry_) external;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`builderRegistry_`|`BuilderRegistryRootstockCollective`|address of the builder registry contract|
+
+
 ### supportsInterface
 
-*See [IERC165-supportsInterface](/node_modules/forge-std/src/mocks/MockERC721.sol/contract.MockERC721.md#supportsinterface).*
+*See [IERC165-supportsInterface](/node_modules/forge-std/src/interfaces/IERC165.sol/interface.IERC165.md#supportsinterface).*
 
 
 ```solidity
@@ -404,6 +429,19 @@ This action can be performed only by the backer themselves or by the foundation.
 function optInRewards(address backer_) external onlyBackerOrKycApprover(backer_);
 ```
 
+### communityApproveBuilder
+
+This method allows ongoing v1 proposals to be executed after the BackersManager upgrade to v2, by keeping
+compatibility with the v1 interface.
+
+
+```solidity
+function communityApproveBuilder(address builder_)
+    external
+    onlyValidChanger
+    returns (GaugeRootstockCollective gauge_);
+```
+
 ### _allocate
 
 internal function used to allocate votes for a gauge or a batch of gauges
@@ -531,7 +569,8 @@ function _gaugeDistribute(
 
 approves rewardTokens to a given gauge
 
-*give full allowance when it is community approved and remove it when it is dewhitelisted*
+*give full allowance when it is community approved and remove it when it is community banned
+reverts if the reward token contract returns false on the approval*
 
 
 ```solidity
@@ -695,5 +734,17 @@ error AlreadyOptedInRewards();
 
 ```solidity
 error BackerHasAllocations();
+```
+
+### ZeroAddressNotAllowed
+
+```solidity
+error ZeroAddressNotAllowed();
+```
+
+### RewardTokenNotApproved
+
+```solidity
+error RewardTokenNotApproved();
 ```
 

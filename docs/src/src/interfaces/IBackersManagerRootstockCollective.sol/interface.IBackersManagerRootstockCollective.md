@@ -1,5 +1,5 @@
 # IBackersManagerRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/99cb2d8ed5962fe0d1a12a5277c2e7b1068aeff8/src/interfaces/IBackersManagerRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/interfaces/IBackersManagerRootstockCollective.sol)
 
 
 ## Functions
@@ -21,22 +21,22 @@ returns builder address for a given gauge
 function gaugeToBuilder(GaugeRootstockCollective gauge_) external view returns (address builder_);
 ```
 
-### builderRewardReceiver
+### rewardReceiver
 
 returns rewards receiver for a given builder
 
 
 ```solidity
-function builderRewardReceiver(address builder_) external view returns (address rewardReceiver_);
+function rewardReceiver(address builder_) external view returns (address rewardReceiver_);
 ```
 
-### hasBuilderRewardReceiverPendingApproval
+### isRewardReceiverUpdatePending
 
-returns true if the builder has an open request to replace his receiver address
+returns true if the builder has an open request to update his receiver address
 
 
 ```solidity
-function hasBuilderRewardReceiverPendingApproval(address builder_) external view returns (bool);
+function isRewardReceiverUpdatePending(address builder_) external view returns (bool);
 ```
 
 ### isBuilderPaused
