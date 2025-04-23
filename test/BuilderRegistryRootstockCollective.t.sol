@@ -857,4 +857,60 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         // THEN gauge remains halted
         assertEq(builderRegistry.isGaugeHalted(address(gauge)), true);
     }
+
+    function test_GetGaugesInRangeValid() public {
+        _prepareGauges();
+
+        address[] memory _gauges = builderRegistry.getGaugesInRange(1, 2);
+        assertEq(_gauges.length, 1);
+        assertEq(_gauges[0], address(gauge2));
+    }
+
+    function test_GetGaugesInRangeValidLastItem() public {
+        _prepareGauges();
+
+        address[] memory _gauges = builderRegistry.getGaugesInRange(4, 5);
+        assertEq(_gauges.length, 1);
+        assertEq(builderRegistry.getGaugeAt(4), _gauges[0]);
+    }
+
+    function test_GetGaugesInRangeFull() public {
+        _prepareGauges();
+
+        address[] memory _gauges = builderRegistry.getGaugesInRange(0, 5);
+        assertEq(_gauges.length, 5);
+        assertEq(builderRegistry.getGaugeAt(0), _gauges[0]);
+        assertEq(builderRegistry.getGaugeAt(1), _gauges[1]);
+        assertEq(builderRegistry.getGaugeAt(2), _gauges[2]);
+        assertEq(builderRegistry.getGaugeAt(3), _gauges[3]);
+        assertEq(builderRegistry.getGaugeAt(4), _gauges[4]);
+    }
+
+    function test_GetGaugesInRangeInvalidStartGreaterThanEnd() public {
+        _prepareGauges();
+
+        vm.expectRevert(abi.encodeWithSelector(BuilderRegistryRootstockCollective.InvalidIndex.selector));
+        builderRegistry.getGaugesInRange(3, 2);
+    }
+
+    function test_GetGaugesInRangeStartEqualsEnd() public {
+        _prepareGauges();
+
+        vm.expectRevert(abi.encodeWithSelector(BuilderRegistryRootstockCollective.InvalidIndex.selector));
+        builderRegistry.getGaugesInRange(2, 2);
+    }
+
+    function test_GetGaugesInRangeOutOfBounds() public {
+        _prepareGauges();
+
+        vm.expectRevert(abi.encodeWithSelector(BuilderRegistryRootstockCollective.InvalidIndex.selector));
+        builderRegistry.getGaugesInRange(0, 6); // only 5 elements, index 5 is out of bounds
+    }
+
+    function _prepareGauges() internal {
+        for (uint256 i = 0; i < 3; i++) {
+            address _gauge = makeAddr(string(abi.encode(i)));
+            _whitelistBuilder(_gauge, builder, 1 ether);
+        }
+    }
 }
