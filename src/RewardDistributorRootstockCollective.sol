@@ -16,6 +16,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     // -----------------------------
     error NotFoundationTreasury();
     error CollectiveRewardsAddressesAlreadyInitialized();
+    error CycleAlreadyFunded();
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -23,6 +24,12 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     modifier onlyFoundationTreasury() {
         governanceManager.validateFoundationTreasury(msg.sender);
         _;
+    }
+
+    modifier onlyOncePerCycle() {
+        if (lastFundedCycleStart == backersManager.cycleStart(block.timestamp)) revert CycleAlreadyFunded();
+        _;
+        lastFundedCycleStart = backersManager.cycleStart(block.timestamp);
     }
 
     // -----------------------------
@@ -37,6 +44,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     uint256 public defaultRewardTokenAmount;
     ///@notice default reward coinbase amount
     uint256 public defaultRewardCoinbaseAmount;
+    uint256 public lastFundedCycleStart;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -121,17 +129,17 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
 
     /**
      * @notice sends rewards to backersManager contract with default amounts
-     * @dev reverts if is not called by foundation treasury address
+     * @dev reverts if is called more than once per cycle
      */
-    function sendRewardsWithDefaultAmount() external payable onlyFoundationTreasury {
+    function sendRewardsWithDefaultAmount() external payable onlyOncePerCycle {
         _sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
     }
 
     /**
      * @notice sends rewards to backersManager contract with default amounts and starts the distribution
-     * @dev reverts if is not called by foundation treasury address
+     * @dev reverts if is called more than once per cycle
      */
-    function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyFoundationTreasury {
+    function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyOncePerCycle {
         _sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
         backersManager.startDistribution();
     }
