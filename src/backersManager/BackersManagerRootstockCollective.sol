@@ -51,6 +51,7 @@ contract BackersManagerRootstockCollective is
     event RewardDistributionFinished(address indexed sender_);
     event BackerRewardsOptedOut(address indexed backer_);
     event BackerRewardsOptedIn(address indexed backer_);
+    event MaxDistributionsPerBatchUpdated(uint256 oldValue, uint256 newValue);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -414,7 +415,9 @@ contract BackersManagerRootstockCollective is
         if (msg.sender != governanceManager.upgrader()) {
             revert NotAuthorized();
         }
+        uint256 oldValue = maxDistributionsPerBatch;
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
+        emit MaxDistributionsPerBatchUpdated(oldValue, maxDistributionsPerBatch_);
     }
 
     // -----------------------------
