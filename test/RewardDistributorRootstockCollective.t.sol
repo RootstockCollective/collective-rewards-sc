@@ -5,6 +5,7 @@ import { BaseTest } from "./BaseTest.sol";
 import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
+import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 
 contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function _setUp() internal override {
@@ -176,6 +177,58 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         assertEq(rewardToken.balanceOf(address(gauge)), 2 ether);
         // THEN coinbase balance of gauge is 3 ether
         assertEq(address(gauge).balance, 3 ether);
+    }
+
+    function test_RevertSendRewardsAndStartDistributionWithDefaultAmountTwicePerCycle() public {
+        // GIVEN a funded Reward Distributor contract
+        rewardToken.transfer(address(rewardDistributor), 10 ether);
+        Address.sendValue(payable(foundation), 5 ether);
+        _skipToStartDistributionWindow();
+        // WHEN cycle is funded with default amounts and distribution is started
+        vm.startPrank(foundation);
+        rewardDistributor.setDefaultRewardAmount(2 ether, 1 ether);
+        rewardDistributor.sendRewardsAndStartDistributionWithDefaultAmount{ value: 1 ether }();
+
+        // THEN the same cycle cannot be funded again
+        vm.expectRevert(RewardDistributorRootstockCollective.CycleAlreadyFunded.selector);
+        rewardDistributor.sendRewardsAndStartDistributionWithDefaultAmount{ value: 1 ether }();
+    }
+
+    /**
+     * SCENARIO: Revert if cycle is funded with default amounts more than once per cycle
+     */
+    function test_RevertSendRewardsWithDefaultAmountTwicePerCycle() public {
+        // GIVEN a funded Reward Distributor contract
+        rewardToken.transfer(address(rewardDistributor), 10 ether);
+        Address.sendValue(payable(address(rewardDistributor)), 5 ether);
+        // WHEN the default rewards are set
+        vm.startPrank(foundation);
+        rewardDistributor.setDefaultRewardAmount(2 ether, 1 ether);
+        // AND the rewards are sent by permissionless address
+        vm.startPrank(bob);
+        rewardDistributor.sendRewardsWithDefaultAmount();
+        // AND half cycle pass
+        _skipRemainingCycleFraction(2);
+        // THEN the same cycle cannot be funded again
+        vm.expectRevert(RewardDistributorRootstockCollective.CycleAlreadyFunded.selector);
+        rewardDistributor.sendRewardsWithDefaultAmount();
+    }
+
+    /**
+     * SCENARIO: Send default rewards once per cycle restriction is reseted in a new cycle
+     */
+    function test_SendRewardsWithDefaultAmountInNewCycle() public {
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
+        rewardToken.transfer(address(rewardDistributor), 10 ether);
+        Address.sendValue(payable(address(rewardDistributor)), 5 ether);
+        // WHEN foundation treasury calls sendRewardsWithDefaultAmount
+        vm.startPrank(foundation);
+        rewardDistributor.setDefaultRewardAmount(2 ether, 1 ether);
+        rewardDistributor.sendRewardsWithDefaultAmount();
+        // AND cycle finish
+        _skipAndStartNewCycle();
+        // THEN foundation treasury can send rewards again in the new cycle
+        rewardDistributor.sendRewardsWithDefaultAmount();
     }
 
     /**
