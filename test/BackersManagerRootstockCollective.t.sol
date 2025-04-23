@@ -17,6 +17,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     event RewardDistributionStarted(address indexed sender_);
     event RewardDistributed(address indexed sender_);
     event RewardDistributionFinished(address indexed sender_);
+    event MaxDistributionsPerBatchUpdated(uint256 oldMaxDistributionsPerBatch, uint256 newMaxDistributionsPerBatch);
 
     /**
      * SCENARIO: allocate should revert if it is called with arrays with different lengths
@@ -1822,9 +1823,12 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     function test_UpdateMaxDistributionsPerBatch() public {
         // GIVEN a new maxDistributionsPerBatch value
         uint256 newMaxDistributionsPerBatch = 30;
+        uint256 oldMaxDistributionsPerBatch = backersManager.maxDistributionsPerBatch();
 
         // WHEN upgrader calls updateMaxDistributionsPerBatch
         vm.prank(governanceManager.upgrader());
+        vm.expectEmit();
+        emit MaxDistributionsPerBatchUpdated(oldMaxDistributionsPerBatch, newMaxDistributionsPerBatch);
         backersManager.updateMaxDistributionsPerBatch(newMaxDistributionsPerBatch);
 
         // THEN maxDistributionsPerBatch is updated
