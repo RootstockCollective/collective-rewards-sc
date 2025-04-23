@@ -8,7 +8,7 @@
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/RootstockCollective/collective-rewards-sc/badge)](https://scorecard.dev/viewer/?uri=github.com/RootstockCollective/collective-rewards-sc)
 
-A set of Solidity smart [contracts](./specs/CONTRACTS.md), to implement builder incentives and staker rewards mechanisms to be integrated with the DAO. For technical detail, please refer to the [specifications](./specs/SPECIFICATION.md).
+A set of Solidity smart [contracts](./specs/CONTRACTS.md), to implement builder incentives and staker rewards mechanisms to be integrated with the DAO. For technical details, please refer to the [specifications](./specs/SPECIFICATION.md).
 
 ## What's Inside
 
