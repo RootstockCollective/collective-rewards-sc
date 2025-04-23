@@ -327,17 +327,30 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice claims backer rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
-     * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      */
-    function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external {
+    function claimBackerRIFReward(GaugeRootstockCollective[] memory gauges_) external {
         uint256 _length = gauges_.length;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             if (_builderRegistry.gaugeToBuilder(gauges_[i]) == address(0)) {
                 revert BuilderRegistryRootstockCollective.GaugeDoesNotExist();
             }
-            gauges_[i].claimBackerReward(rewardToken_, msg.sender);
+            gauges_[i].claimBackerRIFReward(msg.sender);
+        }
+    }
+
+    /**
+     * @notice claims backer rewards from a batch of gauges
+     * @param gauges_ array of gauges to claim
+     */
+    function claimBackerRBTCReward(GaugeRootstockCollective[] memory gauges_) external {
+        uint256 _length = gauges_.length;
+        BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
+        for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
+            if (_builderRegistry.gaugeToBuilder(gauges_[i]) == address(0)) {
+                revert BuilderRegistryRootstockCollective.GaugeDoesNotExist();
+            }
+            gauges_[i].claimBackerRBTCReward(msg.sender);
         }
     }
 

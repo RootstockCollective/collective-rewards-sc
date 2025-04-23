@@ -57,17 +57,17 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
         backersManager.claimBackerRewards(gaugesArray);
 
-        //  WHEN alice calls claimBackerRewards using the wrong gauge
+        //  WHEN alice calls claimBackerRIFReward using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
         vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
-        backersManager.claimBackerRewards(address(rewardToken), gaugesArray);
+        backersManager.claimBackerRIFReward(gaugesArray);
 
-        //  WHEN alice calls claimBackerRewards using the wrong gauge
+        //  WHEN alice calls claimBackerRBTCReward using the wrong gauge
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
         vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
-        backersManager.claimBackerRewards(UtilsLib._COINBASE_ADDRESS, gaugesArray);
+        backersManager.claimBackerRBTCReward(gaugesArray);
     }
 
     /**
@@ -1241,7 +1241,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claim rewards
         vm.prank(alice);
-        backersManager.claimBackerRewards(address(rewardToken), gaugesArray);
+        backersManager.claimBackerRIFReward(gaugesArray);
 
         // THEN alice rewardToken balance is 50% of the distributed amount
         assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_992);
@@ -1276,7 +1276,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claim rewards
         vm.prank(alice);
-        backersManager.claimBackerRewards(UtilsLib._COINBASE_ADDRESS, gaugesArray);
+        backersManager.claimBackerRBTCReward(gaugesArray);
 
         // THEN alice coinbase balance is 50% of the distributed amount
         assertEq(alice.balance, 24_999_999_999_999_999_992);

@@ -63,10 +63,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     function test_NotAuthorized() public {
         // GIVEN a backer alice
         vm.startPrank(alice);
-        // WHEN alice calls claimBackerReward using bob address
+        // WHEN alice calls claimBackerRIFReward using bob address
         //  THEN tx reverts because caller is not authorized
         vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
-        gauge.claimBackerReward(address(rewardToken), bob);
+        gauge.claimBackerRIFReward(bob);
+
+        // WHEN alice calls claimBackerRBTCReward using bob address
+        //  THEN tx reverts because caller is not authorized
+        vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
+        gauge.claimBackerRIFReward(bob);
 
         // WHEN alice calls claimBackerReward using bob address
         //  THEN tx reverts because caller is not authorized
@@ -1633,13 +1638,13 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimBackerReward(address(rewardToken), alice);
+        gauge.claimBackerRIFReward(alice);
         // THEN alice rewardToken balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimBackerReward(address(rewardToken), bob);
+        gauge.claimBackerRIFReward(bob);
         // THEN bob rewardToken balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
     }
@@ -1669,13 +1674,13 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimBackerReward(UtilsLib._COINBASE_ADDRESS, alice);
+        gauge.claimBackerRBTCReward(alice);
         // THEN alice coinbase balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(alice.balance, 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimBackerReward(UtilsLib._COINBASE_ADDRESS, bob);
+        gauge.claimBackerRBTCReward(bob);
         // THEN bob coinbase balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(bob.balance, 83_333_333_333_333_333_330);
     }

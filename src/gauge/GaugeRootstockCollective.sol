@@ -238,36 +238,22 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         return _earned(rewardToken_, backer_, backersManager.periodFinish());
     }
 
+    function claimBackerRIFReward(address backer_) public {
+        _claimBackerReward(rewardToken, backer_);
+    }
+
+    function claimBackerRBTCReward(address backer_) public {
+        _claimBackerReward(UtilsLib._COINBASE_ADDRESS, backer_);
+    }
+
     /**
      * @notice claim rewards for a `backer_` address
      * @dev reverts if is not called by the `backer_` or the backersManager
      * @param backer_ address who receives the rewards
      */
     function claimBackerReward(address backer_) external {
-        claimBackerReward(rewardToken, backer_);
-        claimBackerReward(UtilsLib._COINBASE_ADDRESS, backer_);
-    }
-
-    /**
-     * @notice claim rewards for a `backer_` address
-     * @dev reverts if is not called by the `backer_` or the backersManager
-     * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
-     * @param backer_ address who receives the rewards
-     */
-    function claimBackerReward(address rewardToken_, address backer_) public {
-        if (msg.sender != backer_ && msg.sender != address(backersManager)) revert NotAuthorized();
-
-        RewardData storage _rewardData = rewardData[rewardToken_];
-
-        _updateRewards(rewardToken_, backer_, backersManager.periodFinish());
-
-        uint256 _reward = _rewardData.rewards[backer_];
-        if (_reward > 0) {
-            _rewardData.rewards[backer_] = 0;
-            _transferRewardToken(rewardToken_, backer_, _reward);
-            emit BackerRewardsClaimed(rewardToken_, backer_, _reward);
-        }
+        claimBackerRIFReward(backer_);
+        claimBackerRBTCReward(backer_);
     }
 
     /**
@@ -467,6 +453,28 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
+
+    /**
+     * @notice claim rewards for a `backer_` address
+     * @dev reverts if is not called by the `backer_` or the backersManager
+     * @param rewardToken_ address of the token rewarded
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     * @param backer_ address who receives the rewards
+     */
+    function _claimBackerReward(address rewardToken_, address backer_) internal {
+        if (msg.sender != backer_ && msg.sender != address(backersManager)) revert NotAuthorized();
+
+        RewardData storage _rewardData = rewardData[rewardToken_];
+
+        _updateRewards(rewardToken_, backer_, backersManager.periodFinish());
+
+        uint256 _reward = _rewardData.rewards[backer_];
+        if (_reward > 0) {
+            _rewardData.rewards[backer_] = 0;
+            _transferRewardToken(rewardToken_, backer_, _reward);
+            emit BackerRewardsClaimed(rewardToken_, backer_, _reward);
+        }
+    }
 
     /**
      * @notice gets the last time the reward is applicable, now or when the cycle finished
