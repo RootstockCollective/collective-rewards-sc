@@ -20,11 +20,9 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     // ------- Custom Errors -------
     // -----------------------------
 
-    error AlreadyActivated();
     error AlreadyKYCApproved();
     error AlreadyCommunityApproved();
     error AlreadyRevoked();
-    error NotActivated();
     error NotKYCApproved();
     error NotCommunityApproved();
     error NotPaused();
@@ -32,6 +30,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error NotOperational();
     error InvalidBackerRewardPercentage();
     error InvalidBuilderRewardReceiver();
+    error BuilderAlreadyInitialized();
+    error BuilderNotInitialized();
     error BuilderAlreadyExists();
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
@@ -42,7 +42,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event BuilderActivated(address indexed builder_, address rewardReceiver_, uint64 rewardPercentage_);
+    event BuilderInitialized(address indexed builder_, address rewardReceiver_, uint64 rewardPercentage_);
     event KYCApproved(address indexed builder_);
     event KYCRevoked(address indexed builder_);
     event CommunityApproved(address indexed builder_);
@@ -88,7 +88,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     // ---------- Structs ----------
     // -----------------------------
     struct BuilderState {
-        bool activated;
+        bool initialized;
         bool kycApproved;
         bool communityApproved;
         bool paused;
@@ -241,15 +241,15 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @notice activates builder for the first time, setting the reward receiver and the reward percentage
-     *  Sets activate flag to true. It cannot be switched to false anymore
+     * @notice initializes builder, setting the reward receiver and the reward percentage
+     *  Sets initialized flag to true. It cannot be switched to false anymore
      * @dev reverts if it is not called by the owner address
-     * reverts if it is already activated
+     * reverts if it is already initialized
      * @param builder_ address of the builder
      * @param rewardReceiver_ address of the builder reward receiver
      * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
-    function activateBuilder(
+    function initializeBuilder(
         address builder_,
         address rewardReceiver_,
         uint64 rewardPercentage_
@@ -257,13 +257,13 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         external
         onlyKycApprover
     {
-        _activateBuilder(builder_, rewardReceiver_, rewardPercentage_);
+        _intialiseBuilder(builder_, rewardReceiver_, rewardPercentage_);
     }
 
     /**
      * @notice approves builder's KYC after a revocation
      * @dev reverts if it is not called by the owner address
-     * reverts if it is not activated
+     * reverts if it is not initialized
      * reverts if it is already KYC approved
      * reverts if it does not have a gauge associated
      * @param builder_ address of the builder
@@ -271,8 +271,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function approveBuilderKYC(address builder_) external onlyKycApprover {
         GaugeRootstockCollective _gauge = builderToGauge[builder_];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[builder_].activated) revert NotActivated();
         if (builderState[builder_].kycApproved) revert AlreadyKYCApproved();
+        if (!builderState[builder_].initialized) revert BuilderNotInitialized();
 
         builderState[builder_].kycApproved = true;
 
@@ -589,15 +589,15 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @notice Ensures the builder associated with the given gauge exists and builder is activated
-     * @dev Reverts if the builder gauge does not exist or if the builder is not activated.
+     * @notice Ensures the builder associated with the given gauge exists and builder is initialized
+     * @dev Reverts if the builder gauge does not exist or if the builder is not initialized.
      * @dev reverts if it is not called by the backers manager
      * @param gauge_ The gauge to validate.
      */
-    function requireBuilderActivation(GaugeRootstockCollective gauge_) external view onlyBackersManager {
+    function requireInitializedBuilder(GaugeRootstockCollective gauge_) external view {
         address _builder = gaugeToBuilder[gauge_];
         if (_builder == address(0)) revert GaugeDoesNotExist();
-        if (!builderState[_builder].activated) revert NotActivated();
+        if (!builderState[_builder].initialized) revert BuilderNotInitialized();
     }
 
     /**
@@ -638,13 +638,13 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @dev activates builder for the first time, setting the reward receiver and the reward percentage
-     *  Sets activate flag to true. It cannot be switched to false anymore
-     *  See {activateBuilder} for details.
+     * @dev Initializes builder for the first time, setting the reward receiver and the reward percentage
+     *  Sets initialized flag to true. It cannot be switched to false anymore
+     *  See {intialiseBuilder} for details.
      */
-    function _activateBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
-        if (builderState[builder_].activated) revert AlreadyActivated();
-        builderState[builder_].activated = true;
+    function _intialiseBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
+        if (builderState[builder_].initialized) revert BuilderAlreadyInitialized();
+        builderState[builder_].initialized = true;
         builderState[builder_].kycApproved = true;
         builderRewardReceiver[builder_] = rewardReceiver_;
         // TODO: should we have a minimal amount?
@@ -662,7 +662,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         // write to storage
         backerRewardPercentage[builder_] = _rewardPercentageData;
 
-        emit BuilderActivated(builder_, rewardReceiver_, rewardPercentage_);
+        emit BuilderInitialized(builder_, rewardReceiver_, rewardPercentage_);
     }
 
     /**
