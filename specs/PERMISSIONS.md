@@ -55,7 +55,7 @@ You can find bellow the permissions, roles, and functionalities within the `Buil
 - Who: Address stored in `_authorizedChanger` in the `GovernanceManagerRootstockCollective` contract.  Follow the path: BuilderRegistry -> CycleTimeKeeper -> UpgradeableRootstockCollective
 - Permissions and Capabilities:
     + Community approve builder using `communityApproveBuilder`.
-    + Dewhitelist builder using `dewhitelistBuilder`.
+    + Ban builder permanently using `communityBanBuilder`.
     + Schedule a new cycle duration using `setCycleDuration`. Defined at `CycleTimeKeeperRootstockCollective.sol`
 
 ### Foundation Treasury

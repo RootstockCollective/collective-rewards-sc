@@ -3,33 +3,33 @@ pragma solidity 0.8.20;
 
 import { HaltedBuilderBehavior } from "./HaltedBuilderBehavior.t.sol";
 
-contract DewhitelistBuilderTest is HaltedBuilderBehavior {
+contract CommunityBanBuilderTest is HaltedBuilderBehavior {
     function _initialState() internal override {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
         _initialDistribution();
 
-        // AND builder is dewhitelisted
+        // AND builder is community banned
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
     }
 
     function _haltGauge() internal override {
-        // AND builder is dewhitelisted
+        // AND builder is community banned
         vm.prank(governor);
-        builderRegistry.dewhitelistBuilder(builder);
+        builderRegistry.communityBanBuilder(builder);
     }
 
     /**
-     * SCENARIO: builder is dewhitelisted in the middle of an cycle having allocation.
+     * SCENARIO: builder is community banned in the middle of an cycle having allocation.
      *  builder receives all the rewards for the current cycle
      */
     function test_BuildersReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is dewhitelisted
+        //    AND builder is community banned
         _initialState();
 
         // WHEN builders claim rewards
@@ -47,14 +47,14 @@ contract DewhitelistBuilderTest is HaltedBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is dewhitelisted in the middle of an cycle having allocation.
+     * SCENARIO: builder is community banned in the middle of an cycle having allocation.
      *  Builder doesn't receive those rewards on the next cycle
      */
     function test_BuilderDoesNotReceiveNextRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is dewhitelisted
+        //    AND builder is community banned
         _initialState();
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
