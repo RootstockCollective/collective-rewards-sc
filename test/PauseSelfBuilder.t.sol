@@ -4,42 +4,42 @@ pragma solidity 0.8.20;
 import { HaltedBuilderBehavior } from "./HaltedBuilderBehavior.t.sol";
 import { ResumeBuilderBehavior } from "./ResumeBuilderBehavior.t.sol";
 
-contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
+contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     function _initialState() internal override(HaltedBuilderBehavior, ResumeBuilderBehavior) {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
         _initialDistribution();
 
-        // AND builder is revoked
+        // AND builder pauses himself
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
         vm.stopPrank();
     }
 
     function _haltGauge() internal override {
-        // AND builder is revoked
+        // AND builder pauses himself
         vm.startPrank(builder);
-        builderRegistry.revokeBuilder();
+        builderRegistry.pauseSelf();
         vm.stopPrank();
     }
 
     function _resumeGauge() internal override {
-        // AND builder is permitted
+        // AND builder unpauses himself
         vm.startPrank(builder);
-        builderRegistry.permitBuilder(0.5 ether);
+        builderRegistry.unpauseSelf(0.5 ether);
         vm.stopPrank();
     }
 
     /**
-     * SCENARIO: builder is revoked in the middle of an cycle having allocation.
+     * SCENARIO: builder pauses himself in the middle of an cycle having allocation.
      *  builder receives all the rewards for the current cycle
      */
     function test_BuildersReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is revoked
+        //    AND builder is self paused
         _initialState();
 
         // WHEN builders claim rewards
@@ -57,14 +57,14 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is revoked in the middle of an cycle having allocation.
+     * SCENARIO: builder pauses himself in the middle of an cycle having allocation.
      *  Builder doesn't receive those rewards on the next cycle
      */
     function test_BuilderDoesNotReceiveNextRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is revoked
+        //    AND builder is self pauses
         _initialState();
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -91,12 +91,12 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is revoked
+        //    AND builder is self paused
         _initialState();
 
-        // AND builder is permitted
+        // AND builder unpauses himself
         vm.startPrank(builder);
-        builderRegistry.permitBuilder(0.5 ether);
+        builderRegistry.unpauseSelf(0.5 ether);
 
         // AND 100 rewardToken and 10 coinbase are distributed
         _distribute(100 ether, 10 ether);
@@ -116,14 +116,14 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is permitted with a new reward percentage before the cooldown end time
+     * SCENARIO: builder unpauses himself with a new reward percentage before the cooldown end time
      *  and it is not applied
      */
-    function test_PermitBuilderBeforeCooldown() public {
+    function test_BuilderUnpauseSelfBeforeCooldown() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is revoked
+        //    AND builder pauses himself
         _initialState();
 
         (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
@@ -131,11 +131,11 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
 
         // AND cooldown time didn't end
-        vm.warp(_cooldownEndTime - 12 days); // cannot skip an cycle, permit will revert
+        vm.warp(_cooldownEndTime - 12 days); // cannot skip an cycle, unpauseSelf will revert
 
-        // WHEN gauge is permitted with a new reward percentage of 80%
+        // WHEN gauge is self unpaused by the builder with a new reward percentage of 80%
         vm.startPrank(builder);
-        builderRegistry.permitBuilder(0.8 ether);
+        builderRegistry.unpauseSelf(0.8 ether);
         (_previous, _next, _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         // THEN previous backer reward percentage is 50%
         assertEq(_previous, 0.5 ether);
@@ -153,14 +153,14 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     }
 
     /**
-     * SCENARIO: builder is permitted with a new reward percentage after the cooldown end time
+     * SCENARIO: builder unpauses himself with a new reward percentage after the cooldown end time
      *  and it is applied
      */
-    function test_PermitBuilderAfterCooldown() public {
+    function test_BuilderUnpauseSelfAfterCooldown() public {
         // GIVEN alice and bob allocate to builder and builder2
         //  AND 100 rewardToken and 10 coinbase are distributed
         //   AND half cycle pass
-        //    AND builder is revoked
+        //    AND builder pauses himself
         _initialState();
 
         (uint64 _previous, uint64 _next, uint128 _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
@@ -170,12 +170,12 @@ contract RevokeBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // AND cooldown time ends
         vm.warp(_cooldownEndTime);
 
-        // AND there is a distribution to set the new periodFinish and allow the permit
+        // AND there is a distribution to set the new periodFinish and allow the self unpause
         _distribute(0, 0);
 
-        // WHEN gauge is permitted with a new reward percentage of 80%
+        // WHEN gauge is self unpause with a new reward percentage of 80%
         vm.startPrank(builder);
-        builderRegistry.permitBuilder(0.8 ether);
+        builderRegistry.unpauseSelf(0.8 ether);
         (_previous, _next, _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         // THEN previous backer reward percentage is 50%
         assertEq(_previous, 0.5 ether);

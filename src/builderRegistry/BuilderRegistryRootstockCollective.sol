@@ -22,11 +22,12 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     error AlreadyKYCApproved();
     error AlreadyCommunityApproved();
-    error AlreadyRevoked();
+    error BuilderAlreadySelfPaused();
+    error NotActivated();
     error NotKYCApproved();
     error NotCommunityApproved();
     error NotPaused();
-    error NotRevoked();
+    error BuilderNotSelfPaused();
     error NotOperational();
     error InvalidBackerRewardPercentage();
     error InvalidBuilderRewardReceiver();
@@ -49,8 +50,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     event Dewhitelisted(address indexed builder_);
     event Paused(address indexed builder_, bytes20 reason_);
     event Unpaused(address indexed builder_);
-    event Revoked(address indexed builder_);
-    event Permitted(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
+    event SelfPaused(address indexed builder_);
+    event SelfResumed(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event BackerRewardPercentageUpdateScheduled(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event BuilderRewardReceiverReplacementRequested(address indexed builder_, address newRewardReceiver_);
     event BuilderRewardReceiverReplacementCancelled(address indexed builder_, address newRewardReceiver_);
@@ -92,7 +93,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         bool kycApproved;
         bool communityApproved;
         bool paused;
-        bool revoked;
+        bool selfPaused;
         bytes7 reserved; // for future upgrades
         bytes20 pausedReason;
     }
@@ -367,28 +368,28 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
-     * @notice permit builder
+     * @notice Builder unpauses himself
      * @dev reverts if it does not have a gauge associated
      *  reverts if it is not KYC approved
      *  reverts if it is not community approved
-     *  reverts if it is not revoked
+     *  reverts if it is not self paused
      *  reverts if it is executed in distribution period because changing the totalPotentialReward produce a
      * miscalculation of rewards
      * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
-    function permitBuilder(uint64 rewardPercentage_) external {
+    function unpauseSelf(uint64 rewardPercentage_) external {
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
         if (!builderState[msg.sender].communityApproved) revert NotCommunityApproved();
-        if (!builderState[msg.sender].revoked) revert NotRevoked();
+        if (!builderState[msg.sender].selfPaused) revert BuilderNotSelfPaused();
 
         // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
             revert InvalidBackerRewardPercentage();
         }
 
-        builderState[msg.sender].revoked = false;
+        builderState[msg.sender].selfPaused = false;
 
         // read from storage
         RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[msg.sender];
@@ -401,33 +402,33 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
         _resumeGauge(_gauge);
 
-        emit Permitted(msg.sender, rewardPercentage_, _rewardPercentageData.cooldownEndTime);
+        emit SelfResumed(msg.sender, rewardPercentage_, _rewardPercentageData.cooldownEndTime);
     }
 
     /**
-     * @notice revoke builder
-     * @dev reverts if it does not have a gauge associated
-     *  reverts if it is not KYC approved
-     *  reverts if it is not community approved
-     *  reverts if it is already revoked
-     *  reverts if it is executed in distribution period because changing the totalPotentialReward produce a
+     * @notice Builder pauses himself - this action will also halt the gauge
+     * @dev reverts if caller does not have a gauge associated
+     *  reverts if caller is not KYC approved
+     *  reverts if caller is not community approved
+     *  reverts if caller is already self paused
+     *  reverts if caller is executed in distribution period because changing the totalPotentialReward produce a
      * miscalculation of rewards
      */
-    function revokeBuilder() external {
+    function pauseSelf() external {
         GaugeRootstockCollective _gauge = builderToGauge[msg.sender];
         if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
         if (!builderState[msg.sender].kycApproved) revert NotKYCApproved();
         if (!builderState[msg.sender].communityApproved) revert NotCommunityApproved();
-        if (builderState[msg.sender].revoked) revert AlreadyRevoked();
+        if (builderState[msg.sender].selfPaused) revert BuilderAlreadySelfPaused();
 
-        builderState[msg.sender].revoked = true;
-        // when revoked builder wants to come back, it can set a new reward percentage. So, the cooldown time starts
+        builderState[msg.sender].selfPaused = true;
+        // when self paused builder wants to come back, it can set a new reward percentage. So, the cooldown time starts
         // here
         backerRewardPercentage[msg.sender].cooldownEndTime = uint128(block.timestamp + rewardPercentageCooldown);
 
         _haltGauge(_gauge);
 
-        emit Revoked(msg.sender);
+        emit SelfPaused(msg.sender);
     }
 
     /**
@@ -629,12 +630,12 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @notice returns true if gauge can be resumed
      * @dev kycApproved == true &&
      *  communityApproved == true &&
-     *  revoked == false
+     *  selfPaused == false
      * @param gauge_ gauge contract to be resumed
      */
     function _canBeResumed(GaugeRootstockCollective gauge_) internal view returns (bool) {
         BuilderState memory _builderState = builderState[gaugeToBuilder[gauge_]];
-        return _builderState.kycApproved && _builderState.communityApproved && !_builderState.revoked;
+        return _builderState.kycApproved && _builderState.communityApproved && !_builderState.selfPaused;
     }
 
     /**
