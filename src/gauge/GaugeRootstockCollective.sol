@@ -57,8 +57,6 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         uint256 rewardRate;
         /// @notice most recent stored value of rewardPerToken [PREC]
         uint256 rewardPerTokenStored;
-        /// @notice last active cycle start stored value of rewardPerToken [PREC]
-        uint256 cycleRewardPerTokenStored;
         /// @notice missing rewards where there is not allocation [PREC]
         uint256 rewardMissing;
         /// @notice most recent timestamp contract has updated state
@@ -71,6 +69,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         mapping(address backer => uint256 rewards) rewards;
         /// @notice cached amount of rewardToken earned for a backer until the end of the last cycle
         mapping(address backer => uint256 rewards) rewardsUntilLastCycle;
+        /// @notice last active cycle start stored value of rewardPerToken [PREC]
+        uint256 cycleRewardPerTokenStored;
     }
 
     // -----------------------------
@@ -301,8 +301,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         _updateRewards(rewardToken_, backer_, backersManager.periodFinish());
 
         uint256 _rewardsUntilLastCycle = _rewardData.rewardsUntilLastCycle[backer_];
-        uint256 _rewards = _rewardData.rewards[backer_] - _rewardsUntilLastCycle;
         if (_rewardsUntilLastCycle > 0) {
+            uint256 _rewards = _rewardData.rewards[backer_] - _rewardsUntilLastCycle;
             _rewardData.rewards[backer_] = _rewards;
             _rewardData.rewardsUntilLastCycle[backer_] = 0;
             _transferRewardToken(rewardToken_, backer_, _rewardsUntilLastCycle);
@@ -356,7 +356,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @notice update cycle rewards per token stored
      * @param periodFinish_ timestamp end of current rewards period
      */
-    function updateCycleRewardPerTokenStored(uint256 periodFinish_) external {
+    function updateCycleRewardPerTokenStored(uint256 periodFinish_) external onlyAuthorizedContract {
         _updateCycleRewardPerTokenStored(rewardToken, periodFinish_);
         _updateCycleRewardPerTokenStored(UtilsLib._COINBASE_ADDRESS, periodFinish_);
     }
@@ -681,8 +681,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param periodFinish_ timestamp end of current rewards period
      */
     function _updateCycleRewardPerTokenStored(address rewardToken_, uint256 periodFinish_) internal {
-        RewardData storage _rewardData = rewardData[rewardToken_];
-        _rewardData.cycleRewardPerTokenStored = _rewardPerToken(rewardToken_, periodFinish_);
+        rewardData[rewardToken_].cycleRewardPerTokenStored = _rewardPerToken(rewardToken_, periodFinish_);
     }
 
     /**
