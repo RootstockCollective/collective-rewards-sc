@@ -39,7 +39,7 @@ contract RewardReceiverUpdateTest is BaseTest {
         // GIVEN a whitelisted builder
         //  WHEN calls requestRewardReceiverUpdate
         //   THEN tx reverts because caller is not an operational builder
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotOperational.selector);
         vm.prank(alice);
         builderRegistry.requestRewardReceiverUpdate(alice);
     }
@@ -51,7 +51,7 @@ contract RewardReceiverUpdateTest is BaseTest {
         // GIVEN a whitelisted builder
         //  WHEN calls cancelRewardReceiverUpdate
         //   THEN tx reverts because caller is not an operational builder
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotOperational.selector);
         vm.prank(alice);
         builderRegistry.cancelRewardReceiverUpdate();
     }
@@ -76,7 +76,7 @@ contract RewardReceiverUpdateTest is BaseTest {
         //  WHEN kycApprover calls approveNewRewardReceiver
         //   THEN tx reverts because Builder is not operational
         vm.prank(kycApprover);
-        vm.expectRevert(BuilderRegistryRootstockCollective.NotOperational.selector);
+        vm.expectRevert(BuilderRegistryRootstockCollective.BuilderNotOperational.selector);
         builderRegistry.approveNewRewardReceiver(alice, alice);
     }
 
