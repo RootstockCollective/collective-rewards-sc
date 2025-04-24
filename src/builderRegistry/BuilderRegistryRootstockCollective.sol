@@ -71,13 +71,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         _;
     }
 
-    modifier onlyValidChangerOrBackersManager() {
-        if (!governanceManager.isAuthorizedChanger(msg.sender) && msg.sender != address(backersManager)) {
-            revert NotAuthorized();
-        }
-        _;
-    }
-
     modifier onlyBackersManager() {
         if (msg.sender != address(backersManager)) {
             revert NotAuthorized();
@@ -252,7 +245,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         external
         onlyKycApprover
     {
-        _intialiseBuilder(builder_, rewardReceiver_, rewardPercentage_);
+        _initializeBuilder(builder_, rewardReceiver_, rewardPercentage_);
     }
 
     /**
@@ -307,7 +300,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      */
     function communityApproveBuilder(address builder_)
         external
-        onlyValidChangerOrBackersManager
+        onlyValidChanger
         returns (GaugeRootstockCollective gauge_)
     {
         return _communityApproveBuilder(builder_);
@@ -635,9 +628,9 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     /**
      * @dev Initializes builder for the first time, setting the reward receiver and the reward percentage
      *  Sets initialized flag to true. It cannot be switched to false anymore
-     *  See {intialiseBuilder} for details.
+     *  See {initializeBuilder} for details.
      */
-    function _intialiseBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
+    function _initializeBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
         if (builderState[builder_].initialized) revert BuilderAlreadyInitialized();
         builderState[builder_].initialized = true;
         builderState[builder_].kycApproved = true;

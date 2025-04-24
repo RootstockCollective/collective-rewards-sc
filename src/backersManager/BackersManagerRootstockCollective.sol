@@ -394,18 +394,6 @@ contract BackersManagerRootstockCollective is
     }
 
     /**
-     * @notice This method allows ongoing v1 proposals to be executed after the BackersManager upgrade to v2, by keeping
-     * compatibility with the v1 interface.
-     */
-    function communityApproveBuilder(address builder_)
-        external
-        onlyValidChanger
-        returns (GaugeRootstockCollective gauge_)
-    {
-        return builderRegistry.communityApproveBuilder(builder_);
-    }
-
-    /**
      * @notice Updates the maximum number of distributions allowed per batch.
      * @dev reverts if not called by the upgrader
      * @dev permission will be delegated from upgrader to different role once the GovernanceManagerRootStockCollective
