@@ -3,26 +3,34 @@ name: Report gas diff
 on:
   push:
     branches:
-      - gas-comparison-gh
+      - main
   pull_request:
 
 jobs:
   compare_gas_reports:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - name: "Check out the repo"
+        uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683" # v4.2.2
 
-      - name: Install Foundry
-        uses: onbjerg/foundry-toolchain@v1
+      - name: "Install Foundry"
+        uses: "foundry-rs/foundry-toolchain@de808b1eea699e761c404bda44ba8f21aba30b2c" # v1.3.1
         with:
-          version: nightly
+          version: stable
+
+      - name: "Install Bun"
+        uses: "oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5" # v2.0.1
+
+      - name: "Install the Node.js dependencies"
+        run: "bun install"
+
+      - name: "Show the Foundry config"
+        run: "forge config"
 
       # Add any step generating a gas report to a temporary file named gasreport.ansi.
       # For example:
       - name: Run tests
-        run: forge test --gas-report > gasreport.ansi # <- this file name should be unique in your repository!
+        run: bun run test --gas-report > gasreport.ansi # <- this file name should be unique in your repository!
         env:
           # make fuzzing semi-deterministic to avoid noisy gas cost estimation
           # due to non-deterministic fuzzing (but still use pseudo-random fuzzing seeds)
