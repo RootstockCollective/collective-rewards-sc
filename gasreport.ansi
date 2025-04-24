@@ -1,0 +1,1052 @@
+Compiling 39 files with Solc 0.8.20
+Solc 0.8.20 finished in 17.41s
+Compiler run successful!
+
+Ran 6 tests for test/OptOutRewardsBehaviour.t.sol:OptOutRewardsBehaviour
+[PASS] test_OptInAndAllocate() (gas: 394350)
+[PASS] test_OptInWhileNotOptedOutRevert() (gas: 39654)
+[PASS] test_OptOutAllocateRevert() (gas: 97037)
+[PASS] test_OptOutAlreadyOptedOut() (gas: 94996)
+[PASS] test_OptOutAuthorization() (gas: 176550)
+[PASS] test_OptOutWithAllocation() (gas: 454644)
+Suite result: ok. 6 passed; 0 failed; 0 skipped; finished in 9.27ms (2.19ms CPU time)
+
+Ran 3 tests for test/governance/changers/CommunityApproveBuilderChanger.t.sol:CommunityApproveBuilderChangerTest
+[PASS] test_ExecuteChange() (gas: 480833)
+[PASS] test_RevertWhenIsNotAuthorized() (gas: 56541)
+[PASS] test_RevertWhenIsNotCalledByGovernor() (gas: 41434)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 9.96ms (487.96µs CPU time)
+
+Ran 7 tests for test/governance/Protected.t.sol:ProtectedTest
+[PASS] test_GovernorHasPermissions() (gas: 3364629)
+[PASS] test_NewUpgraderCanUpgradeGovernanceManager() (gas: 2744147)
+[PASS] test_RevertGaugeUpgradeNotAuthorizedUpgrader() (gas: 50430)
+[PASS] test_RevertGovernanceManagerUpgradeNotAuthorizedUpgrader() (gas: 46269)
+[PASS] test_RevertUpgrade() (gas: 56579)
+[PASS] test_UpgraderCanUpgradeBackersManager() (gas: 3366703)
+[PASS] test_UpgraderCanUpgradeGovernanceManager() (gas: 1362854)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 10.19ms (2.18ms CPU time)
+
+Ran 6 tests for test/PauseBuilderKYC.t.sol:PauseBuilderKYCTest
+[PASS] test_PausedGaugeBackersReceiveRewards() (gas: 1789715)
+[PASS] test_PausedGaugeBuilderCannotReceiveRewards() (gas: 1430120)
+[PASS] test_PausedGaugeModifyAllocation() (gas: 1673738)
+[PASS] test_ResumeGaugeInNextCycle() (gas: 1753482)
+[PASS] test_ResumeGaugeInSameCycle() (gas: 1392208)
+[PASS] test_RevokedGaugeIsPaused() (gas: 1473435)
+Suite result: ok. 6 passed; 0 failed; 0 skipped; finished in 17.15ms (9.96ms CPU time)
+
+Ran 40 tests for test/BuilderRegistryRootstockCollective.t.sol:BuilderRegistryRootstockCollectiveTest
+[PASS] test_ApproveBuilderKYC() (gas: 336492)
+[PASS] test_BanPausedBuilder() (gas: 250547)
+[PASS] test_CommunityApproveBuilder() (gas: 567487)
+[PASS] test_CommunityApproveBuilderBeforeInitialize() (gas: 568103)
+[PASS] test_CommunityBanBuilder() (gas: 221023)
+[PASS] test_InitializeBuilder() (gas: 132305)
+[PASS] test_InitializeBuilderInvalidBackerRewardPercentage() (gas: 96705)
+[PASS] test_KYCApproveBannedBuilder() (gas: 332537)
+[PASS] test_KYCRevokeBannedBuilder() (gas: 276615)
+[PASS] test_KYCRevokePausedBuilder() (gas: 252011)
+[PASS] test_OnlyGovernor() (gas: 99668)
+[PASS] test_OnlyKycApprover() (gas: 173073)
+[PASS] test_PauseBannedBuilder() (gas: 299863)
+[PASS] test_PauseBuilderKyc() (gas: 63406)
+[PASS] test_PauseKycOnKycRevokedBuilder() (gas: 301375)
+[PASS] test_PauseReason20bytes() (gas: 61649)
+[PASS] test_PauseSelfBuilder() (gas: 205207)
+[PASS] test_PauseSelfPausedBuilder() (gas: 284007)
+[PASS] test_PauseWithAnotherReason() (gas: 111833)
+[PASS] test_RevertActivatingWhitelistedRevokedBuilder() (gas: 245243)
+[PASS] test_RevertAlreadyCommunityApproved() (gas: 56334)
+[PASS] test_RevertBuilderAlreadyInitialized() (gas: 54720)
+[PASS] test_RevertBuilderAlreadyKYCApproved() (gas: 56166)
+[PASS] test_RevertBuilderAlreadySelfPaused() (gas: 214333)
+[PASS] test_RevertBuilderDoesNotExist() (gas: 160411)
+[PASS] test_RevertNotKYCInitialized() (gas: 509451)
+[PASS] test_RevertRevokeBuilderKYCNotKYCApproved() (gas: 244468)
+[PASS] test_RevertRevokeBuilderNotKYCApproved() (gas: 234179)
+[PASS] test_RevertSelfPauseBuilderNotWhitelisted() (gas: 230372)
+[PASS] test_RevertUnpauseSelfBuilderNotKYCApproved() (gas: 289757)
+[PASS] test_RevertUnpauseSelfBuilderNotWhitelisted() (gas: 230731)
+[PASS] test_RevertWhitelistingBuilderTwice() (gas: 245560)
+[PASS] test_RevertsCommunityBanBuilder() (gas: 245344)
+[PASS] test_RevokeBuilderKYC() (gas: 225013)
+[PASS] test_SelfPausePausedBuilder() (gas: 350283)
+[PASS] test_SelfResumeBuilder() (gas: 311367)
+[PASS] test_UnpauseBuilderKYC() (gas: 109195)
+[PASS] test_UnpauseSelfBuilderInvalidBackerRewardPercentage() (gas: 214656)
+[PASS] test_UnpauseSelfBuilderRevert() (gas: 123496)
+[PASS] test_communityBanBuilderWithoutActivate() (gas: 639591)
+Suite result: ok. 40 passed; 0 failed; 0 skipped; finished in 18.96ms (11.54ms CPU time)
+
+Ran 17 tests for test/governance/GovernanceManagerRootstockCollective.t.sol:GovernanceManagerRootstockCollectiveTest
+[PASS] test_AuthorizeChange() (gas: 23344)
+[PASS] test_AuthorizedUpgrade() (gas: 29205)
+[PASS] test_ExecuteChange() (gas: 179682)
+[PASS] test_FailExecuteChangeByNotGovernor() (gas: 159481)
+[PASS] test_FailUpdateFoundationTreasuryByNotAuthorizedChanger() (gas: 43615)
+[PASS] test_FailUpdateGovernorByNotAuthorizedChanger() (gas: 43648)
+[PASS] test_FailUpdateKYCApproverByNotAuthorizedChanger() (gas: 43647)
+[PASS] test_FailUpdateUpgraderByNotAuthorizedChanger() (gas: 41444)
+[PASS] test_Initialize() (gas: 34972)
+[PASS] test_RevertZeroAddress() (gas: 137894)
+[PASS] test_UpdateFoundationTreasury() (gas: 53450)
+[PASS] test_UpdateGovernor() (gas: 51494)
+[PASS] test_UpdateKYCApprover() (gas: 53408)
+[PASS] test_UpdateUpgrader() (gas: 49313)
+[PASS] test_ValidateFoundationTreasury() (gas: 20923)
+[PASS] test_ValidateGovernor() (gas: 21050)
+[PASS] test_ValidateKYCApprover() (gas: 20971)
+Suite result: ok. 17 passed; 0 failed; 0 skipped; finished in 10.49ms (5.32ms CPU time)
+
+Ran 5 tests for test/StakingTokenWithdrawability.t.sol:StakingTokenWithdrawabilityTest
+[PASS] test_CanWithdrawNoAllocatedAmount(uint256) (runs: 200, μ: 25417, ~: 25417)
+[PASS] test_NoBackerCanWithdrawAlwaysTrue(uint256) (runs: 200, μ: 19750, ~: 19750)
+[PASS] test_RevertWithdraw() (gas: 63286)
+[PASS] test_RevertWithdrawWithInsufficietBalance() (gas: 37932)
+[PASS] test_WithdrawAll() (gas: 73463)
+Suite result: ok. 5 passed; 0 failed; 0 skipped; finished in 24.74ms (15.02ms CPU time)
+
+Ran 4 tests for test/upgradeability/Initialization.t.sol:InitializationTest
+[PASS] test_RevertBackersManagerRootstockCollectiveInitialize() (gas: 47372)
+[PASS] test_RevertGaugeInitialize() (gas: 44872)
+[PASS] test_RevertGovernanceManagerRootstockCollectiveInitialize() (gas: 47427)
+[PASS] test_RevertRewardDistributorRootstockCollectiveInitialize() (gas: 39203)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 5.47ms (568.46µs CPU time)
+
+Ran 10 tests for test/SetCycleDuration.t.sol:SetCycleDurationTest
+[PASS] test_LongerCycleDurationWithOffset() (gas: 2426561)
+[PASS] test_OnlyValidChangerOrFoundation() (gas: 167427)
+[PASS] test_RevertCycleDurationTooShort() (gas: 56363)
+[PASS] test_SameCycleDurationWithOffset() (gas: 2426584)
+[PASS] test_SetCycleDuration() (gas: 147688)
+[PASS] test_SetCycleDurationLonger() (gas: 2452846)
+[PASS] test_SetCycleDurationSameValue() (gas: 64134)
+[PASS] test_SetCycleDurationShorter() (gas: 2452803)
+[PASS] test_SetCycleDurationTwiceBeforeCooldown() (gas: 836005)
+[PASS] test_ShorterCycleDurationWithOffset() (gas: 2426573)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 28.15ms (20.25ms CPU time)
+
+Ran 2 tests for test/integration/DifferentRewardPercentages.t.sol:DifferentRewardPercentages
+[PASS] test_integration_DifferentBackerRewardPercentage() (gas: 4915850)
+[PASS] test_integration_DifferentBackerRewardPercentageAndChangeInAllocations() (gas: 5416279)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 18.70ms (11.49ms CPU time)
+
+Ran 7 tests for test/SetDistributionDuration.t.sol:SetDistributionDurationTest
+[PASS] test_RevertUnauthorizedSetDistributionDuration() (gas: 49307)
+[PASS] test_RevertWhenDistributionDurationTooLongForNextCycle() (gas: 61473)
+[PASS] test_RevertWhenDistributionDurationTooLongForPreviousCycle() (gas: 55185)
+[PASS] test_RevertWhenDistributionDurationTooShort() (gas: 49313)
+[PASS] test_RevertWhenModifiedDuringCurrentDistributionWindow() (gas: 55106)
+[PASS] test_RevertWhenModifiedDuringNewDistributionWindow() (gas: 55083)
+[PASS] test_SetDistributionDuration() (gas: 62417)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 6.79ms (849.59µs CPU time)
+
+Ran 3 tests for test/RewardRateManipulation.t.sol:RewardRateManipulationTest
+[PASS] test_RewardMissingNoDistributedToBackerOnSameCycle() (gas: 971076)
+[PASS] test_RewardRateNoChangesWithIncentivization() (gas: 1055312)
+[PASS] test_RewardRateNoIssue() (gas: 1141352)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 9.30ms (3.71ms CPU time)
+
+Ran 7 tests for test/RewardReceiverUpdate.t.sol:RewardReceiverUpdateTest
+[PASS] test_approveANonOperationalBuilder() (gas: 54823)
+[PASS] test_approveRewardReceiverUpdate() (gas: 126045)
+[PASS] test_approverIsNotKYCApprover() (gas: 52279)
+[PASS] test_cancelRewardReceiverUpdate() (gas: 110383)
+[PASS] test_cancellerIsNotABuilder() (gas: 41580)
+[PASS] test_requestRewardReceiverUpdate() (gas: 76112)
+[PASS] test_requesterIsNotABuilder() (gas: 39935)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 6.83ms (1.25ms CPU time)
+
+Ran 4 tests for test/upgradeability/Upgrade.t.sol:UpgradeTest
+[PASS] test_UpgradeBuilderRegistryRootstockCollective() (gas: 3420782)
+[PASS] test_UpgradeGauge() (gas: 2946342)
+[PASS] test_UpgradeGovernanceManagerRootstockCollective() (gas: 1440526)
+[PASS] test_UpgradeRewardDistributorRootstockCollective() (gas: 1404879)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 9.89ms (2.58ms CPU time)
+
+Ran 19 tests for test/RevokeKYC.t.sol:RevokeKYCTest
+[PASS] test_BuilderClaimRewards() (gas: 1492803)
+[PASS] test_BuilderUnclaimedRewards() (gas: 1427575)
+[PASS] test_GaugeDecreaseAllocationMiddleCycleBeforeHalt() (gas: 1825793)
+[PASS] test_GaugeIncreaseAllocationMiddleCycleBeforeHalt() (gas: 1699076)
+[PASS] test_GaugeWithLotAllocationMiddleCycleBeforeHalt() (gas: 1843247)
+[PASS] test_HaltedGaugeBeforeDistributionRewardMissing() (gas: 1675023)
+[PASS] test_HaltedGaugeBeforeDistributionRewardPerToken() (gas: 1752837)
+[PASS] test_HaltedGaugeCannotIncreaseAllocations() (gas: 1679585)
+[PASS] test_HaltedGaugeDoNotReceiveNextRewards() (gas: 2196833)
+[PASS] test_HaltedGaugeDoNotResumeTwice() (gas: 1665270)
+[PASS] test_HaltedGaugeLoseAllocation() (gas: 3275446)
+[PASS] test_HaltedGaugeReceiveCurrentRewards() (gas: 1979744)
+[PASS] test_NegativeAllocationOnHaltedGauge() (gas: 1676652)
+[PASS] test_PausedBuilderIsKYCRevoked() (gas: 1736679)
+[PASS] test_ResumeGaugeInSameCycle() (gas: 2641127)
+[PASS] test_ResumeGaugeInSameCycleDoNotRecoverShares() (gas: 1820557)
+[PASS] test_ResumeGaugeTwoCyclesLater() (gas: 3176206)
+[PASS] test_ResumedBuilderClaimsAll() (gas: 2147005)
+[PASS] test_RevokedBuilderIsKYCRevoked() (gas: 1745043)
+Suite result: ok. 19 passed; 0 failed; 0 skipped; finished in 47.75ms (41.27ms CPU time)
+
+Ran 9 tests for test/RewardDistributorRootstockCollective.t.sol:RewardDistributorRootstockCollectiveTest
+[PASS] test_FailSendRewardsWithDefaultAmountForCoinbase() (gas: 418851)
+[PASS] test_FailSendRewardsWithDefaultAmountForTokens() (gas: 459348)
+[PASS] test_InsufficientBalance() (gas: 322134)
+[PASS] test_InsufficientCoinbaseBalance() (gas: 168962)
+[PASS] test_OnlyFoundationTreasury() (gas: 89195)
+[PASS] test_SendRewards() (gas: 446871)
+[PASS] test_SendRewardsAndStartDistribution() (gas: 491429)
+[PASS] test_SendRewardsAndStartDistributionWithDefaultAmount() (gas: 578742)
+[PASS] test_SendRewardsWithDefaultAmount() (gas: 534253)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 12.74ms (8.68ms CPU time)
+
+Ran 18 tests for test/PauseSelfBuilder.t.sol:PauseSelfBuilderTest
+[PASS] test_BuilderDoesNotReceiveNextRewards() (gas: 1851673)
+[PASS] test_BuilderUnpauseSelfAfterCooldown() (gas: 1833428)
+[PASS] test_BuilderUnpauseSelfBeforeCooldown() (gas: 1500264)
+[PASS] test_BuildersReceiveCurrentRewards() (gas: 1583184)
+[PASS] test_GaugeDecreaseAllocationMiddleCycleBeforeHalt() (gas: 1773781)
+[PASS] test_GaugeIncreaseAllocationMiddleCycleBeforeHalt() (gas: 1647064)
+[PASS] test_GaugeWithLotAllocationMiddleCycleBeforeHalt() (gas: 1791257)
+[PASS] test_HaltedGaugeBeforeDistributionRewardMissing() (gas: 1623033)
+[PASS] test_HaltedGaugeBeforeDistributionRewardPerToken() (gas: 1700825)
+[PASS] test_HaltedGaugeCannotIncreaseAllocations() (gas: 1627595)
+[PASS] test_HaltedGaugeDoNotReceiveNextRewards() (gas: 2161943)
+[PASS] test_HaltedGaugeLoseAllocation() (gas: 3211516)
+[PASS] test_HaltedGaugeReceiveCurrentRewards() (gas: 1927709)
+[PASS] test_NegativeAllocationOnHaltedGauge() (gas: 1624662)
+[PASS] test_ResumeGaugeInSameCycle() (gas: 2553603)
+[PASS] test_ResumeGaugeInSameCycleDoNotRecoverShares() (gas: 1759760)
+[PASS] test_ResumeGaugeTwoCyclesLater() (gas: 3122931)
+[PASS] test_ResumedBuilderClaimsAll() (gas: 2057284)
+Suite result: ok. 18 passed; 0 failed; 0 skipped; finished in 42.01ms (31.76ms CPU time)
+
+Ran 11 tests for test/CommunityBanBuilder.t.sol:CommunityBanBuilderTest
+[PASS] test_BuilderDoesNotReceiveNextRewards() (gas: 1867101)
+[PASS] test_BuildersReceiveCurrentRewards() (gas: 1598618)
+[PASS] test_GaugeDecreaseAllocationMiddleCycleBeforeHalt() (gas: 1789185)
+[PASS] test_GaugeIncreaseAllocationMiddleCycleBeforeHalt() (gas: 1662583)
+[PASS] test_GaugeWithLotAllocationMiddleCycleBeforeHalt() (gas: 1806726)
+[PASS] test_HaltedGaugeBeforeDistributionRewardMissing() (gas: 1638466)
+[PASS] test_HaltedGaugeBeforeDistributionRewardPerToken() (gas: 1716275)
+[PASS] test_HaltedGaugeCannotIncreaseAllocations() (gas: 1643051)
+[PASS] test_HaltedGaugeDoNotReceiveNextRewards() (gas: 2177326)
+[PASS] test_HaltedGaugeReceiveCurrentRewards() (gas: 1943168)
+[PASS] test_NegativeAllocationOnHaltedGauge() (gas: 1640071)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 60.58ms (27.25ms CPU time)
+
+Ran 8 tests for test/SetBackerRewardPercentage.t.sol:SetBackerRewardPercentageTest
+[PASS] test_BackerRewardPercentageUpdate() (gas: 2529478)
+[PASS] test_CallerIsNotABuilder() (gas: 37198)
+[PASS] test_RevertSetBackerRewardPercentageWrongStatus() (gas: 88684)
+[PASS] test_setBackerRewardPercentage() (gas: 56945)
+[PASS] test_setBackerRewardPercentageInvalidBackerRewardPercentage() (gas: 39716)
+[PASS] test_setBackerRewardPercentageSameValue() (gas: 53808)
+[PASS] test_setBackerRewardPercentageTwiceAfterCooldown() (gas: 1788566)
+[PASS] test_setBackerRewardPercentageTwiceBeforeCooldown() (gas: 2582917)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 8.28ms (9.11ms CPU time)
+
+Ran 45 tests for test/BackersManagerRootstockCollective.t.sol:BackersManagerRootstockCollectiveTest
+[PASS] test_AddAllocationBeforeDistribution() (gas: 1160709)
+[PASS] test_AllocateBatch() (gas: 780958)
+[PASS] test_AllocateBatchGaugeRepeated() (gas: 596228)
+[PASS] test_AllocateBatchOverride() (gas: 1511227)
+[PASS] test_AllocateOverride() (gas: 660198)
+[PASS] test_ClaimBackerCoinbaseRewards() (gas: 1246970)
+[PASS] test_ClaimBackerERC20Rewards() (gas: 1274001)
+[PASS] test_ClaimBackerRewards() (gas: 1203965)
+[PASS] test_ClaimBackerRewardsWithIncentivizerInCoinbase() (gas: 1213946)
+[PASS] test_ClaimBackerRewardsWithIncentivizerInRewardToken() (gas: 1399923)
+[PASS] test_DeployStartsInDistributionWindow() (gas: 4850146)
+[PASS] test_Distribute() (gas: 1224288)
+[PASS] test_DistributeAndIncentivizeBackersManagerRootstockCollectiveDuringPagination() (gas: 19005734)
+[PASS] test_DistributeAndIncentivizeGaugeDuringPagination() (gas: 19234250)
+[PASS] test_DistributeCoinbase() (gas: 1337927)
+[PASS] test_DistributeTwice() (gas: 1897427)
+[PASS] test_DistributeTwiceSameCycle() (gas: 1736533)
+[PASS] test_DistributeUsingPagination() (gas: 18984415)
+[PASS] test_GaugeLosesAllocationForOneCycle() (gas: 2986040)
+[PASS] test_GaugeLosesAllocationForTwoCycles() (gas: 3291563)
+[PASS] test_IncentivizeWithCycleStartOffset() (gas: 4914192)
+[PASS] test_InitializedWithAnCycleStartOffset() (gas: 5065449)
+[PASS] test_MissingRewardsAccumulation() (gas: 2026710)
+[PASS] test_ModifyAllocation() (gas: 687971)
+[PASS] test_ModifyAllocationBeforeDistribution() (gas: 1303946)
+[PASS] test_NotifyRewardAmountCoinbase() (gas: 370538)
+[PASS] test_NotifyRewardAmountERC20() (gas: 401227)
+[PASS] test_NotifyRewardAmountTwice() (gas: 467557)
+[PASS] test_NotifyRewardAmountWithNoActiveBuilders() (gas: 501715)
+[PASS] test_NotifyRewardAmountZeroValue() (gas: 55786)
+[PASS] test_ReallocateVotes() (gas: 878838)
+[PASS] test_ReallocateVotesFromKYCRevokedBuilder() (gas: 873746)
+[PASS] test_ReallocateVotesFromRevokedBuilder() (gas: 853951)
+[PASS] test_RemoveAllocationBeforeDistribution() (gas: 1160878)
+[PASS] test_RevertAllocateBatchUnequalLengths() (gas: 62114)
+[PASS] test_RevertDistributionPeriodDidNotStart() (gas: 36513)
+[PASS] test_RevertGaugeDoesNotExist() (gas: 1208841)
+[PASS] test_RevertGaugeIsCommunityApprovedButNotInitialized() (gas: 1096820)
+[PASS] test_RevertNotEnoughStaking() (gas: 687068)
+[PASS] test_RevertNotInDistributionPeriod() (gas: 19269571)
+[PASS] test_RevertOnlyInDistributionWindow() (gas: 54613)
+[PASS] test_RevertRewardTokenApprove() (gas: 146156)
+[PASS] test_StartDistributionAfterLosingAllocations() (gas: 1096780)
+[PASS] test_StartDistributionWithoutAllocations() (gas: 239978)
+[PASS] test_UnallocationBeforeDistribution() (gas: 1123163)
+Suite result: ok. 45 passed; 0 failed; 0 skipped; finished in 72.54ms (145.51ms CPU time)
+
+Ran 41 tests for test/GaugeRootstockCollective.t.sol:GaugeRootstockCollectiveTest
+[PASS] test_Allocate() (gas: 330410)
+[PASS] test_ClaimBackerRewards() (gas: 1218659)
+[PASS] test_ClaimBackerRewards2DistributionOnSameCycle() (gas: 1506292)
+[PASS] test_ClaimBackerRewardsAccumulative() (gas: 1633337)
+[PASS] test_ClaimBackerRewardsAfterNoRewards() (gas: 1909651)
+[PASS] test_ClaimBackerRewardsAliceAllocatesAgain() (gas: 1403862)
+[PASS] test_ClaimBackerRewardsAliceQuit() (gas: 1384803)
+[PASS] test_ClaimBackerRewardsPartial() (gas: 1034963)
+[PASS] test_ClaimBackerRewardsWrongGauge() (gas: 1509282)
+[PASS] test_ClaimBuilderRewards2Cycles() (gas: 1186226)
+[PASS] test_ClaimBuilderRewards2Distributions() (gas: 1186951)
+[PASS] test_ClaimBuilderRewardsBuilder() (gas: 850127)
+[PASS] test_ClaimBuilderRewardsCoinbase() (gas: 823280)
+[PASS] test_ClaimBuilderRewardsRewardReceiver() (gas: 1282890)
+[PASS] test_ClaimBuilderRewardsRewardReceiverWithUpdate() (gas: 1461234)
+[PASS] test_ClaimBuilderRewardsRewardToken() (gas: 848019)
+[PASS] test_ClaimBuilderWrongGauge() (gas: 1234018)
+[PASS] test_ClaimCoinbaseRewards() (gas: 759367)
+[PASS] test_ClaimERC20Rewards() (gas: 852066)
+[PASS] test_ClaimMissingBackerRewardsOnNextCycle() (gas: 1988406)
+[PASS] test_Deallocate() (gas: 437239)
+[PASS] test_DeallocatePartial() (gas: 437992)
+[PASS] test_EstimatedBackerRewardsAllocationsChange() (gas: 852609)
+[PASS] test_EstimatedBackerRewardsIncentivized() (gas: 699333)
+[PASS] test_EstimatedBackerRewardsWithDistribution() (gas: 902537)
+[PASS] test_EstimatedBackerRewardsWithDistributionAndIncentivized() (gas: 1011483)
+[PASS] test_EstimatedBackerRewardsWithNoRewards() (gas: 506645)
+[PASS] test_IncentivizeBeforeAllocation() (gas: 1132989)
+[PASS] test_IncentivizeTwiceInSameCycle() (gas: 829078)
+[PASS] test_IncentivizeWithCoinbaseNotFromBackersManagerRootstockCollective() (gas: 596446)
+[PASS] test_IncentivizeWithIncentivizerAndBackersManagerRootstockCollective() (gas: 926888)
+[PASS] test_IncentivizeWithNoAllocationsInPreviousCycle() (gas: 1224835)
+[PASS] test_IncentivizeWithNoAllocationsInTwoCycles() (gas: 1312526)
+[PASS] test_IncentivizeWithRewardToken() (gas: 651671)
+[PASS] test_IncentivizeWithRewardTokenNotFromBackersManagerRootstockCollective() (gas: 687874)
+[PASS] test_IncentivizeWithZeroAmount() (gas: 532700)
+[PASS] test_NotAuthorized() (gas: 178893)
+[PASS] test_NotifyRewardAmountIncentivizeInDistributionWindow() (gas: 1081160)
+[PASS] test_NotifyRewardAmountWithStrategy() (gas: 766808)
+[PASS] test_incentivizeWithNotEnoughBalance() (gas: 253022)
+[PASS] test_onlyBackersManager() (gas: 133035)
+Suite result: ok. 41 passed; 0 failed; 0 skipped; finished in 73.54ms (62.22ms CPU time)
+
+Ran 10 tests for test/integration/SkipDistribution.t.sol:SkipDistribution
+[PASS] test_integration_NoDistributionAndAllocAndDeallocOnSameCycle() (gas: 2013170)
+[PASS] test_integration_NoDistributionAndDeAllocationBeforeNextDistribution() (gas: 1917178)
+[PASS] test_integration_NoDistributionAndMissingRewards() (gas: 3521420)
+[PASS] test_integration_NoDistributionAndSelfPausedIncentivizedBuilder() (gas: 2527661)
+[PASS] test_integration_NoDistributionAndSelfPausedIncentivizedandRewardsBuilder() (gas: 2716720)
+[PASS] test_integration_NoDistributionOnConsecutiveCycles() (gas: 2709717)
+[PASS] test_integration_NoDistributionOnConsecutiveCyclesAndMissingRewards() (gas: 3524628)
+[PASS] test_integration_NoDistributionOnCycle() (gas: 2706510)
+[PASS] test_integration_NoDistributionOnCycleVotingIncentive() (gas: 1348092)
+[PASS] test_integration_PaginatedDistributionNotFinishedOnCycle() (gas: 21330633)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 44.57ms (40.84ms CPU time)
+
+Ran 1 test for test/integration/SupportAndDistribute.t.sol:SupportAndDistributeTest
+[PASS] test_integration_SupportAndDistribute() (gas: 52863907)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 68.36ms (52.45ms CPU time)
+
+╭-------------------------------------------------------------------------------------------+-----------------+-------+--------+---------+---------╮
+| node_modules/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy Contract |                 |       |        |         |         |
++==================================================================================================================================================+
+| Deployment Cost                                                                           | Deployment Size |       |        |         |         |
+|-------------------------------------------------------------------------------------------+-----------------+-------+--------+---------+---------|
+| 0                                                                                         | 1262            |       |        |         |         |
+|-------------------------------------------------------------------------------------------+-----------------+-------+--------+---------+---------|
+|                                                                                           |                 |       |        |         |         |
+|-------------------------------------------------------------------------------------------+-----------------+-------+--------+---------+---------|
+| Function Name                                                                             | Min             | Avg   | Median | Max     | # Calls |
+|-------------------------------------------------------------------------------------------+-----------------+-------+--------+---------+---------|
+| fallback                                                                                  | 725             | 47805 | 4338   | 3771395 | 16405   |
+╰-------------------------------------------------------------------------------------------+-----------------+-------+--------+---------+---------╯
+
+╭----------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------╮
+| node_modules/@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol:BeaconProxy Contract |                 |       |        |        |         |
++==============================================================================================================================================+
+| Deployment Cost                                                                        | Deployment Size |       |        |        |         |
+|----------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| 0                                                                                      | 1660            |       |        |        |         |
+|----------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+|                                                                                        |                 |       |        |        |         |
+|----------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| Function Name                                                                          | Min             | Avg   | Median | Max    | # Calls |
+|----------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| fallback                                                                               | 0               | 27911 | 6003   | 224915 | 1355    |
+╰----------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------╯
+
+╭----------------------------------------------------------------+-----------------+---------+---------+---------+---------╮
+| script/BackersManagerRootstockCollective.s.sol:Deploy Contract |                 |         |         |         |         |
++==========================================================================================================================+
+| Deployment Cost                                                | Deployment Size |         |         |         |         |
+|----------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| 4739074                                                        | 21837           |         |         |         |         |
+|----------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+|                                                                |                 |         |         |         |         |
+|----------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| Function Name                                                  | Min             | Avg     | Median  | Max     | # Calls |
+|----------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| run                                                            | 3813703         | 3813703 | 3813703 | 3813703 | 283     |
+╰----------------------------------------------------------------+-----------------+---------+---------+---------+---------╯
+
+╭-----------------------------------------------------------------+-----------------+---------+---------+---------+---------╮
+| script/BuilderRegistryRootstockCollective.s.sol:Deploy Contract |                 |         |         |         |         |
++===========================================================================================================================+
+| Deployment Cost                                                 | Deployment Size |         |         |         |         |
+|-----------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| 4394474                                                         | 20231           |         |         |         |         |
+|-----------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+|                                                                 |                 |         |         |         |         |
+|-----------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| Function Name                                                   | Min             | Avg     | Median  | Max     | # Calls |
+|-----------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| run                                                             | 3380331         | 3380331 | 3380331 | 3380331 | 283     |
+╰-----------------------------------------------------------------+-----------------+---------+---------+---------+---------╯
+
+╭-------------------------------------------------------------------+-----------------+---------+---------+---------+---------╮
+| script/RewardDistributorRootstockCollective.s.sol:Deploy Contract |                 |         |         |         |         |
++=============================================================================================================================+
+| Deployment Cost                                                   | Deployment Size |         |         |         |         |
+|-------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| 2074257                                                           | 9379            |         |         |         |         |
+|-------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+|                                                                   |                 |         |         |         |         |
+|-------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| Function Name                                                     | Min             | Avg     | Median  | Max     | # Calls |
+|-------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| run                                                               | 1326113         | 1326113 | 1326113 | 1326113 | 283     |
+╰-------------------------------------------------------------------+-----------------+---------+---------+---------+---------╯
+
+╭-------------------------------------------------------------------+-----------------+---------+---------+---------+---------╮
+| script/gauge/GaugeBeaconRootstockCollective.s.sol:Deploy Contract |                 |         |         |         |         |
++=============================================================================================================================+
+| Deployment Cost                                                   | Deployment Size |         |         |         |         |
+|-------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| 2830190                                                           | 12885           |         |         |         |         |
+|-------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+|                                                                   |                 |         |         |         |         |
+|-------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| Function Name                                                     | Min             | Avg     | Median  | Max     | # Calls |
+|-------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| run                                                               | 2256696         | 2256696 | 2256696 | 2256696 | 283     |
+╰-------------------------------------------------------------------+-----------------+---------+---------+---------+---------╯
+
+╭--------------------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| script/gauge/GaugeFactoryRootstockCollective.s.sol:Deploy Contract |                 |        |        |        |         |
++===========================================================================================================================+
+| Deployment Cost                                                    | Deployment Size |        |        |        |         |
+|--------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 1032493                                                            | 4512            |        |        |        |         |
+|--------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                                    |                 |        |        |        |         |
+|--------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                                      | Min             | Avg    | Median | Max    | # Calls |
+|--------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| run                                                                | 519379          | 519379 | 519379 | 519379 | 283     |
+╰--------------------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭------------------------------------------------------------------------------+-----------------+---------+---------+---------+---------╮
+| script/governance/GovernanceManagerRootstockCollective.s.sol:Deploy Contract |                 |         |         |         |         |
++========================================================================================================================================+
+| Deployment Cost                                                              | Deployment Size |         |         |         |         |
+|------------------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| 2211681                                                                      | 10022           |         |         |         |         |
+|------------------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+|                                                                              |                 |         |         |         |         |
+|------------------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| Function Name                                                                | Min             | Avg     | Median  | Max     | # Calls |
+|------------------------------------------------------------------------------+-----------------+---------+---------+---------+---------|
+| run                                                                          | 1480393         | 1480393 | 1480393 | 1480393 | 283     |
+╰------------------------------------------------------------------------------+-----------------+---------+---------+---------+---------╯
+
+╭---------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| script/test_mock/MockStakingToken.s.sol:Deploy Contract |                 |        |        |        |         |
++================================================================================================================+
+| Deployment Cost                                         | Deployment Size |        |        |        |         |
+|---------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 1551978                                                 | 6941            |        |        |        |         |
+|---------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                         |                 |        |        |        |         |
+|---------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                           | Min             | Avg    | Median | Max    | # Calls |
+|---------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| run                                                     | 930630          | 930630 | 930630 | 930630 | 283     |
+╰---------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭--------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| script/test_mock/MockToken.s.sol:Deploy Contract |                 |        |        |        |         |
++=========================================================================================================+
+| Deployment Cost                                  | Deployment Size |        |        |        |         |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 1302595                                          | 5769            |        |        |        |         |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                  |                 |        |        |        |         |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                    | Min             | Avg    | Median | Max    | # Calls |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| run                                              | 696540          | 696540 | 696540 | 696540 | 283     |
+╰--------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------╮
+| src/RewardDistributorRootstockCollective.sol:RewardDistributorRootstockCollective Contract |                 |        |        |         |         |
++====================================================================================================================================================+
+| Deployment Cost                                                                            | Deployment Size |        |        |         |         |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| 0                                                                                          | 5448            |        |        |         |         |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+|                                                                                            |                 |        |        |         |         |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| Function Name                                                                              | Min             | Avg    | Median | Max     | # Calls |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| initialize                                                                                 | 2733            | 46598  | 46754  | 46754   | 284     |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| initializeCollectiveRewardsAddresses                                                       | 54949           | 54949  | 54949  | 54949   | 283     |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| receive                                                                                    | 55              | 55     | 55     | 55      | 24      |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| sendRewards                                                                                | 12580           | 91742  | 106813 | 158113  | 8       |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| sendRewardsAndStartDistribution                                                            | 12603           | 509249 | 479538 | 2533079 | 170     |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| sendRewardsAndStartDistributionWithDefaultAmount                                           | 480923          | 480923 | 480923 | 480923  | 1       |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| sendRewardsWithDefaultAmount                                                               | 60200           | 129543 | 162275 | 162275  | 5       |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| setDefaultRewardAmount                                                                     | 56802           | 56802  | 56802  | 56802   | 4       |
+|--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| upgradeToAndCall                                                                           | 46227           | 46227  | 46227  | 46227   | 1       |
+╰--------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------╯
+
+╭-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------╮
+| src/backersManager/BackersManagerRootstockCollective.sol:BackersManagerRootstockCollective Contract |                 |        |        |         |         |
++=============================================================================================================================================================+
+| Deployment Cost                                                                                     | Deployment Size |        |        |         |         |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| 0                                                                                                   | 17260           |        |        |         |         |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+|                                                                                                     |                 |        |        |         |         |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| Function Name                                                                                       | Min             | Avg    | Median | Max     | # Calls |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| allocate                                                                                            | 4783            | 195535 | 224215 | 246415  | 205     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| allocateBatch                                                                                       | 2960            | 386456 | 410463 | 3732162 | 191     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| backerTotalAllocation                                                                               | 582             | 646    | 582    | 2582    | 31      |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| canWithdraw                                                                                         | 2680            | 5159   | 2680   | 10176   | 607     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| claimBackerRewards(address,address[])                                                               | 124021          | 188876 | 181648 | 268186  | 4       |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| claimBackerRewards(address[])                                                                       | 156898          | 425097 | 323472 | 1834596 | 66      |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| cycleData                                                                                           | 604             | 617    | 604    | 2604    | 723     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| cycleNext                                                                                           | 1018            | 1464   | 1396   | 3395    | 471     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| cycleStart                                                                                          | 1313            | 1313   | 1314   | 1314    | 8       |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| distribute                                                                                          | 2409            | 766981 | 287263 | 2194105 | 10      |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| distributionDuration                                                                                | 381             | 381    | 381    | 381     | 1       |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| endDistributionWindow                                                                               | 1542            | 1709   | 1543   | 3543    | 12      |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| getCycleStartAndDuration                                                                            | 703             | 1020   | 1080   | 1081    | 19      |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| governanceManager                                                                                   | 2427            | 2427   | 2427   | 2427    | 283     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| haltGaugeShares                                                                                     | 4666            | 47070  | 48581  | 48581   | 81      |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| indexLastGaugeDistributed                                                                           | 363             | 363    | 363    | 363     | 6       |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| initialize                                                                                          | 3237            | 158909 | 159460 | 159460  | 284     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| initializeBuilderRegistry                                                                           | 22596           | 22596  | 22596  | 22596   | 283     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| notifyRewardAmount                                                                                  | 2426            | 81474  | 97180  | 104480  | 211     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| onDistributionPeriod                                                                                | 412             | 412    | 412    | 412     | 179     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| optInRewards                                                                                        | 2701            | 4806   | 4806   | 6912    | 2       |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| optOutRewards                                                                                       | 2718            | 21147  | 26248  | 38590   | 9       |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| periodFinish                                                                                        | 1960            | 4306   | 3960   | 14960   | 1518    |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| resumeGaugeShares                                                                                   | 4687            | 64680  | 32875  | 141155  | 20      |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| rewardToken                                                                                         | 2447            | 2447   | 2447   | 2447    | 283     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| rewardTokenApprove                                                                                  | 10410           | 33745  | 34336  | 34336   | 754     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| rewardsCoinbase                                                                                     | 364             | 1030   | 364    | 2364    | 6       |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| rewardsERC20                                                                                        | 384             | 955    | 384    | 2384    | 7       |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| setCycleDuration                                                                                    | 17475           | 24528  | 25402  | 28740   | 14      |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| setDistributionDuration                                                                             | 12708           | 16660  | 16243  | 22630   | 7       |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| startDistribution                                                                                   | 5488            | 392457 | 321767 | 2392602 | 200     |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| supportsInterface                                                                                   | 422             | 435    | 439    | 439     | 25      |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| tempTotalPotentialReward                                                                            | 385             | 385    | 385    | 385     | 4       |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| timeUntilNextCycle                                                                                  | 3361            | 3361   | 3361   | 3362    | 50      |
+|-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------|
+| totalPotentialReward                                                                                | 407             | 444    | 407    | 2407    | 54      |
+╰-----------------------------------------------------------------------------------------------------+-----------------+--------+--------+---------+---------╯
+
+╭--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| src/builderRegistry/BuilderRegistryRootstockCollective.sol:BuilderRegistryRootstockCollective Contract |                 |        |        |        |         |
++===============================================================================================================================================================+
+| Deployment Cost                                                                                        | Deployment Size |        |        |        |         |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 3269087                                                                                                | 15169           |        |        |        |         |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                                                                        |                 |        |        |        |         |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                                                                          | Min             | Avg    | Median | Max    | # Calls |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| approveBuilderKYC                                                                                      | 14985           | 100664 | 129835 | 240915 | 11      |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| approveNewRewardReceiver                                                                               | 12882           | 19234  | 19883  | 24289  | 4       |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| backerRewardPercentage                                                                                 | 717             | 717    | 717    | 717    | 14      |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| backersManager                                                                                         | 2405            | 2405   | 2405   | 2405   | 730     |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| builderState                                                                                           | 914             | 914    | 914    | 914    | 29      |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| builderToGauge                                                                                         | 642             | 642    | 642    | 642    | 4       |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| canClaimBuilderReward                                                                                  | 1255            | 5336   | 7212   | 9947   | 444     |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| cancelRewardReceiverUpdate                                                                             | 5084            | 8378   | 8378   | 11673  | 2       |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| communityApproveBuilder                                                                                | 17189           | 411767 | 407195 | 424295 | 734     |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| communityBanBuilder                                                                                    | 14944           | 167907 | 188477 | 191277 | 24      |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| gaugeToBuilder                                                                                         | 621             | 2121   | 2621   | 2621   | 829     |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getGaugeAt                                                                                             | 784             | 2720   | 2784   | 2784   | 632     |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getGaugesLength                                                                                        | 437             | 1551   | 2437   | 2437   | 438     |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getHaltedGaugesLength                                                                                  | 438             | 438    | 438    | 438    | 6       |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getRewardPercentageToApply                                                                             | 807             | 2779   | 2812   | 2812   | 622     |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| haltedGaugeLastPeriodFinish                                                                            | 582             | 1841   | 2582   | 2582   | 81      |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| initialize                                                                                             | 145940          | 145940 | 145940 | 145940 | 283     |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| initializeBuilder                                                                                      | 12960           | 81445  | 81778  | 81778  | 731     |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| isGaugeHalted                                                                                          | 657             | 1534   | 657    | 2657   | 2256    |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| isGaugeRewarded                                                                                        | 625             | 625    | 625    | 625    | 5       |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| isRewardReceiverUpdatePending                                                                          | 1052            | 1052   | 1052   | 1052   | 3       |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| pauseBuilderKYC                                                                                        | 12839           | 19071  | 19383  | 19383  | 21      |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| pauseSelf                                                                                              | 2453            | 148200 | 168296 | 168296 | 37      |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| proxiableUUID                                                                                          | 388             | 388    | 388    | 388    | 2       |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| requestRewardReceiverUpdate                                                                            | 3026            | 21986  | 26726  | 26726  | 5       |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| requireInitializedBuilder                                                                              | 791             | 4604   | 4791   | 4822   | 916     |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| revokeBuilderKYC                                                                                       | 12757           | 188407 | 216961 | 248263 | 34      |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| rewardReceiver                                                                                         | 620             | 1286   | 620    | 2620   | 3       |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| rewardReceiverUpdate                                                                                   | 618             | 618    | 618    | 618    | 2       |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| setBackerRewardPercentage                                                                              | 3022            | 11483  | 12972  | 12972  | 20      |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| setHaltedGaugeLastPeriodFinish                                                                         | 3540            | 19213  | 22740  | 22740  | 98      |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| unpauseBuilderKYC                                                                                      | 12760           | 18268  | 19187  | 19187  | 7       |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| unpauseSelf                                                                                            | 2600            | 110124 | 124136 | 234353 | 20      |
+|--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| upgradeToAndCall                                                                                       | 17658           | 28209  | 24360  | 46459  | 4       |
+╰--------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| src/gauge/GaugeBeaconRootstockCollective.sol:GaugeBeaconRootstockCollective Contract |                 |       |        |       |         |
++===========================================================================================================================================+
+| Deployment Cost                                                                      | Deployment Size |       |        |       |         |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 0                                                                                    | 1635            |       |        |       |         |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                      |                 |       |        |       |         |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                        | Min             | Avg   | Median | Max   | # Calls |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| implementation                                                                       | 307             | 1144  | 307    | 2307  | 4385    |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| upgradeTo                                                                            | 38366           | 41706 | 41706  | 45047 | 2       |
+╰--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭----------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| src/gauge/GaugeFactoryRootstockCollective.sol:GaugeFactoryRootstockCollective Contract |                 |        |        |        |         |
++===============================================================================================================================================+
+| Deployment Cost                                                                        | Deployment Size |        |        |        |         |
+|----------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 0                                                                                      | 2380            |        |        |        |         |
+|----------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                                                        |                 |        |        |        |         |
+|----------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                                                          | Min             | Avg    | Median | Max    | # Calls |
+|----------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| createGauge                                                                            | 262838          | 262838 | 262838 | 262838 | 1       |
+╰----------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| src/gauge/GaugeRootstockCollective.sol:GaugeRootstockCollective Contract |                 |        |        |        |         |
++=================================================================================================================================+
+| Deployment Cost                                                          | Deployment Size |        |        |        |         |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 0                                                                        | 9366            |        |        |        |         |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                                          |                 |        |        |        |         |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                                            | Min             | Avg    | Median | Max    | # Calls |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| allocate                                                                 | 4798            | 119380 | 152650 | 185195 | 676     |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| allocationOf                                                             | 569             | 569    | 569    | 569    | 20      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| backerRewardPerTokenPaid                                                 | 778             | 778    | 778    | 778    | 2       |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| builderRewards                                                           | 593             | 593    | 593    | 593    | 28      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| claimBackerReward(address)                                               | 4760            | 112255 | 122612 | 240950 | 272     |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| claimBackerReward(address,address)                                       | 2717            | 85057  | 102482 | 147006 | 13      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| claimBuilderReward()                                                     | 19128           | 58909  | 28767  | 112456 | 224     |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| claimBuilderReward(address)                                              | 17252           | 40687  | 39077  | 65732  | 3       |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| earned                                                                   | 5051            | 5418   | 5581   | 5581   | 39      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| estimatedBackerRewards                                                   | 727             | 5273   | 5424   | 7306   | 24      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| incentivizeWithCoinbase                                                  | 228             | 52194  | 69254  | 72571  | 11      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| incentivizeWithRewardToken                                               | 375             | 103696 | 111011 | 133849 | 46      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| initialize                                                               | 2848            | 116319 | 116475 | 116475 | 731     |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| lastUpdateTime                                                           | 572             | 572    | 572    | 572    | 5       |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| moveBuilderUnclaimedRewards                                              | 4674            | 45044  | 71739  | 71739  | 33      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| notifyRewardAmountAndUpdateShares                                        | 4704            | 105712 | 93278  | 160278 | 626     |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| rewardMissing                                                            | 571             | 642    | 571    | 2571   | 28      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| rewardPerToken                                                           | 3853            | 4269   | 4397   | 5720   | 57      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| rewardPerTokenStored                                                     | 571             | 571    | 571    | 571    | 11      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| rewardRate                                                               | 611             | 611    | 611    | 611    | 42      |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| rewardShares                                                             | 351             | 2233   | 2351   | 2351   | 747     |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| rewards                                                                  | 806             | 806    | 806    | 806    | 2       |
+|--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| totalAllocation                                                          | 373             | 373    | 373    | 373    | 7       |
+╰--------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| src/governance/GovernanceManagerRootstockCollective.sol:GovernanceManagerRootstockCollective Contract |                 |        |        |        |         |
++==============================================================================================================================================================+
+| Deployment Cost                                                                                       | Deployment Size |        |        |        |         |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 1277744                                                                                               | 5846            |        |        |        |         |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                                                                       |                 |        |        |        |         |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                                                                         | Min             | Avg    | Median | Max    | # Calls |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| executeChange                                                                                         | 2515            | 132126 | 26888  | 472215 | 4       |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| foundationTreasury                                                                                    | 347             | 1947   | 2347   | 2347   | 5       |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| governor                                                                                              | 370             | 2362   | 2370   | 2370   | 285     |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| initialize                                                                                            | 3023            | 118411 | 118819 | 118819 | 284     |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| isAuthorizedChanger                                                                                   | 571             | 4691   | 4697   | 4697   | 748     |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| kycApprover                                                                                           | 348             | 1848   | 2348   | 2348   | 4       |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| proxiableUUID                                                                                         | 331             | 331    | 331    | 331    | 2       |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| updateFoundationTreasury                                                                              | 4706            | 6862   | 4761   | 11119  | 3       |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| updateGovernor                                                                                        | 4749            | 6238   | 4804   | 9162   | 3       |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| updateKYCApprover                                                                                     | 4684            | 6836   | 4739   | 11086  | 3       |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| updateUpgrader                                                                                        | 2536            | 4748   | 4759   | 6938   | 4       |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| upgradeToAndCall                                                                                      | 7366            | 16174  | 15053  | 36027  | 5       |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| upgrader                                                                                              | 369             | 1369   | 1369   | 2369   | 2       |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| validateAuthorizedChanger                                                                             | 689             | 4504   | 4656   | 4689   | 26      |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| validateAuthorizedUpgrader                                                                            | 665             | 4739   | 4665   | 6827   | 10      |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| validateFoundationTreasury                                                                            | 501             | 2458   | 2468   | 2501   | 197     |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| validateGovernor                                                                                      | 547             | 1530   | 1530   | 2514   | 2       |
+|-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| validateKycApprover                                                                                   | 525             | 2489   | 2492   | 2525   | 810     |
+╰-------------------------------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| src/governance/changerTemplates/CommunityApproveBuilderChangerTemplateRootstockCollective.sol:CommunityApproveBuilderChangerTemplateRootstockCollective Contract |                 |       |        |       |         |
++=======================================================================================================================================================================================================================+
+| Deployment Cost                                                                                                                                                  | Deployment Size |       |        |       |         |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 183850                                                                                                                                                           | 862             |       |        |       |         |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                                                                                                  |                 |       |        |       |         |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                                                                                                    | Min             | Avg   | Median | Max   | # Calls |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| execute                                                                                                                                                          | 45987           | 45987 | 45987  | 45987 | 1       |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| newGauge                                                                                                                                                         | 301             | 301   | 301    | 301   | 1       |
+╰------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭---------------------------------------------------------------------------------------------+-----------------+------+--------+------+---------╮
+| test/BackersManagerRootstockCollective.t.sol:BackersManagerRootstockCollectiveTest Contract |                 |      |        |      |         |
++================================================================================================================================================+
+| Deployment Cost                                                                             | Deployment Size |      |        |      |         |
+|---------------------------------------------------------------------------------------------+-----------------+------+--------+------+---------|
+| 36482937                                                                                    | 181684          |      |        |      |         |
+|---------------------------------------------------------------------------------------------+-----------------+------+--------+------+---------|
+|                                                                                             |                 |      |        |      |         |
+|---------------------------------------------------------------------------------------------+-----------------+------+--------+------+---------|
+| Function Name                                                                               | Min             | Avg  | Median | Max  | # Calls |
+|---------------------------------------------------------------------------------------------+-----------------+------+--------+------+---------|
+| backersManager                                                                              | 2460            | 2460 | 2460   | 2460 | 1       |
+╰---------------------------------------------------------------------------------------------+-----------------+------+--------+------+---------╯
+
+╭-----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/SetBackerRewardPercentage.t.sol:SetBackerRewardPercentageTest Contract |                 |       |        |       |         |
++==================================================================================================================================+
+| Deployment Cost                                                             | Deployment Size |       |        |       |         |
+|-----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 23165474                                                                    | 115345          |       |        |       |         |
+|-----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                             |                 |       |        |       |         |
+|-----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                               | Min             | Avg   | Median | Max   | # Calls |
+|-----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| receive                                                                     | 21055           | 21055 | 21055  | 21055 | 10      |
+╰-----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-----------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/SetCycleDuration.t.sol:SetCycleDurationTest Contract |                 |       |        |       |         |
++================================================================================================================+
+| Deployment Cost                                           | Deployment Size |       |        |       |         |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 24156405                                                  | 120284          |       |        |       |         |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                           |                 |       |        |       |         |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                             | Min             | Avg   | Median | Max   | # Calls |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| receive                                                   | 21055           | 21055 | 21055  | 21055 | 10      |
+╰-----------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭------------------------------------------------------------------------------------------+-----------------+-----+--------+-----+---------╮
+| test/governance/GovernanceManagerRootstockCollective.t.sol:SampleChangeContract Contract |                 |     |        |     |         |
++===========================================================================================================================================+
+| Deployment Cost                                                                          | Deployment Size |     |        |     |         |
+|------------------------------------------------------------------------------------------+-----------------+-----+--------+-----+---------|
+| 87959                                                                                    | 190             |     |        |     |         |
+|------------------------------------------------------------------------------------------+-----------------+-----+--------+-----+---------|
+|                                                                                          |                 |     |        |     |         |
+|------------------------------------------------------------------------------------------+-----------------+-----+--------+-----+---------|
+| Function Name                                                                            | Min             | Avg | Median | Max | # Calls |
+|------------------------------------------------------------------------------------------+-----------------+-----+--------+-----+---------|
+| executed                                                                                 | 276             | 276 | 276    | 276 | 1       |
+╰------------------------------------------------------------------------------------------+-----------------+-----+--------+-----+---------╯
+
+╭---------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/integration/DifferentRewardPercentages.t.sol:DifferentRewardPercentages Contract |                 |       |        |       |         |
++============================================================================================================================================+
+| Deployment Cost                                                                       | Deployment Size |       |        |       |         |
+|---------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 22814205                                                                              | 113594          |       |        |       |         |
+|---------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                       |                 |       |        |       |         |
+|---------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                         | Min             | Avg   | Median | Max   | # Calls |
+|---------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| receive                                                                               | 21055           | 21055 | 21055  | 21055 | 14      |
+╰---------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/integration/SkipDistribution.t.sol:SkipDistribution Contract |                 |       |        |       |         |
++========================================================================================================================+
+| Deployment Cost                                                   | Deployment Size |       |        |       |         |
+|-------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 25389613                                                          | 126430          |       |        |       |         |
+|-------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                   |                 |       |        |       |         |
+|-------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                     | Min             | Avg   | Median | Max   | # Calls |
+|-------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| receive                                                           | 21055           | 21055 | 21055  | 21055 | 20      |
+╰-------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/integration/SupportAndDistribute.t.sol:SupportAndDistributeTest Contract |                 |       |        |       |         |
++====================================================================================================================================+
+| Deployment Cost                                                               | Deployment Size |       |        |       |         |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 22731350                                                                      | 113181          |       |        |       |         |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                               |                 |       |        |       |         |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                 | Min             | Avg   | Median | Max   | # Calls |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| receive                                                                       | 21055           | 21055 | 21055  | 21055 | 29      |
+╰-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭--------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/mock/ERC20Mock.sol:ERC20Mock Contract |                 |       |        |       |         |
++=================================================================================================+
+| Deployment Cost                            | Deployment Size |       |        |       |         |
+|--------------------------------------------+-----------------+-------+--------+-------+---------|
+| 0                                          | 3716            |       |        |       |         |
+|--------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                            |                 |       |        |       |         |
+|--------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                              | Min             | Avg   | Median | Max   | # Calls |
+|--------------------------------------------+-----------------+-------+--------+-------+---------|
+| approve                                    | 24396           | 43437 | 48359  | 48359 | 477     |
+|--------------------------------------------+-----------------+-------+--------+-------+---------|
+| balanceOf                                  | 561             | 645   | 561    | 2561  | 307     |
+|--------------------------------------------+-----------------+-------+--------+-------+---------|
+| mint                                       | 28488           | 58092 | 51284  | 68384 | 569     |
+|--------------------------------------------+-----------------+-------+--------+-------+---------|
+| transfer                                   | 28702           | 31074 | 29598  | 51474 | 100     |
+╰--------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭----------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/mock/StakingTokenMock.sol:StakingTokenMock Contract |                 |       |        |       |         |
++===============================================================================================================+
+| Deployment Cost                                          | Deployment Size |       |        |       |         |
+|----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 0                                                        | 4888            |       |        |       |         |
+|----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                          |                 |       |        |       |         |
+|----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                            | Min             | Avg   | Median | Max   | # Calls |
+|----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| balanceOf                                                | 539             | 2492  | 2539   | 2539  | 602     |
+|----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| mint                                                     | 53503           | 62053 | 62053  | 70603 | 566     |
+|----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setCollectiveRewardsAddress                              | 60787           | 60787 | 60787  | 60787 | 5       |
+|----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transfer                                                 | 24483           | 41597 | 50125  | 50184 | 3       |
+╰----------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/mock/UpgradesMocks.sol:BuilderRegistryRootstockCollectiveUpgradeMock Contract |                 |       |        |       |         |
++=========================================================================================================================================+
+| Deployment Cost                                                                    | Deployment Size |       |        |       |         |
+|------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 3297342                                                                            | 15300           |       |        |       |         |
+|------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                    |                 |       |        |       |         |
+|------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                      | Min             | Avg   | Median | Max   | # Calls |
+|------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getCustomMockValue                                                                 | 2695            | 2695  | 2695   | 2695  | 1       |
+|------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initializeMock                                                                     | 22425           | 22425 | 22425  | 22425 | 1       |
+|------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| proxiableUUID                                                                      | 366             | 366   | 366    | 366   | 1       |
+╰------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| test/mock/UpgradesMocks.sol:GaugeUpgradeMock Contract |                 |        |        |        |         |
++==============================================================================================================+
+| Deployment Cost                                       | Deployment Size |        |        |        |         |
+|-------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 2071759                                               | 9504            |        |        |        |         |
+|-------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                       |                 |        |        |        |         |
+|-------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                         | Min             | Avg    | Median | Max    | # Calls |
+|-------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getCustomMockValue                                    | 621             | 1954   | 2621   | 2621   | 3       |
+|-------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| initialize                                            | 116541          | 116541 | 116541 | 116541 | 1       |
+|-------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| initializeMock                                        | 22402           | 22402  | 22402  | 22402  | 3       |
+╰-------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/mock/UpgradesMocks.sol:GovernanceManagerRootstockCollectiveUpgradeMock Contract |                 |       |        |       |         |
++===========================================================================================================================================+
+| Deployment Cost                                                                      | Deployment Size |       |        |       |         |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 1331570                                                                              | 6097            |       |        |       |         |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                      |                 |       |        |       |         |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                        | Min             | Avg   | Median | Max   | # Calls |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getCustomMockValue                                                                   | 566             | 566   | 566    | 566   | 1       |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initializeMock                                                                       | 22380           | 22380 | 22380  | 22380 | 1       |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| proxiableUUID                                                                        | 309             | 309   | 309    | 309   | 1       |
+╰--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/mock/UpgradesMocks.sol:RewardDistributorRootstockCollectiveUpgradeMock Contract |                 |       |        |       |         |
++===========================================================================================================================================+
+| Deployment Cost                                                                      | Deployment Size |       |        |       |         |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 1280691                                                                              | 5859            |       |        |       |         |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                      |                 |       |        |       |         |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                        | Min             | Avg   | Median | Max   | # Calls |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getCustomMockValue                                                                   | 3667            | 3667  | 3667   | 3667  | 1       |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initializeMock                                                                       | 22357           | 22357 | 22357  | 22357 | 1       |
+|--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| proxiableUUID                                                                        | 342             | 342   | 342    | 342   | 1       |
+╰--------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+
+Ran 23 test suites in 372.66ms (616.25ms CPU time): 283 tests passed, 0 failed, 0 skipped (283 total tests)
