@@ -19,7 +19,8 @@ jobs:
         with:
           version: nightly
 
-      # Add any step generating a gas report to a temporary file named gasreport.ansi. For example:
+      # Add any step generating a gas report to a temporary file named gasreport.ansi.
+      # For example:
       - name: Run tests
         run: forge test --gas-report > gasreport.ansi # <- this file name should be unique in your repository!
         env:
