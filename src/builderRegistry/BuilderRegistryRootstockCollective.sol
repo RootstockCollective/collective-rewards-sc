@@ -292,7 +292,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     /**
      * @notice community approve builder and create its gauge
-     * @dev reverts if it is not called by the governor, authorized changer nor the backers manager
+     * @dev reverts if it is not called by the governor or the authorized changer
      * reverts if is already community approved
      * reverts if it has a gauge associated
      * @param builder_ address of the builder
