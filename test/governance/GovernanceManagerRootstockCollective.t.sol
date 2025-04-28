@@ -10,6 +10,7 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
     event FoundationTreasuryUpdated(address foundationTreasury_, address updatedBy_);
     event KycApproverUpdated(address kycApprover_, address updatedBy_);
     event UpgraderUpdated(address upgrader_, address updatedBy_);
+    event ConfiguratorUpdated(address configurator_, address updatedBy_);
     event ChangeExecuted(IChangeContractRootstockCollective changeContract_, address executor_);
 
     /**
@@ -27,6 +28,14 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
 
         // AND the upgrader is set correctly
         assertEq(governanceManager.upgrader(), upgrader);
+    }
+
+    /**
+     * SCENARIO: GovernanceManager is reinitialized correctly with configurator
+     */
+    function test_InitializeV2() public view {
+        // THEN the configurator is set correctly
+        assertEq(governanceManager.configurator(), configurator);
     }
 
     /**
@@ -119,6 +128,47 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
+     * SCENARIO: Unauthorized account cannot update the configurator address
+     */
+    function test_OnlyUpdateConfiguratorByAuthorizedConfigurator() public {
+        // WHEN an unauthorized account attempts to update the configurator
+        vm.prank(bob);
+        // THEN tx reverts because NotAuthorizedConfigurator
+        vm.expectRevert(
+            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.NotAuthorizedConfigurator.selector, bob)
+        );
+        governanceManager.updateConfigurator(bob);
+
+        // WHEN the upgrader attempts to update the configurator
+        vm.prank(upgrader);
+        // THEN tx reverts because NotAuthorizedConfigurator
+        vm.expectRevert(
+            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.NotAuthorizedConfigurator.selector, upgrader)
+        );
+        governanceManager.updateConfigurator(bob);
+
+        // WHEN the governor attempts to update the configurator
+        vm.prank(governor);
+        // THEN tx does not revert
+        // AND the ConfiguratorUpdated event is emitted
+        vm.expectEmit();
+        emit ConfiguratorUpdated(bob, governor);
+        governanceManager.updateConfigurator(bob);
+        // AND the configurator address is updated
+        assertEq(governanceManager.configurator(), bob);
+
+        // WHEN the configurator attempts to update the configurator
+        vm.prank(bob);
+        // THEN tx does not revert
+        // AND the ConfiguratorUpdated event is emitted
+        vm.expectEmit();
+        emit ConfiguratorUpdated(alice, bob);
+        governanceManager.updateConfigurator(alice);
+        // AND the configurator address is updated
+        assertEq(governanceManager.configurator(), alice);
+    }
+
+    /**
      * SCENARIO: functions should revert by ZeroAddressNotAllowed error when an address is zero
      */
     function test_RevertZeroAddress() public {
@@ -194,6 +244,36 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
 
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotFoundationTreasury.selector);
         governanceManager.validateFoundationTreasury(alice);
+    }
+
+    /**
+     * SCENARIO: ValidateConfigurator recognizes the configurator and unauthorized accounts
+     */
+    function test_ValidateConfigurator() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.NotAuthorizedConfigurator.selector, alice)
+        );
+        governanceManager.validateConfigurator(alice);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.NotAuthorizedConfigurator.selector, upgrader)
+        );
+        governanceManager.validateConfigurator(upgrader);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernanceManagerRootstockCollective.NotAuthorizedConfigurator.selector, kycApprover
+            )
+        );
+        governanceManager.validateConfigurator(kycApprover);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.NotAuthorizedConfigurator.selector, foundation)
+        );
+        governanceManager.validateConfigurator(foundation);
+
+        governanceManager.validateConfigurator(configurator);
+        governanceManager.validateConfigurator(governor);
     }
 
     /**

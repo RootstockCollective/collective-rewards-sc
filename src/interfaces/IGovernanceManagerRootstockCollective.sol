@@ -14,6 +14,7 @@ interface IGovernanceManagerRootstockCollective {
     event FoundationTreasuryUpdated(address foundationTreasury_, address updatedBy_);
     event KycApproverUpdated(address kycApprover_, address updatedBy_);
     event UpgraderUpdated(address upgrader_, address updatedBy_);
+    event ConfiguratorUpdated(address configurator_, address updatedBy_);
     event ChangeExecuted(IChangeContractRootstockCollective changeContract_, address executor_);
 
     // -----------------------------
@@ -53,6 +54,11 @@ interface IGovernanceManagerRootstockCollective {
      * @notice Thrown when the caller is not the upgrader.
      */
     error NotUpgrader();
+
+    /**
+     * @notice Thrown when the caller is not the configurator.
+     */
+    error NotAuthorizedConfigurator(address account_);
 
     // -----------------------------
     // --------- Functions ---------
@@ -105,6 +111,12 @@ interface IGovernanceManagerRootstockCollective {
     function upgrader() external view returns (address);
 
     /**
+     * @notice The configurator address with contract upgradeability permissions.
+     * @return The configurator address.
+     */
+    function configurator() external view returns (address);
+
+    /**
      * @notice Validates if the given account is authorized as a changer
      * @param account_ The address to be validated as the changer.
      * @dev Reverts with `NotAuthorizedChanger` if the account is not the authorized changer.
@@ -138,6 +150,14 @@ interface IGovernanceManagerRootstockCollective {
      * @dev Reverts with `NotAuthorizedUpgrader` if the account is not the upgrader.
      */
     function validateAuthorizedUpgrader(address account_) external view;
+
+    /**
+     * @notice Validates if the given account is authorized as the configurator.
+     * @param account_ The address to be validated as the configurator.
+     * @dev Reverts with `NotAuthorizedConfigurator` if the account is not the configurator, governor or a valid
+     * changer.
+     */
+    function validateConfigurator(address account_) external view;
 
     /**
      * @notice Updates the governor address
@@ -177,4 +197,12 @@ interface IGovernanceManagerRootstockCollective {
      * @dev allow update to zero address to disable the upgrader role
      */
     function updateUpgrader(address upgrader_) external;
+
+    /**
+     * @notice Updates the configurator address
+     * @param configurator_ The new configurator address.
+     * @dev Reverts if caller is not a valid configurator, governor or a valid changer.
+     * @dev Reverts if the new address is zero.
+     */
+    function updateConfigurator(address configurator_) external;
 }

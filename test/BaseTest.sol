@@ -59,12 +59,15 @@ contract BaseTest is Test {
     address public kycApprover = makeAddr("kycApprover");
     address public foundation = makeAddr("foundation");
     address public upgrader = makeAddr("upgrader");
+    address public configurator = makeAddr("configurator");
 
     /* solhint-enable private-vars-leading-underscore */
 
     function setUp() public {
         (governanceManager,) =
             new GovernanceManagerRootstockCollectiveDeployer().run(governor, foundation, kycApprover, upgrader);
+        vm.prank(upgrader);
+        governanceManager.initializeV2(configurator);
 
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         MockStakingTokenDeployer _mockStakingTokenDeployer = new MockStakingTokenDeployer();
