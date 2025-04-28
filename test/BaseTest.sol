@@ -46,6 +46,7 @@ contract BaseTest is Test {
     uint24 public cycleStartOffset = 0 days;
     uint32 public distributionDuration = 1 hours;
     uint128 public rewardPercentageCooldown = 2 weeks;
+    uint256 public maxDistributionsPerBatch = 20;
 
     /* solhint-disable private-vars-leading-underscore */
     address internal governor = makeAddr("governor"); // TODO: use a GovernorMock contract
@@ -91,6 +92,7 @@ contract BaseTest is Test {
         );
 
         backersManager.initializeBuilderRegistry(builderRegistry);
+        backersManager.initializeV3(maxDistributionsPerBatch);
 
         // allow to execute all the functions protected by governance
 

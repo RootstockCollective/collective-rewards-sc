@@ -22,9 +22,6 @@ contract BackersManagerRootstockCollective is
     ICollectiveRewardsCheckRootstockCollective,
     ERC165Upgradeable
 {
-    // TODO: MAX_DISTRIBUTIONS_PER_BATCH constant?
-    uint256 internal constant _MAX_DISTRIBUTIONS_PER_BATCH = 20;
-
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
@@ -53,6 +50,7 @@ contract BackersManagerRootstockCollective is
     event RewardDistributionFinished(address indexed sender_);
     event BackerRewardsOptedOut(address indexed backer_);
     event BackerRewardsOptedIn(address indexed backer_);
+    event MaxDistributionsPerBatchUpdated(uint256 oldValue_, uint256 newValue_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -123,6 +121,12 @@ contract BackersManagerRootstockCollective is
     mapping(address backer => bool hasOptedOut) public rewardsOptedOut;
 
     // -----------------------------
+    // ---------- V3 Storage ----------
+    // -----------------------------
+
+    uint256 public maxDistributionsPerBatch;
+
+    // -----------------------------
     // ------- Initializer ---------
     // -----------------------------
 
@@ -175,6 +179,14 @@ contract BackersManagerRootstockCollective is
     // NOTE: This contract previously included an `initializeV2` function protected by `reinitializer(2)`,
     // used to initialize `builderRegistry` during an upgrade to version 2.
     // The function has been removed since the upgrade was already executed and it's no longer necessary.
+
+    /**
+     * @notice contract version 3 initializer
+     * @param maxDistributionsPerBatch_ maximum number of distributions allowed per batch
+     */
+    function initializeV3(uint256 maxDistributionsPerBatch_) external reinitializer(3) {
+        maxDistributionsPerBatch = maxDistributionsPerBatch_;
+    }
 
     // -----------------------------
     // ---- External Functions -----
@@ -246,7 +258,6 @@ contract BackersManagerRootstockCollective is
     {
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
-        // TODO: check length < MAX or let revert by out of gas?
         uint256 _backerTotalAllocation = backerTotalAllocation[msg.sender];
         uint256 _totalPotentialReward = totalPotentialReward;
         uint256 _timeUntilNextCycle = timeUntilNextCycle(block.timestamp);
@@ -319,7 +330,6 @@ contract BackersManagerRootstockCollective is
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             _builderRegistry.requireInitializedBuilder(gauges_[i]);
-
             gauges_[i].claimBackerReward(msg.sender);
         }
     }
@@ -393,6 +403,21 @@ contract BackersManagerRootstockCollective is
         returns (GaugeRootstockCollective gauge_)
     {
         return builderRegistry.communityApproveBuilder(builder_);
+    }
+
+    /**
+     * @notice Updates the maximum number of distributions allowed per batch.
+     * @dev reverts if not called by the upgrader
+     * @dev permission will be delegated from upgrader to different role once the GovernanceManagerRootStockCollective
+     * contract is upgraded
+     */
+    function updateMaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_) external {
+        if (msg.sender != governanceManager.upgrader()) {
+            revert NotAuthorized();
+        }
+        uint256 _oldValue = maxDistributionsPerBatch;
+        maxDistributionsPerBatch = maxDistributionsPerBatch_;
+        emit MaxDistributionsPerBatchUpdated(_oldValue, maxDistributionsPerBatch_);
     }
 
     // -----------------------------
@@ -469,7 +494,6 @@ contract BackersManagerRootstockCollective is
 
     /**
      * @notice distribute accumulated reward tokens to the gauges
-     * @dev reverts if distribution period has not yet started
      *  This function is paginated and it finishes once all gauges distribution are completed,
      *  ending the distribution period and voting restrictions.
      * @return true if distribution has finished
@@ -479,7 +503,7 @@ contract BackersManagerRootstockCollective is
         uint256 _gaugeIndex = indexLastGaugeDistributed;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         uint256 _gaugesLength = _builderRegistry.getGaugesLength();
-        uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + _MAX_DISTRIBUTIONS_PER_BATCH);
+        uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + maxDistributionsPerBatch);
 
         // cache variables read in the loop
         uint256 _rewardsERC20 = rewardsERC20;

@@ -75,7 +75,6 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /**
      * @notice sends rewards to backersManager contract to be distributed to the gauges
      * @dev reverts if is not called by foundation treasury address
-     *  reverts if rewards balance is insufficient
      * @param amountERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
@@ -86,7 +85,6 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /**
      * @notice sends rewards to backersManager contract and starts the distribution to the gauges
      * @dev reverts if is not called by foundation treasury address
-     *  reverts if rewards balance is insufficient
      *  reverts if is not in the distribution window
      * @param amountERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
