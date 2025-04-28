@@ -316,16 +316,20 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param builder_ address of the builder
      */
     function communityBanBuilder(address builder_) external onlyValidChanger {
-        GaugeRootstockCollective _gauge = builderToGauge[builder_];
-        if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
-        if (!builderState[builder_].communityApproved) revert BuilderNotCommunityApproved();
+        _communityBanBuilder(builder_);
+    }
 
-        builderState[builder_].communityApproved = false;
-
-        _haltGauge(_gauge);
-        backersManager.rewardTokenApprove(address(_gauge), 0);
-
-        emit CommunityBanned(builder_);
+    /**
+     * @notice Removes a builder from the whitelist. This function is maintained for compatibility with the previous
+     * naming convention
+     * @dev reverts if it is not called by the governor address or authorized changer
+     * reverts if it does not have a gauge associated
+     * reverts if it is not community approved
+     * Internally calls `_communityBanBuilder` to perform the operation.
+     * @param builder_ address of the builder
+     */
+    function dewhitelistBuilder(address builder_) external onlyValidChanger {
+        _communityBanBuilder(builder_);
     }
 
     /**
@@ -690,6 +694,23 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         backersManager.rewardTokenApprove(address(gauge_), type(uint256).max);
 
         emit CommunityApproved(builder_);
+    }
+
+    /**
+     * @dev Internal function to community ban and halt its gauge
+     *  See {communityBanBuilder} for details.
+     */
+    function _communityBanBuilder(address builder_) private {
+        GaugeRootstockCollective _gauge = builderToGauge[builder_];
+        if (address(_gauge) == address(0)) revert BuilderDoesNotExist();
+        if (!builderState[builder_].communityApproved) revert BuilderNotCommunityApproved();
+
+        builderState[builder_].communityApproved = false;
+
+        _haltGauge(_gauge);
+        backersManager.rewardTokenApprove(address(_gauge), 0);
+
+        emit CommunityBanned(builder_);
     }
 
     /**
