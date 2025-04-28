@@ -492,6 +492,7 @@ contract BackersManagerRootstockCollective is
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         uint256 _gaugesLength = _builderRegistry.getGaugesLength();
         uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + maxDistributionsPerBatch);
+        uint256 _batchLength = _lastDistribution - _gaugeIndex;
 
         // cache variables read in the loop
         uint256 _rewardsERC20 = rewardsERC20;
@@ -506,9 +507,10 @@ contract BackersManagerRootstockCollective is
             return true;
         }
 
-        address[] memory _gauges = _builderRegistry.getGaugesInRange(_gaugeIndex, _lastDistribution);
+        // get a batch of gauges in a single external call
+        address[] memory _gauges = _builderRegistry.getGaugesInRange(_gaugeIndex, _batchLength);
 
-        // loop through all pending distributions
+        // loop through gauges
         for (uint256 i = 0; i < _gauges.length; ++i) {
             _newTotalPotentialReward += _gaugeDistribute(
                 GaugeRootstockCollective(_gauges[i]),
@@ -521,6 +523,7 @@ contract BackersManagerRootstockCollective is
             );
         }
         _gaugeIndex = _lastDistribution;
+
         emit RewardDistributed(msg.sender);
 
         // all the gauges were distributed, so distribution period is finished

@@ -521,16 +521,23 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     /**
      * @notice Get gauges in a specified range.
      * @param start_ The starting index (inclusive).
-     * @param end_ The ending index (exclusive).
+     * @param length_ The number of gauge addresses we want to retrieve.
      * @return gauges_ An array of gauge addresses within the specified range.
      */
-    function getGaugesInRange(uint256 start_, uint256 end_) public view returns (address[] memory gauges_) {
-        uint256 _gaugesLength = _gauges.length();
-        if (end_ > _gaugesLength || start_ >= end_) revert InvalidIndex();
-        gauges_ = new address[](end_ - start_);
-        for (uint256 i = start_; i < end_; i++) {
-            gauges_[i - start_] = _gauges.at(i);
+    function getGaugesInRange(uint256 start_, uint256 length_) external view returns (address[] memory) {
+        uint256 _total = _gauges.length();
+        if (start_ >= _total) revert InvalidIndex();
+
+        uint256 _actualLength = length_;
+        if (start_ + length_ > _total) {
+            _actualLength = _total - start_;
         }
+
+        address[] memory _batch = new address[](_actualLength);
+        for (uint256 i = 0; i < _actualLength; ++i) {
+            _batch[i] = _gauges.at(start_ + i);
+        }
+        return _batch;
     }
 
     /**

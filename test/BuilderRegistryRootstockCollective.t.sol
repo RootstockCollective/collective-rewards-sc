@@ -858,53 +858,63 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         assertEq(builderRegistry.isGaugeHalted(address(gauge)), true);
     }
 
-    function test_GetGaugesInRangeValid() public {
+    /**
+     * SCENARIO: get gauges in range with start and length
+     */
+    function test_GetGaugesInRange() public {
+        // GIVEN a builder with 5 gauges
         _prepareGauges();
 
-        address[] memory _gauges = builderRegistry.getGaugesInRange(1, 2);
-        assertEq(_gauges.length, 1);
-        assertEq(_gauges[0], address(gauge2));
-    }
-
-    function test_GetGaugesInRangeValidLastItem() public {
-        _prepareGauges();
-
+        // WHEN getGaugesInRange is called
+        //  THEN it returns the gauges in the range
         address[] memory _gauges = builderRegistry.getGaugesInRange(4, 5);
         assertEq(_gauges.length, 1);
         assertEq(builderRegistry.getGaugeAt(4), _gauges[0]);
     }
 
-    function test_GetGaugesInRangeFull() public {
+    /**
+     * SCENARIO: get gauges in range with start and length
+     */
+    function test_GetGaugesInRangeAllGauges() public {
+        // GIVEN a builder with 5 gauges
         _prepareGauges();
 
-        address[] memory _gauges = builderRegistry.getGaugesInRange(0, 5);
-        assertEq(_gauges.length, 5);
+        // WHEN getGaugesInRange is called
+        //  THEN it returns the gauges in the range
+        address[] memory _gauges = builderRegistry.getGaugesInRange(0, 4);
+        assertEq(_gauges.length, 4);
         assertEq(builderRegistry.getGaugeAt(0), _gauges[0]);
         assertEq(builderRegistry.getGaugeAt(1), _gauges[1]);
         assertEq(builderRegistry.getGaugeAt(2), _gauges[2]);
         assertEq(builderRegistry.getGaugeAt(3), _gauges[3]);
-        assertEq(builderRegistry.getGaugeAt(4), _gauges[4]);
     }
 
-    function test_GetGaugesInRangeInvalidStartGreaterThanEnd() public {
+    /**
+     * SCENARIO: get gauges with length exceeds available gauges
+     */
+    function test_GetGaugesInRangeLengthExceedsAvailable() public {
+        // GIVEN a builder with 5 gauges
         _prepareGauges();
 
-        vm.expectRevert(abi.encodeWithSelector(BuilderRegistryRootstockCollective.InvalidIndex.selector));
-        builderRegistry.getGaugesInRange(3, 2);
+        // WHEN getGaugesInRange is called
+        //  THEN it returns the gauges in the range
+        address[] memory _gauges = builderRegistry.getGaugesInRange(3, 10);
+        assertEq(_gauges.length, 2);
+        assertEq(builderRegistry.getGaugeAt(3), _gauges[0]);
+        assertEq(builderRegistry.getGaugeAt(4), _gauges[1]);
     }
 
-    function test_GetGaugesInRangeStartEqualsEnd() public {
+    /**
+     * SCENARIO: get gauges in range with start out of bounds
+     */
+    function test_GetGaugesInRangeStartOutOfBounds() public {
+        // GIVEN a builder with 5 gauges
         _prepareGauges();
 
+        // WHEN getGaugesInRange is called
+        //  THEN tx reverts because start is out of bounds
         vm.expectRevert(abi.encodeWithSelector(BuilderRegistryRootstockCollective.InvalidIndex.selector));
-        builderRegistry.getGaugesInRange(2, 2);
-    }
-
-    function test_GetGaugesInRangeOutOfBounds() public {
-        _prepareGauges();
-
-        vm.expectRevert(abi.encodeWithSelector(BuilderRegistryRootstockCollective.InvalidIndex.selector));
-        builderRegistry.getGaugesInRange(0, 6); // only 5 elements, index 5 is out of bounds
+        builderRegistry.getGaugesInRange(5, 2);
     }
 
     function _prepareGauges() internal {
