@@ -33,9 +33,9 @@ The Backers who vote for Chad will get 50% of the rewards distributed to Chad.\
 At the end of the cycle Chad is entitled to get 2000 RIF.\
 Alice voted with 100 StRIF for Chad for half cycle.\
 Bob voted with 100 StRIF for Chad for a whole cycle.\
-Chad will get 1500 RIF (75%).\
-Bob will get 375 RIF. For half of the cycle, Bob got all the possible rewards, 500/2 = 250. For the other half of the cycle, the remaining rewards got split between Alice and Bob, hence 250/2 = 125.\
-Alice will get 125 RIF.\
+Chad will get 1000 RIF (50%).\
+Bob will get 750 RIF. For half of the cycle, Bob got all the possible rewards, 1000/2 = 500. For the other half of the cycle, the remaining rewards got split between Alice and Bob, hence 500/2 = 250.\
+Alice will get 250 RIF.\
 
 ## Builder status
 
@@ -117,10 +117,10 @@ Alice allocation is set to 100.\
 Total allocation is updated to 100.
 
 Alice claims at time 90.\
-The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation ((90-10)$\times$ 10)/90 =~ 8.9.\
+The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation 0 + ((90-10)$\times$ 10)/100 = 8.\
 Last time update = 90.\
-Alice rewards = Alice allocation $\times$ (reward per token stored - Alice reward per token paid) = 100 $\times$ 8.9 = 890.\
-Alice per token paid is set to reward per token stored that is equal to 8.9.\
+Alice rewards = Alice allocation $\times$ (reward per token stored - Alice reward per token paid) = 100 $\times$ 8 = 800.\
+Alice per token paid is set to reward per token stored that is equal to 8.\
 Token is transferred to Alice address.\
 Alice reward is set to 0.
 
@@ -151,7 +151,7 @@ Bob allocation is updated to 50.\
 Total allocation is updated to 150.
 
 Bob claims at time 100\
-The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation ((100-50)$\times$ 10)/150 =~ 7.3.\
+The reward per token stored is updated; old value + ((current time - last time update) $\times$ reward rate)/total allocation 4 + ((100-50)$\times$ 10)/150 =~ 7.3.\
 Last time update = 100.\
 Bob rewards = old value + (Bob allocation $\times$ (reward per token stored - Bob reward per token paid)) = 50 $\times$ (7.3 - 4) = 165.\
 Bob per token paid is set to reward per token stored that is equal to 7.3.\
@@ -163,7 +163,7 @@ The reward per token stored is updated; old value + ((current time - last time u
 Last time update = 100.\
 Alice rewards = old value + (Alice allocation $\times$ (reward per token stored - Alice reward per token paid)) = 100 $\times$ (7.3 - 0) = 730.\
 Alice per token paid is set to reward per token stored that is equal to 7.3.\
-Token is transferred to Bob address.\
+Token is transferred to Alice address.\
 Alice reward is set to 0.
 
 ## Builder incentivization
