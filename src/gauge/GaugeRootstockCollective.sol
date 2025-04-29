@@ -670,6 +670,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
                 _rewardData.rewardsUntilLastCycle[backer_] = _rewardData.rewards[backer_];
             }
         }
+        if (block.timestamp >= periodFinish_) {
+            _rewardData.rewardsUntilLastCycle[backer_] = _rewardData.rewards[backer_];
+        }
 
         _rewardData.backerRewardPerTokenPaid[backer_] = _rewardData.rewardPerTokenStored;
     }
