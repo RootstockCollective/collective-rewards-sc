@@ -857,4 +857,70 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         // THEN gauge remains halted
         assertEq(builderRegistry.isGaugeHalted(address(gauge)), true);
     }
+
+    /**
+     * SCENARIO: get gauges in range with start and length
+     */
+    function test_GetGaugesInRange() public {
+        // GIVEN a builder with 5 gauges
+        _prepareGauges();
+
+        // WHEN getGaugesInRange is called
+        //  THEN it returns the gauges in the range
+        address[] memory _gauges = builderRegistry.getGaugesInRange(4, 5);
+        assertEq(_gauges.length, 1);
+        assertEq(builderRegistry.getGaugeAt(4), _gauges[0]);
+    }
+
+    /**
+     * SCENARIO: get gauges in range with start and length
+     */
+    function test_GetGaugesInRangeAllGauges() public {
+        // GIVEN a builder with 5 gauges
+        _prepareGauges();
+
+        // WHEN getGaugesInRange is called
+        //  THEN it returns the gauges in the range
+        address[] memory _gauges = builderRegistry.getGaugesInRange(0, 4);
+        assertEq(_gauges.length, 4);
+        assertEq(builderRegistry.getGaugeAt(0), _gauges[0]);
+        assertEq(builderRegistry.getGaugeAt(1), _gauges[1]);
+        assertEq(builderRegistry.getGaugeAt(2), _gauges[2]);
+        assertEq(builderRegistry.getGaugeAt(3), _gauges[3]);
+    }
+
+    /**
+     * SCENARIO: get gauges with length exceeds available gauges
+     */
+    function test_GetGaugesInRangeLengthExceedsAvailable() public {
+        // GIVEN a builder with 5 gauges
+        _prepareGauges();
+
+        // WHEN getGaugesInRange is called
+        //  THEN it returns the gauges in the range
+        address[] memory _gauges = builderRegistry.getGaugesInRange(3, 10);
+        assertEq(_gauges.length, 2);
+        assertEq(builderRegistry.getGaugeAt(3), _gauges[0]);
+        assertEq(builderRegistry.getGaugeAt(4), _gauges[1]);
+    }
+
+    /**
+     * SCENARIO: get gauges in range with start out of bounds
+     */
+    function test_GetGaugesInRangeStartOutOfBounds() public {
+        // GIVEN a builder with 5 gauges
+        _prepareGauges();
+
+        // WHEN getGaugesInRange is called
+        //  THEN tx reverts because start is out of bounds
+        vm.expectRevert(abi.encodeWithSelector(BuilderRegistryRootstockCollective.InvalidIndex.selector));
+        builderRegistry.getGaugesInRange(5, 2);
+    }
+
+    function _prepareGauges() internal {
+        for (uint256 i = 0; i < 3; i++) {
+            address _gauge = makeAddr(string(abi.encode(i)));
+            _whitelistBuilder(_gauge, builder, 1 ether);
+        }
+    }
 }

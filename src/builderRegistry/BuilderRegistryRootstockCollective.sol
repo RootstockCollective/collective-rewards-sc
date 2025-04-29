@@ -39,6 +39,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error NotAuthorized();
     error ZeroAddressNotAllowed();
     error BuilderRewardsLocked();
+    error InvalidIndex();
 
     // -----------------------------
     // ----------- Events ----------
@@ -515,6 +516,28 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      */
     function getGaugeAt(uint256 index_) public view returns (address) {
         return _gauges.at(index_);
+    }
+
+    /**
+     * @notice Get gauges in a specified range.
+     * @param start_ The starting index (inclusive).
+     * @param length_ The number of gauge addresses we want to retrieve.
+     * @return gauges_ An array of gauge addresses within the specified range.
+     */
+    function getGaugesInRange(uint256 start_, uint256 length_) external view returns (address[] memory) {
+        uint256 _total = _gauges.length();
+        if (start_ >= _total) revert InvalidIndex();
+
+        uint256 _actualLength = length_;
+        if (start_ + length_ > _total) {
+            _actualLength = _total - start_;
+        }
+
+        address[] memory _batch = new address[](_actualLength);
+        for (uint256 i = 0; i < _actualLength; ++i) {
+            _batch[i] = _gauges.at(start_ + i);
+        }
+        return _batch;
     }
 
     /**
