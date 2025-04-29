@@ -39,6 +39,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error NotAuthorized();
     error ZeroAddressNotAllowed();
     error BuilderRewardsLocked();
+    error InvalidIndex();
 
     // -----------------------------
     // ----------- Events ----------
@@ -68,13 +69,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     modifier onlyUpgrader() {
         governanceManager.validateAuthorizedUpgrader(msg.sender);
-        _;
-    }
-
-    modifier onlyValidChangerOrBackersManager() {
-        if (!governanceManager.isAuthorizedChanger(msg.sender) && msg.sender != address(backersManager)) {
-            revert NotAuthorized();
-        }
         _;
     }
 
@@ -252,7 +246,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         external
         onlyKycApprover
     {
-        _intialiseBuilder(builder_, rewardReceiver_, rewardPercentage_);
+        _initializeBuilder(builder_, rewardReceiver_, rewardPercentage_);
     }
 
     /**
@@ -299,7 +293,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     /**
      * @notice community approve builder and create its gauge
-     * @dev reverts if it is not called by the governor, authorized changer nor the backers manager
+     * @dev reverts if it is not called by the governor or the authorized changer
      * reverts if is already community approved
      * reverts if it has a gauge associated
      * @param builder_ address of the builder
@@ -307,7 +301,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      */
     function communityApproveBuilder(address builder_)
         external
-        onlyValidChangerOrBackersManager
+        onlyValidChanger
         returns (GaugeRootstockCollective gauge_)
     {
         return _communityApproveBuilder(builder_);
@@ -379,7 +373,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         if (!builderState[msg.sender].communityApproved) revert BuilderNotCommunityApproved();
         if (!builderState[msg.sender].selfPaused) revert BuilderNotSelfPaused();
 
-        // TODO: should we have a minimal amount?
         if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
             revert InvalidBackerRewardPercentage();
         }
@@ -526,6 +519,28 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
+     * @notice Get gauges in a specified range.
+     * @param start_ The starting index (inclusive).
+     * @param length_ The number of gauge addresses we want to retrieve.
+     * @return gauges_ An array of gauge addresses within the specified range.
+     */
+    function getGaugesInRange(uint256 start_, uint256 length_) external view returns (address[] memory) {
+        uint256 _total = _gauges.length();
+        if (start_ >= _total) revert InvalidIndex();
+
+        uint256 _actualLength = length_;
+        if (start_ + length_ > _total) {
+            _actualLength = _total - start_;
+        }
+
+        address[] memory _batch = new address[](_actualLength);
+        for (uint256 i = 0; i < _actualLength; ++i) {
+            _batch[i] = _gauges.at(start_ + i);
+        }
+        return _batch;
+    }
+
+    /**
      * @notice return true is gauge is rewarded
      */
     function isGaugeRewarded(address gauge_) public view returns (bool) {
@@ -636,9 +651,9 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     /**
      * @dev Initializes builder for the first time, setting the reward receiver and the reward percentage
      *  Sets initialized flag to true. It cannot be switched to false anymore
-     *  See {intialiseBuilder} for details.
+     *  See {initializeBuilder} for details.
      */
-    function _intialiseBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
+    function _initializeBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
         if (builderState[builder_].initialized) revert BuilderAlreadyInitialized();
         builderState[builder_].initialized = true;
         builderState[builder_].kycApproved = true;

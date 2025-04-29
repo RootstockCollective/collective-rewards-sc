@@ -29,6 +29,7 @@ contract Deploy is Broadcaster, OutputWriter {
     uint24 private _cycleStartOffset;
     uint32 private _distributionDuration;
     uint128 private _rewardPercentageCooldown;
+    uint256 private _maxDistributionsPerBatch;
 
     function setUp() public {
         _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
@@ -41,6 +42,7 @@ contract Deploy is Broadcaster, OutputWriter {
         _cycleStartOffset = uint24(vm.envUint("CYCLE_START_OFFSET"));
         _distributionDuration = uint32(vm.envUint("DISTRIBUTION_DURATION"));
         _rewardPercentageCooldown = uint128(vm.envUint("REWARD_PERCENTAGE_COOLDOWN"));
+        _maxDistributionsPerBatch = 20;
 
         outputWriterSetup();
     }
@@ -98,6 +100,7 @@ contract Deploy is Broadcaster, OutputWriter {
 
         vm.broadcast();
         _backersManagerProxy.initializeBuilderRegistry(_builderRegistryProxy);
+        _backersManagerProxy.initializeV3(_maxDistributionsPerBatch);
 
         vm.broadcast();
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
