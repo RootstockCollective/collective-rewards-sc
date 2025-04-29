@@ -68,6 +68,11 @@ contract UpgradeV3 {
         _resetUpgrader();
     }
 
+    /**
+     * @notice Resets the upgrader role back to the original address
+     * @dev reverts if not called by the original upgrader
+     * @dev Prevents this contract from being permanently stuck with the upgrader role if upgrades are no longer needed
+     */
     function resetUpgrader() public {
         if (msg.sender != upgrader) revert NotUpgrader();
         _resetUpgrader();

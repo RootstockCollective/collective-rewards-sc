@@ -70,6 +70,9 @@ contract UpgradeV3Test is Test {
         vm.assertGt(upgradeV3.MAX_DISTRIBUTIONS_PER_BATCH(), 0);
     }
 
+    /**
+     * SCENARIO: original upgrader can reclaim UpgradeV3 upgrader role
+     */
     function test_fork_upgradeV3ResetUpgrader() public {
         // GIVEN UpgradeV3 is setup
         // AND the upgrader is set to UpgradeV3 address
@@ -84,6 +87,9 @@ contract UpgradeV3Test is Test {
         vm.assertEq(address(backersManager.governanceManager().upgrader()), upgrader);
     }
 
+    /**
+     * SCENARIO: only original upgrader can reclaim UpgradeV3 upgrader role
+     */
     function test_fork_upgradeV3ResetUpgrader_unauthorized() public {
         // GIVEN UpgradeV3 is setup
         // AND the upgrader is set to UpgradeV3 address
