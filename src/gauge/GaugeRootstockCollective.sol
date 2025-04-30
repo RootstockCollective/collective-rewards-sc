@@ -378,6 +378,13 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // Gauges cannot be incentivized before the distribution of the cycle finishes
         if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
 
+        if (
+            IERC20(rewardToken).balanceOf(msg.sender) < amount_
+                || IERC20(rewardToken).allowance(msg.sender, address(this)) < amount_
+        ) {
+            revert NotEnoughAmount();
+        }
+
         _notifyRewardAmount(
             rewardToken,
             0, /*builderAmount_*/
