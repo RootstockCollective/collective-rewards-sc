@@ -436,13 +436,13 @@ contract BackersManagerRootstockCollective is
         internal
         returns (uint256 newBackerTotalAllocation_, uint256 newTotalPotentialReward_)
     {
-        builderRegistry_.requireInitializedBuilder(gauge_);
+        bool _isHalted = builderRegistry_.isGaugeHaltedValidated(gauge_);
 
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
             gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
 
         // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
-        if (builderRegistry_.isGaugeHalted(address(gauge_))) {
+        if (_isHalted) {
             if (!_isNegative) {
                 revert PositiveAllocationOnHaltedGauge();
             }
