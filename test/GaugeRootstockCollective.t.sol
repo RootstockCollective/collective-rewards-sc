@@ -366,12 +366,21 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         address _incentivizer2 = makeAddr("incentivizer2");
         // WHEN an Incentivizer has rewardToken
         vm.startPrank(_incentivizer2);
-        rewardToken.mint(address(_incentivizer2), 50 ether);
+        rewardToken.mint(address(_incentivizer2), 100 ether);
         rewardToken.approve(address(gauge), 50 ether);
 
         // WHEN 100 ether are distributed by Incentivizer in rewardToken
         //  THEN tx reverts because of insufficient allowance
-        vm.expectRevert();
+        vm.expectRevert(GaugeRootstockCollective.NotEnoughAmount.selector);
+        gauge.incentivizeWithRewardToken(100 ether);
+
+        // Adjust allowance to be sufficient but reduce balance
+        rewardToken.approve(address(gauge), 100 ether);
+        rewardToken.burn(address(_incentivizer2), 50 ether);
+
+        // WHEN 100 ether are distributed by Incentivizer in rewardToken
+        //  THEN tx reverts because of insufficient balance
+        vm.expectRevert(GaugeRootstockCollective.NotEnoughAmount.selector);
         gauge.incentivizeWithRewardToken(100 ether);
 
         // WHEN 100 ether are distributed by Incentivizer
