@@ -571,7 +571,7 @@ contract BackersManagerRootstockCollective is
         returns (uint256)
     {
         uint256 _rewardShares = gauge_.rewardShares();
-        gauge_.updateCycleRewardPerTokenStored(periodFinish_);
+        gauge_.updateCycleStartRewardPerToken(periodFinish_);
         // [N] = [N] * [N] / [N]
         uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
         // [N] = [N] * [N] / [N]

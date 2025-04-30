@@ -72,4 +72,11 @@ contract CommunityBanBuilderTest is HaltedBuilderBehavior {
         // THEN builder2Receiver coinbase balance is 43.75 + 50. All the rewards are to him
         assertEq(builder2Receiver.balance, 9.375 ether);
     }
+
+    function _assertGaugeRewards() internal view override {
+        // THEN gauge rewardToken balance is
+        assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 9.375 ether, 100);
+        // THEN gauge coinbase balance is
+        assertApproxEqAbs(address(gauge).balance, 0.9375 ether, 100);
+    }
 }
