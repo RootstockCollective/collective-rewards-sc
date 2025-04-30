@@ -88,6 +88,11 @@ contract BackersManagerRootstockCollective is
         _;
     }
 
+    modifier onlyConfigurator() {
+        governanceManager.validateConfigurator(msg.sender);
+        _;
+    }
+
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
@@ -399,10 +404,7 @@ contract BackersManagerRootstockCollective is
      * @dev permission will be delegated from upgrader to different role once the GovernanceManagerRootStockCollective
      * contract is upgraded
      */
-    function updateMaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_) external {
-        if (msg.sender != governanceManager.upgrader()) {
-            revert NotAuthorized();
-        }
+    function updateMaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_) external onlyConfigurator {
         uint256 _oldValue = maxDistributionsPerBatch;
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
         emit MaxDistributionsPerBatchUpdated(_oldValue, maxDistributionsPerBatch_);

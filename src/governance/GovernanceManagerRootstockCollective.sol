@@ -52,6 +52,8 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
     address public kycApprover;
     /// @notice The upgrader address with contract upgradeability permissions
     address public upgrader;
+    /// @notice The address with the right to change contract parameters
+    address public configurator;
 
     /**
      * @dev Disables initializers for the contract. This ensures the contract is upgradeable.
@@ -76,6 +78,10 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _updateFoundationTreasury(foundationTreasury_);
         _updateKYCApprover(kycApprover_);
         _updateUpgrader(upgrader_);
+    }
+
+    function initializeV2(address configurator_) public reinitializer(2) onlyAuthorizedUpgrader {
+        _updateConfigurator(configurator_);
     }
 
     // -----------------------------
@@ -107,6 +113,12 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _updateUpgrader(upgrader_);
     }
 
+    function updateConfigurator(address configurator_) public {
+        _validateConfigurator(msg.sender);
+
+        _updateConfigurator(configurator_);
+    }
+
     function validateGovernor(address account_) external view {
         if (account_ != governor) revert NotGovernor();
     }
@@ -123,6 +135,10 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
 
     function validateKycApprover(address account_) external view {
         if (account_ != kycApprover) revert NotKycApprover();
+    }
+
+    function validateConfigurator(address account_) external view {
+        _validateConfigurator(account_);
     }
 
     function validateFoundationTreasury(address account_) external view {
@@ -157,11 +173,22 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         emit UpgraderUpdated(upgrader_, msg.sender);
     }
 
+    function _updateConfigurator(address configurator_) private onlyNonZeroAddress(configurator_) {
+        configurator = configurator_;
+        emit ConfiguratorUpdated(configurator_, msg.sender);
+    }
+
     function _authorizeChanger(address authorizedChanger_) internal {
         _authorizedChanger = authorizedChanger_;
     }
 
     function _authorizeUpgrade(address newImplementation_) internal override onlyAuthorizedUpgrader { }
+
+    function _validateConfigurator(address account_) internal view {
+        if (account_ != configurator && account_ != _authorizedChanger && account_ != governor) {
+            revert NotAuthorizedConfigurator(account_);
+        }
+    }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 import { BaseTest, BackersManagerRootstockCollective, GaugeRootstockCollective } from "./BaseTest.sol";
+import { IGovernanceManagerRootstockCollective } from "../src/interfaces/IGovernanceManagerRootstockCollective.sol";
 import { BuilderRegistryRootstockCollective } from "../src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 
@@ -1823,15 +1824,15 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: upgrader can update maxDistributionsPerBatch
+     * SCENARIO: configurator can update maxDistributionsPerBatch
      */
     function test_UpdateMaxDistributionsPerBatch() public {
         // GIVEN a new maxDistributionsPerBatch value
         uint256 _newMaxDistributionsPerBatch = 30;
         uint256 _oldMaxDistributionsPerBatch = backersManager.maxDistributionsPerBatch();
 
-        // WHEN upgrader calls updateMaxDistributionsPerBatch
-        vm.prank(governanceManager.upgrader());
+        // WHEN configurator calls updateMaxDistributionsPerBatch
+        vm.prank(governanceManager.configurator());
         vm.expectEmit();
         emit MaxDistributionsPerBatchUpdated(_oldMaxDistributionsPerBatch, _newMaxDistributionsPerBatch);
         backersManager.updateMaxDistributionsPerBatch(_newMaxDistributionsPerBatch);
@@ -1841,15 +1842,17 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: non-upgrader cannot update maxDistributionsPerBatch
+     * SCENARIO: non-configurator cannot update maxDistributionsPerBatch
      */
-    function test_RevertUpdateMaxDistributionsPerBatchNotUpgrader() public {
+    function test_RevertUpdateMaxDistributionsPerBatchNotConfigurator() public {
         // GIVEN a new maxDistributionsPerBatch value
         uint256 _newMaxDistributionsPerBatch = 30;
 
-        // WHEN a non-upgrader tries to update maxDistributionsPerBatch
+        // WHEN a non-configurator tries to update maxDistributionsPerBatch
         vm.prank(alice);
-        vm.expectRevert(BackersManagerRootstockCollective.NotAuthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(IGovernanceManagerRootstockCollective.NotAuthorizedConfigurator.selector, alice)
+        );
         backersManager.updateMaxDistributionsPerBatch(_newMaxDistributionsPerBatch);
     }
 
@@ -1863,7 +1866,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN maxDistributionsPerBatch is updated to a smaller value
         uint256 _newMaxDistributionsPerBatch = 3; // Smaller than the number of gauges (20)
-        vm.prank(governanceManager.upgrader());
+        vm.prank(governanceManager.configurator());
         backersManager.updateMaxDistributionsPerBatch(_newMaxDistributionsPerBatch);
 
         // WHEN distribute is called again
