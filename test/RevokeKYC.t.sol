@@ -217,7 +217,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         builderRegistry.approveBuilderKYC(builder);
 
         // THEN gauge is still halted
-        assertEq(builderRegistry.isGaugeHalted(address(gauge)), true);
+        assertEq(backersManager.isGaugeHalted(address(gauge)), true);
         // THEN gauge rewardShares is 1209600 ether = 2 * 1 WEEK
         assertEq(gauge.rewardShares(), 1_209_600 ether);
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
@@ -228,7 +228,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         builderRegistry.unpauseSelf(0.1 ether);
 
         // THEN gauge is not halted anymore
-        assertEq(builderRegistry.isGaugeHalted(address(gauge)), false);
+        assertEq(backersManager.isGaugeHalted(address(gauge)), false);
         // THEN gauge rewardShares is 1209600 ether = 2 * 1 WEEK
         assertEq(gauge.rewardShares(), 1_209_600 ether);
         // THEN total allocation is 8467200 ether = 16 * 1 WEEK

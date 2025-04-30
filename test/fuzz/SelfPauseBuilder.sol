@@ -119,7 +119,7 @@ contract SelfPauseBuilderFuzzTest is BaseFuzz {
                 uint256 _allocationBefore = backersAllocations[i][j];
                 backersAllocations[i][j] = uint256(keccak256(abi.encodePacked(block.timestamp, i, j))) % MAX_VOTE;
                 // self paused gauges don't modify the totalPotentialReward
-                if (!builderRegistry.isGaugeHalted(address(backersGauges[i][j]))) {
+                if (!backersManager.isGaugeHalted(address(backersGauges[i][j]))) {
                     if (backersAllocations[i][j] > _allocationBefore) {
                         _expectedTotalPotentialReward += (backersAllocations[i][j] - _allocationBefore)
                             * backersManager.timeUntilNextCycle(block.timestamp);

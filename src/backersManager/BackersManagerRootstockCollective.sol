@@ -10,6 +10,7 @@ import { BuilderRegistryRootstockCollective } from "../builderRegistry/BuilderRe
 import { ICollectiveRewardsCheckRootstockCollective } from
     "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { CycleTimeKeeperRootstockCollective } from "./CycleTimeKeeperRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
 
@@ -22,6 +23,8 @@ contract BackersManagerRootstockCollective is
     ICollectiveRewardsCheckRootstockCollective,
     ERC165Upgradeable
 {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
@@ -130,6 +133,11 @@ contract BackersManagerRootstockCollective is
     // -----------------------------
 
     uint256 public maxDistributionsPerBatch;
+
+    /// @notice array of all the halted gauges
+    EnumerableSet.AddressSet internal _haltedGauges;
+    /// @notice map of last period finish for halted gauges
+    mapping(GaugeRootstockCollective gauge => uint256 lastPeriodFinish) public haltedGaugeLastPeriodFinish;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -363,8 +371,8 @@ contract BackersManagerRootstockCollective is
      *  are not updated on the distribution anymore
      */
     function periodFinish() external view returns (uint256) {
-        if (builderRegistry.isGaugeHalted(msg.sender)) {
-            return builderRegistry.haltedGaugeLastPeriodFinish(GaugeRootstockCollective(msg.sender));
+        if (isGaugeHalted(msg.sender)) {
+            return haltedGaugeLastPeriodFinish[GaugeRootstockCollective(msg.sender)];
         }
         return _periodFinish;
     }
@@ -410,6 +418,27 @@ contract BackersManagerRootstockCollective is
         emit MaxDistributionsPerBatchUpdated(_oldValue, maxDistributionsPerBatch_);
     }
 
+    /**
+     * @notice get length of halted gauges array
+     */
+    function getHaltedGaugesLength() public view returns (uint256) {
+        return _haltedGauges.length();
+    }
+
+    /**
+     * @notice get halted gauge by index
+     */
+    function getHaltedGaugeAt(uint256 index_) public view returns (address) {
+        return _haltedGauges.at(index_);
+    }
+
+    /**
+     * @notice return true is gauge is halted
+     */
+    function isGaugeHalted(address gauge_) public view returns (bool) {
+        return _haltedGauges.contains(gauge_);
+    }
+
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
@@ -442,7 +471,7 @@ contract BackersManagerRootstockCollective is
             gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
 
         // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
-        if (builderRegistry_.isGaugeHalted(address(gauge_))) {
+        if (isGaugeHalted(address(gauge_))) {
             if (!_isNegative) {
                 revert PositiveAllocationOnHaltedGauge();
             }
@@ -585,6 +614,18 @@ contract BackersManagerRootstockCollective is
     }
 
     /**
+     * @notice removes halted gauge shares to not be accounted on the distribution anymore
+     * @dev reverts if it is executed in distribution period because changing the totalPotentialReward
+     * produce a miscalculation of rewards
+     * @param gauge_ gauge contract to be halted
+     */
+    function _haltGaugeShares(GaugeRootstockCollective gauge_) internal notInDistributionPeriod {
+        // allocations are not considered for the reward's distribution
+        totalPotentialReward -= gauge_.rewardShares();
+        haltedGaugeLastPeriodFinish[gauge_] = _periodFinish;
+    }
+
+    /**
      * @notice approves rewardTokens to a given gauge
      * @dev give full allowance when it is community approved and remove it when it is community banned
      * reverts if the reward token contract returns false on the approval
@@ -598,40 +639,42 @@ contract BackersManagerRootstockCollective is
     }
 
     /**
-     * @notice removes halted gauge shares to not be accounted on the distribution anymore
-     * @dev reverts if it is executed in distribution period because changing the totalPotentialReward
-     * produce a miscalculation of rewards
-     * @param gauge_ gauge contract to be halted
-     */
-    function haltGaugeShares(GaugeRootstockCollective gauge_) external onlyBuilderRegistry notInDistributionPeriod {
-        // allocations are not considered for the reward's distribution
-        totalPotentialReward -= gauge_.rewardShares();
-        builderRegistry.setHaltedGaugeLastPeriodFinish(gauge_, _periodFinish);
-    }
-
-    /**
      * @notice adds resumed gauge shares to be accounted on the distribution again
      * @dev reverts if it is executed in distribution period because changing the totalPotentialReward
      * produce a miscalculation of rewards
      * @param gauge_ gauge contract to be resumed
      */
     function resumeGaugeShares(GaugeRootstockCollective gauge_) external onlyBuilderRegistry notInDistributionPeriod {
+        _haltedGauges.remove(address(gauge_));
         // gauges cannot be resumed before the distribution,
         // incentives can stay in the gauge because lastUpdateTime > lastTimeRewardApplicable
         if (_periodFinish <= block.timestamp) revert BeforeDistribution();
         // allocations are considered again for the reward's distribution
         // if there was a distribution we need to update the shares with the full cycle duration
-        BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
-        if (_builderRegistry.haltedGaugeLastPeriodFinish(gauge_) < _periodFinish) {
+        if (haltedGaugeLastPeriodFinish[gauge_] < _periodFinish) {
             (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
             totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-                0, 0, _builderRegistry.haltedGaugeLastPeriodFinish(gauge_), _cycleStart, _cycleDuration
+                0, 0, haltedGaugeLastPeriodFinish[gauge_], _cycleStart, _cycleDuration
             );
         } else {
             // halt and resume were in the same cycle, we don't update the shares
             totalPotentialReward += gauge_.rewardShares();
         }
-        _builderRegistry.setHaltedGaugeLastPeriodFinish(gauge_, 0);
+        haltedGaugeLastPeriodFinish[gauge_] = 0;
+    }
+
+    /**
+     * @notice Halts a gauge, preventing it from being considered in reward distributions.
+     * @dev This function removes the gauge's shares from the total potential reward calculation.
+     *      It can only be called by the Builder Registry.
+     * @param gauge_ The address of the gauge to halt.
+     * @return halted_ True if the gauge was successfully halted, false if it was already halted.
+     */
+    function haltGauge(GaugeRootstockCollective gauge_) external onlyBuilderRegistry returns (bool halted_) {
+        if (_haltedGauges.add(address(gauge_))) {
+            _haltGaugeShares(gauge_);
+            halted_ = true;
+        }
     }
 
     /**

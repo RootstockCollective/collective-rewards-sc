@@ -374,7 +374,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
-        if (builderRegistry.isGaugeHalted(address(this))) revert GaugeHalted();
+        if (backersManager.isGaugeHalted(address(this))) revert GaugeHalted();
         // Gauges cannot be incentivized before the distribution of the cycle finishes
         if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
 
@@ -406,7 +406,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
-        if (builderRegistry.isGaugeHalted(address(this))) revert GaugeHalted();
+        if (backersManager.isGaugeHalted(address(this))) revert GaugeHalted();
         // Gauges cannot be incentivized before the distribution of the cycle finishes
         if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
 

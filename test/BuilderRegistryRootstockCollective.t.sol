@@ -329,15 +329,15 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         (,,,, bool _selfPaused,,) = builderRegistry.builderState(builder);
         assertEq(_selfPaused, false);
         // THEN gauge is not halted
-        assertEq(builderRegistry.isGaugeHalted(address(gauge)), false);
+        assertEq(backersManager.isGaugeHalted(address(gauge)), false);
         // THEN halted gauges array length is 0
-        assertEq(builderRegistry.getHaltedGaugesLength(), 0);
+        assertEq(backersManager.getHaltedGaugesLength(), 0);
         // THEN gauge is rewarded
         assertEq(builderRegistry.isGaugeRewarded(address(gauge)), true);
         // THEN rewarded gauges array length is 2
         assertEq(builderRegistry.getGaugesLength(), 2);
         // THEN haltedGaugeLastPeriodFinish is 0
-        assertEq(builderRegistry.haltedGaugeLastPeriodFinish(gauge), 0);
+        assertEq(backersManager.haltedGaugeLastPeriodFinish(gauge), 0);
     }
 
     /**
@@ -390,15 +390,15 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         (,,,, bool _selfPaused,,) = builderRegistry.builderState(builder);
         assertEq(_selfPaused, true);
         // THEN gauge is halted
-        assertEq(builderRegistry.isGaugeHalted(address(gauge)), true);
+        assertEq(backersManager.isGaugeHalted(address(gauge)), true);
         // THEN halted gauges array length is 1
-        assertEq(builderRegistry.getHaltedGaugesLength(), 1);
+        assertEq(backersManager.getHaltedGaugesLength(), 1);
         // THEN gauge is not rewarded
         assertEq(builderRegistry.isGaugeRewarded(address(gauge)), false);
         // THEN rewarded gauges array length is 1
         assertEq(builderRegistry.getGaugesLength(), 1);
         // THEN haltedGaugeLastPeriodFinish is periodFinish
-        assertEq(builderRegistry.haltedGaugeLastPeriodFinish(gauge), backersManager.periodFinish());
+        assertEq(backersManager.haltedGaugeLastPeriodFinish(gauge), backersManager.periodFinish());
     }
 
     /**
@@ -554,15 +554,15 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         (, bool _kycApproved,,,,,) = builderRegistry.builderState(builder);
         assertEq(_kycApproved, false);
         // THEN gauge is halted
-        assertEq(builderRegistry.isGaugeHalted(address(gauge)), true);
+        assertEq(backersManager.isGaugeHalted(address(gauge)), true);
         // THEN halted gauges array length is 1
-        assertEq(builderRegistry.getHaltedGaugesLength(), 1);
+        assertEq(backersManager.getHaltedGaugesLength(), 1);
         // THEN gauge is not rewarded
         assertEq(builderRegistry.isGaugeRewarded(address(gauge)), false);
         // THEN rewarded gauges array length is 1
         assertEq(builderRegistry.getGaugesLength(), 1);
         // THEN haltedGaugeLastPeriodFinish is periodFinish
-        assertEq(builderRegistry.haltedGaugeLastPeriodFinish(gauge), backersManager.periodFinish());
+        assertEq(backersManager.haltedGaugeLastPeriodFinish(gauge), backersManager.periodFinish());
     }
 
     /**
@@ -583,15 +583,15 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         (, bool _kycApproved,,,,,) = builderRegistry.builderState(builder);
         assertEq(_kycApproved, true);
         // THEN gauge is not halted
-        assertEq(builderRegistry.isGaugeHalted(address(gauge)), false);
+        assertEq(backersManager.isGaugeHalted(address(gauge)), false);
         // THEN halted gauges array length is 0
-        assertEq(builderRegistry.getHaltedGaugesLength(), 0);
+        assertEq(backersManager.getHaltedGaugesLength(), 0);
         // THEN gauge is rewarded
         assertEq(builderRegistry.isGaugeRewarded(address(gauge)), true);
         // THEN rewarded gauges array length is 2
         assertEq(builderRegistry.getGaugesLength(), 2);
         // THEN haltedGaugeLastPeriodFinish is 0
-        assertEq(builderRegistry.haltedGaugeLastPeriodFinish(gauge), 0);
+        assertEq(backersManager.haltedGaugeLastPeriodFinish(gauge), 0);
     }
 
     /**
@@ -701,15 +701,15 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         (,, bool _communityApproved,,,,) = builderRegistry.builderState(builder);
         assertEq(_communityApproved, false);
         // THEN gauge is halted
-        assertEq(builderRegistry.isGaugeHalted(address(gauge)), true);
+        assertEq(backersManager.isGaugeHalted(address(gauge)), true);
         // THEN halted gauges array length is 1
-        assertEq(builderRegistry.getHaltedGaugesLength(), 1);
+        assertEq(backersManager.getHaltedGaugesLength(), 1);
         // THEN gauge is not rewarded
         assertEq(builderRegistry.isGaugeRewarded(address(gauge)), false);
         // THEN rewarded gauges array length is 1
         assertEq(builderRegistry.getGaugesLength(), 1);
         // THEN haltedGaugeLastPeriodFinish is periodFinish
-        assertEq(builderRegistry.haltedGaugeLastPeriodFinish(gauge), backersManager.periodFinish());
+        assertEq(backersManager.haltedGaugeLastPeriodFinish(gauge), backersManager.periodFinish());
     }
 
     /**
@@ -855,7 +855,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         // THEN builder is kyc approved
         assertEq(_kycApproved, true);
         // THEN gauge remains halted
-        assertEq(builderRegistry.isGaugeHalted(address(gauge)), true);
+        assertEq(backersManager.isGaugeHalted(address(gauge)), true);
     }
 
     /**

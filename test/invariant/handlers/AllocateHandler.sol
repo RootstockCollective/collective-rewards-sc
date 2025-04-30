@@ -54,7 +54,7 @@ contract AllocateHandler is BaseHandler {
 
         GaugeRootstockCollective _gauge = baseTest.gaugesArray(gaugeIndex_);
         uint256 _allocationBefore = backerGaugeAllocation[msg.sender][_gauge];
-        if (builderRegistry.isGaugeHalted(address(_gauge))) {
+        if (backersManager.isGaugeHalted(address(_gauge))) {
             if (allocation_ > _allocationBefore) {
                 allocation_ = _allocationBefore;
             }

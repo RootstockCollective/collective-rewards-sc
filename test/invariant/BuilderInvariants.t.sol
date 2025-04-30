@@ -15,7 +15,7 @@ contract BuilderInvariants is BaseInvariants {
 
             bool _expectedIsHalted = !_kycApproved || !_communityApproved || _revoked;
 
-            assertEq(builderRegistry.isGaugeHalted(_gauge), _gauge != address(0) && _expectedIsHalted);
+            assertEq(backersManager.isGaugeHalted(_gauge), _gauge != address(0) && _expectedIsHalted);
 
             assertEq(builderRegistry.isGaugeRewarded(_gauge), _gauge != address(0) && !_expectedIsHalted);
         }

@@ -120,7 +120,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     /// @notice array of all the operational gauges
     EnumerableSet.AddressSet internal _gauges;
     /// @notice array of all the halted gauges
-    EnumerableSet.AddressSet internal _haltedGauges;
+    EnumerableSet.AddressSet internal _deprecatedHaltedGauges;
     /// @notice gauge factory contract address
     GaugeFactoryRootstockCollective public gaugeFactory;
     /// @notice gauge contract for a builder
@@ -128,7 +128,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     /// @notice builder address for a gauge contract
     mapping(GaugeRootstockCollective gauge => address builder) public gaugeToBuilder;
     /// @notice map of last period finish for halted gauges
-    mapping(GaugeRootstockCollective gauge => uint256 lastPeriodFinish) public haltedGaugeLastPeriodFinish;
+    mapping(GaugeRootstockCollective gauge => uint256 lastPeriodFinish) internal _deprecatedHaltedGaugeLastPeriodFinish;
     /// @notice time that must elapse for a new reward percentage from a builder to be applied
     uint128 public rewardPercentageCooldown;
     /// @notice address of the BackersManagerRootstockCollective contract
@@ -166,20 +166,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
         rewardPercentageCooldown = rewardPercentageCooldown_;
-    }
-
-    // -----------------------------
-    // ---- External Functions -----
-    // -----------------------------
-
-    function setHaltedGaugeLastPeriodFinish(
-        GaugeRootstockCollective gauge_,
-        uint256 periodFinish_
-    )
-        external
-        onlyBackersManager
-    {
-        haltedGaugeLastPeriodFinish[gauge_] = periodFinish_;
     }
 
     /**
@@ -551,27 +537,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         return _gauges.contains(gauge_);
     }
 
-    /**
-     * @notice get length of halted gauges array
-     */
-    function getHaltedGaugesLength() public view returns (uint256) {
-        return _haltedGauges.length();
-    }
-
-    /**
-     * @notice get halted gauge by index
-     */
-    function getHaltedGaugeAt(uint256 index_) public view returns (address) {
-        return _haltedGauges.at(index_);
-    }
-
-    /**
-     * @notice return true is gauge is halted
-     */
-    function isGaugeHalted(address gauge_) public view returns (bool) {
-        return _haltedGauges.contains(gauge_);
-    }
-
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
@@ -620,10 +585,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param gauge_ gauge contract to be halted
      */
     function _haltGauge(GaugeRootstockCollective gauge_) internal {
-        if (!isGaugeHalted(address(gauge_))) {
-            _haltedGauges.add(address(gauge_));
+        if (backersManager.haltGauge(gauge_)) {
             _gauges.remove(address(gauge_));
-            backersManager.haltGaugeShares(gauge_);
         }
     }
 
@@ -635,7 +598,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function _resumeGauge(GaugeRootstockCollective gauge_) internal {
         if (_canBeResumed(gauge_)) {
             _gauges.add(address(gauge_));
-            _haltedGauges.remove(address(gauge_));
             backersManager.resumeGaugeShares(gauge_);
         }
     }

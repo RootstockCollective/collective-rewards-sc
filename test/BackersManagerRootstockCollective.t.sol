@@ -435,7 +435,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN there are no active gauges
         assertEq(builderRegistry.getGaugesLength(), 0);
         // THEN all there are 2 halted gauges
-        assertEq(builderRegistry.getHaltedGaugesLength(), 2);
+        assertEq(backersManager.getHaltedGaugesLength(), 2);
 
         // AND notifyRewardAmount is called with coinbase
         //  THEN it reverts with NoGaugesForDistribution error
