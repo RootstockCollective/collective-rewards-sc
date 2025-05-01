@@ -477,7 +477,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param gauge_ The gauge contract to check
      * @return bool True if the gauge is halted, false otherwise
      */
-    function isGaugeHaltedValidated(GaugeRootstockCollective gauge_) external view returns (bool) {
+    function validateGaugeHalted(GaugeRootstockCollective gauge_) external view returns (bool) {
         requireInitializedBuilder(gauge_);
         return isGaugeHalted(address(gauge_));
     }
