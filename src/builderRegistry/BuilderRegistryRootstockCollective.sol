@@ -172,16 +172,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     // ---- External Functions -----
     // -----------------------------
 
-    function setHaltedGaugeLastPeriodFinish(
-        GaugeRootstockCollective gauge_,
-        uint256 periodFinish_
-    )
-        external
-        onlyBackersManager
-    {
-        haltedGaugeLastPeriodFinish[gauge_] = periodFinish_;
-    }
-
     /**
      * @notice Builder submits a request to update his rewardReceiver address,
      * the request will then need to be approved by `approveNewRewardReceiver`
@@ -623,7 +613,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         if (!isGaugeHalted(address(gauge_))) {
             _haltedGauges.add(address(gauge_));
             _gauges.remove(address(gauge_));
-            backersManager.haltGaugeShares(gauge_);
+            haltedGaugeLastPeriodFinish[gauge_] = backersManager.haltGaugeShares(gauge_);
         }
     }
 
@@ -636,7 +626,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         if (_canBeResumed(gauge_)) {
             _gauges.add(address(gauge_));
             _haltedGauges.remove(address(gauge_));
-            backersManager.resumeGaugeShares(gauge_);
+            backersManager.resumeGaugeShares(gauge_, haltedGaugeLastPeriodFinish[gauge_]);
+            haltedGaugeLastPeriodFinish[gauge_] = 0;
         }
     }
 
