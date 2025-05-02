@@ -603,9 +603,15 @@ contract BackersManagerRootstockCollective is
      * produce a miscalculation of rewards
      * @param gauge_ gauge contract to be halted
      */
-    function haltGaugeShares(GaugeRootstockCollective gauge_) external onlyBuilderRegistry notInDistributionPeriod {
+    function haltGaugeShares(GaugeRootstockCollective gauge_)
+        external
+        onlyBuilderRegistry
+        notInDistributionPeriod
+        returns (uint256)
+    {
         // allocations are not considered for the reward's distribution
         totalPotentialReward -= gauge_.rewardShares();
+        return _periodFinish;
     }
 
     /**

@@ -613,9 +613,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         if (!isGaugeHalted(address(gauge_))) {
             _haltedGauges.add(address(gauge_));
             _gauges.remove(address(gauge_));
-            BackersManagerRootstockCollective _backersManager = backersManager;
-            _backersManager.haltGaugeShares(gauge_);
-            haltedGaugeLastPeriodFinish[gauge_] = _backersManager.periodFinish();
+            haltedGaugeLastPeriodFinish[gauge_] = backersManager.haltGaugeShares(gauge_);
         }
     }
 
