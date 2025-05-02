@@ -602,6 +602,7 @@ contract BackersManagerRootstockCollective is
      * @dev reverts if it is executed in distribution period because changing the totalPotentialReward
      * produce a miscalculation of rewards
      * @param gauge_ gauge contract to be halted
+     * @return periodFinish_ timestamp indicating the end of the current rewards period
      */
     function haltGaugeShares(GaugeRootstockCollective gauge_)
         external
