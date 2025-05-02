@@ -471,6 +471,18 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
+     * @notice Validates if a gauge is halted and can accept allocations
+     * @dev This function first checks if the gauge is initialized and then checks if it is halted.
+     *      Halted gauges can only have negative allocations (withdrawals) and are not considered for rewards.
+     * @param gauge_ The gauge contract to check
+     * @return bool True if the gauge is halted, false otherwise
+     */
+    function validateGaugeHalted(GaugeRootstockCollective gauge_) external view returns (bool) {
+        requireInitializedBuilder(gauge_);
+        return isGaugeHalted(address(gauge_));
+    }
+
+    /**
      * @notice return true if builder is operational
      *  kycApproved == true &&
      *  communityApproved == true &&
@@ -599,7 +611,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @dev reverts if it is not called by the backers manager
      * @param gauge_ The gauge to validate.
      */
-    function requireInitializedBuilder(GaugeRootstockCollective gauge_) external view {
+    function requireInitializedBuilder(GaugeRootstockCollective gauge_) public view {
         address _builder = gaugeToBuilder[gauge_];
         if (_builder == address(0)) revert GaugeDoesNotExist();
         if (!builderState[_builder].initialized) revert BuilderNotInitialized();
