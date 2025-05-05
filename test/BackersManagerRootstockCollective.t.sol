@@ -13,7 +13,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     // ----------- Events ----------
     // -----------------------------
 
-    event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_);
+    event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_, bool backerOptedOut_);
     event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
     event RewardDistributionStarted(address indexed sender_);
     event RewardDistributed(address indexed sender_);
@@ -133,9 +133,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // WHEN alice allocates 2 ether to builder and 6 ether to builder2
         //  THEN 2 NewAllocation events are emitted
         vm.expectEmit();
-        emit NewAllocation(alice, address(gaugesArray[0]), 2 ether);
+        emit NewAllocation(alice, address(gaugesArray[0]), 2 ether, false);
         vm.expectEmit();
-        emit NewAllocation(alice, address(gaugesArray[1]), 6 ether);
+        emit NewAllocation(alice, address(gaugesArray[1]), 6 ether, false);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         // AND bob allocates 4 ether to builder and 10 ether to builder2
