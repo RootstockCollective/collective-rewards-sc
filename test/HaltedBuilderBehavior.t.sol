@@ -4,13 +4,85 @@ pragma solidity 0.8.20;
 import { BaseTest, BackersManagerRootstockCollective } from "./BaseTest.sol";
 
 abstract contract HaltedBuilderBehavior is BaseTest {
-    function _initialState() internal virtual { }
+    function _initialState() internal virtual;
 
-    function _haltGauge() internal virtual { }
+    function _haltGauge() internal virtual;
+
+    function _assertGaugeRewards() internal view virtual;
 
     /**
      * SCENARIO: builder is halted in the middle of an cycle having allocation.
-     *  Backers receive all the rewards for the current cycle
+     *  Backers reduce their allocation to 0 while the gauge is halted
+     *  Backers receive all the generated rewards for the current cycle at the end of the cycle
+     *  Gauge keeps the missing rewards
+     */
+    function test_HaltedGaugeReceiveCurrentRewardsDeallocation() public {
+        // GIVEN alice and bob allocate to builder and builder2
+        //  AND 100 rewardToken and 10 coinbase are distributed
+        //   AND half cycle pass
+        //    AND builder is halted
+        _initialState();
+
+        // GIVEN alice allocates 0 to builder
+        allocationsArray[0] = 0 ether;
+        allocationsArray[1] = 6 ether;
+        vm.prank(alice);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // GIVEN bob allocates 0 to builder
+        allocationsArray[0] = 0 ether;
+        allocationsArray[1] = 8 ether;
+        vm.prank(bob);
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+
+        // WHEN alice claim rewards
+        vm.startPrank(alice);
+        backersManager.claimBackerRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is 0
+        assertEq(rewardToken.balanceOf(alice), 0);
+        // THEN alice coinbase balance is 0
+        assertEq(alice.balance, 0);
+
+        // WHEN bob claim rewards
+        vm.startPrank(bob);
+        backersManager.claimBackerRewards(gaugesArray);
+
+        // THEN bob rewardToken balance is 0
+        assertEq(rewardToken.balanceOf(bob), 0);
+        // THEN bob coinbase balance is 0
+        assertEq(bob.balance, 0);
+
+        // AND cycle finish
+        _skipAndStartNewCycle();
+
+        // THEN total allocation is 8467200 ether = 14 * 1 WEEK
+        assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
+
+        // WHEN alice claim rewards
+        vm.startPrank(alice);
+        backersManager.claimBackerRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is 21.875 = (100 * 14 / 16 * 6 /14 ) * 0.5 + ((100 * 2 / 16) * 0.5
+        assertApproxEqAbs(rewardToken.balanceOf(alice), 21.875 ether, 100);
+        // THEN alice coinbase balance is 2.5 = (10 * 14 / 16 * 6 /14 ) * 0.5 + ((10 * 2 / 16) * 0.5
+        assertApproxEqAbs(alice.balance, 2.1875 ether, 100);
+
+        // WHEN bob claim rewards
+        vm.startPrank(bob);
+        backersManager.claimBackerRewards(gaugesArray);
+
+        // THEN bob rewardToken balance is 25 = (100 * 8 / 16) * 0.5
+        assertApproxEqAbs(rewardToken.balanceOf(bob), 25 ether, 100);
+        // THEN bob coinbase balance is 2.5 = (10 * 8 / 16) * 0.5
+        assertApproxEqAbs(bob.balance, 2.5 ether, 100);
+
+        _assertGaugeRewards();
+    }
+
+    /**
+     * SCENARIO: builder is halted in the middle of an cycle having allocation.
+     *  Backers receive all the rewards for the current cycle at the end of the cycle
      */
     function test_HaltedGaugeReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
@@ -18,6 +90,25 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         //   AND half cycle pass
         //    AND builder is halted
         _initialState();
+
+        // WHEN alice claim rewards
+        vm.startPrank(alice);
+        backersManager.claimBackerRewards(gaugesArray);
+
+        // THEN alice rewardToken balance is 0
+        assertEq(rewardToken.balanceOf(alice), 0);
+        // THEN alice coinbase balance is 0
+        assertEq(alice.balance, 0);
+
+        // WHEN bob claim rewards
+        vm.startPrank(bob);
+        backersManager.claimBackerRewards(gaugesArray);
+
+        // THEN bob rewardToken balance is 0
+        assertEq(rewardToken.balanceOf(bob), 0);
+        // THEN bob coinbase balance is 0
+        assertEq(bob.balance, 0);
+
         // AND cycle finish
         _skipAndStartNewCycle();
 
@@ -44,8 +135,8 @@ abstract contract HaltedBuilderBehavior is BaseTest {
     }
 
     /**
-     * SCENARIO: builder is halted in the middle of an cycle having allocation.  and builder
-     *  don't receive those rewards on the next cycle
+     * SCENARIO: builder is halted in the middle of an cycle having allocation and builder
+     *  doesn't receive those rewards on the next cycle
      */
     function test_HaltedGaugeDoNotReceiveNextRewards() public {
         // GIVEN alice and bob allocate to builder and builder2

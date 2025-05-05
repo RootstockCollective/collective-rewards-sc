@@ -186,4 +186,11 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN backer reward percentage to apply is 80%
         assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.8 ether);
     }
+
+    function _assertGaugeRewards() internal view override {
+        // THEN gauge rewardToken balance is
+        assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 9.375 ether, 100);
+        // THEN gauge coinbase balance is
+        assertApproxEqAbs(address(gauge).balance, 0.9375 ether, 100);
+    }
 }
