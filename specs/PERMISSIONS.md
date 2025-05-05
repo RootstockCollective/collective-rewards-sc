@@ -37,6 +37,13 @@ You can find bellow the permissions, roles, and functionalities within the `Gove
     + Update the upgrader address using `updateUpgrader`.
     + Replace or upgrade the contract implementation.
 
+### Configurator
+- Who: Defined by the `configurator` state variable.
+- Permissions and Capabilities:
+    + Update the configurator address using `updateConfigurator`.
+    + Set some protocol parameters:
+        - `maxDistributionsPerBatch`.
+
 # BuilderRegistryRootstockCollective.sol
 You can find bellow the permissions, roles, and functionalities within the `BuilderRegistryRootstockCollective` contract.  This also contains some definitions within `CycleTimeKeeperRootstockCollective` contract.
 
