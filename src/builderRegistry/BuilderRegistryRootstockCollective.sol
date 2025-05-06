@@ -37,9 +37,11 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error BuilderDoesNotExist();
     error GaugeDoesNotExist();
     error NotAuthorized();
+    error NotKycApproverOrFoundation();
     error ZeroAddressNotAllowed();
     error BuilderRewardsLocked();
     error InvalidIndex();
+    error InvalidBackerRewardPercentageLimit();
 
     // -----------------------------
     // ----------- Events ----------
@@ -79,6 +81,13 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         _;
     }
 
+    modifier onlyKycApproverOrFoundation() {
+        if (msg.sender != governanceManager.kycApprover() && msg.sender != governanceManager.foundationTreasury()) {
+            revert NotKycApproverOrFoundation();
+        }
+        _;
+    }
+
     // -----------------------------
     // ---------- Structs ----------
     // -----------------------------
@@ -92,9 +101,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         bytes20 pausedReason;
     }
 
-    // -----------------------------
-    // ---------- Structs ----------
-    // -----------------------------
     struct RewardPercentageData {
         // previous reward percentage
         uint64 previous;
@@ -108,6 +114,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     // ---------- Storage ----------
     // -----------------------------
     /// @notice reward distributor address. If a builder is KYC revoked their unclaimed rewards will sent back here
+
     address public rewardDistributor;
     /// @notice map of builders state
     mapping(address builder => BuilderState state) public builderState;
@@ -133,6 +140,13 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     uint128 public rewardPercentageCooldown;
     /// @notice address of the BackersManagerRootstockCollective contract
     BackersManagerRootstockCollective public backersManager;
+
+    // -----------------------------
+    // ---------- V2 Storage ----------
+    // -----------------------------
+
+    /// @notice maximum allowed percentage of reward that should be received by the backers
+    uint64 public backerRewardPercentageLimit;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -166,6 +180,13 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
         rewardPercentageCooldown = rewardPercentageCooldown_;
+    }
+
+    // -----------------------------
+    // ------- V2 Initializer ---------
+    // -----------------------------
+    function initializeV2() external reinitializer(2) {
+        _setBackerRewardPercentageLimit(uint64(_MAX_REWARD_PERCENTAGE));
     }
 
     // -----------------------------
@@ -333,6 +354,15 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     }
 
     /**
+     * @notice Sets the minimum and maximum backer reward percentage limit.
+     * @dev Reverts if the caller is not the kycApprover or the Foundation
+     * @param max_ The maximum reward percentage limit.
+     */
+    function setBackerRewardPercentageLimit(uint64 max_) external onlyKycApproverOrFoundation {
+        _setBackerRewardPercentageLimit(max_);
+    }
+
+    /**
      * @notice pause builder KYC
      * @dev reverts if it is not called by the owner address
      * @param builder_ address of the builder
@@ -377,9 +407,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         if (!builderState[msg.sender].communityApproved) revert BuilderNotCommunityApproved();
         if (!builderState[msg.sender].selfPaused) revert BuilderNotSelfPaused();
 
-        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
-            revert InvalidBackerRewardPercentage();
-        }
+        _validateRewardPercentage(rewardPercentage_);
 
         builderState[msg.sender].selfPaused = false;
 
@@ -431,10 +459,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function setBackerRewardPercentage(uint64 rewardPercentage_) external {
         if (!isBuilderOperational(msg.sender)) revert BuilderNotOperational();
 
-        // TODO: should we have a minimal amount?
-        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
-            revert InvalidBackerRewardPercentage();
-        }
+        _validateRewardPercentage(rewardPercentage_);
 
         // read from storage
         RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[msg.sender];
@@ -662,10 +687,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         builderState[builder_].initialized = true;
         builderState[builder_].kycApproved = true;
         rewardReceiver[builder_] = rewardReceiver_;
-        // TODO: should we have a minimal amount?
-        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
-            revert InvalidBackerRewardPercentage();
-        }
+        _validateRewardPercentage(rewardPercentage_);
 
         // read from storage
         RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[builder_];
@@ -678,6 +700,31 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         backerRewardPercentage[builder_] = _rewardPercentageData;
 
         emit BuilderInitialized(builder_, rewardReceiver_, rewardPercentage_);
+    }
+
+    /**
+     * @dev Validates the reward percentage to ensure it is within the allowed limit.
+     * Reverts with InvalidBackerRewardPercentage if the percentage is outside the defined range.
+     * @param rewardPercentage_ The reward percentage to validate.
+     */
+    function _validateRewardPercentage(uint64 rewardPercentage_) internal view {
+        // Check if the reward percentage is greater than the maximum allowed limit
+        // or less than the minimum allowed limit.
+        if (
+            rewardPercentage_ > backerRewardPercentageLimit
+        ) {
+            // Revert the transaction if the reward percentage is invalid.
+            revert InvalidBackerRewardPercentage();
+        }
+    }
+
+    /**
+     * @dev Reverts if the maximum percentage exceeds the constant representing 100%.
+     * @param max_ The maximum reward percentage limit.
+     */
+    function _setBackerRewardPercentageLimit(uint64 max_) internal {
+        if (max_ > _MAX_REWARD_PERCENTAGE) revert InvalidBackerRewardPercentageLimit();
+        backerRewardPercentageLimit = max_;
     }
 
     /**
