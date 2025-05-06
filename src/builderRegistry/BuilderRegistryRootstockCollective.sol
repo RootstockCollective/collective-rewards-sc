@@ -710,9 +710,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function _validateRewardPercentage(uint64 rewardPercentage_) internal view {
         // Check if the reward percentage is greater than the maximum allowed limit
         // or less than the minimum allowed limit.
-        if (
-            rewardPercentage_ > backerRewardPercentageLimit
-        ) {
+        if (rewardPercentage_ > backerRewardPercentageLimit) {
             // Revert the transaction if the reward percentage is invalid.
             revert InvalidBackerRewardPercentage();
         }

@@ -104,5 +104,8 @@ contract Deploy is Broadcaster, OutputWriter {
 
         vm.broadcast();
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
+
+        vm.broadcast();
+        _builderRegistryProxy.initializeV2();
     }
 }
