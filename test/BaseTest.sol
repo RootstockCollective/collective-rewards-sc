@@ -97,6 +97,8 @@ contract BaseTest is Test {
         backersManager.initializeBuilderRegistry(builderRegistry);
         backersManager.initializeV3(maxDistributionsPerBatch);
 
+        builderRegistry.initializeV2();
+
         // allow to execute all the functions protected by governance
 
         gauge = _whitelistBuilder(builder, builder, 0.5 ether);
