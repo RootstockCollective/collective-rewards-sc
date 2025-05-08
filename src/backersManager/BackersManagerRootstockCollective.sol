@@ -129,6 +129,7 @@ contract BackersManagerRootstockCollective is
     // ---------- V3 Storage ----------
     // -----------------------------
 
+    /// @notice maximum allowed distributions per batch
     uint256 public maxDistributionsPerBatch;
 
     // -----------------------------
