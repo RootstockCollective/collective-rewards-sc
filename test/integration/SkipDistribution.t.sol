@@ -861,7 +861,7 @@ contract SkipDistribution is BaseTest {
         vm.deal(address(rewardDistributor), 10 ether + address(rewardDistributor).balance);
         rewardToken.mint(address(rewardDistributor), 100 ether);
         vm.prank(foundation);
-        rewardDistributor.sendRewardsAndStartDistribution(100 ether, 10 ether);
+        rewardDistributor.sendRewardsAndStartDistribution(100 ether, 0, 10 ether);
 
         // THEN distribution is ongoing
         assertTrue(backersManager.onDistributionPeriod());

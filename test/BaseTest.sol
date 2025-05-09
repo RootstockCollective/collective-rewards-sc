@@ -26,6 +26,7 @@ import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceM
 contract BaseTest is Test {
     StakingTokenMock public stakingToken;
     ERC20Mock public rewardToken;
+    ERC20Mock public usdrifRewardToken;
 
     GovernanceManagerRootstockCollective public governanceManager;
     GaugeBeaconRootstockCollective public gaugeBeacon;
@@ -73,6 +74,7 @@ contract BaseTest is Test {
         MockStakingTokenDeployer _mockStakingTokenDeployer = new MockStakingTokenDeployer();
         stakingToken = _mockStakingTokenDeployer.run(0);
         rewardToken = _mockTokenDeployer.run(1);
+        usdrifRewardToken = _mockTokenDeployer.run(2);
         gaugeBeacon = new GaugeBeaconRootstockCollectiveDeployer().run(address(governanceManager));
         gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(address(gaugeBeacon), address(rewardToken));
 
@@ -95,7 +97,7 @@ contract BaseTest is Test {
         );
 
         backersManager.initializeBuilderRegistry(builderRegistry);
-        backersManager.initializeV3(maxDistributionsPerBatch);
+        backersManager.initializeV3(maxDistributionsPerBatch, address(usdrifRewardToken));
 
         // allow to execute all the functions protected by governance
 
@@ -189,7 +191,7 @@ contract BaseTest is Test {
         rewardToken.mint(address(rewardDistributor), amountERC20_);
         vm.deal(address(rewardDistributor), amountCoinbase_ + address(rewardDistributor).balance);
         vm.startPrank(foundation);
-        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountCoinbase_);
+        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, 0, amountCoinbase_);
         while (backersManager.onDistributionPeriod()) {
             backersManager.distribute();
         }
@@ -223,8 +225,20 @@ contract BaseTest is Test {
      * @notice returns reward token balance and clear it.
      *  Used to simplify maths and asserts considering only tokens received
      */
-    function _clearERC20Balance(address address_) internal returns (uint256 balance_) {
-        balance_ = rewardToken.balanceOf(address_);
+    function _clearERC20Balance(address address_) internal returns (uint256) {
+        return _clearBalance(address_, rewardToken);
+    }
+
+    /**
+     * @notice returns usdrifReward token balance and clear it.
+     *  Used to simplify maths and asserts considering only tokens received
+     */
+    function _clearUsdrifBalance(address address_) internal returns (uint256) {
+        return _clearBalance(address_, usdrifRewardToken);
+    }
+
+    function _clearBalance(address address_, ERC20Mock token_) private returns (uint256 balance_) {
+        balance_ = token_.balanceOf(address_);
         vm.prank(address_);
         rewardToken.transfer(address(this), balance_);
     }
