@@ -48,6 +48,15 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     uint256 public lastFundedCycleStart;
 
     // -----------------------------
+    // -------- Storage V2 ---------
+    // -----------------------------
+
+    /// @notice address of the usdrif token rewarded to builder and backers
+    IERC20 public usdrifRewardToken;
+    ///@notice default reward token amount
+    uint256 public defaultUsdrifRewardTokenAmount;
+
+    // -----------------------------
     // ------- Initializer ---------
     // -----------------------------
 
@@ -75,6 +84,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         if (address(backersManager) != address(0)) revert CollectiveRewardsAddressesAlreadyInitialized();
         backersManager = BackersManagerRootstockCollective(backersManager_);
         rewardToken = IERC20(BackersManagerRootstockCollective(backersManager_).rewardToken());
+        usdrifRewardToken = IERC20(BackersManagerRootstockCollective(backersManager_).usdrifRewardToken());
     }
 
     // -----------------------------
@@ -87,8 +97,16 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @param amountERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) external payable onlyFoundationTreasury {
-        _sendRewards(amountERC20_, amountCoinbase_);
+    function sendRewards(
+        uint256 amountERC20_,
+        uint256 amountUsdrif_,
+        uint256 amountCoinbase_
+    )
+        external
+        payable
+        onlyFoundationTreasury
+    {
+        _sendRewards(amountERC20_, amountUsdrif_, amountCoinbase_);
     }
 
     /**
@@ -100,13 +118,14 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      */
     function sendRewardsAndStartDistribution(
         uint256 amountERC20_,
+        uint256 amountUsdrif_,
         uint256 amountCoinbase_
     )
         external
         payable
         onlyFoundationTreasury
     {
-        _sendRewards(amountERC20_, amountCoinbase_);
+        _sendRewards(amountERC20_, amountUsdrif_, amountCoinbase_);
         backersManager.startDistribution();
     }
 
@@ -118,6 +137,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      */
     function setDefaultRewardAmount(
         uint256 tokenAmount_,
+        uint256 usdrifTokenAmount_,
         uint256 coinbaseAmount_
     )
         external
@@ -125,6 +145,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         onlyFoundationTreasury
     {
         defaultRewardTokenAmount = tokenAmount_;
+        defaultUsdrifRewardTokenAmount = usdrifTokenAmount_;
         defaultRewardCoinbaseAmount = coinbaseAmount_;
     }
 
@@ -133,7 +154,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @dev reverts if is called more than once per cycle
      */
     function sendRewardsWithDefaultAmount() external payable onlyOncePerCycle {
-        _sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
+        _sendRewards(defaultRewardTokenAmount, defaultUsdrifRewardTokenAmount, defaultRewardCoinbaseAmount);
     }
 
     /**
@@ -141,7 +162,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @dev reverts if is called more than once per cycle
      */
     function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyOncePerCycle {
-        _sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
+        _sendRewards(defaultRewardTokenAmount, defaultUsdrifRewardTokenAmount, defaultRewardCoinbaseAmount);
         backersManager.startDistribution();
     }
 
@@ -154,9 +175,9 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @param amountERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function _sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) internal {
+    function _sendRewards(uint256 amountERC20_, uint256 amountUsdrifToken_, uint256 amountCoinbase_) internal {
         rewardToken.approve(address(backersManager), amountERC20_);
-        backersManager.notifyRewardAmount{ value: amountCoinbase_ }(amountERC20_);
+        backersManager.notifyRewardAmount{ value: amountCoinbase_ }(amountERC20_, amountUsdrifToken_);
     }
 
     /**
