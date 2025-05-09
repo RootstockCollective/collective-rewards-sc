@@ -585,7 +585,8 @@ contract BackersManagerRootstockCollective is
         returns (uint256)
     {
         uint256 _rewardShares = gauge_.rewardShares();
-        // NOTE: the following local variables are not used as we hit the function stack limit after introducing the rewardsUsdrif_ parameter
+        // NOTE: the following local variables are not used as we hit the function stack limit after introducing the
+        // rewardsUsdrif_ parameter
         // [N] = [N] * [N] / [N]
         // uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
         // [N] = [N] * [N] / [N]
