@@ -20,6 +20,7 @@ import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
 
 contract Deploy is Broadcaster, OutputWriter {
     address private _rewardTokenAddress;
+    address private _usdrifRewardTokenAddress;
     address private _stakingTokenAddress;
     address private _kycApproverAddress;
     address private _governorAddress;
@@ -33,6 +34,7 @@ contract Deploy is Broadcaster, OutputWriter {
 
     function setUp() public {
         _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
+        _usdrifRewardTokenAddress = vm.envAddress("USDRIF_REWARD_TOKEN_ADDRESS");
         _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
         _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
@@ -98,11 +100,13 @@ contract Deploy is Broadcaster, OutputWriter {
             "BuilderRegistryRootstockCollective", address(_builderRegistryImpl), address(_builderRegistryProxy)
         );
 
-        vm.broadcast();
-        _backersManagerProxy.initializeBuilderRegistry(_builderRegistryProxy);
-        _backersManagerProxy.initializeV3(_maxDistributionsPerBatch);
+        vm.startBroadcast();
 
-        vm.broadcast();
+        _backersManagerProxy.initializeBuilderRegistry(_builderRegistryProxy);
+        _backersManagerProxy.initializeV3(_maxDistributionsPerBatch, _usdrifRewardTokenAddress);
+
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
+
+        vm.stopBroadcast();
     }
 }
