@@ -38,6 +38,6 @@ contract DistributionHandler is BaseHandler {
         rewardToken.mint(address(rewardDistributor), amountERC20_);
         vm.deal(address(rewardDistributor), amountCoinbase_);
         vm.prank(baseTest.foundation());
-        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountCoinbase_);
+        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, 0, amountCoinbase_);
     }
 }
