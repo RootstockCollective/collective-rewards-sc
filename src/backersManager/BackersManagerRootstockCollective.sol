@@ -43,7 +43,7 @@ contract BackersManagerRootstockCollective is
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_);
+    event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_, bool backerOptedOut_);
     event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
     event RewardDistributionStarted(address indexed sender_);
     event RewardDistributed(address indexed sender_);
@@ -81,12 +81,6 @@ contract BackersManagerRootstockCollective is
         _;
     }
 
-    modifier onlyOptedInBacker() {
-        if (rewardsOptedOut[msg.sender]) {
-            revert BackerOptedOutRewards();
-        }
-        _;
-    }
 
     modifier onlyConfigurator() {
         governanceManager.validateConfigurator(msg.sender);
@@ -226,14 +220,7 @@ contract BackersManagerRootstockCollective is
      * @param gauge_ address of the gauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
      */
-    function allocate(
-        GaugeRootstockCollective gauge_,
-        uint256 allocation_
-    )
-        external
-        notInDistributionPeriod
-        onlyOptedInBacker
-    {
+    function allocate(GaugeRootstockCollective gauge_, uint256 allocation_) external notInDistributionPeriod {
         (uint256 _newBackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
             gauge_,
             allocation_,
@@ -259,7 +246,6 @@ contract BackersManagerRootstockCollective is
     )
         external
         notInDistributionPeriod
-        onlyOptedInBacker
     {
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
@@ -391,6 +377,9 @@ contract BackersManagerRootstockCollective is
      *         This action can be performed only by the backer themselves or by the foundation.
      */
     function optInRewards(address backer_) external onlyBackerOrKycApprover(backer_) {
+        if (backerTotalAllocation[backer_] != 0) {
+            revert BackerHasAllocations();
+        }
         if (!rewardsOptedOut[backer_]) {
             revert AlreadyOptedInRewards();
         }
@@ -438,8 +427,9 @@ contract BackersManagerRootstockCollective is
     {
         bool _isHalted = builderRegistry_.validateGaugeHalted(gauge_);
 
+        bool _isOptedOut = rewardsOptedOut[msg.sender];
         (uint256 _allocationDeviation, uint256 _rewardSharesDeviation, bool _isNegative) =
-            gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_);
+            gauge_.allocate(msg.sender, allocation_, timeUntilNextCycle_, _isOptedOut);
 
         // halted gauges are not taken into account for the rewards; newTotalPotentialReward_ == totalPotentialReward_
         if (_isHalted) {
@@ -458,7 +448,7 @@ contract BackersManagerRootstockCollective is
             newTotalPotentialReward_ = totalPotentialReward_ + _rewardSharesDeviation;
         }
 
-        emit NewAllocation(msg.sender, address(gauge_), allocation_);
+        emit NewAllocation(msg.sender, address(gauge_), allocation_, _isOptedOut);
         return (newBackerTotalAllocation_, newTotalPotentialReward_);
     }
 
