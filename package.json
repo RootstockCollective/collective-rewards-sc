@@ -37,7 +37,7 @@
     "@typescript-eslint/eslint-plugin": "^8.30.1",
     "@typescript-eslint/parser": "^8.30.1",
     "eslint-config-prettier": "^10.1.2",
-    "eslint-plugin-mocha": "^10.4.3",
+    "eslint-plugin-mocha": "^11.0.0",
     "forge-std": "github:foundry-rs/forge-std#v1.9.7",
     "husky": "^9.0.11",
     "markdownlint-cli2": "^0.18.0",
