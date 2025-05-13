@@ -1286,7 +1286,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: alice and bob claim their rewards in the middle of the cycle receiving partial rewards.
+     * SCENARIO: alice and bob claim their rewards in the middle of the cycle receiving the rewards generated until the
+     * last cycle.
      */
     function test_ClaimBackerRewardsPartial() public {
         // GIVEN alice allocates 1 ether
@@ -1311,17 +1312,44 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN rewardPerToken is 5.555555555555555555 = 518400 / 3 * 0.000192901234567901 / 6 ether
         assertEq(gauge.rewardPerToken(address(rewardToken)), 5_555_555_555_555_555_555);
 
+        // THEN alice rewardToken earned is 5.555555555555555555 = 1 * 5.555555555555555555
+        assertEq(gauge.earned(address(rewardToken), alice), 5_555_555_555_555_555_555);
+
+        // THEN bob rewardToken earned is 27.777777777777777775 = 5 * 5.555555555555555555
+        assertEq(gauge.earned(address(rewardToken), bob), 27_777_777_777_777_777_775);
+
+        // THEN alice rewardToken claimable rewards is 0
+        assertEq(gauge.claimableBackerRewards(address(rewardToken), alice), 0);
+
+        // THEN bob rewardToken claimable rewards is 0
+        assertEq(gauge.claimableBackerRewards(address(rewardToken), bob), 0);
+
+        // AND cycle finishes
+        _skipToStartDistributionWindow();
+
         // WHEN alice claims rewards
         vm.prank(alice);
         gauge.claimBackerReward(alice);
-        // THEN alice rewardToken balance is 5.555555555555555555 = 1 * 5.555555555555555555
-        assertEq(rewardToken.balanceOf(alice), 5_555_555_555_555_555_555);
+        // THEN alice rewardToken balance is the 16.67%
+        assertEq(rewardToken.balanceOf(alice), 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
         vm.prank(bob);
         gauge.claimBackerReward(bob);
-        // THEN bob rewardToken balance is 27.777777777777777775 = 5 * 5.555555555555555555
-        assertEq(rewardToken.balanceOf(bob), 27_777_777_777_777_777_775);
+        // THEN bob rewardToken balance is the 83.33%
+        assertEq(rewardToken.balanceOf(bob), 83_333_333_333_333_333_330);
+
+        // THEN alice rewardToken earned is 0
+        assertEq(gauge.earned(address(rewardToken), alice), 0);
+
+        // THEN bob rewardToken earned is 0
+        assertEq(gauge.earned(address(rewardToken), bob), 0);
+
+        // THEN alice rewardToken claimable rewards is 0
+        assertEq(gauge.claimableBackerRewards(address(rewardToken), alice), 0);
+
+        // THEN bob rewardToken claimable rewards is 0
+        assertEq(gauge.claimableBackerRewards(address(rewardToken), bob), 0);
     }
 
     /**

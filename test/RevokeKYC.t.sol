@@ -234,4 +234,11 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN total allocation is 8467200 ether = 16 * 1 WEEK
         assertEq(backersManager.totalPotentialReward(), 9_676_800 ether);
     }
+
+    function _assertGaugeRewards() internal view override {
+        // THEN gauge rewardToken balance is
+        assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 3.125 ether, 100);
+        // THEN gauge coinbase balance is
+        assertApproxEqAbs(address(gauge).balance, 0.3125 ether, 100);
+    }
 }
