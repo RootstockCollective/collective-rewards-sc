@@ -342,7 +342,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param to_ address who receives the rewards
      */
     function moveBuilderUnclaimedRewards(address to_) external onlyAuthorizedContract {
-        _moveBuilderUnclaimedRewards(rewardToken, to_);
+        for (uint256 i = 0; i < rewardsTokens.length; i++) {
+            _moveBuilderUnclaimedRewards(rewardsTokens[i], to_);
+        }
         _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
     }
 
