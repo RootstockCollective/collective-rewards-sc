@@ -369,12 +369,15 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // if backers quit before cycle finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
-            _updateRewardMissing(rewardToken, _periodFinish);
             _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
-
-        _updateRewards(rewardToken, backer_, _periodFinish);
         _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
+        for (uint256 i = 0; i < rewardsTokens.length; i++) {
+            if (totalAllocation == 0) {
+                _updateRewardMissing(rewardsTokens[i], _periodFinish);
+            }
+            _updateRewards(rewardsTokens[i], backer_, _periodFinish);
+        }
 
         // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
         uint256 _previousAllocation = allocationOf[backer_];
