@@ -42,10 +42,23 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
     ///@notice default reward token amount
-    uint256 public defaultRewardTokenAmount;
+    uint256[] public defaultRewardTokenAmount;
     ///@notice default reward coinbase amount
     uint256 public defaultRewardCoinbaseAmount;
     uint256 public lastFundedCycleStart;
+
+    // -----------------------------
+    // ---------- V2 Storage ----------
+    // -----------------------------
+
+    /// @notice addresses of all valid rewards tokens
+    address[] public rewardsTokens;
+
+    /// @notice mapping of validated reward tokens
+    mapping(address => bool) public rewardsTokensValid;
+
+    /// @notice mapping of reward amounts of reward tokens
+    mapping(address => uint256) public rewardsAmounts;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -63,6 +76,22 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      */
     function initialize(IGovernanceManagerRootstockCollective governanceManager_) external initializer {
         __Upgradeable_init(governanceManager_);
+    }
+
+    /**
+     * @notice contract initializer
+     * @param usdrifRewardToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the
+     * ERC-20
+     * standard are supported.
+     * @notice For more info on supported tokens, see:
+     * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
+     */
+    function initializeV2(address usdrifRewardToken_) external reinitializer(2) {
+        // make 2 rewardTokens true and add them to the array
+        rewardsTokensValid[usdrifRewardToken_] = true;
+        rewardsTokensValid[address(rewardToken)] = true;
+        rewardsTokens.push(address(rewardToken));
+        rewardsTokens.push(usdrifRewardToken_);
     }
 
     /**
