@@ -449,15 +449,17 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice called on the reward distribution. Transfers reward tokens from backerManger to this contract
      * @dev reverts if caller is not the backersManager contract
-     * @param amountERC20_ amount of ERC20 rewards
+     * @param amountsERC20_ amount of ERC20 rewards
      * @param backerRewardPercentage_  backers reward percentage
      * @param periodFinish_ timestamp end of current rewards period
      * @param cycleStart_ Collective Rewards cycle start timestamp
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
+    // TODO: add comments
     function notifyRewardAmountAndUpdateShares(
-        uint256 amountERC20_,
+        uint256[] calldata amountsERC20_,
+        address[] calldata addressesERC20_,
         uint256 backerRewardPercentage_,
         uint256 periodFinish_,
         uint256 cycleStart_,
@@ -468,33 +470,35 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         onlyAuthorizedContract
         returns (uint256 newGaugeRewardShares_)
     {
-        address _rewardToken = rewardToken;
-        uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountERC20_);
-        uint256 _backerAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
-        uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
         // On a distribution, we include any reward missing into the new reward rate and reset it
-        bool _resetRewardMissing = true;
-        _notifyRewardAmount(
-            _rewardToken,
-            amountERC20_ - _backerAmountERC20,
-            _backerAmountERC20,
-            periodFinish_,
-            _timeUntilNextCycle,
-            _resetRewardMissing
-        );
+        // TODO: Check length and revert if not equal
+        uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
+        for (uint256 i = 0; i < amountsERC20_.length; i++) {
+            uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountsERC20_[i]);
+            _notifyRewardAmount(
+                addressesERC20_[i],
+                amountsERC20_[i] - _backerAmountERC20,
+                _backerAmountERC20,
+                periodFinish_,
+                _timeUntilNextCycle,
+                true /*_resetRewardMissing*/
+            );
+        }
         _notifyRewardAmount(
             UtilsLib._COINBASE_ADDRESS,
-            msg.value - _backerAmountCoinbase,
-            _backerAmountCoinbase,
+            0, /*builderAmount_*/
+            msg.value - UtilsLib._mulPrec(backerRewardPercentage_, msg.value), /*_backersAmountCoinbase*/
             periodFinish_,
             _timeUntilNextCycle,
-            _resetRewardMissing
+            true /*_resetRewardMissing*/
         );
 
         newGaugeRewardShares_ = totalAllocation * cycleDuration_;
         rewardShares = newGaugeRewardShares_;
 
-        SafeERC20.safeTransferFrom(IERC20(_rewardToken), msg.sender, address(this), amountERC20_);
+        for (uint256 i = 0; i < addressesERC20_.length; i++) {
+            SafeERC20.safeTransferFrom(IERC20(addressesERC20_[i]), msg.sender, address(this), amountsERC20_[i]);
+        }
     }
 
     // -----------------------------
