@@ -90,6 +90,19 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     BuilderRegistryRootstockCollective public builderRegistry;
 
     // -----------------------------
+    // -------- V3 Storage ---------
+    // -----------------------------
+
+    /// @notice addresses of all valid rewards tokens
+    address[] public rewardsTokens;
+
+    /// @notice mapping of validated reward tokens
+    mapping(address => bool) public rewardsTokensValid;
+
+    /// @notice mapping of reward amounts of reward tokens
+    mapping(address => uint256) public rewardsAmounts;
+
+    // -----------------------------
     // ------- Initializer ---------
     // -----------------------------
 
@@ -112,6 +125,23 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
         builderRegistry = BuilderRegistryRootstockCollective(builderRegistry_);
         backersManager = BackersManagerRootstockCollective(builderRegistry.backersManager());
+    }
+
+    /**
+     * @notice contract initializer
+     * @param usdrifRewardToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the
+     * ERC-20
+     * standard are supported.
+     * @notice For more info on supported tokens, see:
+     * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
+     */
+    function initializeV3(address usdrifRewardToken_) external reinitializer(3) {
+        __ReentrancyGuard_init();
+        // make 2 rewardTokens true and add them to the array
+        rewardsTokensValid[usdrifRewardToken_] = true;
+        rewardsTokensValid[rewardToken] = true;
+        rewardsTokens.push(rewardToken);
+        rewardsTokens.push(usdrifRewardToken_);
     }
 
     // NOTE: This contract previously included an `initializeV2()` function using `reinitializer(2)`
