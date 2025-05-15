@@ -717,13 +717,20 @@ contract BackersManagerRootstockCollective is
     {
         // gauges cannot be resumed before the distribution,
         // incentives can stay in the gauge because lastUpdateTime > lastTimeRewardApplicable
+        uint256[] memory _zeroAmounts = new uint256[](2);
+
+        // Passing an empty array as an argument with the length of the addresses
+        for (uint256 i = 0; i < rewardsTokens.length; i++) {
+            _zeroAmounts[i] = 0;
+        }
+
         if (_periodFinish <= block.timestamp) revert BeforeDistribution();
         // allocations are considered again for the reward's distribution
         // if there was a distribution we need to update the shares with the full cycle duration
         if (haltedGaugeLastPeriodFinish_ < _periodFinish) {
             (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
             totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-                0, 0, haltedGaugeLastPeriodFinish_, _cycleStart, _cycleDuration
+                _zeroAmounts, rewardsTokens, 0, haltedGaugeLastPeriodFinish_, _cycleStart, _cycleDuration
             );
         } else {
             // halt and resume were in the same cycle, we don't update the shares
