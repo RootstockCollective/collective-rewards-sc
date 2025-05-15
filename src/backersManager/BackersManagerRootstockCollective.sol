@@ -131,6 +131,15 @@ contract BackersManagerRootstockCollective is
 
     uint256 public maxDistributionsPerBatch;
 
+    /// @notice addresses of all valid rewards tokens
+    address[] public rewardsTokens;
+
+    /// @notice mapping of validated reward tokens
+    mapping(address => bool) public rewardsTokensValid;
+
+    /// @notice mapping of reward amounts of reward tokens
+    mapping(address => uint256) public rewardsAmounts;
+
     // -----------------------------
     // ------- Initializer ---------
     // -----------------------------
@@ -189,7 +198,15 @@ contract BackersManagerRootstockCollective is
      * @notice contract version 3 initializer
      * @param maxDistributionsPerBatch_ maximum number of distributions allowed per batch
      */
-    function initializeV3(uint256 maxDistributionsPerBatch_) external reinitializer(3) {
+    function initializeV3(uint256 maxDistributionsPerBatch_, address usdrifRewardToken_) external reinitializer(3) {
+        if (address(usdrifRewardToken_) == address(0)) revert ZeroAddressNotAllowed();
+        // make 2 rewardTokens true and add them to the array
+        rewardsTokensValid[usdrifRewardToken_] = true;
+        rewardsTokensValid[rewardToken] = true;
+        rewardsTokens.push(rewardToken);
+        rewardsTokens.push(usdrifRewardToken_);
+        // set current values for 2 reward token amounts(0 for usdrifRewardToken)
+        rewardsAmounts[rewardToken] = rewardsERC20;
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
     }
 
