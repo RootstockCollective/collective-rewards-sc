@@ -149,18 +149,18 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /**
      * @notice sets the default reward amounts
      * @dev reverts if is not called by foundation treasury address
-     * @param tokenAmount_ default amount of ERC20 reward token to send
+     * @param tokenAmounts_ default amount of ERC20 reward token to send
      * @param coinbaseAmount_ default amount of Coinbase reward token to send
      */
-    function setDefaultRewardAmount(
-        uint256 tokenAmount_,
+    function setDefaultRewardAmounts(
+        uint256[] memory tokenAmounts_,
         uint256 coinbaseAmount_
     )
         external
         payable
         onlyFoundationTreasury
     {
-        defaultRewardTokenAmount = tokenAmount_;
+        defaultRewardTokenAmount = tokenAmounts_;
         defaultRewardCoinbaseAmount = coinbaseAmount_;
     }
 
