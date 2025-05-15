@@ -23,6 +23,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     error GaugeHalted();
     error BeforeDistribution();
     error NotEnoughAmount();
+    error RewardTokenNotValid();
 
     // -----------------------------
     // ----------- Events ----------
@@ -335,6 +336,12 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         }
     }
 
+    function validateRewardToken(address rewardToken_) public view {
+        if (rewardsTokensValid[rewardToken_]) {
+            revert RewardTokenNotValid();
+        }
+    }
+
     /**
      * @notice moves builder rewards to another address
      *  It is triggered only when the builder is KYC revoked
@@ -403,37 +410,17 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         return (allocationDeviation_, rewardSharesDeviation_, isNegative_);
     }
 
+    // NOTE: incentivize functions should be generalized into one which takes the address of the corresponding reward
+    // function
     /**
      * @notice transfers reward tokens to this contract to incentivize backers
      * @dev reverts if Gauge is halted
      *  reverts if distribution for the cycle has not finished
      * @param amount_ amount of reward tokens
      */
-    function incentivizeWithRewardToken(uint256 amount_) external minIncentiveAmount(amount_) {
-        // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
-        // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
-        // calculate rewardPerToken
-        if (builderRegistry.isGaugeHalted(address(this))) revert GaugeHalted();
-        // Gauges cannot be incentivized before the distribution of the cycle finishes
-        if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
-
-        if (
-            IERC20(rewardToken).balanceOf(msg.sender) < amount_
-                || IERC20(rewardToken).allowance(msg.sender, address(this)) < amount_
-        ) {
-            revert NotEnoughAmount();
-        }
-
-        _notifyRewardAmount(
-            rewardToken,
-            0, /*builderAmount_*/
-            amount_,
-            backersManager.periodFinish(),
-            backersManager.timeUntilNextCycle(block.timestamp),
-            false /*resetRewardMissing_*/
-        );
-
-        SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
+    function incentivizeWithRewardToken(uint256 amount_, address rewardToken_) external {
+        validateRewardToken(rewardToken_);
+        _incentivizeWithToken(amount_, rewardToken_);
     }
 
     /**
@@ -692,6 +679,33 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             rewardData[rewardToken_].builderRewards = 0;
             _transferRewardToken(rewardToken_, to_, _rewardTokenAmount);
         }
+    }
+
+    function _incentivizeWithToken(uint256 amount_, address rewardToken_) internal minIncentiveAmount(amount_) {
+        // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
+        // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
+        // calculate rewardPerToken
+        if (builderRegistry.isGaugeHalted(address(this))) revert GaugeHalted();
+        // Gauges cannot be incentivized before the distribution of the cycle finishes
+        if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
+
+        if (
+            IERC20(rewardToken_).balanceOf(msg.sender) < amount_
+                || IERC20(rewardToken_).allowance(msg.sender, address(this)) < amount_
+        ) {
+            revert NotEnoughAmount();
+        }
+
+        _notifyRewardAmount(
+            rewardToken_,
+            0, /*builderAmount_*/
+            amount_,
+            backersManager.periodFinish(),
+            backersManager.timeUntilNextCycle(block.timestamp),
+            false /*resetRewardMissing_*/
+        );
+
+        SafeERC20.safeTransferFrom(IERC20(rewardToken_), msg.sender, address(this), amount_);
     }
 
     /**
