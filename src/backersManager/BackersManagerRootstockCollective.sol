@@ -39,6 +39,7 @@ contract BackersManagerRootstockCollective is
     error BackerHasAllocations();
     error ZeroAddressNotAllowed();
     error RewardTokenNotApproved();
+    error RewardTokenNotValid();
 
     // -----------------------------
     // ----------- Events ----------
@@ -90,6 +91,11 @@ contract BackersManagerRootstockCollective is
 
     modifier onlyConfigurator() {
         governanceManager.validateConfigurator(msg.sender);
+        _;
+    }
+
+    modifier MoreThanZeroGauges() {
+        if (builderRegistry.getGaugesLength() == 0) revert NoGaugesForDistribution();
         _;
     }
 
@@ -304,6 +310,8 @@ contract BackersManagerRootstockCollective is
      * @dev reverts if it is called during the distribution period
      *  reverts if there are no gauges available for the distribution
      */
+    // LEGACY function that was used for Rif token
+    // TODO: Remove when pr is ready
     function notifyRewardAmount(uint256 amount_) external payable notInDistributionPeriod {
         if (builderRegistry.getGaugesLength() == 0) revert NoGaugesForDistribution();
         if (msg.value > 0) {
@@ -314,6 +322,62 @@ contract BackersManagerRootstockCollective is
             rewardsERC20 += amount_;
             emit NotifyReward(rewardToken, msg.sender, amount_);
             SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
+        }
+    }
+
+    // TODO: add comments
+    function notifyRewardAmount(
+        address rewardToken_,
+        uint256 rewardAmount_
+    )
+        external
+        notInDistributionPeriod
+        MoreThanZeroGauges
+    {
+        validateRewardToken(rewardToken_);
+        if (rewardAmount_ > 0) {
+            rewardsAmounts[rewardToken_] += rewardAmount_;
+            emit NotifyReward(rewardToken_, msg.sender, rewardAmount_);
+            SafeERC20.safeTransferFrom(IERC20(rewardToken_), msg.sender, address(this), rewardAmount_);
+        }
+    }
+
+    // TODO: Add comments
+    function notifyRewardAmountERC20(
+        address[] memory rewardTokens_,
+        uint256[] memory rewardsAmounts_
+    )
+        external
+        notInDistributionPeriod
+        MoreThanZeroGauges
+    {
+        uint256 _rewardTokensLength = rewardTokens_.length;
+        if (_rewardTokensLength != rewardsAmounts_.length) {
+            revert UnequalLengths();
+        }
+        for (uint256 i = 0; i < _rewardTokensLength; i++) {
+            address _rewardToken = rewardTokens_[i];
+            validateRewardToken(_rewardToken);
+            uint256 _rewardAmount = rewardsAmounts_[i];
+            if (_rewardAmount > 0) {
+                rewardsAmounts[_rewardToken] += _rewardAmount;
+                emit NotifyReward(_rewardToken, msg.sender, _rewardAmount);
+                SafeERC20.safeTransferFrom(IERC20(_rewardToken), msg.sender, address(this), _rewardAmount);
+            }
+        }
+    }
+
+    function notifyRewardAmountCoinBase() external payable notInDistributionPeriod MoreThanZeroGauges {
+        if (msg.value > 0) {
+            rewardsCoinbase += msg.value;
+            emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
+        }
+    }
+
+    // TODO: Add comments
+    function validateRewardToken(address rewardToken_) public view {
+        if (!rewardsTokensValid[rewardToken_]) {
+            revert RewardTokenNotValid();
         }
     }
 
