@@ -274,7 +274,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param backer_ address who receives the rewards
      */
     function claimBackerReward(address backer_) external {
-        claimBackerReward(rewardToken, backer_);
+        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
+            claimBackerReward(rewardsTokens[i], backer_);
+        }
         claimBackerReward(UtilsLib._COINBASE_ADDRESS, backer_);
     }
 
@@ -307,7 +309,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev rewards are transferred to the builder reward receiver
      */
     function claimBuilderReward() external {
-        claimBuilderReward(rewardToken);
+        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
+            claimBuilderReward(rewardsTokens[i]);
+        }
         claimBuilderReward(UtilsLib._COINBASE_ADDRESS);
     }
 
