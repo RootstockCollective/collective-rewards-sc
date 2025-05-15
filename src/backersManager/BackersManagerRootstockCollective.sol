@@ -39,6 +39,7 @@ contract BackersManagerRootstockCollective is
     error BackerHasAllocations();
     error ZeroAddressNotAllowed();
     error RewardTokenNotApproved();
+    error RewardTokenNotValid();
 
     // -----------------------------
     // ----------- Events ----------
@@ -93,6 +94,11 @@ contract BackersManagerRootstockCollective is
         _;
     }
 
+    modifier MoreThanZeroGauges() {
+        if (builderRegistry.getGaugesLength() == 0) revert NoGaugesForDistribution();
+        _;
+    }
+
     // -----------------------------
     // ---------- Storage ----------
     // -----------------------------
@@ -130,6 +136,15 @@ contract BackersManagerRootstockCollective is
     // -----------------------------
 
     uint256 public maxDistributionsPerBatch;
+
+    /// @notice addresses of all valid rewards tokens
+    address[] public rewardsTokens;
+
+    /// @notice mapping of validated reward tokens
+    mapping(address => bool) public rewardsTokensValid;
+
+    /// @notice mapping of reward amounts of reward tokens
+    mapping(address => uint256) public rewardsAmounts;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -189,7 +204,15 @@ contract BackersManagerRootstockCollective is
      * @notice contract version 3 initializer
      * @param maxDistributionsPerBatch_ maximum number of distributions allowed per batch
      */
-    function initializeV3(uint256 maxDistributionsPerBatch_) external reinitializer(3) {
+    function initializeV3(uint256 maxDistributionsPerBatch_, address usdrifRewardToken_) external reinitializer(3) {
+        if (address(usdrifRewardToken_) == address(0)) revert ZeroAddressNotAllowed();
+        // make 2 rewardTokens true and add them to the array
+        rewardsTokensValid[usdrifRewardToken_] = true;
+        rewardsTokensValid[rewardToken] = true;
+        rewardsTokens.push(rewardToken);
+        rewardsTokens.push(usdrifRewardToken_);
+        // set current values for 2 reward token amounts(0 for usdrifRewardToken)
+        rewardsAmounts[rewardToken] = rewardsERC20;
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
     }
 
@@ -287,6 +310,8 @@ contract BackersManagerRootstockCollective is
      * @dev reverts if it is called during the distribution period
      *  reverts if there are no gauges available for the distribution
      */
+    // LEGACY function that was used for Rif token
+    // TODO: Remove when pr is ready
     function notifyRewardAmount(uint256 amount_) external payable notInDistributionPeriod {
         if (builderRegistry.getGaugesLength() == 0) revert NoGaugesForDistribution();
         if (msg.value > 0) {
@@ -297,6 +322,62 @@ contract BackersManagerRootstockCollective is
             rewardsERC20 += amount_;
             emit NotifyReward(rewardToken, msg.sender, amount_);
             SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
+        }
+    }
+
+    // TODO: add comments
+    function notifyRewardAmount(
+        address rewardToken_,
+        uint256 rewardAmount_
+    )
+        external
+        notInDistributionPeriod
+        MoreThanZeroGauges
+    {
+        validateRewardToken(rewardToken_);
+        if (rewardAmount_ > 0) {
+            rewardsAmounts[rewardToken_] += rewardAmount_;
+            emit NotifyReward(rewardToken_, msg.sender, rewardAmount_);
+            SafeERC20.safeTransferFrom(IERC20(rewardToken_), msg.sender, address(this), rewardAmount_);
+        }
+    }
+
+    // TODO: Add comments
+    function notifyRewardAmountERC20(
+        address[] memory rewardTokens_,
+        uint256[] memory rewardsAmounts_
+    )
+        external
+        notInDistributionPeriod
+        MoreThanZeroGauges
+    {
+        uint256 _rewardTokensLength = rewardTokens_.length;
+        if (_rewardTokensLength != rewardsAmounts_.length) {
+            revert UnequalLengths();
+        }
+        for (uint256 i = 0; i < _rewardTokensLength; i++) {
+            address _rewardToken = rewardTokens_[i];
+            validateRewardToken(_rewardToken);
+            uint256 _rewardAmount = rewardsAmounts_[i];
+            if (_rewardAmount > 0) {
+                rewardsAmounts[_rewardToken] += _rewardAmount;
+                emit NotifyReward(_rewardToken, msg.sender, _rewardAmount);
+                SafeERC20.safeTransferFrom(IERC20(_rewardToken), msg.sender, address(this), _rewardAmount);
+            }
+        }
+    }
+
+    function notifyRewardAmountCoinBase() external payable notInDistributionPeriod MoreThanZeroGauges {
+        if (msg.value > 0) {
+            rewardsCoinbase += msg.value;
+            emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
+        }
+    }
+
+    // TODO: Add comments
+    function validateRewardToken(address rewardToken_) public view {
+        if (!rewardsTokensValid[rewardToken_]) {
+            revert RewardTokenNotValid();
         }
     }
 
@@ -489,6 +570,15 @@ contract BackersManagerRootstockCollective is
      * @return true if distribution has finished
      */
     function _distribute() internal returns (bool) {
+        uint256[] memory _amounts = new uint256[](rewardsTokens.length);
+        for (uint256 i = 0; i < rewardsTokens.length; i++) {
+            _amounts[i] = rewardsAmounts[rewardsTokens[i]];
+        }
+        return _distribute(_amounts);
+    }
+
+    // TODO: Add comments and change the name
+    function _distribute(uint256[] memory rewardsERC20_) internal returns (bool) {
         uint256 _newTotalPotentialReward = tempTotalPotentialReward;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
@@ -496,15 +586,10 @@ contract BackersManagerRootstockCollective is
         uint256 _lastDistribution = Math.min(_gaugesLength, _gaugeIndex + maxDistributionsPerBatch);
         uint256 _batchLength = _lastDistribution - _gaugeIndex;
 
-        // cache variables read in the loop
-        uint256 _rewardsERC20 = rewardsERC20;
-        uint256 _rewardsCoinbase = rewardsCoinbase;
-        uint256 _totalPotentialReward = totalPotentialReward;
-        uint256 __periodFinish = _periodFinish;
         (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
 
         // no rewards to distribute since there are no allocations
-        if (_totalPotentialReward == 0) {
+        if (totalPotentialReward == 0) {
             _finishDistribution();
             return true;
         }
@@ -515,13 +600,7 @@ contract BackersManagerRootstockCollective is
         // loop through gauges
         for (uint256 i = 0; i < _gauges.length; ++i) {
             _newTotalPotentialReward += _gaugeDistribute(
-                GaugeRootstockCollective(_gauges[i]),
-                _rewardsERC20,
-                _rewardsCoinbase,
-                _totalPotentialReward,
-                __periodFinish,
-                _cycleStart,
-                _cycleDuration
+                GaugeRootstockCollective(_gauges[i]), totalPotentialReward, _periodFinish, _cycleStart, _cycleDuration
             );
         }
         _gaugeIndex = _lastDistribution;
@@ -532,7 +611,11 @@ contract BackersManagerRootstockCollective is
         if (_lastDistribution == _gaugesLength) {
             _finishDistribution();
             totalPotentialReward = _newTotalPotentialReward;
-            rewardsERC20 = rewardsCoinbase = 0;
+            for (uint256 i = 0; i < rewardsERC20_.length; i++) {
+                // Storage rewards are getting updated
+                rewardsAmounts[rewardsTokens[i]] = 0;
+            }
+            rewardsCoinbase = 0;
             return true;
         }
 
@@ -552,8 +635,6 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice internal function used to distribute reward tokens to a gauge
      * @param gauge_ address of the gauge to distribute
-     * @param rewardsERC20_ ERC20 rewards to distribute
-     * @param rewardsCoinbase_ Coinbase rewards to distribute
      * @param totalPotentialReward_ cached total potential reward
      * @param periodFinish_ cached period finish
      * @param cycleStart_ cached cycle start timestamp
@@ -562,8 +643,6 @@ contract BackersManagerRootstockCollective is
      */
     function _gaugeDistribute(
         GaugeRootstockCollective gauge_,
-        uint256 rewardsERC20_,
-        uint256 rewardsCoinbase_,
         uint256 totalPotentialReward_,
         uint256 periodFinish_,
         uint256 cycleStart_,
@@ -574,13 +653,18 @@ contract BackersManagerRootstockCollective is
     {
         uint256 _rewardShares = gauge_.rewardShares();
         // [N] = [N] * [N] / [N]
-        uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
+        uint256[] memory _rewardsAmounts = new uint256[](rewardsTokens.length);
         // [N] = [N] * [N] / [N]
-        uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
+        for (uint256 i = 0; i < rewardsTokens.length; i++) {
+            _rewardsAmounts[i] = (_rewardShares * rewardsAmounts[rewardsTokens[i]]) / totalPotentialReward_;
+        }
+
+        uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase) / totalPotentialReward_;
+
         uint256 _backerRewardPercentage =
             builderRegistry.getRewardPercentageToApply(builderRegistry.gaugeToBuilder(gauge_));
         return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
-            _amountERC20, _backerRewardPercentage, periodFinish_, cycleStart_, cycleDuration_
+            _rewardsAmounts, rewardsTokens, _backerRewardPercentage, periodFinish_, cycleStart_, cycleDuration_
         );
     }
 
@@ -592,8 +676,10 @@ contract BackersManagerRootstockCollective is
      * @param value_ amount of rewardTokens to approve
      */
     function rewardTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
-        if (!IERC20(rewardToken).approve(gauge_, value_)) {
-            revert RewardTokenNotApproved();
+        for (uint256 i = 0; i < rewardsTokens.length; i++) {
+            if (!IERC20(rewardsTokens[i]).approve(gauge_, value_)) {
+                revert RewardTokenNotApproved();
+            }
         }
     }
 
@@ -631,13 +717,20 @@ contract BackersManagerRootstockCollective is
     {
         // gauges cannot be resumed before the distribution,
         // incentives can stay in the gauge because lastUpdateTime > lastTimeRewardApplicable
+        uint256[] memory _zeroAmounts = new uint256[](2);
+
+        // Passing an empty array as an argument with the length of the addresses
+        for (uint256 i = 0; i < rewardsTokens.length; i++) {
+            _zeroAmounts[i] = 0;
+        }
+
         if (_periodFinish <= block.timestamp) revert BeforeDistribution();
         // allocations are considered again for the reward's distribution
         // if there was a distribution we need to update the shares with the full cycle duration
         if (haltedGaugeLastPeriodFinish_ < _periodFinish) {
             (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
             totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-                0, 0, haltedGaugeLastPeriodFinish_, _cycleStart, _cycleDuration
+                _zeroAmounts, rewardsTokens, 0, haltedGaugeLastPeriodFinish_, _cycleStart, _cycleDuration
             );
         } else {
             // halt and resume were in the same cycle, we don't update the shares
