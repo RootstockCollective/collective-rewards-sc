@@ -16,11 +16,13 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         address _backersManager = vm.envOr("BackersManagerRootstockCollectiveProxy", address(0));
         address payable _rewardDistributor = payable(vm.envOr("RewardDistributorRootstockCollectiveProxy", address(0)));
         address _configurator = vm.envAddress("CONFIGURATOR_ADDRESS");
+        address _usdrifRewardToken = vm.envAddress("USDRIF_ADDRESS");
 
         upgradeV3_ = run(
             BackersManagerRootstockCollective(_backersManager),
             RewardDistributorRootstockCollective(_rewardDistributor),
             _configurator,
+            _usdrifRewardToken,
             true
         );
     }
@@ -29,6 +31,7 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         BackersManagerRootstockCollective backersManagerProxy_,
         RewardDistributorRootstockCollective rewardDistributorProxy_,
         address configurator_,
+        address usdrifRewardToken_,
         bool writeDeployment_
     )
         public
@@ -53,7 +56,8 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
             _gaugeImplV3,
             rewardDistributorProxy_,
             _rewardDistributorImplV3,
-            configurator_
+            configurator_,
+            usdrifRewardToken_
         );
 
         if (!writeDeployment_) return upgradeV3_;

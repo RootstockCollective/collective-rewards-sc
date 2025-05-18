@@ -100,7 +100,7 @@ contract Deploy is Broadcaster, OutputWriter {
 
         vm.broadcast();
         _backersManagerProxy.initializeBuilderRegistry(_builderRegistryProxy);
-        _backersManagerProxy.initializeV3(_maxDistributionsPerBatch);
+        _backersManagerProxy.initializeV3(_maxDistributionsPerBatch, _rewardTokenAddress);
 
         vm.broadcast();
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
