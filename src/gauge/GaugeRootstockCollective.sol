@@ -337,7 +337,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     }
 
     function validateRewardToken(address rewardToken_) public view {
-        if (rewardsTokensValid[rewardToken_]) {
+        if (!rewardsTokensValid[rewardToken_]) {
             revert RewardTokenNotValid();
         }
     }
