@@ -26,6 +26,7 @@ import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceM
 contract BaseTest is Test {
     StakingTokenMock public stakingToken;
     ERC20Mock public rewardToken;
+    ERC20Mock public usdrifRewardToken;
 
     GovernanceManagerRootstockCollective public governanceManager;
     GaugeBeaconRootstockCollective public gaugeBeacon;
@@ -73,6 +74,7 @@ contract BaseTest is Test {
         MockStakingTokenDeployer _mockStakingTokenDeployer = new MockStakingTokenDeployer();
         stakingToken = _mockStakingTokenDeployer.run(0);
         rewardToken = _mockTokenDeployer.run(1);
+        usdrifRewardToken = _mockTokenDeployer.run(2);
         gaugeBeacon = new GaugeBeaconRootstockCollectiveDeployer().run(address(governanceManager));
         gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(address(gaugeBeacon), address(rewardToken));
 
@@ -89,18 +91,23 @@ contract BaseTest is Test {
         );
 
         rewardDistributor.initializeCollectiveRewardsAddresses(address(backersManager));
+        rewardDistributor.initializeV2(address(usdrifRewardToken));
 
         (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer().run(
             address(backersManager), address(gaugeFactory), address(rewardDistributor), rewardPercentageCooldown
         );
 
         backersManager.initializeBuilderRegistry(builderRegistry);
-        backersManager.initializeV3(maxDistributionsPerBatch);
+        backersManager.initializeV3(maxDistributionsPerBatch, address(usdrifRewardToken));
 
         // allow to execute all the functions protected by governance
 
         gauge = _whitelistBuilder(builder, builder, 0.5 ether);
         gauge2 = _whitelistBuilder(builder2, builder2Receiver, 0.5 ether);
+
+        // NOTE:
+        gauge.initializeV3(address(usdrifRewardToken));
+        gauge2.initializeV3(address(usdrifRewardToken));
 
         // mint some stakingTokens to alice and bob
         stakingToken.mint(alice, 100_000 ether);
@@ -189,7 +196,10 @@ contract BaseTest is Test {
         rewardToken.mint(address(rewardDistributor), amountERC20_);
         vm.deal(address(rewardDistributor), amountCoinbase_ + address(rewardDistributor).balance);
         vm.startPrank(foundation);
-        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountCoinbase_);
+        uint256[] memory _amounts = new uint256[](2);
+        _amounts[0] = amountERC20_;
+        _amounts[1] = 0;
+        rewardDistributor.sendRewardsAndStartDistribution(_amounts, amountCoinbase_);
         while (backersManager.onDistributionPeriod()) {
             backersManager.distribute();
         }
@@ -207,7 +217,7 @@ contract BaseTest is Test {
             vm.prank(address(incentivizer));
             rewardToken.approve(address(gauge_), amountERC20_);
             vm.prank(address(incentivizer));
-            gauge_.incentivizeWithRewardToken(amountERC20_);
+            gauge_.incentivizeWithRewardToken(amountERC20_, address(rewardToken));
         }
     }
 

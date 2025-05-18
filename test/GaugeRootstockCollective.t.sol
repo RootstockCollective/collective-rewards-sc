@@ -49,7 +49,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
-        gauge.notifyRewardAmountAndUpdateShares(1 ether, 1 ether, block.timestamp, _cycleStart, _cycleDuration);
+        address[] memory _addressesERC20 = new address[](2);
+        _addressesERC20[0] = address(rewardToken);
+        _addressesERC20[1] = address(usdrifRewardToken);
+        uint256[] memory _amountsERC20 = new uint256[](2);
+        _amountsERC20[0] = 1 ether;
+        _amountsERC20[1] = 0 ether;
+        gauge.notifyRewardAmountAndUpdateShares(
+            _amountsERC20, _addressesERC20, 1 ether, block.timestamp, _cycleStart, _cycleDuration
+        );
         // WHEN alice calls moveBuilderUnclaimedRewards
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
         vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
@@ -202,7 +210,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.expectEmit();
         emit NotifyReward(address(rewardToken), 30 ether, 70 ether);
         vm.startPrank(foundation);
-        rewardDistributor.sendRewardsAndStartDistribution(100 ether, 0);
+        uint256[] memory _amounts = new uint256[](2);
+        _amounts[0] = 100 ether;
+        rewardDistributor.sendRewardsAndStartDistribution(_amounts, 100 ether);
 
         // THEN rewardPerTokenStored is 0
         assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
@@ -255,7 +265,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(address(incentivizer));
         vm.expectEmit();
         emit NotifyReward(address(rewardToken), 0, /*builderAmount_*/ 100 ether);
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // THEN rewardPerTokenStored is 0
         assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
@@ -306,7 +316,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         skip(1 days);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
@@ -339,7 +349,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN it fails with min amount error
         vm.startPrank(incentivizer);
         vm.expectRevert(GaugeRootstockCollective.NotEnoughAmount.selector);
-        gauge.incentivizeWithRewardToken(0 ether);
+        gauge.incentivizeWithRewardToken(0 ether, address(rewardToken));
 
         // WHEN 10 wei are distributed by Incentivizer
         // THEN it fails with min amount error
@@ -372,7 +382,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // WHEN 100 ether are distributed by Incentivizer in rewardToken
         //  THEN tx reverts because of insufficient allowance
         vm.expectRevert(GaugeRootstockCollective.NotEnoughAmount.selector);
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // Adjust allowance to be sufficient but reduce balance
         rewardToken.approve(address(gauge), 100 ether);
@@ -381,7 +391,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // WHEN 100 ether are distributed by Incentivizer in rewardToken
         //  THEN tx reverts because of insufficient balance
         vm.expectRevert(GaugeRootstockCollective.NotEnoughAmount.selector);
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // WHEN 100 ether are distributed by Incentivizer
         //  THEN tx reverts because of insufficient balance
@@ -409,7 +419,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         skip(1 days);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
@@ -418,7 +428,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         _skipRemainingCycleFraction(2);
 
         // WHEN 100 ether are distributed again by Incentivizer
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // THEN rewardRate is 0.000578703703703703 = 100 ether / 518400 sec + 100 / (518400 sec/2)
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 578_703_703_703_703);
@@ -441,7 +451,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables are updated by incentivizer that is not the BackersManagerRootstockCollective using
+     * SCENARIO: rewards variables are updated by incentivizer that is not the BackersManagerRootstockCollective
+     * using
      * coinbase
      */
     function test_IncentivizeWithCoinbaseNotFromBackersManagerRootstockCollective() public {
@@ -496,7 +507,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         skip(1 days);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
         // THEN rewardPerTokenStored is 0
         assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
         // THEN rewardMissing is 0
@@ -582,7 +593,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         skip(1 days);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
@@ -597,8 +608,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // rewardMissing are updated with all the existing rewards (since there were no allocations), included in the
         // rewardRate for new cycle and set back to 0 in this method
+        address[] memory _addressesERC20 = new address[](2);
+        _addressesERC20[0] = address(rewardToken);
+        _addressesERC20[1] = address(usdrifRewardToken);
+        uint256[] memory _amountsERC20 = new uint256[](2);
+        _amountsERC20[0] = 0 ether;
+        _amountsERC20[1] = 0 ether;
         gauge.notifyRewardAmountAndUpdateShares(
-            0 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
+            _amountsERC20, _addressesERC20, 1 ether, block.timestamp, _cycleStart, _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -669,7 +686,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         skip(1 days);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
@@ -683,8 +700,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 0 ether are distributed for backers
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        address[] memory _addressesERC20 = new address[](2);
+        _addressesERC20[0] = address(rewardToken);
+        _addressesERC20[1] = address(usdrifRewardToken);
+        uint256[] memory _amountsERC20 = new uint256[](2);
+        _amountsERC20[0] = 0 ether;
+        _amountsERC20[1] = 0 ether;
         gauge.notifyRewardAmountAndUpdateShares(
-            0 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
+            _amountsERC20, _addressesERC20, 1 ether, block.timestamp, _cycleStart, _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -706,7 +729,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(address(backersManager));
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         gauge.notifyRewardAmountAndUpdateShares(
-            0 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
+            _amountsERC20, _addressesERC20, 1 ether, block.timestamp, _cycleStart, _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -760,7 +783,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN 100 ether are distributed by Incentivizer
         vm.prank(incentivizer);
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 192_901_234_567_901);
@@ -776,8 +799,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 100 ether are distributed for backers
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        address[] memory _addressesERC20 = new address[](2);
+        _addressesERC20[0] = address(rewardToken);
+        _addressesERC20[1] = address(usdrifRewardToken);
+        uint256[] memory _amountsERC20 = new uint256[](2);
+        _amountsERC20[0] = 100 ether;
+        _amountsERC20[1] = 0 ether;
         gauge.notifyRewardAmountAndUpdateShares(
-            100 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
+            _amountsERC20, _addressesERC20, 1 ether, block.timestamp, _cycleStart, _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -826,7 +855,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         rewardToken.approve(address(gauge), 200 ether);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // AND cycle finishes
         _skipToStartDistributionWindow();
@@ -834,7 +863,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // WHEN there is an attempt to distribute 100 ether in rewardToken by Incentivizer
         //  THEN it reverts since distribution has not finished yet
         vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // WHEN there is an attempt to distribute 100 ether in coinbase by Incentivizer
         //  THEN it reverts since distribution has not finished yet
@@ -844,8 +873,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND distribution finishes with 100 ether being distributed
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        address[] memory _addressesERC20 = new address[](2);
+        _addressesERC20[0] = address(rewardToken);
+        _addressesERC20[1] = address(usdrifRewardToken);
+        uint256[] memory _amountsERC20 = new uint256[](2);
+        _amountsERC20[0] = 100 ether;
+        _amountsERC20[1] = 0 ether;
         gauge.notifyRewardAmountAndUpdateShares(
-            100 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
+            _amountsERC20, _addressesERC20, 1 ether, block.timestamp, _cycleStart, _cycleDuration
         );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -1013,7 +1048,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: reward receiver claims his rewards at any time during the cycle receiving the total amount of rewards.
+     * SCENARIO: reward receiver claims his rewards at any time during the cycle receiving the total amount of
+     * rewards.
      */
     function test_ClaimBuilderRewardsRewardReceiver() public {
         // GIVEN a builder2 with 30% of reward percentage for backers
@@ -1132,7 +1168,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         rewardToken.mint(address(rewardDistributor), 100 ether);
         vm.deal(address(rewardDistributor), 100 ether);
         vm.startPrank(foundation);
-        rewardDistributor.sendRewardsAndStartDistribution(100 ether, 100 ether);
+        uint256[] memory _amounts = new uint256[](2);
+        _amounts[0] = 100 ether;
+        rewardDistributor.sendRewardsAndStartDistribution(_amounts, 100 ether);
 
         // THEN builderRewards rewardToken is 140 ether
         assertEq(gauge.builderRewards(address(rewardToken)), 140 ether);
@@ -1201,7 +1239,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: alice and bob claim their rewards at the end of the cycle receiving the total amount of rewards.
      */
-    function test_ClaimBackerRewards() public {
+    function test_ClaimBackerRewards1() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
         backersManager.allocate(gauge, 1 ether);
@@ -1211,7 +1249,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 100 ether distributed for backers
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // AND there is a distribution
         _distribute(0, 0);
@@ -1250,8 +1288,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 100 ether distributed for backers on both gauges
         vm.startPrank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(100 ether);
-        gauge2.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
+        gauge2.incentivizeWithRewardToken(100 ether, address(rewardToken));
         vm.stopPrank();
 
         // simulates a distribution setting the periodFinish
@@ -1298,7 +1336,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
@@ -1338,7 +1376,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 100 ether distributed for backers
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -1348,7 +1386,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 200 ether more are distributed for backers
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(200 ether);
+        gauge.incentivizeWithRewardToken(200 ether, address(rewardToken));
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -1399,14 +1437,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 100 ether distributed for backers
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
         // AND 200 ether more are distributed for backers
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(200 ether);
+        gauge.incentivizeWithRewardToken(200 ether, address(rewardToken));
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND cycle finish
@@ -1457,7 +1495,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
         // AND 100 ether distributed for backers
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // AND half cycle passes
         _skipRemainingCycleFraction(2);
@@ -1505,7 +1543,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
         // AND 100 ether distributed for backers
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // AND half cycle passes
         _skipRemainingCycleFraction(2);
@@ -1556,7 +1594,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
         // AND 100 ether distributed for backers
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
@@ -1592,7 +1630,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // AND 0 ether are distributed for backers
         _distribute(0, 0);
@@ -1630,7 +1668,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -1737,7 +1775,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 0 ether distributed for backers
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
-        gauge.notifyRewardAmountAndUpdateShares(0, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration);
+        address[] memory _addressesERC20 = new address[](2);
+        _addressesERC20[0] = address(rewardToken);
+        _addressesERC20[1] = address(usdrifRewardToken);
+        uint256[] memory _amountsERC20 = new uint256[](2);
+        _amountsERC20[0] = 0 ether;
+        _amountsERC20[1] = 0 ether;
+        gauge.notifyRewardAmountAndUpdateShares(
+            _amountsERC20, _addressesERC20, 1 ether, block.timestamp, _cycleStart, _cycleDuration
+        );
         // simulates a distribution setting the periodFinish
         _setPeriodFinish();
         // AND half cycle pass
@@ -1798,7 +1844,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN gauge is incentivized
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // THEN alice estimated rewards left to earn is
         // 16.666666666666666666 = allocation * rewardPerToken = 1 * 16.666666666666666666
@@ -1901,7 +1947,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND gauge is incentivized
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(50 ether);
+        gauge.incentivizeWithRewardToken(50 ether, address(rewardToken));
 
         // THEN alice estimated rewards left to earn is
         // 16.666666666666666666 = allocation * rewardPerToken = 1 * 16.666666666666666666
@@ -1944,7 +1990,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // WHEN gauge is incentivized
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRewardToken(100 ether, address(rewardToken));
 
         // AND half an epoch passes
         _skipRemainingCycleFraction(2);
@@ -1977,7 +2023,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN bob estimated rewards left to earn is 0
         assertEq(gauge.estimatedBackerRewards(address(rewardToken), bob), 0);
         // THEN bob earned rewards is
-        // 91.666666666666666660 = (allocation * old rewardPerToken * 1 / 2) + (allocation * new rewardPerToken * 1 / 2)
+        // 91.666666666666666660 = (allocation * old rewardPerToken * 1 / 2) + (allocation * new rewardPerToken * 1 /2)
         // 91.666666666666666660 = (5 * 16.666666666666666666  * 1 / 2) + (5 * 20 * 1 / 2)
         assertEq(gauge.earned(address(rewardToken), bob), 91_666_666_666_666_666_660);
     }
