@@ -1239,7 +1239,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: alice and bob claim their rewards at the end of the cycle receiving the total amount of rewards.
      */
-    function test_ClaimBackerRewards1() public {
+    function test_ClaimBackerRewards() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
         backersManager.allocate(gauge, 1 ether);
