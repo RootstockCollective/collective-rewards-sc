@@ -484,10 +484,11 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
                 true /*_resetRewardMissing*/
             );
         }
+        uint256 _backersAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
         _notifyRewardAmount(
             UtilsLib._COINBASE_ADDRESS,
-            0, /*builderAmount_*/
-            msg.value - UtilsLib._mulPrec(backerRewardPercentage_, msg.value), /*_backersAmountCoinbase*/
+            msg.value - _backersAmountCoinbase,
+            _backersAmountCoinbase,
             periodFinish_,
             _timeUntilNextCycle,
             true /*_resetRewardMissing*/
