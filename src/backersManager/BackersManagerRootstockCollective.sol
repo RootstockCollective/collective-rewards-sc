@@ -465,10 +465,8 @@ contract BackersManagerRootstockCollective is
                 revert PositiveAllocationOnHaltedGauge();
             }
             newBackerTotalAllocation_ = backerTotalAllocation_ - _allocationDeviation;
-            return (newBackerTotalAllocation_, totalPotentialReward_);
-        }
-
-        if (_isNegative) {
+            newTotalPotentialReward_ = totalPotentialReward_;
+        } else if (_isNegative) {
             newBackerTotalAllocation_ = backerTotalAllocation_ - _allocationDeviation;
             newTotalPotentialReward_ = totalPotentialReward_ - _rewardSharesDeviation;
         } else {
@@ -563,10 +561,10 @@ contract BackersManagerRootstockCollective is
     }
 
     function _finishDistribution() internal {
-        emit RewardDistributionFinished(msg.sender);
         indexLastGaugeDistributed = 0;
         tempTotalPotentialReward = 0;
         _periodFinish = cycleNext(block.timestamp);
+        emit RewardDistributionFinished(msg.sender);
     }
 
     /**
