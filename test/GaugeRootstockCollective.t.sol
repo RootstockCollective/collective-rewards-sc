@@ -212,7 +212,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(foundation);
         uint256[] memory _amounts = new uint256[](2);
         _amounts[0] = 100 ether;
-        rewardDistributor.sendRewardsAndStartDistribution(_amounts, 100 ether);
+        rewardDistributor.sendRewardsAndStartDistribution(_amounts, 0);
 
         // THEN rewardPerTokenStored is 0
         assertEq(gauge.rewardPerTokenStored(address(rewardToken)), 0);
