@@ -136,8 +136,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @notice For more info on supported tokens, see:
      * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
      */
-    function initializeV3(address usdrifRewardToken_) external reinitializer(3) {
-        __ReentrancyGuard_init();
+    // Note: Initialization patterns are currently disabled, because including the upgrade of the gauge contract is out of the scope of this pr
+    function initializeV3(address usdrifRewardToken_) external /*reinitializer(3)*/ {
+        // __ReentrancyGuard_init();
         // make 2 rewardTokens true and add them to the array
         rewardsTokensValid[usdrifRewardToken_] = true;
         rewardsTokensValid[rewardToken] = true;

@@ -156,6 +156,8 @@ contract BaseTest is Test {
         builders.push(builder_);
         vm.prank(governor);
         newGauge_ = builderRegistry.communityApproveBuilder(builder_);
+        // Note: Manually iniitializing the gauges as the current setUp does not support gauge beacon upgrade
+        newGauge_.initializeV3(address(usdrifRewardToken));
         gaugesArray.push(newGauge_);
     }
 
