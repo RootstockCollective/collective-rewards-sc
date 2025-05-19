@@ -632,7 +632,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         //  AND 100 ether rewardToken and 50 ether coinbase are added
         backersManager.notifyRewardAmount(address(rewardToken), 100 ether);
-        backersManager.notifyRewardAmountCoinBase{value: 50 ether}();
+        backersManager.notifyRewardAmountCoinbase{value: 50 ether}();
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -1214,7 +1214,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // AND 100 ether rewardToken and 50 ether coinbase are added
         backersManager.notifyRewardAmount(address(rewardToken), 100 ether);
-        backersManager.notifyRewardAmountCoinBase{value: 50 ether}();
+        backersManager.notifyRewardAmountCoinbase{value: 50 ether}();
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -1739,7 +1739,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         //  AND 50 ether rewardToken and 50 ether coinbase are added
         backersManager.notifyRewardAmount(address(rewardToken), 50 ether);
-        backersManager.notifyRewardAmountCoinBase{value: 50 ether}();
+        backersManager.notifyRewardAmountCoinbase{value: 50 ether}();
 
         // AND a new cycle
         _skipAndStartNewCycle();

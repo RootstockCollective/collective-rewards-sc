@@ -195,7 +195,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
             IERC20(rewardsTokens[i]).approve(address(backersManager), amountsERC20_[i]);
         }
         backersManager.notifyRewardAmountERC20(rewardsTokens, amountsERC20_);
-        backersManager.notifyRewardAmountCoinBase{ value: amountCoinbase_ }();
+        backersManager.notifyRewardAmountCoinbase{ value: amountCoinbase_ }();
     }
 
     /**

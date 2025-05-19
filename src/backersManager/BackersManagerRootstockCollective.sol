@@ -367,7 +367,7 @@ contract BackersManagerRootstockCollective is
         }
     }
 
-    function notifyRewardAmountCoinBase() external payable notInDistributionPeriod MoreThanZeroGauges {
+    function notifyRewardAmountCoinbase() external payable notInDistributionPeriod MoreThanZeroGauges {
         if (msg.value > 0) {
             rewardsCoinbase += msg.value;
             emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
