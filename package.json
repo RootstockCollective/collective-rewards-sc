@@ -40,7 +40,7 @@
     "eslint-plugin-mocha": "^10.4.3",
     "forge-std": "github:foundry-rs/forge-std#v1.9.7",
     "husky": "^9.0.11",
-    "markdownlint-cli2": "^0.17.2",
+    "markdownlint-cli2": "^0.18.0",
     "prettier": "^3.3.3",
     "solhint": "^5.0.5",
     "solhint-plugin-bim": "file:utils/solhint-plugin",
