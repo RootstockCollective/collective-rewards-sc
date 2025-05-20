@@ -396,7 +396,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //    THEN NotifyReward event is emitted
         vm.expectEmit();
         emit NotifyReward(address(rewardToken), address(this), 2 ether);
-        backersManager.notifyRewardAmount(2 ether);
+        backersManager.notifyRewardAmount(2 ether, 0);
         // THEN rewards is 2 ether
         assertEq(backersManager.rewardsERC20(), 2 ether);
         // THEN Coinbase rewards is 0
@@ -414,7 +414,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // GIVEN a BackersManager contract
         //   WHEN 0 ether in rewardToken and 0 coinbase are added
         //    THEN it does not revert and rewards don't change
-        backersManager.notifyRewardAmount(0 ether);
+        backersManager.notifyRewardAmount(0 ether, 0);
         // THEN reward for reward token is 0 ether
         assertEq(backersManager.rewardsERC20(), 0 ether);
         // THEN Coinbase reward is 0
@@ -440,17 +440,17 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // AND notifyRewardAmount is called with coinbase
         //  THEN it reverts with NoGaugesForDistribution error
         vm.expectRevert(BackersManagerRootstockCollective.NoGaugesForDistribution.selector);
-        backersManager.notifyRewardAmount{ value: 1 ether }(0 ether);
+        backersManager.notifyRewardAmount{ value: 1 ether }(0 ether, 0);
 
         // AND notifyRewardAmount is called with rewardTken
         //  THEN it reverts with NoGaugesForDistribution error
         vm.expectRevert(BackersManagerRootstockCollective.NoGaugesForDistribution.selector);
-        backersManager.notifyRewardAmount(0 ether);
+        backersManager.notifyRewardAmount(0 ether, 0);
 
         // AND notifyRewardAmount is called with both coinbase and rewardToken
         //  THEN it reverts with NoGaugesForDistribution error
         vm.expectRevert(BackersManagerRootstockCollective.NoGaugesForDistribution.selector);
-        backersManager.notifyRewardAmount{ value: 1 ether }(1 ether);
+        backersManager.notifyRewardAmount{ value: 1 ether }(1 ether, 0);
     }
 
     /**
@@ -465,7 +465,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //    THEN NotifyReward event is emitted
         vm.expectEmit();
         emit NotifyReward(UtilsLib._COINBASE_ADDRESS, address(this), 2 ether);
-        backersManager.notifyRewardAmount{ value: 2 ether }(0);
+        backersManager.notifyRewardAmount{ value: 2 ether }(0, 0);
         // THEN Coinbase rewards is 2 ether
         assertEq(backersManager.rewardsCoinbase(), 2 ether);
         // THEN ERC20 rewards is 0
@@ -479,15 +479,16 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: notifyRewardAmount is called twice before distribution and values are updated
      */
+    // TODO: change 0 to some meaniningful value
     function test_NotifyRewardAmountTwice() public {
         // GIVEN a BackerManager contract
         //  AND alice allocates 0.1 ether
         vm.prank(alice);
         backersManager.allocate(gauge, 0.1 ether);
         // AND 2 ether reward are added
-        backersManager.notifyRewardAmount(2 ether);
+        backersManager.notifyRewardAmount(2 ether, 0);
         // WHEN 10 ether reward are more added
-        backersManager.notifyRewardAmount(10 ether);
+        backersManager.notifyRewardAmount(10 ether, 0);
         // THEN rewards is is 12 ether
         assertEq(backersManager.rewardsERC20(), 12 ether);
         // THEN reward token balance of backersManager is 12 ether
@@ -519,7 +520,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         builderRegistry.pauseSelf();
 
         //  AND 2 ether reward are added
-        backersManager.notifyRewardAmount(2 ether);
+        backersManager.notifyRewardAmount(2 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         //  AND distribution start
@@ -532,7 +533,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // WHEN tries to add more reward
         //  THEN tx reverts because NotInDistributionPeriod
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
-        backersManager.notifyRewardAmount(2 ether);
+        backersManager.notifyRewardAmount(2 ether, 0);
         // WHEN tries to start distribution again
         //  THEN tx reverts because NotInDistributionPeriod
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
@@ -591,7 +592,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         //  AND 100 ether reward are added
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -631,7 +632,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         //  AND 100 ether rewardToken and 50 ether coinbase are added
-        backersManager.notifyRewardAmount{ value: 50 ether }(100 ether);
+        backersManager.notifyRewardAmount{ value: 50 ether }(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -667,7 +668,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         //  AND 100 ether reward are added and distributed
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         // AND distribution is executed
@@ -681,7 +682,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         //  WHEN 100 ether reward are added and distributed again
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         backersManager.startDistribution();
 
         // THEN reward token balance of gauge is 91.558441558441558441 = 100 * 6 / 22 + 100 * 18 / 28
@@ -722,7 +723,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 12_096_000 ether);
 
         //  AND 100 ether reward are added and distributed
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         // AND distribution is executed
@@ -772,7 +773,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 9_072_000 ether);
 
         //  AND 100 ether reward are added and distributed
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         // AND distribution is executed
@@ -822,7 +823,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 10_584_000 ether);
 
         //  AND 100 ether reward are added and distributed
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         // AND distribution is executed
@@ -872,7 +873,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 13_608_000 ether);
 
         //  AND 100 ether reward are added and distributed
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         // AND distribution is executed
@@ -910,7 +911,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         //  AND 100 ether reward are added and distributed
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         backersManager.startDistribution();
@@ -925,7 +926,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         //  WHEN 100 ether reward are added and distributed again
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         backersManager.startDistribution();
@@ -952,7 +953,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         // AND 100 ether reward are added
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -1000,7 +1001,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         // AND 100 ether reward are added
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -1069,7 +1070,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // WHEN there is an attempt to add 100 ether reward in the middle of the distribution
         //  THEN notifyRewardAmount reverts
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
 
         // AND distribute is executed again
         backersManager.distribute();
@@ -1097,7 +1098,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         // AND 100 ether reward are added
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -1130,7 +1131,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         // AND 100 ether reward are added
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND 100 ether are added directly to first gauge by incentivizer
         vm.startPrank(incentivizer);
         rewardToken.mint(address(incentivizer), 100 ether);
@@ -1172,7 +1173,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         // AND 100 ether reward in coinbase are added
-        backersManager.notifyRewardAmount{ value: 100 ether }(0 ether);
+        backersManager.notifyRewardAmount{ value: 100 ether }(0 ether, 0);
         // AND 100 ether in coinbase are added directly to first gauge by incentivizer
         vm.startPrank(incentivizer);
         vm.deal(address(incentivizer), 100 ether);
@@ -1212,7 +1213,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         // AND 100 ether rewardToken and 50 ether coinbase are added
-        backersManager.notifyRewardAmount{ value: 50 ether }(100 ether);
+        backersManager.notifyRewardAmount{ value: 50 ether }(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -1247,7 +1248,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         // AND 100 ether rewardToken and 50 ether coinbase are added
-        backersManager.notifyRewardAmount{ value: 50 ether }(100 ether);
+        backersManager.notifyRewardAmount{ value: 50 ether }(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -1736,7 +1737,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 1_209_600 ether);
 
         //  AND 50 ether rewardToken and 50 ether coinbase are added
-        backersManager.notifyRewardAmount{ value: 50 ether }(50 ether);
+        backersManager.notifyRewardAmount{ value: 50 ether }(50 ether, 0);
 
         // AND a new cycle
         _skipAndStartNewCycle();
@@ -1769,7 +1770,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 0);
 
         //  AND 50 ether rewardToken and 50 ether coinbase are added
-        backersManager.notifyRewardAmount{ value: 50 ether }(50 ether);
+        backersManager.notifyRewardAmount{ value: 50 ether }(50 ether, 0);
 
         //  WHEN distribute is executed
         //   THEN RewardDistributionStarted event is emitted
@@ -1812,7 +1813,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         // AND 100 ether reward are added
-        backersManager.notifyRewardAmount(100 ether);
+        backersManager.notifyRewardAmount(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
