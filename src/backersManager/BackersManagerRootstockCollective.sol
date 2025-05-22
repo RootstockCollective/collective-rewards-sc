@@ -571,7 +571,8 @@ contract BackersManagerRootstockCollective is
      */
     function _distribute() internal returns (bool) {
         uint256[] memory _amounts = new uint256[](rewardsTokens.length);
-        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
+        uint256 _rewardsTokensLength = rewardsTokens.length;
+        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
             _amounts[i] = rewardsAmounts[rewardsTokens[i]];
         }
         return _distribute(_amounts);
@@ -598,7 +599,8 @@ contract BackersManagerRootstockCollective is
         address[] memory _gauges = _builderRegistry.getGaugesInRange(_gaugeIndex, _batchLength);
 
         // loop through gauges
-        for (uint256 i = 0; i < _gauges.length; i = UtilsLib._uncheckedInc(i)) {
+        uint256 _length = _gauges.length;
+        for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             _newTotalPotentialReward += _gaugeDistribute(
                 GaugeRootstockCollective(_gauges[i]), totalPotentialReward, _periodFinish, _cycleStart, _cycleDuration
             );
@@ -611,7 +613,8 @@ contract BackersManagerRootstockCollective is
         if (_lastDistribution == _gaugesLength) {
             _finishDistribution();
             totalPotentialReward = _newTotalPotentialReward;
-            for (uint256 i = 0; i < rewardsERC20_.length; i = UtilsLib._uncheckedInc(i)) {
+            uint256 _rewardsTokensLength = rewardsTokens.length;
+            for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
                 // Storage rewards are getting updated
                 rewardsAmounts[rewardsTokens[i]] = 0;
             }
@@ -655,7 +658,8 @@ contract BackersManagerRootstockCollective is
         // [N] = [N] * [N] / [N]
         uint256[] memory _rewardsAmounts = new uint256[](rewardsTokens.length);
         // [N] = [N] * [N] / [N]
-        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
+        uint256 _rewardsTokensLength = rewardsTokens.length;
+        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
             _rewardsAmounts[i] = (_rewardShares * rewardsAmounts[rewardsTokens[i]]) / totalPotentialReward_;
         }
 
@@ -676,7 +680,8 @@ contract BackersManagerRootstockCollective is
      * @param value_ amount of rewardTokens to approve
      */
     function rewardTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
-        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
+        uint256 _rewardsTokensLength = rewardsTokens.length;
+        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
             if (!IERC20(rewardsTokens[i]).approve(gauge_, value_)) {
                 revert RewardTokenNotApproved();
             }
@@ -720,7 +725,8 @@ contract BackersManagerRootstockCollective is
         uint256[] memory _zeroAmounts = new uint256[](2);
 
         // Passing an empty array as an argument with the length of the addresses
-        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
+        uint256 _rewardsTokensLength = rewardsTokens.length;
+        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
             _zeroAmounts[i] = 0;
         }
 

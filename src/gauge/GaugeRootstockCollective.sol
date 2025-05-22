@@ -277,7 +277,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param backer_ address who receives the rewards
      */
     function claimBackerReward(address backer_) external {
-        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
+        uint256 _rewardsTokensLength = rewardsTokens.length;
+        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
             claimBackerReward(rewardsTokens[i], backer_);
         }
         claimBackerReward(UtilsLib._COINBASE_ADDRESS, backer_);
@@ -312,7 +313,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev rewards are transferred to the builder reward receiver
      */
     function claimBuilderReward() external {
-        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
+        uint256 _rewardsTokensLength = rewardsTokens.length;
+        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
             claimBuilderReward(rewardsTokens[i]);
         }
         claimBuilderReward(UtilsLib._COINBASE_ADDRESS);
@@ -351,7 +353,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param to_ address who receives the rewards
      */
     function moveBuilderUnclaimedRewards(address to_) external onlyAuthorizedContract {
-        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
+        uint256 _rewardsTokensLength = rewardsTokens.length;
+        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
             _moveBuilderUnclaimedRewards(rewardsTokens[i], to_);
         }
         _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
@@ -383,7 +386,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
         _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
-        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
+        uint256 _rewardsTokensLength = rewardsTokens.length;
+        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
             if (totalAllocation == 0) {
                 _updateRewardMissing(rewardsTokens[i], _periodFinish);
             }
