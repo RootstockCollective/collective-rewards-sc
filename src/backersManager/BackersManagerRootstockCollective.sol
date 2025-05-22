@@ -94,7 +94,7 @@ contract BackersManagerRootstockCollective is
         _;
     }
 
-    modifier MoreThanZeroGauges() {
+    modifier hasGauges() {
         if (builderRegistry.getGaugesLength() == 0) revert NoGaugesForDistribution();
         _;
     }
@@ -332,7 +332,7 @@ contract BackersManagerRootstockCollective is
     )
         external
         notInDistributionPeriod
-        MoreThanZeroGauges
+        hasGauges
     {
         validateRewardToken(rewardToken_);
         if (rewardAmount_ > 0) {
@@ -349,7 +349,7 @@ contract BackersManagerRootstockCollective is
     )
         external
         notInDistributionPeriod
-        MoreThanZeroGauges
+        hasGauges
     {
         uint256 _rewardTokensLength = rewardTokens_.length;
         if (_rewardTokensLength != rewardsAmounts_.length) {
@@ -367,7 +367,7 @@ contract BackersManagerRootstockCollective is
         }
     }
 
-    function notifyRewardAmountCoinbase() external payable notInDistributionPeriod MoreThanZeroGauges {
+    function notifyRewardAmountCoinbase() external payable notInDistributionPeriod hasGauges {
         if (msg.value > 0) {
             rewardsCoinbase += msg.value;
             emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
