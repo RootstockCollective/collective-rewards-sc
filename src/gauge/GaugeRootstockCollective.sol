@@ -100,9 +100,6 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /// @notice mapping of validated reward tokens
     mapping(address => bool) public rewardsTokensValid;
 
-    /// @notice mapping of reward amounts of reward tokens
-    mapping(address => uint256) public rewardsAmounts;
-
     // -----------------------------
     // ------- Initializer ---------
     // -----------------------------
