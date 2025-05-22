@@ -575,11 +575,6 @@ contract BackersManagerRootstockCollective is
         for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
             _amounts[i] = rewardsAmounts[rewardsTokens[i]];
         }
-        return _distribute(_amounts);
-    }
-
-    // TODO: Add comments and change the name
-    function _distribute(uint256[] memory rewardsERC20_) internal returns (bool) {
         uint256 _newTotalPotentialReward = tempTotalPotentialReward;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
@@ -613,8 +608,8 @@ contract BackersManagerRootstockCollective is
         if (_lastDistribution == _gaugesLength) {
             _finishDistribution();
             totalPotentialReward = _newTotalPotentialReward;
-            uint256 _rewardsTokensLength = rewardsTokens.length;
-            for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            uint256 __rewardsTokensLength = rewardsTokens.length;
+            for (uint256 i = 0; i < __rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
                 // Storage rewards are getting updated
                 rewardsAmounts[rewardsTokens[i]] = 0;
             }
