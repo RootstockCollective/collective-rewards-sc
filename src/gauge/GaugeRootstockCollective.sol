@@ -351,7 +351,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param to_ address who receives the rewards
      */
     function moveBuilderUnclaimedRewards(address to_) external onlyAuthorizedContract {
-        for (uint256 i = 0; i < rewardsTokens.length; i++) {
+        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
             _moveBuilderUnclaimedRewards(rewardsTokens[i], to_);
         }
         _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
@@ -383,7 +383,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
         _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
-        for (uint256 i = 0; i < rewardsTokens.length; i++) {
+        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
             if (totalAllocation == 0) {
                 _updateRewardMissing(rewardsTokens[i], _periodFinish);
             }
@@ -475,7 +475,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // On a distribution, we include any reward missing into the new reward rate and reset it
         // TODO: Check length and revert if not equal
         uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
-        for (uint256 i = 0; i < amountsERC20_.length; i++) {
+        for (uint256 i = 0; i < amountsERC20_.length; i = UtilsLib._uncheckedInc(i)) {
             uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountsERC20_[i]);
             _notifyRewardAmount(
                 addressesERC20_[i],
@@ -499,7 +499,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         newGaugeRewardShares_ = totalAllocation * cycleDuration_;
         rewardShares = newGaugeRewardShares_;
 
-        for (uint256 i = 0; i < addressesERC20_.length; i++) {
+        for (uint256 i = 0; i < addressesERC20_.length; i = UtilsLib._uncheckedInc(i)) {
             SafeERC20.safeTransferFrom(IERC20(addressesERC20_[i]), msg.sender, address(this), amountsERC20_[i]);
         }
     }

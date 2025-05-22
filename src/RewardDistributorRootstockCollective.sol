@@ -5,7 +5,7 @@ import { UpgradeableRootstockCollective } from "./governance/UpgradeableRootstoc
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { BackersManagerRootstockCollective } from "./backersManager/BackersManagerRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
-
+import { UtilsLib } from "./libraries/UtilsLib.sol";
 /**
  * @title RewardDistributorRootstockCollective
  * @notice Accumulates all the rewards to be distributed for each cycle
@@ -191,7 +191,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
     function _sendRewards(uint256[] memory amountsERC20_, uint256 amountCoinbase_) internal {
-        for (uint256 i = 0; i < rewardsTokens.length; i++) {
+        for (uint256 i = 0; i < rewardsTokens.length; i = UtilsLib._uncheckedInc(i)) {
             IERC20(rewardsTokens[i]).approve(address(backersManager), amountsERC20_[i]);
         }
         backersManager.notifyRewardAmountERC20(rewardsTokens, amountsERC20_);
