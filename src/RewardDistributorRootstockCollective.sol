@@ -52,10 +52,10 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     // -----------------------------
 
     /// @notice addresses of all valid rewards tokens
-    address[] public rewardsTokens;
+    address[] public rewardTokens;
 
     /// @notice mapping of validated reward tokens
-    mapping(address => bool) public rewardsTokensValid;
+    mapping(address => bool) public rewardTokensValid;
 
     /// @notice mapping of reward amounts of reward tokens
     mapping(address => uint256) public rewardsAmounts;
@@ -88,10 +88,10 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      */
     function initializeV2(address usdrifRewardToken_) external reinitializer(2) {
         // make 2 rewardTokens true and add them to the array
-        rewardsTokensValid[usdrifRewardToken_] = true;
-        rewardsTokensValid[address(rewardToken)] = true;
-        rewardsTokens.push(address(rewardToken));
-        rewardsTokens.push(usdrifRewardToken_);
+        rewardTokensValid[usdrifRewardToken_] = true;
+        rewardTokensValid[address(rewardToken)] = true;
+        rewardTokens.push(address(rewardToken));
+        rewardTokens.push(usdrifRewardToken_);
     }
 
     /**
@@ -191,11 +191,11 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
     function _sendRewards(uint256[] memory amountsERC20_, uint256 amountCoinbase_) internal {
-        uint256 _rewardsTokensLength = rewardsTokens.length;
-        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
-            IERC20(rewardsTokens[i]).approve(address(backersManager), amountsERC20_[i]);
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            IERC20(rewardTokens[i]).approve(address(backersManager), amountsERC20_[i]);
         }
-        backersManager.notifyRewardAmountERC20(rewardsTokens, amountsERC20_);
+        backersManager.notifyRewardAmountERC20(rewardTokens, amountsERC20_);
         backersManager.notifyRewardAmountCoinbase{ value: amountCoinbase_ }();
     }
 

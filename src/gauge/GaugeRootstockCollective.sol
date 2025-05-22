@@ -95,10 +95,10 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
 
     /// @notice addresses of all valid rewards tokens
-    address[] public rewardsTokens;
+    address[] public rewardTokens;
 
     /// @notice mapping of validated reward tokens
-    mapping(address => bool) public rewardsTokensValid;
+    mapping(address => bool) public rewardTokensValid;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -138,10 +138,10 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     function initializeV3(address usdrifRewardToken_) external /*reinitializer(3)*/ {
         // __ReentrancyGuard_init();
         // make 2 rewardTokens true and add them to the array
-        rewardsTokensValid[usdrifRewardToken_] = true;
-        rewardsTokensValid[rewardToken] = true;
-        rewardsTokens.push(rewardToken);
-        rewardsTokens.push(usdrifRewardToken_);
+        rewardTokensValid[usdrifRewardToken_] = true;
+        rewardTokensValid[rewardToken] = true;
+        rewardTokens.push(rewardToken);
+        rewardTokens.push(usdrifRewardToken_);
     }
 
     // NOTE: This contract previously included an `initializeV2()` function using `reinitializer(2)`
@@ -274,9 +274,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param backer_ address who receives the rewards
      */
     function claimBackerReward(address backer_) external {
-        uint256 _rewardsTokensLength = rewardsTokens.length;
-        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
-            claimBackerReward(rewardsTokens[i], backer_);
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            claimBackerReward(rewardTokens[i], backer_);
         }
         claimBackerReward(UtilsLib._COINBASE_ADDRESS, backer_);
     }
@@ -310,9 +310,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev rewards are transferred to the builder reward receiver
      */
     function claimBuilderReward() external {
-        uint256 _rewardsTokensLength = rewardsTokens.length;
-        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
-            claimBuilderReward(rewardsTokens[i]);
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            claimBuilderReward(rewardTokens[i]);
         }
         claimBuilderReward(UtilsLib._COINBASE_ADDRESS);
     }
@@ -344,9 +344,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param to_ address who receives the rewards
      */
     function moveBuilderUnclaimedRewards(address to_) external onlyAuthorizedContract {
-        uint256 _rewardsTokensLength = rewardsTokens.length;
-        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
-            _moveBuilderUnclaimedRewards(rewardsTokens[i], to_);
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            _moveBuilderUnclaimedRewards(rewardTokens[i], to_);
         }
         _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
     }
@@ -377,12 +377,12 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
         _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
-        uint256 _rewardsTokensLength = rewardsTokens.length;
-        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
             if (totalAllocation == 0) {
-                _updateRewardMissing(rewardsTokens[i], _periodFinish);
+                _updateRewardMissing(rewardTokens[i], _periodFinish);
             }
-            _updateRewards(rewardsTokens[i], backer_, _periodFinish);
+            _updateRewards(rewardTokens[i], backer_, _periodFinish);
         }
 
         // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
@@ -416,7 +416,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param amount_ amount of reward tokens
      */
     function incentivizeWithRewardToken(uint256 amount_, address rewardToken_) external {
-        if (!rewardsTokensValid[rewardToken_]) {
+        if (!rewardTokensValid[rewardToken_]) {
             revert RewardTokenNotValid();
         }
         _incentivizeWithToken(amount_, rewardToken_);

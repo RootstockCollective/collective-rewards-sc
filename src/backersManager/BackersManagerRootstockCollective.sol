@@ -138,10 +138,10 @@ contract BackersManagerRootstockCollective is
     uint256 public maxDistributionsPerBatch;
 
     /// @notice addresses of all valid rewards tokens
-    address[] public rewardsTokens;
+    address[] public rewardTokens;
 
     /// @notice mapping of validated reward tokens
-    mapping(address => bool) public rewardsTokensValid;
+    mapping(address => bool) public rewardTokensValid;
 
     /// @notice mapping of reward amounts of reward tokens
     mapping(address => uint256) public rewardsAmounts;
@@ -207,10 +207,10 @@ contract BackersManagerRootstockCollective is
     function initializeV3(uint256 maxDistributionsPerBatch_, address usdrifRewardToken_) external reinitializer(3) {
         if (address(usdrifRewardToken_) == address(0)) revert ZeroAddressNotAllowed();
         // make 2 rewardTokens true and add them to the array
-        rewardsTokensValid[usdrifRewardToken_] = true;
-        rewardsTokensValid[rewardToken] = true;
-        rewardsTokens.push(rewardToken);
-        rewardsTokens.push(usdrifRewardToken_);
+        rewardTokensValid[usdrifRewardToken_] = true;
+        rewardTokensValid[rewardToken] = true;
+        rewardTokens.push(rewardToken);
+        rewardTokens.push(usdrifRewardToken_);
         // set current values for 2 reward token amounts(0 for usdrifRewardToken)
         rewardsAmounts[rewardToken] = rewardsERC20;
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
@@ -490,7 +490,7 @@ contract BackersManagerRootstockCollective is
 
     // TODO: Add comments
     function _validateRewardToken(address rewardToken_) internal view {
-        if (!rewardsTokensValid[rewardToken_]) {
+        if (!rewardTokensValid[rewardToken_]) {
             revert RewardTokenNotValid();
         }
     }
@@ -570,10 +570,10 @@ contract BackersManagerRootstockCollective is
      * @return true if distribution has finished
      */
     function _distribute() internal returns (bool) {
-        uint256[] memory _amounts = new uint256[](rewardsTokens.length);
-        uint256 _rewardsTokensLength = rewardsTokens.length;
-        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
-            _amounts[i] = rewardsAmounts[rewardsTokens[i]];
+        uint256[] memory _amounts = new uint256[](rewardTokens.length);
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            _amounts[i] = rewardsAmounts[rewardTokens[i]];
         }
         uint256 _newTotalPotentialReward = tempTotalPotentialReward;
         uint256 _gaugeIndex = indexLastGaugeDistributed;
@@ -608,10 +608,10 @@ contract BackersManagerRootstockCollective is
         if (_lastDistribution == _gaugesLength) {
             _finishDistribution();
             totalPotentialReward = _newTotalPotentialReward;
-            uint256 __rewardsTokensLength = rewardsTokens.length;
-            for (uint256 i = 0; i < __rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            uint256 __rewardTokensLength = rewardTokens.length;
+            for (uint256 i = 0; i < __rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
                 // Storage rewards are getting updated
-                rewardsAmounts[rewardsTokens[i]] = 0;
+                rewardsAmounts[rewardTokens[i]] = 0;
             }
             rewardsCoinbase = 0;
             return true;
@@ -651,11 +651,11 @@ contract BackersManagerRootstockCollective is
     {
         uint256 _rewardShares = gauge_.rewardShares();
         // [N] = [N] * [N] / [N]
-        uint256[] memory _rewardsAmounts = new uint256[](rewardsTokens.length);
+        uint256[] memory _rewardsAmounts = new uint256[](rewardTokens.length);
         // [N] = [N] * [N] / [N]
-        uint256 _rewardsTokensLength = rewardsTokens.length;
-        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
-            _rewardsAmounts[i] = (_rewardShares * rewardsAmounts[rewardsTokens[i]]) / totalPotentialReward_;
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            _rewardsAmounts[i] = (_rewardShares * rewardsAmounts[rewardTokens[i]]) / totalPotentialReward_;
         }
 
         uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase) / totalPotentialReward_;
@@ -663,7 +663,7 @@ contract BackersManagerRootstockCollective is
         uint256 _backerRewardPercentage =
             builderRegistry.getRewardPercentageToApply(builderRegistry.gaugeToBuilder(gauge_));
         return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
-            _rewardsAmounts, rewardsTokens, _backerRewardPercentage, periodFinish_, cycleStart_, cycleDuration_
+            _rewardsAmounts, rewardTokens, _backerRewardPercentage, periodFinish_, cycleStart_, cycleDuration_
         );
     }
 
@@ -675,9 +675,9 @@ contract BackersManagerRootstockCollective is
      * @param value_ amount of rewardTokens to approve
      */
     function rewardTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
-        uint256 _rewardsTokensLength = rewardsTokens.length;
-        for (uint256 i = 0; i < _rewardsTokensLength; i = UtilsLib._uncheckedInc(i)) {
-            if (!IERC20(rewardsTokens[i]).approve(gauge_, value_)) {
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            if (!IERC20(rewardTokens[i]).approve(gauge_, value_)) {
                 revert RewardTokenNotApproved();
             }
         }
@@ -727,7 +727,7 @@ contract BackersManagerRootstockCollective is
         if (haltedGaugeLastPeriodFinish_ < _periodFinish) {
             (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
             totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-                _zeroAmounts, rewardsTokens, 0, haltedGaugeLastPeriodFinish_, _cycleStart, _cycleDuration
+                _zeroAmounts, rewardTokens, 0, haltedGaugeLastPeriodFinish_, _cycleStart, _cycleDuration
             );
         } else {
             // halt and resume were in the same cycle, we don't update the shares
