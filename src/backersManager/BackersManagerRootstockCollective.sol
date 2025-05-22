@@ -334,7 +334,7 @@ contract BackersManagerRootstockCollective is
         notInDistributionPeriod
         hasGauges
     {
-        validateRewardToken(rewardToken_);
+        _validateRewardToken(rewardToken_);
         if (rewardAmount_ > 0) {
             rewardsAmounts[rewardToken_] += rewardAmount_;
             emit NotifyReward(rewardToken_, msg.sender, rewardAmount_);
@@ -357,7 +357,7 @@ contract BackersManagerRootstockCollective is
         }
         for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
             address _rewardToken = rewardTokens_[i];
-            validateRewardToken(_rewardToken);
+            _validateRewardToken(_rewardToken);
             uint256 _rewardAmount = rewardsAmounts_[i];
             if (_rewardAmount > 0) {
                 rewardsAmounts[_rewardToken] += _rewardAmount;
@@ -371,13 +371,6 @@ contract BackersManagerRootstockCollective is
         if (msg.value > 0) {
             rewardsCoinbase += msg.value;
             emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
-        }
-    }
-
-    // TODO: Add comments
-    function validateRewardToken(address rewardToken_) public view {
-        if (!rewardsTokensValid[rewardToken_]) {
-            revert RewardTokenNotValid();
         }
     }
 
@@ -495,6 +488,13 @@ contract BackersManagerRootstockCollective is
     // ---- Internal Functions -----
     // -----------------------------
 
+    // TODO: Add comments
+    function _validateRewardToken(address rewardToken_) internal view {
+        if (!rewardsTokensValid[rewardToken_]) {
+            revert RewardTokenNotValid();
+        }
+    }
+    
     /**
      * @notice internal function used to allocate votes for a gauge or a batch of gauges
      * @param gauge_ address of the gauge where the votes will be allocated

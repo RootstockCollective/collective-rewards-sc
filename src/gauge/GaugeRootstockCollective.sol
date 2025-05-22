@@ -340,12 +340,6 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         }
     }
 
-    function validateRewardToken(address rewardToken_) public view {
-        if (!rewardsTokensValid[rewardToken_]) {
-            revert RewardTokenNotValid();
-        }
-    }
-
     /**
      * @notice moves builder rewards to another address
      *  It is triggered only when the builder is KYC revoked
@@ -425,7 +419,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param amount_ amount of reward tokens
      */
     function incentivizeWithRewardToken(uint256 amount_, address rewardToken_) external {
-        validateRewardToken(rewardToken_);
+        if (!rewardsTokensValid[rewardToken_]) {
+            revert RewardTokenNotValid();
+        }
         _incentivizeWithToken(amount_, rewardToken_);
     }
 
