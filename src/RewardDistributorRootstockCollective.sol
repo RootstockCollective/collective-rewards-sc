@@ -17,7 +17,8 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     error NotFoundationTreasury();
     error CollectiveRewardsAddressesAlreadyInitialized();
     error CycleAlreadyFunded();
-
+    error UnequalLengths();
+    
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
@@ -192,6 +193,9 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      */
     function _sendRewards(uint256[] memory amountsERC20_, uint256 amountCoinbase_) internal {
         uint256 _rewardTokensLength = rewardTokens.length;
+        if (_rewardTokensLength != amountsERC20_.length) {
+            revert UnequalLengths();
+        }
         for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
             IERC20(rewardTokens[i]).approve(address(backersManager), amountsERC20_[i]);
         }
