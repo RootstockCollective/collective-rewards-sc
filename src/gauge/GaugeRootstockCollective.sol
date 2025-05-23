@@ -458,7 +458,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // TODO: add comments
     function notifyRewardAmountAndUpdateShares(
         uint256[] calldata amountsERC20_,
-        address[] calldata addressesERC20_,
+        address[] calldata tokensERC20_,
         uint256 backerRewardPercentage_,
         uint256 periodFinish_,
         uint256 cycleStart_,
@@ -475,7 +475,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         for (uint256 i = 0; i < amountsERC20_.length; i = UtilsLib._uncheckedInc(i)) {
             uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountsERC20_[i]);
             _notifyRewardAmount(
-                addressesERC20_[i],
+                tokensERC20_[i],
                 amountsERC20_[i] - _backerAmountERC20,
                 _backerAmountERC20,
                 periodFinish_,
@@ -496,8 +496,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         newGaugeRewardShares_ = totalAllocation * cycleDuration_;
         rewardShares = newGaugeRewardShares_;
 
-        for (uint256 i = 0; i < addressesERC20_.length; i = UtilsLib._uncheckedInc(i)) {
-            SafeERC20.safeTransferFrom(IERC20(addressesERC20_[i]), msg.sender, address(this), amountsERC20_[i]);
+        for (uint256 i = 0; i < tokensERC20_.length; i = UtilsLib._uncheckedInc(i)) {
+            SafeERC20.safeTransferFrom(IERC20(tokensERC20_[i]), msg.sender, address(this), amountsERC20_[i]);
         }
     }
 
