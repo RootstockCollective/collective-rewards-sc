@@ -5,11 +5,12 @@ import { UpgradeableRootstockCollective } from "./governance/UpgradeableRootstoc
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { BackersManagerRootstockCollective } from "./backersManager/BackersManagerRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "./interfaces/IGovernanceManagerRootstockCollective.sol";
-
+import { UtilsLib } from "./libraries/UtilsLib.sol";
 /**
  * @title RewardDistributorRootstockCollective
  * @notice Accumulates all the rewards to be distributed for each cycle
  */
+
 contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective {
     // -----------------------------
     // ------- Custom Errors -------
@@ -17,6 +18,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     error NotFoundationTreasury();
     error CollectiveRewardsAddressesAlreadyInitialized();
     error CycleAlreadyFunded();
+    error UnequalLengths();
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -42,10 +44,23 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
     ///@notice default reward token amount
-    uint256 public defaultRewardTokenAmount;
+    uint256[] public defaultRewardTokenAmount;
     ///@notice default reward coinbase amount
     uint256 public defaultRewardCoinbaseAmount;
     uint256 public lastFundedCycleStart;
+
+    // -----------------------------
+    // ---------- V2 Storage ----------
+    // -----------------------------
+
+    /// @notice addresses of all valid rewards tokens
+    address[] public rewardTokens;
+
+    /// @notice mapping of validated reward tokens
+    mapping(address => bool) public rewardTokensValid;
+
+    /// @notice mapping of reward amounts of reward tokens
+    mapping(address => uint256) public rewardsAmounts;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -63,6 +78,22 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      */
     function initialize(IGovernanceManagerRootstockCollective governanceManager_) external initializer {
         __Upgradeable_init(governanceManager_);
+    }
+
+    /**
+     * @notice contract initializer
+     * @param usdrifRewardToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the
+     * ERC-20
+     * standard are supported.
+     * @notice For more info on supported tokens, see:
+     * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
+     */
+    function initializeV2(address usdrifRewardToken_) external reinitializer(2) {
+        // make 2 rewardTokens true and add them to the array
+        rewardTokensValid[usdrifRewardToken_] = true;
+        rewardTokensValid[address(rewardToken)] = true;
+        rewardTokens.push(address(rewardToken));
+        rewardTokens.push(usdrifRewardToken_);
     }
 
     /**
@@ -84,47 +115,54 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /**
      * @notice sends rewards to backersManager contract to be distributed to the gauges
      * @dev reverts if is not called by foundation treasury address
-     * @param amountERC20_ amount of ERC20 reward token to send
+     * @param amountsERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) external payable onlyFoundationTreasury {
-        _sendRewards(amountERC20_, amountCoinbase_);
-    }
-
-    /**
-     * @notice sends rewards to backersManager contract and starts the distribution to the gauges
-     * @dev reverts if is not called by foundation treasury address
-     *  reverts if is not in the distribution window
-     * @param amountERC20_ amount of ERC20 reward token to send
-     * @param amountCoinbase_ amount of Coinbase reward token to send
-     */
-    function sendRewardsAndStartDistribution(
-        uint256 amountERC20_,
+    function sendRewards(
+        uint256[] memory amountsERC20_,
         uint256 amountCoinbase_
     )
         external
         payable
         onlyFoundationTreasury
     {
-        _sendRewards(amountERC20_, amountCoinbase_);
+        _sendRewards(amountsERC20_, amountCoinbase_);
+    }
+
+    /**
+     * @notice sends rewards to backersManager contract and starts the distribution to the gauges
+     * @dev reverts if is not called by foundation treasury address
+     *  reverts if is not in the distribution window
+     * @param amountsERC20_ amount of ERC20 reward token to send
+     * @param amountCoinbase_ amount of Coinbase reward token to send
+     */
+    function sendRewardsAndStartDistribution(
+        uint256[] memory amountsERC20_,
+        uint256 amountCoinbase_
+    )
+        external
+        payable
+        onlyFoundationTreasury
+    {
+        _sendRewards(amountsERC20_, amountCoinbase_);
         backersManager.startDistribution();
     }
 
     /**
      * @notice sets the default reward amounts
      * @dev reverts if is not called by foundation treasury address
-     * @param tokenAmount_ default amount of ERC20 reward token to send
+     * @param tokenAmounts_ default amount of ERC20 reward token to send
      * @param coinbaseAmount_ default amount of Coinbase reward token to send
      */
-    function setDefaultRewardAmount(
-        uint256 tokenAmount_,
+    function setDefaultRewardAmounts(
+        uint256[] memory tokenAmounts_,
         uint256 coinbaseAmount_
     )
         external
         payable
         onlyFoundationTreasury
     {
-        defaultRewardTokenAmount = tokenAmount_;
+        defaultRewardTokenAmount = tokenAmounts_;
         defaultRewardCoinbaseAmount = coinbaseAmount_;
     }
 
@@ -151,12 +189,19 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
 
     /**
      * @notice internal function to send rewards to backersManager contract
-     * @param amountERC20_ amount of ERC20 reward token to send
+     * @param amountsERC20_ amount of ERC20 reward token to send
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
-    function _sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) internal {
-        rewardToken.approve(address(backersManager), amountERC20_);
-        backersManager.notifyRewardAmount{ value: amountCoinbase_ }(amountERC20_);
+    function _sendRewards(uint256[] memory amountsERC20_, uint256 amountCoinbase_) internal {
+        uint256 _rewardTokensLength = rewardTokens.length;
+        if (_rewardTokensLength != amountsERC20_.length) {
+            revert UnequalLengths();
+        }
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            IERC20(rewardTokens[i]).approve(address(backersManager), amountsERC20_[i]);
+        }
+        backersManager.notifyRewardAmountERC20(rewardTokens, amountsERC20_);
+        backersManager.notifyRewardAmountCoinbase{ value: amountCoinbase_ }();
     }
 
     /**

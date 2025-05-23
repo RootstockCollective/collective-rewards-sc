@@ -28,6 +28,7 @@ contract UpgradeV3 {
     RewardDistributorRootstockCollective public rewardDistributorImplV3;
     address public upgrader;
     address public configurator;
+    address public usdrifRewardToken;
     uint256 public constant MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
     constructor(
@@ -38,7 +39,8 @@ contract UpgradeV3 {
         GaugeRootstockCollective gaugeImplV3_,
         RewardDistributorRootstockCollective rewardDistributorProxy_,
         RewardDistributorRootstockCollective rewardDistributorImplV3_,
-        address configurator_
+        address configurator_,
+        address usdrifRewardToken_
     ) {
         backersManagerProxy = backersManagerProxy_;
         backersManagerImplV3 = backersManagerImplV3_;
@@ -54,6 +56,7 @@ contract UpgradeV3 {
         rewardDistributorImplV3 = rewardDistributorImplV3_;
         upgrader = governanceManagerProxy.upgrader();
         configurator = configurator_;
+        usdrifRewardToken = usdrifRewardToken_;
     }
 
     function run() public {
@@ -79,8 +82,9 @@ contract UpgradeV3 {
     }
 
     function _upgradeBackersManager() internal {
-        bytes memory _backersManagerInitializeData =
-            abi.encodeCall(BackersManagerRootstockCollective.initializeV3, (MAX_DISTRIBUTIONS_PER_BATCH));
+        bytes memory _backersManagerInitializeData = abi.encodeCall(
+            BackersManagerRootstockCollective.initializeV3, (MAX_DISTRIBUTIONS_PER_BATCH, usdrifRewardToken)
+        );
 
         backersManagerProxy.upgradeToAndCall(address(backersManagerImplV3), _backersManagerInitializeData);
     }

@@ -41,7 +41,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
         for (uint256 i = 0; i < _qIncentives; i++) {
             uint256 _randomGauge = uint256(keccak256(abi.encodePacked(seed_, i))) % gaugesArray.length;
             rewardToken.approve(address(gaugesArray[_randomGauge]), incentiveAmount_);
-            gaugesArray[_randomGauge].incentivizeWithRewardToken(incentiveAmount_);
+            gaugesArray[_randomGauge].incentivizeWithRewardToken(incentiveAmount_, address(rewardToken));
             gaugesArray[_randomGauge].incentivizeWithCoinbase{ value: incentiveAmount_ }();
             rewardsAdded[gaugesArray[_randomGauge]] += incentiveAmount_;
         }

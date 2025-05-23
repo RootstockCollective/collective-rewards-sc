@@ -20,6 +20,7 @@ contract UpgradeV3Test is Test {
     UpgradeV3 public upgradeV3;
     address public upgrader;
     address public configurator = makeAddr("configurator");
+    address public usdrifRewardToken = makeAddr("usdrifRewardToken");
     address public alice = makeAddr("alice");
 
     function setUp() public {
@@ -40,7 +41,7 @@ contract UpgradeV3Test is Test {
 
         // Setup UpgradeV3
         UpgradeV3Deployer _upgradeV3Deployer = new UpgradeV3Deployer();
-        upgradeV3 = _upgradeV3Deployer.run(backersManager, rewardDistributor, configurator, false);
+        upgradeV3 = _upgradeV3Deployer.run(backersManager, rewardDistributor, configurator, usdrifRewardToken, false);
     }
 
     /**

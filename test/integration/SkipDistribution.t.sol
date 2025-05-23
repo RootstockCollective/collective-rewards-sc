@@ -860,8 +860,10 @@ contract SkipDistribution is BaseTest {
         _skipToStartDistributionWindow();
         vm.deal(address(rewardDistributor), 10 ether + address(rewardDistributor).balance);
         rewardToken.mint(address(rewardDistributor), 100 ether);
+        uint256[] memory _amountsERC20 = new uint256[](2);
+        _amountsERC20[0] = 100 ether;
         vm.prank(foundation);
-        rewardDistributor.sendRewardsAndStartDistribution(100 ether, 10 ether);
+        rewardDistributor.sendRewardsAndStartDistribution(_amountsERC20, 10 ether);
 
         // THEN distribution is ongoing
         assertTrue(backersManager.onDistributionPeriod());

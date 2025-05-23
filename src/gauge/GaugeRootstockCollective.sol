@@ -23,6 +23,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     error GaugeHalted();
     error BeforeDistribution();
     error NotEnoughAmount();
+    error RewardTokenNotValid();
 
     // -----------------------------
     // ----------- Events ----------
@@ -90,6 +91,16 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     BuilderRegistryRootstockCollective public builderRegistry;
 
     // -----------------------------
+    // -------- V3 Storage ---------
+    // -----------------------------
+
+    /// @notice addresses of all valid rewards tokens
+    address[] public rewardTokens;
+
+    /// @notice mapping of validated reward tokens
+    mapping(address => bool) public rewardTokensValid;
+
+    // -----------------------------
     // ------- Initializer ---------
     // -----------------------------
 
@@ -112,6 +123,25 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
         builderRegistry = BuilderRegistryRootstockCollective(builderRegistry_);
         backersManager = BackersManagerRootstockCollective(builderRegistry.backersManager());
+    }
+
+    /**
+     * @notice contract initializer
+     * @param usdrifRewardToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the
+     * ERC-20
+     * standard are supported.
+     * @notice For more info on supported tokens, see:
+     * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
+     */
+    // Note: Initialization patterns are currently disabled, because including the upgrade of the gauge contract is out
+    // of the scope of this pr
+    function initializeV3(address usdrifRewardToken_) external /*reinitializer(3)*/ {
+        // __ReentrancyGuard_init();
+        // make 2 rewardTokens true and add them to the array
+        rewardTokensValid[usdrifRewardToken_] = true;
+        rewardTokensValid[rewardToken] = true;
+        rewardTokens.push(rewardToken);
+        rewardTokens.push(usdrifRewardToken_);
     }
 
     // NOTE: This contract previously included an `initializeV2()` function using `reinitializer(2)`
@@ -244,7 +274,10 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param backer_ address who receives the rewards
      */
     function claimBackerReward(address backer_) external {
-        claimBackerReward(rewardToken, backer_);
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            claimBackerReward(rewardTokens[i], backer_);
+        }
         claimBackerReward(UtilsLib._COINBASE_ADDRESS, backer_);
     }
 
@@ -277,7 +310,10 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev rewards are transferred to the builder reward receiver
      */
     function claimBuilderReward() external {
-        claimBuilderReward(rewardToken);
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            claimBuilderReward(rewardTokens[i]);
+        }
         claimBuilderReward(UtilsLib._COINBASE_ADDRESS);
     }
 
@@ -308,7 +344,10 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param to_ address who receives the rewards
      */
     function moveBuilderUnclaimedRewards(address to_) external onlyAuthorizedContract {
-        _moveBuilderUnclaimedRewards(rewardToken, to_);
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            _moveBuilderUnclaimedRewards(rewardTokens[i], to_);
+        }
         _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
     }
 
@@ -335,12 +374,16 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // if backers quit before cycle finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
-            _updateRewardMissing(rewardToken, _periodFinish);
             _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
-
-        _updateRewards(rewardToken, backer_, _periodFinish);
         _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
+        uint256 _rewardTokensLength = rewardTokens.length;
+        for (uint256 i = 0; i < _rewardTokensLength; i = UtilsLib._uncheckedInc(i)) {
+            if (totalAllocation == 0) {
+                _updateRewardMissing(rewardTokens[i], _periodFinish);
+            }
+            _updateRewards(rewardTokens[i], backer_, _periodFinish);
+        }
 
         // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
         uint256 _previousAllocation = allocationOf[backer_];
@@ -364,37 +407,19 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         return (allocationDeviation_, rewardSharesDeviation_, isNegative_);
     }
 
+    // NOTE: incentivize functions should be generalized into one which takes the address of the corresponding reward
+    // function
     /**
      * @notice transfers reward tokens to this contract to incentivize backers
      * @dev reverts if Gauge is halted
      *  reverts if distribution for the cycle has not finished
      * @param amount_ amount of reward tokens
      */
-    function incentivizeWithRewardToken(uint256 amount_) external minIncentiveAmount(amount_) {
-        // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
-        // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
-        // calculate rewardPerToken
-        if (builderRegistry.isGaugeHalted(address(this))) revert GaugeHalted();
-        // Gauges cannot be incentivized before the distribution of the cycle finishes
-        if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
-
-        if (
-            IERC20(rewardToken).balanceOf(msg.sender) < amount_
-                || IERC20(rewardToken).allowance(msg.sender, address(this)) < amount_
-        ) {
-            revert NotEnoughAmount();
+    function incentivizeWithRewardToken(uint256 amount_, address rewardToken_) external {
+        if (!rewardTokensValid[rewardToken_]) {
+            revert RewardTokenNotValid();
         }
-
-        _notifyRewardAmount(
-            rewardToken,
-            0, /*builderAmount_*/
-            amount_,
-            backersManager.periodFinish(),
-            backersManager.timeUntilNextCycle(block.timestamp),
-            false /*resetRewardMissing_*/
-        );
-
-        SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
+        _incentivizeWithToken(amount_, rewardToken_);
     }
 
     /**
@@ -423,15 +448,17 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice called on the reward distribution. Transfers reward tokens from backerManger to this contract
      * @dev reverts if caller is not the backersManager contract
-     * @param amountERC20_ amount of ERC20 rewards
+     * @param amountsERC20_ amount of ERC20 rewards
      * @param backerRewardPercentage_  backers reward percentage
      * @param periodFinish_ timestamp end of current rewards period
      * @param cycleStart_ Collective Rewards cycle start timestamp
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
+    // TODO: add comments
     function notifyRewardAmountAndUpdateShares(
-        uint256 amountERC20_,
+        uint256[] calldata amountsERC20_,
+        address[] calldata tokensERC20_,
         uint256 backerRewardPercentage_,
         uint256 periodFinish_,
         uint256 cycleStart_,
@@ -442,33 +469,36 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         onlyAuthorizedContract
         returns (uint256 newGaugeRewardShares_)
     {
-        address _rewardToken = rewardToken;
-        uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountERC20_);
-        uint256 _backerAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
-        uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
         // On a distribution, we include any reward missing into the new reward rate and reset it
-        bool _resetRewardMissing = true;
-        _notifyRewardAmount(
-            _rewardToken,
-            amountERC20_ - _backerAmountERC20,
-            _backerAmountERC20,
-            periodFinish_,
-            _timeUntilNextCycle,
-            _resetRewardMissing
-        );
+        // TODO: Check length and revert if not equal
+        uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
+        for (uint256 i = 0; i < amountsERC20_.length; i = UtilsLib._uncheckedInc(i)) {
+            uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountsERC20_[i]);
+            _notifyRewardAmount(
+                tokensERC20_[i],
+                amountsERC20_[i] - _backerAmountERC20,
+                _backerAmountERC20,
+                periodFinish_,
+                _timeUntilNextCycle,
+                true /*_resetRewardMissing*/
+            );
+        }
+        uint256 _backersAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
         _notifyRewardAmount(
             UtilsLib._COINBASE_ADDRESS,
-            msg.value - _backerAmountCoinbase,
-            _backerAmountCoinbase,
+            msg.value - _backersAmountCoinbase,
+            _backersAmountCoinbase,
             periodFinish_,
             _timeUntilNextCycle,
-            _resetRewardMissing
+            true /*_resetRewardMissing*/
         );
 
         newGaugeRewardShares_ = totalAllocation * cycleDuration_;
         rewardShares = newGaugeRewardShares_;
 
-        SafeERC20.safeTransferFrom(IERC20(_rewardToken), msg.sender, address(this), amountERC20_);
+        for (uint256 i = 0; i < tokensERC20_.length; i = UtilsLib._uncheckedInc(i)) {
+            SafeERC20.safeTransferFrom(IERC20(tokensERC20_[i]), msg.sender, address(this), amountsERC20_[i]);
+        }
     }
 
     // -----------------------------
@@ -653,6 +683,33 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             rewardData[rewardToken_].builderRewards = 0;
             _transferRewardToken(rewardToken_, to_, _rewardTokenAmount);
         }
+    }
+
+    function _incentivizeWithToken(uint256 amount_, address rewardToken_) internal minIncentiveAmount(amount_) {
+        // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
+        // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
+        // calculate rewardPerToken
+        if (builderRegistry.isGaugeHalted(address(this))) revert GaugeHalted();
+        // Gauges cannot be incentivized before the distribution of the cycle finishes
+        if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
+
+        if (
+            IERC20(rewardToken_).balanceOf(msg.sender) < amount_
+                || IERC20(rewardToken_).allowance(msg.sender, address(this)) < amount_
+        ) {
+            revert NotEnoughAmount();
+        }
+
+        _notifyRewardAmount(
+            rewardToken_,
+            0, /*builderAmount_*/
+            amount_,
+            backersManager.periodFinish(),
+            backersManager.timeUntilNextCycle(block.timestamp),
+            false /*resetRewardMissing_*/
+        );
+
+        SafeERC20.safeTransferFrom(IERC20(rewardToken_), msg.sender, address(this), amount_);
     }
 
     /**
