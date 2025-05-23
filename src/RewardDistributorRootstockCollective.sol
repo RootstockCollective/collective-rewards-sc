@@ -10,6 +10,7 @@ import { UtilsLib } from "./libraries/UtilsLib.sol";
  * @title RewardDistributorRootstockCollective
  * @notice Accumulates all the rewards to be distributed for each cycle
  */
+
 contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective {
     // -----------------------------
     // ------- Custom Errors -------
@@ -18,7 +19,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     error CollectiveRewardsAddressesAlreadyInitialized();
     error CycleAlreadyFunded();
     error UnequalLengths();
-    
+
     // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------

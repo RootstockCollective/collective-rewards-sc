@@ -494,7 +494,7 @@ contract BackersManagerRootstockCollective is
             revert RewardTokenNotValid();
         }
     }
-    
+
     /**
      * @notice internal function used to allocate votes for a gauge or a batch of gauges
      * @param gauge_ address of the gauge where the votes will be allocated
@@ -719,7 +719,6 @@ contract BackersManagerRootstockCollective is
         // incentives can stay in the gauge because lastUpdateTime > lastTimeRewardApplicable
         // Passing an empty array as an argument with the length of the addresses
         uint256[] memory _zeroAmounts = new uint256[](2);
-
 
         if (_periodFinish <= block.timestamp) revert BeforeDistribution();
         // allocations are considered again for the reward's distribution
