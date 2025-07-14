@@ -304,9 +304,9 @@ contract BackersManagerRootstockCollective is
             emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
         }
         // transfering rif tokens
-        _notifyRewardAmount(amount_, true);
+        _notifyRewardAmount(amount_);
         // transfering usdrif tokens
-        _notifyRewardAmount(amountUsdrif_, false);
+        _notifyRewardAmountUsdrif(amountUsdrif_);
     }
 
     /**
@@ -606,22 +606,23 @@ contract BackersManagerRootstockCollective is
     }
 
     /**
-     * @notice internal function used to transfer the reward amount
-     * @param amount_ amount to distribute
-     * @param isRif_ boolean value indicating which token is distributed
+     * @notice Internal function to notify and transfer RIF reward tokens to this contract.
+     * @param amount_ The amount of RIF tokens to transfer and notify.
      */
-    function _notifyRewardAmount(uint256 amount_, bool isRif_) internal {
-        if (amount_ > 0) {
-            if (isRif_) {
-                rewardsERC20 += amount_;
-                emit NotifyReward(rewardToken, msg.sender, amount_);
-                SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
-            } else {
-                rewardsUsdrif += amount_;
-                emit NotifyReward(usdrifRewardToken, msg.sender, amount_);
-                SafeERC20.safeTransferFrom(IERC20(usdrifRewardToken), msg.sender, address(this), amount_);
-            }
-        }
+    function _notifyRewardAmount(uint256 amount_) internal {
+        rewardsERC20 += amount_;
+        emit NotifyReward(rewardToken, msg.sender, amount_);
+        SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
+    }
+
+    /**
+     * @notice Internal function to notify and transfer USDRIF reward tokens to this contract.
+     * @param amount_ The amount of USDRIF tokens to transfer and notify.
+     */
+    function _notifyRewardAmountUsdrif(uint256 amount_) internal {
+        rewardsUsdrif += amount_;
+        emit NotifyReward(usdrifRewardToken, msg.sender, amount_);
+        SafeERC20.safeTransferFrom(IERC20(usdrifRewardToken), msg.sender, address(this), amount_);
     }
 
     /**
