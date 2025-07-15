@@ -90,6 +90,7 @@ contract BaseTest is Test {
             distributionDuration
         );
 
+        backersManager.initializeV3(maxDistributionsPerBatch, address(usdrifRewardToken));
         rewardDistributor.initializeCollectiveRewardsAddresses(address(backersManager));
 
         (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer().run(
@@ -97,7 +98,6 @@ contract BaseTest is Test {
         );
 
         backersManager.initializeBuilderRegistry(builderRegistry);
-        backersManager.initializeV3(maxDistributionsPerBatch, address(usdrifRewardToken));
 
         // allow to execute all the functions protected by governance
 
