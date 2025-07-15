@@ -8,7 +8,7 @@ import { BuilderRegistryRootstockCollective } from "../src/builderRegistry/Build
 contract PauseBuilderKYCTest is BaseTest {
     function _initialState() internal {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         _initialDistribution();
 
@@ -24,7 +24,7 @@ contract PauseBuilderKYCTest is BaseTest {
      */
     function test_PausedGaugeBackersReceiveRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is KYC paused
         _initialState();
@@ -37,7 +37,7 @@ contract PauseBuilderKYCTest is BaseTest {
 
         // THEN alice rewardToken balance is 25 = (100 * 8 / 16) * 0.5
         assertApproxEqAbs(rewardToken.balanceOf(alice), 25 ether, 100);
-        // THEN alice coinbase balance is 2.5 = (10 * 8 / 16) * 0.5
+        // THEN alice native tokens balance is 2.5 = (10 * 8 / 16) * 0.5
         assertApproxEqAbs(alice.balance, 2.5 ether, 100);
 
         // WHEN bob claim rewards
@@ -46,7 +46,7 @@ contract PauseBuilderKYCTest is BaseTest {
 
         // THEN bob rewardToken balance is 25 = (100 * 8 / 16) * 0.5
         assertApproxEqAbs(rewardToken.balanceOf(bob), 25 ether, 100);
-        // THEN bob coinbase balance is 2.5 = (10 * 8 / 16) * 0.5
+        // THEN bob native tokens balance is 2.5 = (10 * 8 / 16) * 0.5
         assertApproxEqAbs(bob.balance, 2.5 ether, 100);
     }
 
@@ -56,7 +56,7 @@ contract PauseBuilderKYCTest is BaseTest {
      */
     function test_PausedGaugeBuilderCannotReceiveRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is KYC paused
         _initialState();
@@ -71,12 +71,12 @@ contract PauseBuilderKYCTest is BaseTest {
 
         // THEN builder rewardToken balance is 0
         assertEq(rewardToken.balanceOf(builder), 0);
-        // THEN builder coinbase balance is 0
+        // THEN builder native tokens balance is 0
         assertEq(builder.balance, 0);
         // THEN builder rewardToken pending to claim are 6.25 = (100 * 2 / 16) * 0.5
         assertEq(gauge.builderRewards(address(rewardToken)), 6.25 ether);
-        // THEN builder coinbase pending to claim are 0.625 = (10 * 2 / 16) * 0.5
-        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 0.625 ether);
+        // THEN builder native tokens pending to claim are 0.625 = (10 * 2 / 16) * 0.5
+        assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 0.625 ether);
 
         // WHEN builder2 claim rewards
         vm.startPrank(builder2);
@@ -84,7 +84,7 @@ contract PauseBuilderKYCTest is BaseTest {
 
         // THEN builder2Receiver rewardToken balance is 43.75 = (100 * 14 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder2Receiver), 43.75 ether);
-        // THEN builder2Receiver coinbase balance is 4.375 = (10 * 14 / 16) * 0.5
+        // THEN builder2Receiver native tokens balance is 4.375 = (10 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 4.375 ether);
     }
 
@@ -94,7 +94,7 @@ contract PauseBuilderKYCTest is BaseTest {
      */
     function test_PausedGaugeModifyAllocation() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is KYC paused
         _initialState();
@@ -122,7 +122,7 @@ contract PauseBuilderKYCTest is BaseTest {
      */
     function test_ResumeGaugeInSameCycle() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is KYC paused
         _initialState();
@@ -140,12 +140,12 @@ contract PauseBuilderKYCTest is BaseTest {
 
         // THEN builder rewardToken balance is 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder), 6.25 ether);
-        // THEN builder coinbase balance is 0.625 = (10 * 2 / 16) * 0.5
+        // THEN builder native tokens balance is 0.625 = (10 * 2 / 16) * 0.5
         assertEq(builder.balance, 0.625 ether);
         // THEN builder rewardToken pending to claim are 0
         assertEq(gauge.builderRewards(address(rewardToken)), 0);
-        // THEN builder coinbase pending to claim are 0
-        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 0);
+        // THEN builder native tokens pending to claim are 0
+        assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 0);
     }
 
     /**
@@ -154,14 +154,14 @@ contract PauseBuilderKYCTest is BaseTest {
      */
     function test_ResumeGaugeInNextCycle() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is KYC paused
         _initialState();
 
         // AND cycle finish
         _skipAndStartNewCycle();
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
 
         // WHEN gauge is KYC unpaused
@@ -174,12 +174,12 @@ contract PauseBuilderKYCTest is BaseTest {
 
         // THEN builder rewardToken balance is 12.5 = (200 * 2 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder), 12.5 ether);
-        // THEN builder coinbase balance is 1.25 = (20 * 2 / 16) * 0.5
+        // THEN builder native tokens balance is 1.25 = (20 * 2 / 16) * 0.5
         assertEq(builder.balance, 1.25 ether);
         // THEN builder rewardToken pending to claim are 0
         assertEq(gauge.builderRewards(address(rewardToken)), 0);
-        // THEN builder coinbase pending to claim are 0
-        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 0);
+        // THEN builder native tokens pending to claim are 0
+        assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 0);
     }
 
     /**
@@ -188,7 +188,7 @@ contract PauseBuilderKYCTest is BaseTest {
      */
     function test_RevokedGaugeIsPaused() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         _initialDistribution();
         // AND builder pauses himself

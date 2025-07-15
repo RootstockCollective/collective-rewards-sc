@@ -14,7 +14,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_HaltedGaugeReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is halted
         _initialState();
@@ -30,7 +30,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // THEN alice rewardToken balance is 25 = (100 * 8 / 16) * 0.5
         assertApproxEqAbs(rewardToken.balanceOf(alice), 25 ether, 100);
-        // THEN alice coinbase balance is 2.5 = (10 * 8 / 16) * 0.5
+        // THEN alice native tokens balance is 2.5 = (10 * 8 / 16) * 0.5
         assertApproxEqAbs(alice.balance, 2.5 ether, 100);
 
         // WHEN bob claim rewards
@@ -39,7 +39,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // THEN bob rewardToken balance is 25 = (100 * 8 / 16) * 0.5
         assertApproxEqAbs(rewardToken.balanceOf(bob), 25 ether, 100);
-        // THEN bob coinbase balance is 2.5 = (10 * 8 / 16) * 0.5
+        // THEN bob native tokens balance is 2.5 = (10 * 8 / 16) * 0.5
         assertApproxEqAbs(bob.balance, 2.5 ether, 100);
     }
 
@@ -49,12 +49,12 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_HaltedGaugeDoNotReceiveNextRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is halted
         _initialState();
 
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
         assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
@@ -69,7 +69,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // THEN alice rewardToken balance is 25 + increment of 21.42 = (100 * 6 / 14) * 0.5
         // builder allocations are not considered anymore. Alice lose those rewards
         assertEq(rewardToken.balanceOf(alice), 46_428_571_428_571_428_560);
-        // THEN alice coinbase balance is 2.5 + increment of 2.142 = (10 * 6 / 14) * 0.5
+        // THEN alice native tokens balance is 2.5 + increment of 2.142 = (10 * 6 / 14) * 0.5
         // builder allocations are not considered anymore. Alice lose those rewards
         assertEq(alice.balance, 4_642_857_142_857_142_844);
 
@@ -79,7 +79,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // THEN bob rewardToken balance is 25 + increment of 28.57 = (100 * 8 / 14) * 0.5
         assertEq(rewardToken.balanceOf(bob), 53_571_428_571_428_571_416);
-        // THEN bob coinbase balance is 2.5 + increment of 2.857 = (10 * 8 / 14) * 0.5
+        // THEN bob native tokens balance is 2.5 + increment of 2.857 = (10 * 8 / 14) * 0.5
         assertEq(bob.balance, 5_357_142_857_142_857_128);
     }
 
@@ -90,7 +90,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_NegativeAllocationOnHaltedGauge() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is halted
         _initialState();
@@ -112,7 +112,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_HaltedGaugeBeforeDistributionRewardPerToken() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         _initialDistribution();
 
         // AND cycle finish
@@ -134,7 +134,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // THEN alice rewardToken balance is 25 = (100 * 8 / 16) * 0.5
         assertApproxEqAbs(rewardToken.balanceOf(alice), 25 ether, 100);
-        // THEN alice coinbase balance is 2.5 = (10 * 8 / 16) * 0.5
+        // THEN alice native tokens balance is 2.5 = (10 * 8 / 16) * 0.5
         assertApproxEqAbs(alice.balance, 2.5 ether, 100);
     }
 
@@ -144,7 +144,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_HaltedGaugeBeforeDistributionRewardMissing() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         _initialDistribution();
 
         // AND cycle finish
@@ -167,7 +167,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_GaugeIncreaseAllocationMiddleCycleBeforeHalt() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         _initialDistribution();
 
@@ -192,7 +192,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_GaugeDecreaseAllocationMiddleCycleBeforeHalt() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         _initialDistribution();
         // AND cycle finish
         _skipAndStartNewCycle();
@@ -224,7 +224,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_GaugeWithLotAllocationMiddleCycleBeforeHalt() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         _initialDistribution();
 
@@ -256,7 +256,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_HaltedGaugeCannotIncreaseAllocations() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native tokens are distributed
         //   AND half cycle pass
         _initialDistribution();
 

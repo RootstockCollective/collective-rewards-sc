@@ -6,7 +6,7 @@ library UtilsLib {
     // not using any space in storage, so we disable the check
     // slither-disable-next-line unused-state
     uint256 internal constant _PRECISION = 10 ** 18;
-    address internal constant _COINBASE_ADDRESS = address(uint160(uint256(keccak256("COINBASE_ADDRESS"))));
+    address internal constant _NATIVE_ADDRESS = address(uint160(uint256(keccak256("NATIVE_ADDRESS"))));
     uint256 public constant MIN_AMOUNT_INCENTIVES = 100;
 
     // Saves gas

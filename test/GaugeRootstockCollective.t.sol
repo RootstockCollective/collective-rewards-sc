@@ -111,7 +111,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN rewardPerToken is 0 because there are no rewards distributed
         assertEq(gauge.rewardPerToken(address(rewardToken)), 0);
         // THEN rewardPerToken is 0 because there are no rewards distributed
-        assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);
+        assertEq(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 0);
         // THEN alice reward is 0 because there are no rewards distributed
         assertEq(gauge.rewards(address(rewardToken), alice), 0);
         // THEN alice backerRewardPerTokenPaid is 0 because there are no rewards distributed
@@ -149,7 +149,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN rewardPerToken is 0 because there are no rewards distributed
         assertEq(gauge.rewardPerToken(address(rewardToken)), 0);
         // THEN rewardPerToken is 0 because there are no rewards distributed
-        assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);
+        assertEq(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 0);
         // THEN alice reward is 0 because there are no rewards distributed
         assertEq(gauge.rewards(address(rewardToken), alice), 0);
         // THEN alice backerRewardPerTokenPaid is 0 because there are no rewards distributed
@@ -346,12 +346,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN it fails with min amount error
         vm.startPrank(incentivizer);
         vm.expectRevert(GaugeRootstockCollective.NotEnoughAmount.selector);
-        gauge.incentivizeWithCoinbase{ value: 10 }();
+        gauge.incentivizeWithNative{ value: 10 }();
 
         // THEN rewardPerToken is 0
-        assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);
+        assertEq(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 0);
         // THEN rewardRate is 0
-        assertEq(gauge.rewardRate(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 0);
+        assertEq(gauge.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 0);
     }
 
     /**
@@ -387,7 +387,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // WHEN 100 ether are distributed by Incentivizer
         //  THEN tx reverts because of insufficient balance
         vm.expectRevert();
-        gauge.incentivizeWithCoinbase{ value: 100 ether }();
+        gauge.incentivizeWithNative{ value: 100 ether }();
     }
 
     /**
@@ -443,9 +443,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
     /**
      * SCENARIO: rewards variables are updated by incentivizer that is not the BackersManagerRootstockCollective using
-     * coinbase
+     * native tokens
      */
-    function test_IncentivizeWithCoinbaseNotFromBackersManagerRootstockCollective() public {
+    function test_IncentivizeWithNativeTokensNotFromBackersManagerRootstockCollective() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
@@ -456,31 +456,31 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 1 day passes
         skip(1 days);
 
-        // AND an Incentivizer has coinbase
+        // AND an Incentivizer has native tokens
         vm.startPrank(incentivizer);
         vm.deal(address(incentivizer), 100 ether);
 
         // WHEN 100 ether are distributed by Incentivizer
-        gauge.incentivizeWithCoinbase{ value: 100 ether }();
+        gauge.incentivizeWithNative{ value: 100 ether }();
 
         // THEN rewardMissing is 0
-        assertEq(gauge.rewardMissing(UtilsLib._COINBASE_ADDRESS), 0);
+        assertEq(gauge.rewardMissing(UtilsLib._NATIVE_ADDRESS), 0);
         // THEN rewardPerToken is 0
-        assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0);
+        assertEq(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 0);
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
-        assertEq(gauge.rewardRate(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 192_901_234_567_901);
+        assertEq(gauge.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 192_901_234_567_901);
 
         // AND half cycle passes
         _skipRemainingCycleFraction(2);
 
         // THEN rewardPerToken is 8.333333333333333333 = 518400 / 2 * 0.000192901234567901 / 6 ether
-        assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 8_333_333_333_333_333_333);
+        assertEq(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 8_333_333_333_333_333_333);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
 
         // THEN rewardPerToken is 16.666666666666666666 = 518400 * 0.000192901234567901 / 6 ether
-        assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 16_666_666_666_666_666_666);
+        assertEq(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 16_666_666_666_666_666_666);
     }
 
     /**
@@ -820,7 +820,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(bob);
         backersManager.allocate(gauge, 5 ether);
 
-        // WHEN an Incentivizer has rewardToken and coinbase
+        // WHEN an Incentivizer has rewardToken and native tokens
         vm.startPrank(incentivizer);
         vm.deal(address(incentivizer), 100 ether);
         rewardToken.mint(address(incentivizer), 200 ether);
@@ -837,10 +837,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
         gauge.incentivizeWithRifToken(100 ether);
 
-        // WHEN there is an attempt to distribute 100 ether in coinbase by Incentivizer
+        // WHEN there is an attempt to distribute 100 ether in native tokens by Incentivizer
         //  THEN it reverts since distribution has not finished yet
         vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
-        gauge.incentivizeWithCoinbase{ value: 100 ether }();
+        gauge.incentivizeWithNative{ value: 100 ether }();
 
         // AND distribution finishes with 100 ether being distributed
         vm.startPrank(address(backersManager));
@@ -920,7 +920,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 2 ether);
 
-        // AND 100 rewardToken and 100 coinbase are distributed
+        // AND 100 rewardToken and 100 native tokens are distributed
         _distribute(100 ether, 100 ether);
 
         // AND half cycle passes
@@ -937,7 +937,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         gauge.claimBuilderReward();
         // THEN builder rewardToken balance is 70 ether
         assertEq(rewardToken.balanceOf(builder), 70 ether);
-        // THEN builder coinbase balance is 70 ether
+        // THEN builder native tokens balance is 70 ether
         assertEq(builder.balance, 70 ether);
     }
 
@@ -954,12 +954,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
 
-        // AND 100 rewardToken and 100 coinbase are distributed
+        // AND 100 rewardToken and 100 native tokens are distributed
         _distribute(100 ether, 100 ether);
 
-        // THEN builderRewards is 70 ether in rewardToken and 70 ether in coinbase
+        // THEN builderRewards is 70 ether in rewardToken and 70 ether in native tokens
         assertEq(gauge.builderRewards(address(rewardToken)), 70 ether);
-        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 70 ether);
+        assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 70 ether);
 
         // AND another cycle finishes without a new distribution
         _skipAndStartNewCycle();
@@ -971,17 +971,17 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(rewardToken.balanceOf(builder), 70 ether);
         // THEN builderRewards in rewardToken is 0
         assertEq(gauge.builderRewards(address(rewardToken)), 0 ether);
-        // THEN builder coinbase balance is 0 ether
+        // THEN builder native tokens balance is 0 ether
         assertEq(builder.balance, 0 ether);
-        // THEN builderRewards in coinbase is 70 ether
-        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 70 ether);
+        // THEN builderRewards in native tokens is 70 ether
+        assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 70 ether);
     }
 
     /**
      * SCENARIO: builder claims his rewards at any time during the cycle by asset receiving the total rewards of the
      * asset claimed.
      */
-    function test_ClaimBuilderRewardsCoinbase() public {
+    function test_ClaimBuilderRewardsNativeTokens() public {
         // GIVEN a builder with 30% of reward percentage for backers
         vm.startPrank(builder);
         builderRegistry.setBackerRewardPercentage(0.3 ether);
@@ -990,27 +990,27 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
 
-        // AND 100 rewardToken and 100 coinbase are distributed
+        // AND 100 rewardToken and 100 native tokens are distributed
         _distribute(100 ether, 100 ether);
 
-        // THEN builderRewards is 70 ether in rewardToken and 70 ether in coinbase
+        // THEN builderRewards is 70 ether in rewardToken and 70 ether in native tokens
         assertEq(gauge.builderRewards(address(rewardToken)), 70 ether);
-        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 70 ether);
+        assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 70 ether);
 
         // AND another cycle finishes without a new distribution
         _skipAndStartNewCycle();
 
-        // WHEN builder claims rewards by Coinbase
+        // WHEN builder claims rewards by native tokens
         vm.startPrank(builder);
-        gauge.claimBuilderReward(UtilsLib._COINBASE_ADDRESS);
+        gauge.claimBuilderReward(UtilsLib._NATIVE_ADDRESS);
         // THEN builder rewardToken balance is 70 ether
         assertEq(rewardToken.balanceOf(builder), 0 ether);
         // THEN builderRewards in rewardToken is 70 ether
         assertEq(gauge.builderRewards(address(rewardToken)), 70 ether);
-        // THEN builder coinbase balance is 70 ether
+        // THEN builder native tokens balance is 70 ether
         assertEq(builder.balance, 70 ether);
-        // THEN builderRewards in coinbase is 0 ether
-        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 0 ether);
+        // THEN builderRewards in native tokens is 0 ether
+        assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 0 ether);
     }
 
     /**
@@ -1025,7 +1025,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge2, 2 ether);
 
-        // AND 100 rewardToken and 100 coinbase are distributed
+        // AND 100 rewardToken and 100 native tokens are distributed
         _distribute(100 ether, 100 ether);
 
         // AND half cycle passes
@@ -1042,10 +1042,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         gauge2.claimBuilderReward();
         // THEN builder2Receiver rewardToken balance is 70 ether
         assertEq(rewardToken.balanceOf(builder2Receiver), 70 ether);
-        // THEN builder2Receiver coinbase balance is 70 ether
+        // THEN builder2Receiver native tokens balance is 70 ether
         assertEq(builder2Receiver.balance, 70 ether);
 
-        // AND 100 rewardToken and 100 coinbase are distributed
+        // AND 100 rewardToken and 100 native tokens are distributed
         _distribute(100 ether, 100 ether);
 
         // WHEN builder2 claims rewards
@@ -1053,7 +1053,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         gauge2.claimBuilderReward();
         // THEN builder2Receiver rewardToken balance is 140 ether
         assertEq(rewardToken.balanceOf(builder2Receiver), 140 ether);
-        // THEN builder2Receiver coinbase balance is 140 ether
+        // THEN builder2Receiver native tokens balance is 140 ether
         assertEq(builder2Receiver.balance, 140 ether);
     }
 
@@ -1070,7 +1070,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge2, 2 ether);
 
-        // AND 100 rewardToken and 100 coinbase are distributed
+        // AND 100 rewardToken and 100 native tokens are distributed
         _distribute(100 ether, 100 ether);
 
         // AND half cycle passes
@@ -1103,7 +1103,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.prank(kycApprover);
         builderRegistry.approveNewRewardReceiver(builder2, _newRewardReceiver);
 
-        // AND 100 rewardToken and 100 coinbase are distributed
+        // AND 100 rewardToken and 100 native tokens are distributed
         _distribute(100 ether, 100 ether);
 
         // WHEN newRewardReceiver claims his rewards
@@ -1125,10 +1125,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 2 ether);
 
-        // AND 100 rewardToken and 100 coinbase are distributed
+        // AND 100 rewardToken and 100 native tokens are distributed
         _distribute(100 ether, 100 ether);
 
-        // AND 100 rewardToken and 100 coinbase are distributed in the same distribution window
+        // AND 100 rewardToken and 100 native tokens are distributed in the same distribution window
         vm.warp(backersManager.endDistributionWindow(block.timestamp) - 1);
         rewardToken.mint(address(rewardDistributor), 100 ether);
         usdrifRewardToken.mint(address(rewardDistributor), 100 ether);
@@ -1138,16 +1138,16 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN builderRewards rewardToken is 140 ether
         assertEq(gauge.builderRewards(address(rewardToken)), 140 ether);
-        // THEN builderRewards coinbase is 140 ether
-        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 140 ether);
+        // THEN builderRewards native tokens is 140 ether
+        assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 140 ether);
 
         // AND another cycle finish without a new distribution
         _skipAndStartNewCycle();
 
         // THEN rewardPerToken for rewardToken is 30 = 60 / 2 ether
         assertApproxEqAbs(gauge.rewardPerToken(address(rewardToken)), 30 ether, 100);
-        // THEN rewardPerToken for coinbase is 30 = 60 / 2 ether
-        assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 30 ether, 100);
+        // THEN rewardPerToken for native tokens is 30 = 60 / 2 ether
+        assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 30 ether, 100);
 
         // WHEN builder claims rewards
         vm.startPrank(builder);
@@ -1155,7 +1155,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN builder rewardToken balance is 140 ether
         assertEq(rewardToken.balanceOf(builder), 140 ether);
-        // THEN builder coinbase balance is 140 ether
+        // THEN builder native tokens balance is 140 ether
         assertEq(builder.balance, 140 ether);
     }
 
@@ -1171,24 +1171,24 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 2 ether);
 
-        // AND 100 rewardToken and 100 coinbase are distributed
+        // AND 100 rewardToken and 100 native tokens are distributed
         _distribute(100 ether, 100 ether);
 
-        // AND 100 rewardToken and 100 coinbase are distributed
+        // AND 100 rewardToken and 100 native tokens are distributed
         _distribute(100 ether, 100 ether);
 
         // THEN builderRewards rewardToken is 140 ether
         assertEq(gauge.builderRewards(address(rewardToken)), 140 ether);
-        // THEN builderRewards coinbase is 140 ether
-        assertEq(gauge.builderRewards(UtilsLib._COINBASE_ADDRESS), 140 ether);
+        // THEN builderRewards native tokens is 140 ether
+        assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 140 ether);
 
         // AND another cycle finishes without a new distribution
         _skipAndStartNewCycle();
 
         // THEN rewardPerToken for rewardToken is 30 = 60 / 2 ether
         assertApproxEqAbs(gauge.rewardPerToken(address(rewardToken)), 30 ether, 100);
-        // THEN rewardPerToken for coinbase is 30 = 60 / 2 ether
-        assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 30 ether, 100);
+        // THEN rewardPerToken for native tokens is 30 = 60 / 2 ether
+        assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 30 ether, 100);
 
         // WHEN builder claims rewards
         vm.startPrank(builder);
@@ -1196,7 +1196,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN builder rewardToken balance is 140 ether
         assertEq(rewardToken.balanceOf(builder), 140 ether);
-        // THEN builder coinbase balance is 140 ether
+        // THEN builder native tokens balance is 140 ether
         assertEq(builder.balance, 140 ether);
     }
 
@@ -1656,9 +1656,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: alice and bob receive rewards on Coinbase
+     * SCENARIO: alice and bob receive rewards on native tokens
      */
-    function test_ClaimCoinbaseRewards() public {
+    function test_ClaimNativeTokensRewards() public {
         // GIVEN alice allocates 1 ether
         vm.prank(alice);
         backersManager.allocate(gauge, 1 ether);
@@ -1668,7 +1668,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // AND 100 ether are distributed for backers
         vm.prank(address(incentivizer));
-        gauge.incentivizeWithCoinbase{ value: 100 ether }();
+        gauge.incentivizeWithNative{ value: 100 ether }();
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -1676,18 +1676,18 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // time until next cycle is 518400
         // rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         // THEN rewardPerToken is 16.666666666666666666 = 518400 * 0.000192901234567901 / 6 ether
-        assertEq(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 16_666_666_666_666_666_666);
+        assertEq(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 16_666_666_666_666_666_666);
 
         // WHEN alice claims rewards
         vm.prank(alice);
-        gauge.claimBackerReward(UtilsLib._COINBASE_ADDRESS, alice);
-        // THEN alice coinbase balance is 16.666666666666666666 = 1 * 16.666666666666666666
+        gauge.claimBackerReward(UtilsLib._NATIVE_ADDRESS, alice);
+        // THEN alice native tokens balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(alice.balance, 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
         vm.prank(bob);
-        gauge.claimBackerReward(UtilsLib._COINBASE_ADDRESS, bob);
-        // THEN bob coinbase balance is 83.333333333333333330 = 5 * 16.666666666666666666
+        gauge.claimBackerReward(UtilsLib._NATIVE_ADDRESS, bob);
+        // THEN bob native tokens balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(bob.balance, 83_333_333_333_333_333_330);
     }
 

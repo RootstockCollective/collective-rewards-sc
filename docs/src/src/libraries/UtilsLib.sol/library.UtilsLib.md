@@ -10,10 +10,10 @@ uint256 internal constant _PRECISION = 10 ** 18;
 ```
 
 
-### _COINBASE_ADDRESS
+### _NATIVE_ADDRESS
 
 ```solidity
-address internal constant _COINBASE_ADDRESS = address(uint160(uint256(keccak256("COINBASE_ADDRESS"))));
+address internal constant _NATIVE_ADDRESS = address(uint160(uint256(keccak256("NATIVE_ADDRESS"))));
 ```
 
 

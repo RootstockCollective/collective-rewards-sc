@@ -63,10 +63,10 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: sendRewards should revert trying to send more Coinbase than its balance
+     * SCENARIO: sendRewards should revert trying to send more native tokens than its balance
      */
-    function test_InsufficientCoinbaseBalance() public {
-        // GIVEN a RewardDistributorRootstockCollective contract with 1 ether of coinbase
+    function test_InsufficientNativeBalance() public {
+        // GIVEN a RewardDistributorRootstockCollective contract with 1 ether of native tokens
         Address.sendValue(payable(address(rewardDistributor)), 1 ether);
         vm.startPrank(foundation);
         // WHEN foundation treasury calls sendRewards trying to transfer 2 ethers
@@ -84,29 +84,29 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
      * SCENARIO: sends rewards twice on one cycle and then on more time on the next one
      */
     function test_SendRewards() public {
-        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of native tokens
         rewardToken.transfer(address(rewardDistributor), 10 ether);
         usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
-        // WHEN foundation treasury calls sendRewards transferring 2 ethers of reward token and 1 of coinbase
+        // WHEN foundation treasury calls sendRewards transferring 2 ethers of reward token and 1 of native tokens
         vm.startPrank(foundation);
         rewardDistributor.sendRewards(2 ether, 0, 1 ether);
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
-        // AND foundation treasury calls sendRewards transferring 1 ethers of reward token and 0.5 of coinbase
+        // AND foundation treasury calls sendRewards transferring 1 ethers of reward token and 0.5 of native tokens
         rewardDistributor.sendRewards(1 ether, 0, 0.5 ether);
         // AND cycle finish
         _skipAndStartNewCycle();
-        // AND foundation treasury calls sendRewards transferring 4 ethers of reward token and 2 of coinbase
+        // AND foundation treasury calls sendRewards transferring 4 ethers of reward token and 2 of native tokens
         rewardDistributor.sendRewards(4 ether, 0, 2 ether);
 
         // THEN reward token balance of rewardDistributor is 3 ether
         assertEq(rewardToken.balanceOf(address(rewardDistributor)), 3 ether);
         // THEN reward token balance of backersManager is 7 ether
         assertEq(rewardToken.balanceOf(address(backersManager)), 7 ether);
-        // THEN coinbase balance of rewardDistributor is 1.5 ether
+        // THEN native tokens balance of rewardDistributor is 1.5 ether
         assertEq(address(rewardDistributor).balance, 1.5 ether);
-        // THEN coinbase balance of backersManager is 3.5 ether
+        // THEN native tokens balance of backersManager is 3.5 ether
         assertEq(address(backersManager).balance, 3.5 ether);
     }
 
@@ -117,17 +117,17 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token
         rewardToken.transfer(address(rewardDistributor), 10 ether);
         usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
-        // AND a foundation with 5 ether of coinbase
+        // AND a foundation with 5 ether of native tokens
         Address.sendValue(payable(foundation), 5 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         // WHEN foundation treasury calls sendRewardsAndStartDistribution transferring 2 ethers of reward token and
-        // 3 of coinbase
+        // 3 of native tokens
         vm.startPrank(foundation);
         rewardDistributor.sendRewardsAndStartDistribution{ value: 3 ether }(2 ether, 0, 3 ether);
         // THEN reward token balance of gauge is 2 ether
         assertEq(rewardToken.balanceOf(address(gauge)), 2 ether);
-        // THEN coinbase balance of gauge is 3 ether
+        // THEN native tokens balance of gauge is 3 ether
         assertEq(address(gauge).balance, 3 ether);
     }
 
@@ -135,31 +135,31 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
      * SCENARIO: sends rewards twice on one cycle and then on more time on the next one with default amounts
      */
     function test_SendRewardsWithDefaultAmount() public {
-        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of native tokens
         rewardToken.transfer(address(rewardDistributor), 10 ether);
         usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
         // WHEN foundation treasury calls sendRewardsWithDefaultAmount
-        // setting as default values 2 ethers of reward token and 1 of coinbase
+        // setting as default values 2 ethers of reward token and 1 of native tokens
         vm.startPrank(foundation);
         rewardDistributor.setDefaultRewardAmount(2 ether, 0, 1 ether);
         rewardDistributor.sendRewardsWithDefaultAmount();
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
-        // AND foundation treasury calls sendRewards transferring 1 ethers of reward token and 0.5 of coinbase
+        // AND foundation treasury calls sendRewards transferring 1 ethers of reward token and 0.5 of native tokens
         rewardDistributor.sendRewards(1 ether, 0, 0.5 ether);
         // AND cycle finish
         _skipAndStartNewCycle();
-        // AND foundation treasury calls sendRewards transferring 4 ethers of reward token and 2 of coinbase
+        // AND foundation treasury calls sendRewards transferring 4 ethers of reward token and 2 of native tokens
         rewardDistributor.sendRewards(4 ether, 0, 2 ether);
 
         // THEN reward token balance of rewardDistributor is 3 ether
         assertEq(rewardToken.balanceOf(address(rewardDistributor)), 3 ether);
         // THEN reward token balance of backersManager is 7 ether
         assertEq(rewardToken.balanceOf(address(backersManager)), 7 ether);
-        // THEN coinbase balance of rewardDistributor is 1.5 ether
+        // THEN native tokens balance of rewardDistributor is 1.5 ether
         assertEq(address(rewardDistributor).balance, 1.5 ether);
-        // THEN coinbase balance of backersManager is 3.5 ether
+        // THEN native tokens balance of backersManager is 3.5 ether
         assertEq(address(backersManager).balance, 3.5 ether);
     }
 
@@ -170,18 +170,18 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token
         rewardToken.transfer(address(rewardDistributor), 10 ether);
         usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
-        // AND a foundation with 5 ether of coinbase
+        // AND a foundation with 5 ether of native tokens
         Address.sendValue(payable(foundation), 5 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         // WHEN foundation treasury calls sendRewardsAndStartDistribution transferring 2 ethers of reward token and
-        // 3 of coinbase
+        // 3 of native tokens
         vm.startPrank(foundation);
         rewardDistributor.setDefaultRewardAmount(2 ether, 0, 3 ether);
         rewardDistributor.sendRewardsAndStartDistributionWithDefaultAmount{ value: 3 ether }();
         // THEN reward token balance of gauge is 2 ether
         assertEq(rewardToken.balanceOf(address(gauge)), 2 ether);
-        // THEN coinbase balance of gauge is 3 ether
+        // THEN native tokens balance of gauge is 3 ether
         assertEq(address(gauge).balance, 3 ether);
     }
 
@@ -226,7 +226,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
      * SCENARIO: Send default rewards once per cycle restriction is reseted in a new cycle
      */
     function test_SendRewardsWithDefaultAmountInNewCycle() public {
-        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of native tokens
         rewardToken.transfer(address(rewardDistributor), 10 ether);
         usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
@@ -244,12 +244,12 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
      * SCENARIO: should fail when sends rewards several times on one cycle with default amounts
      */
     function test_FailSendRewardsWithDefaultAmountForTokens() public {
-        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of native tokens
         rewardToken.transfer(address(rewardDistributor), 10 ether);
         usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
         // WHEN foundation treasury calls sendRewardsWithDefaultAmount
-        // setting as default values 6 ethers of reward token and 1 of coinbase
+        // setting as default values 6 ethers of reward token and 1 of native tokens
         vm.startPrank(foundation);
         rewardDistributor.setDefaultRewardAmount(6 ether, 0, 1 ether);
         rewardDistributor.sendRewardsWithDefaultAmount();
@@ -261,17 +261,17 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: should fail when sends rewards several times on one cycle with default amounts
      */
-    function test_FailSendRewardsWithDefaultAmountForCoinbase() public {
-        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
+    function test_FailSendRewardsWithDefaultAmountForNativeTokens() public {
+        // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of native tokens
         rewardToken.transfer(address(rewardDistributor), 10 ether);
         usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
         // WHEN foundation treasury calls sendRewardsWithDefaultAmount
-        // setting as default values 6 ethers of reward token and 1 of coinbase
+        // setting as default values 6 ethers of reward token and 1 of native tokens
         vm.startPrank(foundation);
         rewardDistributor.setDefaultRewardAmount(1 ether, 0, 3 ether);
         rewardDistributor.sendRewardsWithDefaultAmount();
-        // should fail because send the default Coinbase amount twice exceeding the balance
+        // should fail because send the default native tokens amount twice exceeding the balance
         vm.expectRevert();
         rewardDistributor.sendRewardsWithDefaultAmount();
     }

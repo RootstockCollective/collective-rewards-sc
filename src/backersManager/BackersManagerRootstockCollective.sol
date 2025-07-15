@@ -301,7 +301,7 @@ contract BackersManagerRootstockCollective is
         if (builderRegistry.getGaugesLength() == 0) revert NoGaugesForDistribution();
         if (msg.value > 0) {
             rewardsNative += msg.value;
-            emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
+            emit NotifyReward(UtilsLib._NATIVE_ADDRESS, msg.sender, msg.value);
         }
         // transfering rif tokens
         _notifyRewardAmount(amountRif_);
@@ -352,7 +352,7 @@ contract BackersManagerRootstockCollective is
      * @notice claims backer rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native address
      */
     function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external {
         uint256 _length = gauges_.length;
@@ -563,7 +563,7 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice internal function used to distribute reward tokens to a gauge
      * @param gauge_ address of the gauge to distribute
-     * @param rewardsERC20_ ERC20 rewards to distribute
+     * @param rewardsRif_ ERC20 rewards to distribute
      * @param rewardsNative_ Native rewards to distribute
      * @param totalPotentialReward_ cached total potential reward
      * @param periodFinish_ cached period finish
@@ -573,7 +573,7 @@ contract BackersManagerRootstockCollective is
      */
     function _gaugeDistribute(
         GaugeRootstockCollective gauge_,
-        uint256 rewardsERC20_,
+        uint256 rewardsRif_,
         uint256 rewardsUsdrif_,
         uint256 rewardsNative_,
         uint256 totalPotentialReward_,
@@ -589,7 +589,7 @@ contract BackersManagerRootstockCollective is
         uint256 _backerRewardPercentage =
             builderRegistry.getRewardPercentageToApply(builderRegistry.gaugeToBuilder(gauge_));
         return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountNative }(
-            (_rewardShares * rewardsERC20_) / totalPotentialReward_,
+            (_rewardShares * rewardsRif_) / totalPotentialReward_,
             (_rewardShares * rewardsUsdrif_) / totalPotentialReward_,
             _backerRewardPercentage,
             periodFinish_,

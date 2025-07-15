@@ -81,7 +81,7 @@ contract DistributionFuzzTest is BaseFuzz {
         //  AND a random amount of backers voting the gauges
         _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
+        // AND there is a distribution of 10000 rewardToken and 1000 native tokens
         _distribute(10_000 ether, 1000 ether);
 
         // AND a random time passes
@@ -132,7 +132,7 @@ contract DistributionFuzzTest is BaseFuzz {
             assertEq(gaugesArray[i].rewardShares(), _expectedRewardShares);
         }
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
+        // AND there is a distribution of 10000 rewardToken and 1000 native tokens
         _distribute(10_000 ether, 1000 ether);
         // THEN totalPotentialReward is the entire cycle
         assertEq(backersManager.totalPotentialReward(), _newTotalAllocations * cycleDuration);

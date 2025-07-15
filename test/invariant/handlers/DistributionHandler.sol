@@ -18,26 +18,26 @@ contract DistributionHandler is BaseHandler {
     }
 
     function startDistribution(
-        uint256 amountERC20_,
-        uint256 amountCoinbase_,
+        uint256 amountRif_,
+        uint256 amountNative_,
         uint256 timeToSkip_
     )
         external
         skipTime(timeToSkip_)
     {
         if (backersManager.totalPotentialReward() == 0) return;
-        amountERC20_ = bound(amountERC20_, 0, type(uint64).max);
-        amountCoinbase_ = bound(amountCoinbase_, 0, type(uint64).max);
+        amountRif_ = bound(amountRif_, 0, type(uint64).max);
+        amountNative_ = bound(amountNative_, 0, type(uint64).max);
 
         timeManager.increaseTimestamp(
             backersManager.cycleNext(block.timestamp) - block.timestamp + (timeToSkip_ % 0.99 hours)
         );
 
-        totalAmountDistributed += amountERC20_;
+        totalAmountDistributed += amountRif_;
 
-        rewardToken.mint(address(rewardDistributor), amountERC20_);
-        vm.deal(address(rewardDistributor), amountCoinbase_);
+        rewardToken.mint(address(rewardDistributor), amountRif_);
+        vm.deal(address(rewardDistributor), amountNative_);
         vm.prank(baseTest.foundation());
-        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, 0, amountCoinbase_);
+        rewardDistributor.sendRewardsAndStartDistribution(amountRif_, 0, amountNative_);
     }
 }

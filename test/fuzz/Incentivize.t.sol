@@ -42,7 +42,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
             uint256 _randomGauge = uint256(keccak256(abi.encodePacked(seed_, i))) % gaugesArray.length;
             rewardToken.approve(address(gaugesArray[_randomGauge]), incentiveAmount_);
             gaugesArray[_randomGauge].incentivizeWithRifToken(incentiveAmount_);
-            gaugesArray[_randomGauge].incentivizeWithCoinbase{ value: incentiveAmount_ }();
+            gaugesArray[_randomGauge].incentivizeWithNative{ value: incentiveAmount_ }();
             rewardsAdded[gaugesArray[_randomGauge]] += incentiveAmount_;
         }
 
@@ -53,9 +53,9 @@ contract IncentivizeFuzzTest is BaseFuzz {
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             uint256 _rewardsOnRewardToken =
                 rewardsAdded[gaugesArray[i]] + _calcGaugeReward(RT_DISTRIBUTION_AMOUNT * 2, i);
-            uint256 _rewardsOnCoinbase = rewardsAdded[gaugesArray[i]] + _calcGaugeReward(CB_DISTRIBUTION_AMOUNT * 2, i);
+            uint256 _rewardsOnNative = rewardsAdded[gaugesArray[i]] + _calcGaugeReward(CB_DISTRIBUTION_AMOUNT * 2, i);
             assertApproxEqAbs(rewardToken.balanceOf(address(gaugesArray[i])), _rewardsOnRewardToken, 100);
-            assertApproxEqAbs(address(gaugesArray[i]).balance, _rewardsOnCoinbase, 100);
+            assertApproxEqAbs(address(gaugesArray[i]).balance, _rewardsOnNative, 100);
         }
 
         // WHEN all the builders claim their rewards
@@ -102,7 +102,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
                     0.000000001 ether
                 );
                 assertApproxEqAbs(
-                    gaugesArray[i].rewardRate(UtilsLib._COINBASE_ADDRESS) / 10 ** 18,
+                    gaugesArray[i].rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18,
                     rewardsAdded[gaugesArray[i]] / cycleDuration,
                     0.000000001 ether
                 );

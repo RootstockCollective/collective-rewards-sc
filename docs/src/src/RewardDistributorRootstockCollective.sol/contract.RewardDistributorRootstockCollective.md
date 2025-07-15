@@ -35,12 +35,12 @@ uint256 public defaultRewardTokenAmount;
 ```
 
 
-### defaultRewardCoinbaseAmount
-default reward coinbase amount
+### defaultRewardnativeTokensAmount
+default reward native tokens amount
 
 
 ```solidity
-uint256 public defaultRewardCoinbaseAmount;
+uint256 public defaultRewardnativeTokensAmount;
 ```
 
 
@@ -117,14 +117,14 @@ reverts if rewards balance is insufficient*
 
 
 ```solidity
-function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) external payable onlyFoundationTreasury;
+function sendRewards(uint256 amountRif_, uint256 amountNative_) external payable onlyFoundationTreasury;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`amountERC20_`|`uint256`|amount of ERC20 reward token to send|
-|`amountCoinbase_`|`uint256`|amount of Coinbase reward token to send|
+|`amountRif_`|`uint256`|amount of ERC20 reward token to send|
+|`amountNative_`|`uint256`|amount of native tokens reward token to send|
 
 
 ### sendRewardsAndStartDistribution
@@ -138,8 +138,8 @@ reverts if is not in the distribution window*
 
 ```solidity
 function sendRewardsAndStartDistribution(
-    uint256 amountERC20_,
-    uint256 amountCoinbase_
+    uint256 amountRif_,
+    uint256 amountNative_
 )
     external
     payable
@@ -149,8 +149,8 @@ function sendRewardsAndStartDistribution(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`amountERC20_`|`uint256`|amount of ERC20 reward token to send|
-|`amountCoinbase_`|`uint256`|amount of Coinbase reward token to send|
+|`amountRif_`|`uint256`|amount of ERC20 reward token to send|
+|`amountNative_`|`uint256`|amount of native tokens reward token to send|
 
 
 ### setDefaultRewardAmount
@@ -163,7 +163,7 @@ sets the default reward amounts
 ```solidity
 function setDefaultRewardAmount(
     uint256 tokenAmount_,
-    uint256 coinbaseAmount_
+    uint256 nativeTokensAmount_
 )
     external
     payable
@@ -174,7 +174,7 @@ function setDefaultRewardAmount(
 |Name|Type|Description|
 |----|----|-----------|
 |`tokenAmount_`|`uint256`|default amount of ERC20 reward token to send|
-|`coinbaseAmount_`|`uint256`|default amount of Coinbase reward token to send|
+|`nativeTokensAmount_`|`uint256`|default amount of native tokens reward token to send|
 
 
 ### sendRewardsWithDefaultAmount
@@ -205,19 +205,19 @@ internal function to send rewards to backersManager contract
 
 
 ```solidity
-function _sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) internal;
+function _sendRewards(uint256 amountRif_, uint256 amountNative_) internal;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`amountERC20_`|`uint256`|amount of ERC20 reward token to send|
-|`amountCoinbase_`|`uint256`|amount of Coinbase reward token to send|
+|`amountRif_`|`uint256`|amount of ERC20 reward token to send|
+|`amountNative_`|`uint256`|amount of native tokens reward token to send|
 
 
 ### receive
 
-receives coinbase to distribute for rewards
+receives native tokens to distribute for rewards
 
 
 ```solidity

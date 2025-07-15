@@ -168,7 +168,7 @@ Alice reward is set to 0.
 
 ## Builder incentivization
 
-In order for the Builder to receive rewards, they need to capture Backers attention and votes. Beside the Builder network community value itself, and setting a compelling backers reward, Builders could also pump their rewards up on theirs Gauge contracts by means of `Gauge#incentivizeWithRewardToken()` and `Gauge#incentivizeWithCoinbase()`. Those rewards will be available only for the Backers who vote for the Builder on the ongoing cycle and they'll be undistinguishable from the rewards gained by votes.
+In order for the Builder to receive rewards, they need to capture Backers attention and votes. Beside the Builder network community value itself, and setting a compelling backers reward, Builders could also pump their rewards up on theirs Gauge contracts by means of `Gauge#incentivizeWithRewardToken()` and `Gauge#incentivizeWithNativeTokens()`. Those rewards will be available only for the Backers who vote for the Builder on the ongoing cycle and they'll be undistinguishable from the rewards gained by votes.
 
 ## Missing rewards
 

@@ -69,7 +69,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //   THEN tx reverts because GaugeDoesNotExist
         vm.prank(alice);
         vm.expectRevert(BuilderRegistryRootstockCollective.GaugeDoesNotExist.selector);
-        backersManager.claimBackerRewards(UtilsLib._COINBASE_ADDRESS, gaugesArray);
+        backersManager.claimBackerRewards(UtilsLib._NATIVE_ADDRESS, gaugesArray);
     }
 
     /**
@@ -387,7 +387,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: notifyRewardAmount is called using ERC20 and values are updated
      */
-    function test_NotifyRewardAmountERC20() public {
+    function test_NotifyRewardAmountRifToken() public {
         // GIVEN a BackerManager contract
         //  AND alice allocates 0.1 ether
         vm.prank(alice);
@@ -403,7 +403,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(backersManager.rewardsNative(), 0);
         // THEN reward token balance of backersManager is 2 ether
         assertEq(rewardToken.balanceOf(address(backersManager)), 2 ether);
-        // THEN Coinbase balance of backersManager is 0
+        // THEN native tokens balance of backersManager is 0
         assertEq(address(backersManager).balance, 0);
     }
 
@@ -412,7 +412,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
      */
     function test_NotifyRewardAmountZeroValue() public {
         // GIVEN a BackersManager contract
-        //   WHEN 0 ether in rewardToken and 0 coinbase are added
+        //   WHEN 0 ether in rewardToken and 0 native tokens are added
         //    THEN it does not revert and rewards don't change
         backersManager.notifyRewardAmount(0 ether, 0);
         // THEN reward for reward token is 0 ether
@@ -437,7 +437,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN all there are 2 halted gauges
         assertEq(builderRegistry.getHaltedGaugesLength(), 2);
 
-        // AND notifyRewardAmount is called with coinbase
+        // AND notifyRewardAmount is called with native tokens
         //  THEN it reverts with NoGaugesForDistribution error
         vm.expectRevert(BackersManagerRootstockCollective.NoGaugesForDistribution.selector);
         backersManager.notifyRewardAmount{ value: 1 ether }(0 ether, 0);
@@ -447,16 +447,16 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.expectRevert(BackersManagerRootstockCollective.NoGaugesForDistribution.selector);
         backersManager.notifyRewardAmount(0 ether, 0);
 
-        // AND notifyRewardAmount is called with both coinbase and rewardToken
+        // AND notifyRewardAmount is called with both native tokens and rewardToken
         //  THEN it reverts with NoGaugesForDistribution error
         vm.expectRevert(BackersManagerRootstockCollective.NoGaugesForDistribution.selector);
         backersManager.notifyRewardAmount{ value: 1 ether }(1 ether, 0);
     }
 
     /**
-     * SCENARIO: notifyRewardAmount is called using Coinbase and values are updated
+     * SCENARIO: notifyRewardAmount is called using native tokens and values are updated
      */
-    function test_NotifyRewardAmountCoinbase() public {
+    function test_NotifyRewardAmountNative() public {
         // GIVEN a BackerManager contract
         //  AND alice allocates 0.1 ether
         vm.prank(alice);
@@ -464,13 +464,13 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //   WHEN 2 ether reward are added
         //    THEN NotifyReward event is emitted
         vm.expectEmit();
-        emit NotifyReward(UtilsLib._COINBASE_ADDRESS, address(this), 2 ether);
+        emit NotifyReward(UtilsLib._NATIVE_ADDRESS, address(this), 2 ether);
         backersManager.notifyRewardAmount{ value: 2 ether }(0, 0);
         // THEN Native rewards is 2 ether
         assertEq(backersManager.rewardsNative(), 2 ether);
         // THEN ERC20 rewards is 0
         assertEq(backersManager.rewardsRif(), 0);
-        // THEN Coinbase balance of backersManager is 2 ether
+        // THEN native tokens balance of backersManager is 2 ether
         assertEq(address(backersManager).balance, 2 ether);
         // THEN reward token balance of backersManager is 0
         assertEq(rewardToken.balanceOf(address(backersManager)), 0);
@@ -614,9 +614,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: alice and bob allocates to 2 gauges and receive coinbase rewards
+     * SCENARIO: alice and bob allocates to 2 gauges and receive native tokens rewards
      */
-    function test_DistributeCoinbase() public {
+    function test_DistributeNative() public {
         // GIVEN a BackerManager contract
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
@@ -631,7 +631,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
         vm.stopPrank();
 
-        //  AND 100 ether rewardToken and 50 ether coinbase are added
+        //  AND 100 ether rewardToken and 50 ether native tokens are added
         backersManager.notifyRewardAmount{ value: 50 ether }(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
@@ -642,9 +642,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(rewardToken.balanceOf(address(gauge)), 27_272_727_272_727_272_727);
         // THEN reward token balance of gauge2 is 72.727272727272727272 = 100 * 16 / 22
         assertEq(rewardToken.balanceOf(address(gauge2)), 72_727_272_727_272_727_272);
-        // THEN coinbase balance of gauge is 13.636363636363636363 = 50 * 6 / 22
+        // THEN native tokens balance of gauge is 13.636363636363636363 = 50 * 6 / 22
         assertEq(address(gauge).balance, 13_636_363_636_363_636_363);
-        // THEN coinbase balance of gauge2 is 36.363636363636363636 = 50 * 16 / 22
+        // THEN native tokens balance of gauge2 is 36.363636363636363636 = 50 * 16 / 22
         assertEq(address(gauge2).balance, 36_363_636_363_636_363_636);
     }
 
@@ -1014,12 +1014,12 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         // WHEN there is an attempt to incentivize a gauge directly before distribution starts
-        // with coinbase
+        // with native tokens
         //  THEN notifyRewardAmount reverts with BeforeDistribution error
         vm.startPrank(incentivizer);
         vm.deal(address(incentivizer), 100 ether);
         vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
-        gauge.incentivizeWithCoinbase{ value: 100 ether }();
+        gauge.incentivizeWithNative{ value: 100 ether }();
         vm.stopPrank();
 
         // WHEN distribute is executed
@@ -1039,11 +1039,11 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         // WHEN there is an attempt to incentivize a gauge directly before distribution ends
-        // with coinbase
+        // with native tokens
         //  THEN notifyRewardAmount reverts
         vm.startPrank(incentivizer);
         vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
-        gauge.incentivizeWithCoinbase{ value: 100 ether }();
+        gauge.incentivizeWithNative{ value: 100 ether }();
         vm.stopPrank();
 
         // AND distribute is executed again
@@ -1160,9 +1160,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
     /**
      * SCENARIO: alice claims all the rewards from a backersManager distribution and
-     * incentivized gauge in coinbase
+     * incentivized gauge in native tokens
      */
-    function test_ClaimBackerRewardsWithIncentivizerInCoinbase() public {
+    function test_ClaimBackerRewardsWithIncentivizerInNative() public {
         // GIVEN builder and builder2 and reward percentage of 50%
         //  AND a backer alice
         vm.startPrank(alice);
@@ -1172,12 +1172,12 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
         vm.stopPrank();
 
-        // AND 100 ether reward in coinbase are added
+        // AND 100 ether reward in native tokens are added
         backersManager.notifyRewardAmount{ value: 100 ether }(0 ether, 0);
-        // AND 100 ether in coinbase are added directly to first gauge by incentivizer
+        // AND 100 ether in native tokens are added directly to first gauge by incentivizer
         vm.startPrank(incentivizer);
         vm.deal(address(incentivizer), 100 ether);
-        gauge.incentivizeWithCoinbase{ value: 100 ether }();
+        gauge.incentivizeWithNative{ value: 100 ether }();
         vm.stopPrank();
 
         // AND distribution window starts
@@ -1212,7 +1212,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
         vm.stopPrank();
 
-        // AND 100 ether rewardToken and 50 ether coinbase are added
+        // AND 100 ether rewardToken and 50 ether native tokens are added
         backersManager.notifyRewardAmount{ value: 50 ether }(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
@@ -1230,14 +1230,14 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN alice rewardToken balance is 50% of the distributed amount
         assertEq(rewardToken.balanceOf(alice), 49_999_999_999_999_999_992);
 
-        // THEN coinbase balance is 0 of the distributed amount
+        // THEN native tokens balance is 0 of the distributed amount
         assertEq(alice.balance, 0);
     }
 
     /**
-     * SCENARIO: alice claims all the coinbase rewards in a single tx
+     * SCENARIO: alice claims all the native tokens rewards in a single tx
      */
-    function test_ClaimBackerCoinbaseRewards() public {
+    function test_ClaimBackerNativeRewards() public {
         // GIVEN builder and builder2 which reward percentage is 50%
         //  AND a backer alice
         vm.startPrank(alice);
@@ -1247,7 +1247,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
         vm.stopPrank();
 
-        // AND 100 ether rewardToken and 50 ether coinbase are added
+        // AND 100 ether rewardToken and 50 ether native tokens are added
         backersManager.notifyRewardAmount{ value: 50 ether }(100 ether, 0);
         // AND distribution window starts
         _skipToStartDistributionWindow();
@@ -1260,9 +1260,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // WHEN alice claim rewards
         vm.prank(alice);
-        backersManager.claimBackerRewards(UtilsLib._COINBASE_ADDRESS, gaugesArray);
+        backersManager.claimBackerRewards(UtilsLib._NATIVE_ADDRESS, gaugesArray);
 
-        // THEN alice coinbase balance is 50% of the distributed amount
+        // THEN alice native tokens balance is 50% of the distributed amount
         assertEq(alice.balance, 24_999_999_999_999_999_992);
 
         // THEN rewardToken balance is 0 of the distributed amount
@@ -1285,7 +1285,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.prank(bob);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
@@ -1294,14 +1294,14 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.prank(alice);
         backersManager.allocate(gauge, 0);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
 
         // AND alice adds allocations again
         vm.prank(alice);
         backersManager.allocate(gauge, 2 ether);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
 
         // AND cycle finish
@@ -1316,7 +1316,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 2 = 23.33 = 3.333 + 20 = (100 * 1 / 15) * 0.5 + (100 * 6 / 15) * 0.5
         //  cycle 3 = 3.125 + 25 = 3.125(missingRewards) + (100 * 8 / 16) * 0.5
         assertEq(rewardToken.balanceOf(alice), 73_333_333_333_333_333_314);
-        // THEN alice coinbase balance is:
+        // THEN alice native tokens balance is:
         //  cycle 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
         //  cycle 2 = 2.333 = 0.3333 + 2 = (10 * 1 / 15) * 0.5 + (10 * 6 / 15) * 0.5
         //  cycle 3 = 0.3125 + 2.5 = 0.3125(missingRewards) + (10 * 8 / 16) * 0.5
@@ -1331,7 +1331,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 2 = 26.66 = (100 * 8 / 15) * 0.5
         //  cycle 3 = 25 = (100 * 8 / 16) * 0.5
         assertEq(rewardToken.balanceOf(bob), 76_666_666_666_666_666_648);
-        // THEN bob coinbase balance is:
+        // THEN bob native tokens balance is:
         //  cycle 1 = 2.5 = (10 * 8 / 16) * 0.5
         //  cycle 2 = 2.66 = (10 * 8 / 15) * 0.5
         //  cycle 3 = 2.5 = (10 * 8 / 16) * 0.5
@@ -1345,7 +1345,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 2 = 3.333 = (100 * 1 / 15) * 0.5
         //  cycle 3 = 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder), 15_833_333_333_333_333_333);
-        // THEN builder coinbase balance is:
+        // THEN builder native tokens balance is:
         //  cycle 1 = 0.625 = (10 * 2 / 16) * 0.5
         //  cycle 2 = 0.3333 = (10 * 1 / 15) * 0.5
         //  cycle 3 = 0.625 = (10 * 2 / 16) * 0.5
@@ -1356,7 +1356,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 2 = 46.66 = (100 * 14 / 15) * 0.5
         //  cycle 3 = 43.75 = (100 * 14 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder2Receiver), 134_166_666_666_666_666_667);
-        // THEN builder2Receiver coinbase balance is:
+        // THEN builder2Receiver native tokens balance is:
         //  cycle 1 = 4.375 = (10 * 14 / 16) * 0.5
         //  cycle 2 = 4.66 = (10 * 14 / 15) * 0.5
         //  cycle 3 = 4.375 = (10 * 14 / 16) * 0.5
@@ -1364,7 +1364,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN gauge rewardToken balance is 0, there is no remaining rewards
         assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 0, 100);
-        // THEN gauge coinbase balance is 0, there is no remaining rewards
+        // THEN gauge native tokens balance is 0, there is no remaining rewards
         assertApproxEqAbs(address(gauge).balance, 0, 100);
     }
 
@@ -1384,7 +1384,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.prank(bob);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
@@ -1393,16 +1393,16 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.prank(alice);
         backersManager.allocate(gauge, 0);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
 
         // AND alice adds allocations again
         vm.prank(alice);
         backersManager.allocate(gauge, 2 ether);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
 
         // AND cycle finish
@@ -1418,7 +1418,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 3 = 6.455 + 21.42  = (3.33 + 3.125)(missingRewards) + (100 * 6 / 14) * 0.5
         //  cycle 4 = 6.25 + 18.75 = (100 * 2 / 16) * 0.5 + (100 * 6 / 16) * 0.5
         assertEq(rewardToken.balanceOf(alice), 94_761_904_761_904_761_882);
-        // THEN alice coinbase balance is:
+        // THEN alice native tokens balance is:
         //  cycle 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
         //  cycle 2 = 2 = (10 * 6 / 15) * 0.5
         //  cycle 3 = 0.645 + 2.142  = (0.33 + 0.3125)(missingRewards) + (10 * 6 / 14) * 0.5
@@ -1435,7 +1435,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 3 = 28.57 = (100 * 8 / 14) * 0.5
         //  cycle 4 = 25 = (100 * 8 / 16) * 0.5
         assertEq(rewardToken.balanceOf(bob), 105_238_095_238_095_238_072);
-        // THEN bob coinbase balance is:
+        // THEN bob native tokens balance is:
         //  cycle 1 = 2.5 = (10 * 8 / 16) * 0.5
         //  cycle 2 = 2.66 = (10 * 8 / 15) * 0.5
         //  cycle 3 = 2.857 = (10 * 8 / 14) * 0.5
@@ -1451,7 +1451,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 3 = 0
         //  cycle 4 = 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder), 15_833_333_333_333_333_333);
-        // THEN builder coinbase balance is:
+        // THEN builder native tokens balance is:
         //  cycle 1 = 0.625 = (10 * 2 / 16) * 0.5
         //  cycle 2 = 0.3333 = (10 * 1 / 15) * 0.5
         //  cycle 3 = 0
@@ -1464,7 +1464,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 3 = 50 = (100 * 14 / 14) * 0.5
         //  cycle 4 = 43.75 = (100 * 14 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder2Receiver), 184_166_666_666_666_666_667);
-        // THEN builder2Receiver coinbase balance is:
+        // THEN builder2Receiver native tokens balance is:
         //  cycle 1 = 4.375 = (10 * 14 / 16) * 0.5
         //  cycle 2 = 4.66 = (10 * 14 / 15) * 0.5
         //  cycle 3 = 5 = (10 * 14 / 14) * 0.5
@@ -1473,7 +1473,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN gauge rewardToken balance is 0, there is no remaining rewards
         assertApproxEqAbs(rewardToken.balanceOf(address(gauge)), 0, 100);
-        // THEN gauge coinbase balance is 0, there is no remaining rewards
+        // THEN gauge native tokens balance is 0, there is no remaining rewards
         assertApproxEqAbs(address(gauge).balance, 0, 100);
     }
 
@@ -1496,12 +1496,12 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
         vm.stopPrank();
 
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
         // THEN rewardToken's rewardRate is 0.0000103 = (50 * 2 / 16) / 604800
         assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 10_333_994_708_994);
-        // THEN coinbase's rewardRate is 0.00000103 = (5 * 2 / 16) / 604800
-        assertEq(gauge.rewardRate(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 1_033_399_470_899);
+        // THEN native tokens's rewardRate is 0.00000103 = (5 * 2 / 16) / 604800
+        assertEq(gauge.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 1_033_399_470_899);
 
         // AND 1 day pass
         skip(1 days);
@@ -1516,8 +1516,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN rewardToken's rewardMissing is 0.89 = 0.0000103 * 1 day
         assertEq(gauge.rewardMissing(address(rewardToken)) / 10 ** 18, 892_857_142_857_142_857);
-        // THEN coinbase's rewardMissing is 0.089 = 0.00000103 * 1 day
-        assertEq(gauge.rewardMissing(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 89_285_714_285_714_285);
+        // THEN native tokens's rewardMissing is 0.089 = 0.00000103 * 1 day
+        assertEq(gauge.rewardMissing(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 89_285_714_285_714_285);
 
         // AND 1 day pass
         skip(1 days);
@@ -1532,8 +1532,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN rewardToken's rewardMissing is 1.78 = 0.0000103 * 2 days
         assertEq(gauge.rewardMissing(address(rewardToken)) / 10 ** 18, 1_785_714_285_714_285_714);
-        // THEN coinbase's rewardMissing is 0.178 = 0.00000103 * 2 days
-        assertEq(gauge.rewardMissing(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 178_571_428_571_428_571);
+        // THEN native tokens's rewardMissing is 0.178 = 0.00000103 * 2 days
+        assertEq(gauge.rewardMissing(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 178_571_428_571_428_571);
     }
 
     /**
@@ -1580,7 +1580,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         uint256 _timestampBefore = block.timestamp;
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
         // THEN cycle was of 8 weeks
         assertEq(block.timestamp - _timestampBefore, 8 weeks);
@@ -1601,7 +1601,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN alice rewardToken balance is 50% of the distributed amount
         assertApproxEqAbs(rewardToken.balanceOf(alice), 50 ether, 100);
-        // THEN alice coinbase balance is 50% of the distributed amount
+        // THEN alice native tokens balance is 50% of the distributed amount
         assertApproxEqAbs(alice.balance, 5 ether, 100);
     }
 
@@ -1736,7 +1736,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN total potential reward is 12096000 ether = 2 ether * 1 WEEK
         assertEq(backersManager.totalPotentialReward(), 1_209_600 ether);
 
-        //  AND 50 ether rewardToken and 50 ether coinbase are added
+        //  AND 50 ether rewardToken and 50 ether native tokens are added
         backersManager.notifyRewardAmount{ value: 50 ether }(50 ether, 0);
 
         // AND a new cycle
@@ -1747,9 +1747,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN reward token balance of backersManager is 0 ether
         assertEq(rewardToken.balanceOf(address(backersManager)), 0);
-        // THEN Coinbase balance of backersManager is 0 ether
+        // THEN native tokens balance of backersManager is 0 ether
         assertEq(address(backersManager).balance, 0);
-        // THEN backersManager rewardsERC20 is 0 ether
+        // THEN backersManager rewardsRif is 0 ether
         assertEq(backersManager.rewardsRif(), 0 ether);
         // THEN backersManager rewardsNative is 0 ether
         assertEq(backersManager.rewardsNative(), 0);
@@ -1769,7 +1769,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // GIVEN a BackersManagerRootstockCollective without allocations
         assertEq(backersManager.totalPotentialReward(), 0);
 
-        //  AND 50 ether rewardToken and 50 ether coinbase are added
+        //  AND 50 ether rewardToken and 50 ether native tokens are added
         backersManager.notifyRewardAmount{ value: 50 ether }(50 ether, 0);
 
         //  WHEN distribute is executed
@@ -1783,9 +1783,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN reward token balance of backersManager is 50 ether
         assertEq(rewardToken.balanceOf(address(backersManager)), 50 ether);
-        // THEN Coinbase balance of backersManager is 50 ether
+        // THEN native tokens balance of backersManager is 50 ether
         assertEq(address(backersManager).balance, 50 ether);
-        // THEN backersManager rewardsERC20 is 50 ether
+        // THEN backersManager rewardsRif is 50 ether
         assertEq(backersManager.rewardsRif(), 50 ether);
         // THEN backersManager rewardsNative is 50 ether
         assertEq(backersManager.rewardsNative(), 50 ether);

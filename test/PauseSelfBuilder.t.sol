@@ -7,7 +7,7 @@ import { ResumeBuilderBehavior } from "./ResumeBuilderBehavior.t.sol";
 contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     function _initialState() internal override(HaltedBuilderBehavior, ResumeBuilderBehavior) {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native are distributed
         //   AND half cycle pass
         _initialDistribution();
 
@@ -37,7 +37,7 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
      */
     function test_BuildersReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native are distributed
         //   AND half cycle pass
         //    AND builder is self paused
         _initialState();
@@ -47,12 +47,12 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // THEN builder rewardToken balance is 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder), 6.25 ether);
-        // THEN builder coinbase balance is 0.625 = (10 * 2 / 16) * 0.5
+        // THEN builder native balance is 0.625 = (10 * 2 / 16) * 0.5
         assertEq(builder.balance, 0.625 ether);
 
         // THEN builder2Receiver rewardToken balance is 43.75 = (100 * 14 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder2Receiver), 43.75 ether);
-        // THEN builder2Receiver coinbase balance is 4.375 = (10 * 14 / 16) * 0.5
+        // THEN builder2Receiver native balance is 4.375 = (10 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 4.375 ether);
     }
 
@@ -62,11 +62,11 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
      */
     function test_BuilderDoesNotReceiveNextRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native are distributed
         //   AND half cycle pass
         //    AND builder is self pauses
         _initialState();
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native are distributed
         _distribute(100 ether, 10 ether);
 
         // WHEN builders claim rewards
@@ -74,12 +74,12 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // THEN builder rewardToken balance is the same. It didn't receive rewards
         assertEq(rewardToken.balanceOf(builder), 6.25 ether);
-        // THEN builder coinbase balance is the same. It didn't receive rewards
+        // THEN builder native balance is the same. It didn't receive rewards
         assertEq(builder.balance, 0.625 ether);
 
         // THEN builder2Receiver rewardToken balance is 43.75 + 50. All the rewards are to him
         assertEq(rewardToken.balanceOf(builder2Receiver), 93.75 ether);
-        // THEN builder2Receiver coinbase balance is 43.75 + 50. All the rewards are to him
+        // THEN builder2Receiver native balance is 43.75 + 50. All the rewards are to him
         assertEq(builder2Receiver.balance, 9.375 ether);
     }
 
@@ -89,7 +89,7 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
      */
     function test_ResumedBuilderClaimsAll() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native are distributed
         //   AND half cycle pass
         //    AND builder is self paused
         _initialState();
@@ -98,7 +98,7 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         vm.startPrank(builder);
         builderRegistry.unpauseSelf(0.5 ether);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native are distributed
         _distribute(100 ether, 10 ether);
 
         // WHEN builders claim rewards
@@ -106,12 +106,12 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // THEN builder rewardToken balance is 12.5 = (200 * 2 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder), 12.5 ether);
-        // THEN builder coinbase balance is 1.25 = (20 * 2 / 16) * 0.5
+        // THEN builder native balance is 1.25 = (20 * 2 / 16) * 0.5
         assertEq(builder.balance, 1.25 ether);
 
         // THEN builder2Receiver rewardToken balance is 87.5 = (200 * 14 / 16) * 0.5
         assertEq(rewardToken.balanceOf(builder2Receiver), 87.5 ether);
-        // THEN builder2Receiver coinbase balance is 8.75 = (20 * 14 / 16) * 0.5
+        // THEN builder2Receiver native balance is 8.75 = (20 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 8.75 ether);
     }
 
@@ -121,7 +121,7 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
      */
     function test_BuilderUnpauseSelfBeforeCooldown() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native are distributed
         //   AND half cycle pass
         //    AND builder pauses himself
         _initialState();
@@ -158,7 +158,7 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
      */
     function test_BuilderUnpauseSelfAfterCooldown() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 coinbase are distributed
+        //  AND 100 rewardToken and 10 native are distributed
         //   AND half cycle pass
         //    AND builder pauses himself
         _initialState();

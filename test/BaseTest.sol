@@ -182,7 +182,7 @@ contract BaseTest is Test {
         vm.prank(bob);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
+        // AND 100 rewardToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
@@ -191,20 +191,20 @@ contract BaseTest is Test {
     /**
      * @notice skips to new cycle and executes a distribution.
      */
-    function _distribute(uint256 amountERC20_, uint256 amountCoinbase_) internal {
-        _distribute(amountERC20_, amountERC20_, amountCoinbase_);
+    function _distribute(uint256 amountRif_, uint256 amountNative_) internal {
+        _distribute(amountRif_, amountRif_, amountNative_);
     }
 
     /**
      * @notice skips to new cycle and executes a distribution with usdrif tokens.
      */
-    function _distribute(uint256 amountERC20_, uint256 amountUsdrif_, uint256 amountCoinbase_) internal {
+    function _distribute(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_) internal {
         _skipToStartDistributionWindow();
-        rewardToken.mint(address(rewardDistributor), amountERC20_);
+        rewardToken.mint(address(rewardDistributor), amountRif_);
         usdrifRewardToken.mint(address(rewardDistributor), amountUsdrif_);
-        vm.deal(address(rewardDistributor), amountCoinbase_ + address(rewardDistributor).balance);
+        vm.deal(address(rewardDistributor), amountNative_ + address(rewardDistributor).balance);
         vm.startPrank(foundation);
-        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountUsdrif_, amountCoinbase_);
+        rewardDistributor.sendRewardsAndStartDistribution(amountRif_, amountUsdrif_, amountNative_);
         while (backersManager.onDistributionPeriod()) {
             backersManager.distribute();
         }
@@ -212,17 +212,17 @@ contract BaseTest is Test {
     }
 
     /// @dev if any amount is zero, it will not be skipped
-    function _incentivize(GaugeRootstockCollective gauge_, uint256 amountERC20_, uint256 amountCoinbase_) internal {
-        if (amountCoinbase_ > 0) {
-            vm.deal(incentivizer, amountCoinbase_);
-            gauge_.incentivizeWithCoinbase{ value: amountCoinbase_ }();
+    function _incentivize(GaugeRootstockCollective gauge_, uint256 amountRif_, uint256 amountNative_) internal {
+        if (amountNative_ > 0) {
+            vm.deal(incentivizer, amountNative_);
+            gauge_.incentivizeWithNative{ value: amountNative_ }();
         }
-        if (amountERC20_ > 0) {
-            rewardToken.mint(address(incentivizer), amountERC20_);
+        if (amountRif_ > 0) {
+            rewardToken.mint(address(incentivizer), amountRif_);
             vm.prank(address(incentivizer));
-            rewardToken.approve(address(gauge_), amountERC20_);
+            rewardToken.approve(address(gauge_), amountRif_);
             vm.prank(address(incentivizer));
-            gauge_.incentivizeWithRifToken(amountERC20_);
+            gauge_.incentivizeWithRifToken(amountRif_);
         }
     }
 
@@ -260,7 +260,7 @@ contract BaseTest is Test {
      * @notice returns reward token balance and clear it.
      *  Used to simplify maths and asserts considering only tokens received
      */
-    function _clearCoinbaseBalance(address address_) internal returns (uint256 balance_) {
+    function _clearNativeBalance(address address_) internal returns (uint256 balance_) {
         balance_ = address_.balance;
         vm.prank(address_);
         Address.sendValue(payable(address(this)), balance_);

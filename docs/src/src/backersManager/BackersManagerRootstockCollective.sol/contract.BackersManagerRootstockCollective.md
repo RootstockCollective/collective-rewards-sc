@@ -60,21 +60,21 @@ uint256 public tempTotalPotentialReward;
 ```
 
 
-### rewardsERC20
-ERC20 rewards to distribute [N]
+### rewardsRif
+RIF rewards to distribute [N]
 
 
 ```solidity
-uint256 public rewardsERC20;
+uint256 public rewardsRif;
 ```
 
 
-### rewardsCoinbase
-Coinbase rewards to distribute [N]
+### rewardsNative
+Native rewards to distribute [N]
 
 
 ```solidity
-uint256 public rewardsCoinbase;
+uint256 public rewardsNative;
 ```
 
 
@@ -391,7 +391,7 @@ function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] mem
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("Native_ADDRESS")))) is used for Native address|
 |`gauges_`|`GaugeRootstockCollective[]`|array of gauges to claim|
 
 
@@ -536,8 +536,8 @@ internal function used to distribute reward tokens to a gauge
 ```solidity
 function _gaugeDistribute(
     GaugeRootstockCollective gauge_,
-    uint256 rewardsERC20_,
-    uint256 rewardsCoinbase_,
+    uint256 rewardsRif_,
+    uint256 rewardsNative_,
     uint256 totalPotentialReward_,
     uint256 periodFinish_,
     uint256 cycleStart_,
@@ -551,8 +551,8 @@ function _gaugeDistribute(
 |Name|Type|Description|
 |----|----|-----------|
 |`gauge_`|`GaugeRootstockCollective`|address of the gauge to distribute|
-|`rewardsERC20_`|`uint256`|ERC20 rewards to distribute|
-|`rewardsCoinbase_`|`uint256`|Coinbase rewards to distribute|
+|`rewardsRif_`|`uint256`|rif rewards to distribute|
+|`rewardsNative_`|`uint256`|Native rewards to distribute|
 |`totalPotentialReward_`|`uint256`|cached total potential reward|
 |`periodFinish_`|`uint256`|cached period finish|
 |`cycleStart_`|`uint256`|cached cycle start timestamp|
