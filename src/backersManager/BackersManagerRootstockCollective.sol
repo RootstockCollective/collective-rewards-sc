@@ -297,14 +297,14 @@ contract BackersManagerRootstockCollective is
      * @dev reverts if it is called during the distribution period
      *  reverts if there are no gauges available for the distribution
      */
-    function notifyRewardAmount(uint256 amount_, uint256 amountUsdrif_) external payable notInDistributionPeriod {
+    function notifyRewardAmount(uint256 amountRif_, uint256 amountUsdrif_) external payable notInDistributionPeriod {
         if (builderRegistry.getGaugesLength() == 0) revert NoGaugesForDistribution();
         if (msg.value > 0) {
             rewardsNative += msg.value;
             emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
         }
         // transfering rif tokens
-        _notifyRewardAmount(amount_);
+        _notifyRewardAmount(amountRif_);
         // transfering usdrif tokens
         _notifyRewardAmountUsdrif(amountUsdrif_);
     }
@@ -585,13 +585,6 @@ contract BackersManagerRootstockCollective is
         returns (uint256)
     {
         uint256 _rewardShares = gauge_.rewardShares();
-        // NOTE: the following local variables are not used as we hit the function stack limit after introducing the
-        // rewardsUsdrif_ parameter
-        // [N] = [N] * [N] / [N]
-        // uint256 _amountERC20 = (_rewardShares * rewardsERC20_) / totalPotentialReward_;
-        // [N] = [N] * [N] / [N]
-        // uint256 _amountUsdrif = (_rewardShares * rewardsUsdrif_) / totalPotentialReward_;
-        // [N] = [N] * [N] / [N]
         uint256 _amountNative = (_rewardShares * rewardsNative_) / totalPotentialReward_;
         uint256 _backerRewardPercentage =
             builderRegistry.getRewardPercentageToApply(builderRegistry.gaugeToBuilder(gauge_));

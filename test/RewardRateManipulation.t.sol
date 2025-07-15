@@ -20,7 +20,7 @@ contract RewardRateManipulationTest is BaseTest {
         console.log("Waiting a day.");
         skip(1 days);
         // AND 100 ether are distributed by Incentivizer
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRifToken(100 ether);
         console.log("Incentivizing 100 Eth");
         console.log("RewardRate 1: %d", gauge.rewardRate(address(rewardToken)));
         console.log(
@@ -30,7 +30,7 @@ contract RewardRateManipulationTest is BaseTest {
         console.log("Waiting a day.");
         skip(1 days);
         // AND almost-0-ether are distributed by Incentivizer
-        gauge.incentivizeWithRewardToken(_minIncentiveAmount);
+        gauge.incentivizeWithRifToken(_minIncentiveAmount);
         console.log("Incentivizing 100 wei");
         console.log("RewardRate 2: %d", gauge.rewardRate(address(rewardToken)));
         console.log("TotalAllocation: %d", gauge.totalAllocation());
@@ -70,7 +70,7 @@ contract RewardRateManipulationTest is BaseTest {
         console.log("Waiting a day.");
         skip(1 days);
         // AND 100 ether are distributed by Incentivizer
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRifToken(100 ether);
         console.log("Incentivizing 100 Eth");
         uint256 _rewardRateBefore = gauge.rewardRate(address(rewardToken));
         console.log("RewardRate before: %d", _rewardRateBefore);
@@ -118,14 +118,14 @@ contract RewardRateManipulationTest is BaseTest {
         rewardToken.approve(address(gauge), 100 ether + _minIncentiveAmount + _minIncentiveAmount);
         console.log("Reward Missing: %d", gauge.rewardMissing(address(rewardToken)));
         // AND 100 ether are distributed by Incentivizer
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRifToken(100 ether);
         console.log("Incentivizing 100 Eth");
         console.log("RewardRate 1: %d", gauge.rewardRate(address(rewardToken)));
         console.log("Reward Missing: %d", gauge.rewardMissing(address(rewardToken)));
         // WHEN 5.5 days passes
         skip(5.5 days);
         // AND almost-0-ether are distributed by Incentivizer
-        gauge.incentivizeWithRewardToken(_minIncentiveAmount);
+        gauge.incentivizeWithRifToken(_minIncentiveAmount);
         console.log("Incentivizing 100 wei");
         console.log("RewardRate 2: %d", gauge.rewardRate(address(rewardToken)));
         console.log("Reward Missing: %d", gauge.rewardMissing(address(rewardToken)));
@@ -134,7 +134,7 @@ contract RewardRateManipulationTest is BaseTest {
         skip(0.5 days);
         // AND almost-0-ether are distributed by Incentivizer by 2nd time
         console.log("Incentivizing 100 wei");
-        gauge.incentivizeWithRewardToken(_minIncentiveAmount);
+        gauge.incentivizeWithRifToken(_minIncentiveAmount);
         vm.stopPrank();
         // AND Alice allocate 1 ether
         vm.startPrank(alice);

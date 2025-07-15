@@ -222,7 +222,7 @@ contract BaseTest is Test {
             vm.prank(address(incentivizer));
             rewardToken.approve(address(gauge_), amountERC20_);
             vm.prank(address(incentivizer));
-            gauge_.incentivizeWithRewardToken(amountERC20_);
+            gauge_.incentivizeWithRifToken(amountERC20_);
         }
     }
 

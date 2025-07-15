@@ -41,7 +41,7 @@ contract IncentivizeHandler is BaseHandler {
 
         vm.startPrank(msg.sender);
         rewardToken.approve(address(_gauge), amountERC20_);
-        _gauge.incentivizeWithRewardToken(amountERC20_);
+        _gauge.incentivizeWithRifToken(amountERC20_);
         _gauge.incentivizeWithCoinbase{ value: amountCoinbase_ }();
         vm.stopPrank();
     }

@@ -1010,7 +1010,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  THEN notifyRewardAmount reverts with BeforeDistribution error
         vm.startPrank(incentivizer);
         vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRifToken(100 ether);
         vm.stopPrank();
 
         // WHEN there is an attempt to incentivize a gauge directly before distribution starts
@@ -1035,7 +1035,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  THEN notifyRewardAmount reverts
         vm.startPrank(incentivizer);
         vm.expectRevert(GaugeRootstockCollective.BeforeDistribution.selector);
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRifToken(100 ether);
         vm.stopPrank();
 
         // WHEN there is an attempt to incentivize a gauge directly before distribution ends
@@ -1136,7 +1136,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.startPrank(incentivizer);
         rewardToken.mint(address(incentivizer), 100 ether);
         rewardToken.approve(address(gaugesArray[0]), 100 ether);
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRifToken(100 ether);
         vm.stopPrank();
 
         // AND distribution window starts
@@ -1630,7 +1630,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // AND gauge is incentive with 100 ether of rewardToken
         rewardToken.approve(address(gauge), 100 ether);
-        gauge.incentivizeWithRewardToken(100 ether);
+        gauge.incentivizeWithRifToken(100 ether);
 
         // AND alice allocates 2 ether to builder
         vm.startPrank(alice);

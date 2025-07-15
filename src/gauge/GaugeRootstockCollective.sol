@@ -74,7 +74,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
 
     /// @notice address of the token rewarded to builder and voters
-    address public rewardToken;
+    address public rifToken;
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
     /// @notice total amount of stakingToken allocated for rewards
@@ -115,7 +115,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      */
     function initialize(address rewardToken_, address builderRegistry_) external initializer {
         __ReentrancyGuard_init();
-        rewardToken = rewardToken_;
+        rifToken = rewardToken_;
 
         builderRegistry = BuilderRegistryRootstockCollective(builderRegistry_);
         backersManager = BackersManagerRootstockCollective(builderRegistry.backersManager());
@@ -264,7 +264,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param backer_ address who receives the rewards
      */
     function claimBackerReward(address backer_) external {
-        claimBackerReward(rewardToken, backer_);
+        claimBackerReward(rifToken, backer_);
         claimBackerReward(usdrifToken, backer_);
         claimBackerReward(UtilsLib._COINBASE_ADDRESS, backer_);
     }
@@ -298,7 +298,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev rewards are transferred to the builder reward receiver
      */
     function claimBuilderReward() external {
-        claimBuilderReward(rewardToken);
+        claimBuilderReward(rifToken);
         claimBuilderReward(usdrifToken);
         claimBuilderReward(UtilsLib._COINBASE_ADDRESS);
     }
@@ -330,7 +330,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param to_ address who receives the rewards
      */
     function moveBuilderUnclaimedRewards(address to_) external onlyAuthorizedContract {
-        _moveBuilderUnclaimedRewards(rewardToken, to_);
+        _moveBuilderUnclaimedRewards(rifToken, to_);
         _moveBuilderUnclaimedRewards(usdrifToken, to_);
         _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
     }
@@ -358,12 +358,12 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // if backers quit before cycle finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
-            _updateRewardMissing(rewardToken, _periodFinish);
+            _updateRewardMissing(rifToken, _periodFinish);
             _updateRewardMissing(usdrifToken, _periodFinish);
             _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
 
-        _updateRewards(rewardToken, backer_, _periodFinish);
+        _updateRewards(rifToken, backer_, _periodFinish);
         _updateRewards(usdrifToken, backer_, _periodFinish);
         _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
 
@@ -397,8 +397,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  reverts if distribution for the cycle has not finished
      * @param amount_ amount of reward tokens
      */
-    function incentivizeWithRewardToken(uint256 amount_) external {
-        _incentivizeWithToken(amount_, rewardToken);
+    function incentivizeWithRifToken(uint256 amount_) external {
+        _incentivizeWithToken(amount_, rifToken);
     }
 
     /**
@@ -407,7 +407,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      *  reverts if distribution for the cycle has not finished
      * @param amount_ amount of reward tokens
      */
-    function incentivizeWithUsdrifRewardToken(uint256 amount_) external {
+    function incentivizeWithUsdrifToken(uint256 amount_) external {
         _incentivizeWithToken(amount_, usdrifToken);
     }
 
@@ -464,7 +464,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // On a distribution, we include any reward missing into the new reward rate and reset it
         bool _resetRewardMissing = true;
         _notifyRewardAmount(
-            rewardToken,
+            rifToken,
             amountERC20_ - _backerAmountERC20,
             _backerAmountERC20,
             periodFinish_,
@@ -491,7 +491,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         newGaugeRewardShares_ = totalAllocation * cycleDuration_;
         rewardShares = newGaugeRewardShares_;
 
-        SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amountERC20_);
+        SafeERC20.safeTransferFrom(IERC20(rifToken), msg.sender, address(this), amountERC20_);
         SafeERC20.safeTransferFrom(IERC20(usdrifToken), msg.sender, address(this), amountUsdrif_);
     }
 
@@ -563,7 +563,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice transfers reward tokens to this contract
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
      * @param builderAmount_ amount of rewards for the builder
      * @param backersAmount_ amount of rewards for the backers
@@ -572,7 +572,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param resetRewardMissing_ true if reward missing accounted for new rewardRate, and be reset
      */
     function _notifyRewardAmount(
-        address rewardToken_,
+        address rifToken_,
         uint256 builderAmount_,
         uint256 backersAmount_,
         uint256 periodFinish_,
@@ -581,7 +581,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     )
         internal
     {
-        RewardData storage _rewardData = rewardData[rewardToken_];
+        RewardData storage _rewardData = rewardData[rifToken_];
         // cache storage variables used multiple times
         uint256 _rewardRate = _rewardData.rewardRate;
         uint256 _leftover = 0;
@@ -594,7 +594,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
         // if there are no allocations we need to update rewardMissing to avoid losing the previous rewards
         if (totalAllocation == 0) {
-            _updateRewardMissing(rewardToken_, periodFinish_);
+            _updateRewardMissing(rifToken_, periodFinish_);
         }
 
         // [PREC] = ([N] * [PREC] + [PREC])
@@ -610,11 +610,11 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         _rewardRate = _rateNumerator / timeUntilNextCycle_;
 
         _rewardData.builderRewards += builderAmount_;
-        _rewardData.rewardPerTokenStored = _rewardPerToken(rewardToken_, periodFinish_);
+        _rewardData.rewardPerTokenStored = _rewardPerToken(rifToken_, periodFinish_);
         _rewardData.lastUpdateTime = block.timestamp;
         _rewardData.rewardRate = _rewardRate;
 
-        emit NotifyReward(rewardToken_, builderAmount_, backersAmount_);
+        emit NotifyReward(rifToken_, builderAmount_, backersAmount_);
     }
 
     /**
