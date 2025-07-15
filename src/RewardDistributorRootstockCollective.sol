@@ -177,6 +177,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      */
     function _sendRewards(uint256 amountERC20_, uint256 amountUsdrifToken_, uint256 amountCoinbase_) internal {
         rewardToken.approve(address(backersManager), amountERC20_);
+        usdrifRewardToken.approve(address(backersManager), amountUsdrifToken_);
         backersManager.notifyRewardAmount{ value: amountCoinbase_ }(amountERC20_, amountUsdrifToken_);
     }
 
