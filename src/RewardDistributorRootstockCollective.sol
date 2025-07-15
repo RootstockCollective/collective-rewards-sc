@@ -94,11 +94,11 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /**
      * @notice sends rewards to backersManager contract to be distributed to the gauges
      * @dev reverts if is not called by foundation treasury address
-     * @param amountRif amount of ERC20 reward token to send
+     * @param amountRif_ amount of ERC20 reward token to send
      * @param amountNative_ amount of Native reward token to send
      */
     function sendRewards(
-        uint256 amountRif,
+        uint256 amountRif_,
         uint256 amountUsdrif_,
         uint256 amountNative_
     )
@@ -106,18 +106,18 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         payable
         onlyFoundationTreasury
     {
-        _sendRewards(amountRif, amountUsdrif_, amountNative_);
+        _sendRewards(amountRif_, amountUsdrif_, amountNative_);
     }
 
     /**
      * @notice sends rewards to backersManager contract and starts the distribution to the gauges
      * @dev reverts if is not called by foundation treasury address
      *  reverts if is not in the distribution window
-     * @param amountRif amount of ERC20 reward token to send
+     * @param amountRif_ amount of ERC20 reward token to send
      * @param amountNative_ amount of Native reward token to send
      */
     function sendRewardsAndStartDistribution(
-        uint256 amountRif,
+        uint256 amountRif_,
         uint256 amountUsdrif_,
         uint256 amountNative_
     )
@@ -125,7 +125,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         payable
         onlyFoundationTreasury
     {
-        _sendRewards(amountRif, amountUsdrif_, amountNative_);
+        _sendRewards(amountRif_, amountUsdrif_, amountNative_);
         backersManager.startDistribution();
     }
 
@@ -172,13 +172,13 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
 
     /**
      * @notice internal function to send rewards to backersManager contract
-     * @param amountRif amount of ERC20 reward token to send
+     * @param amountRif_ amount of ERC20 reward token to send
      * @param amountNative_ amount of Native reward token to send
      */
-    function _sendRewards(uint256 amountRif, uint256 amountUsdrif_, uint256 amountNative_) internal {
-        rifToken.approve(address(backersManager), amountRif);
+    function _sendRewards(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_) internal {
+        rifToken.approve(address(backersManager), amountRif_);
         usdrifToken.approve(address(backersManager), amountUsdrif_);
-        backersManager.notifyRewardAmount{ value: amountNative_ }(amountRif, amountUsdrif_);
+        backersManager.notifyRewardAmount{ value: amountNative_ }(amountRif_, amountUsdrif_);
     }
 
     /**
