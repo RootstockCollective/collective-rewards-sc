@@ -506,7 +506,7 @@ contract BackersManagerRootstockCollective is
         uint256 _batchLength = _lastDistribution - _gaugeIndex;
 
         // cache variables read in the loop
-        uint256 _rewardsERC20 = rewardsRif;
+        uint256 _rewardsRif = rewardsRif;
         uint256 _rewardsUsdrif = rewardsUsdrif;
         uint256 _rewardsNative = rewardsNative;
         uint256 _totalPotentialReward = totalPotentialReward;
@@ -526,7 +526,7 @@ contract BackersManagerRootstockCollective is
         for (uint256 i = 0; i < _gauges.length; ++i) {
             _newTotalPotentialReward += _gaugeDistribute(
                 GaugeRootstockCollective(_gauges[i]),
-                _rewardsERC20,
+                _rewardsRif,
                 _rewardsUsdrif,
                 _rewardsNative,
                 _totalPotentialReward,
