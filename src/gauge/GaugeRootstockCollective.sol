@@ -492,8 +492,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         rewardShares = newGaugeRewardShares_;
 
         SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amountERC20_);
-        // Currently disabled as for all test suites amountUsdrif_ is 0, and this transfer will revert
-        // SafeERC20.safeTransferFrom(IERC20(usdrifRewardToken), msg.sender, address(this), amountUsdrif_);
+        SafeERC20.safeTransferFrom(IERC20(usdrifRewardToken), msg.sender, address(this), amountUsdrif_);
     }
 
     // -----------------------------
