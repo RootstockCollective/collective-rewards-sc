@@ -860,6 +860,7 @@ contract SkipDistribution is BaseTest {
         _skipToStartDistributionWindow();
         vm.deal(address(rewardDistributor), 10 ether + address(rewardDistributor).balance);
         rewardToken.mint(address(rewardDistributor), 100 ether);
+        usdrifRewardToken.mint(address(rewardDistributor), 100 ether);
         vm.prank(foundation);
         rewardDistributor.sendRewardsAndStartDistribution(100 ether, 0, 10 ether);
 

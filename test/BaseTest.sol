@@ -112,6 +112,10 @@ contract BaseTest is Test {
         rewardToken.mint(address(this), 100_000 ether);
         rewardToken.approve(address(backersManager), 100_000 ether);
 
+        // mint some usdrifRewardTokens to this contract for reward distribution
+        usdrifRewardToken.mint(address(this), 100_000 ether);
+        usdrifRewardToken.approve(address(backersManager), 100_000 ether);
+
         _setUp();
     }
 
@@ -188,11 +192,19 @@ contract BaseTest is Test {
      * @notice skips to new cycle and executes a distribution.
      */
     function _distribute(uint256 amountERC20_, uint256 amountCoinbase_) internal {
+        _distribute(amountERC20_, amountERC20_, amountCoinbase_);
+    }
+
+    /**
+     * @notice skips to new cycle and executes a distribution with usdrif tokens.
+     */
+    function _distribute(uint256 amountERC20_, uint256 amountUsdrif_, uint256 amountCoinbase_) internal {
         _skipToStartDistributionWindow();
         rewardToken.mint(address(rewardDistributor), amountERC20_);
+        usdrifRewardToken.mint(address(rewardDistributor), amountUsdrif_);
         vm.deal(address(rewardDistributor), amountCoinbase_ + address(rewardDistributor).balance);
         vm.startPrank(foundation);
-        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, 0, amountCoinbase_);
+        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountUsdrif_, amountCoinbase_);
         while (backersManager.onDistributionPeriod()) {
             backersManager.distribute();
         }

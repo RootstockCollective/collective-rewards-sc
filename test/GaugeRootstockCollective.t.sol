@@ -199,6 +199,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         //  THEN notifyRewardAmount event is emitted
         _skipToStartDistributionWindow();
         rewardToken.mint(address(rewardDistributor), 100 ether);
+        usdrifRewardToken.mint(address(rewardDistributor), 100 ether);
         vm.expectEmit();
         emit NotifyReward(address(rewardToken), 30 ether, 70 ether);
         vm.startPrank(foundation);
@@ -1130,6 +1131,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 100 rewardToken and 100 coinbase are distributed in the same distribution window
         vm.warp(backersManager.endDistributionWindow(block.timestamp) - 1);
         rewardToken.mint(address(rewardDistributor), 100 ether);
+        usdrifRewardToken.mint(address(rewardDistributor), 100 ether);
         vm.deal(address(rewardDistributor), 100 ether);
         vm.startPrank(foundation);
         rewardDistributor.sendRewardsAndStartDistribution(100 ether, 0, 100 ether);

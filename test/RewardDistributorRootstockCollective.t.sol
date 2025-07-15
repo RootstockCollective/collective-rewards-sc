@@ -11,6 +11,8 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function _setUp() internal override {
         // mint some rewardTokens to this contract for reward distribution
         rewardToken.mint(address(this), 100_000 ether);
+        // mint some usdrifRewardTokens to this contract for reward distribution
+        usdrifRewardToken.mint(address(this), 100_000 ether);
         // add some allocations to don't revert by zero division on the notifyRewardAmount
         vm.prank(alice);
         backersManager.allocate(gauge, 0.1 ether);
@@ -84,6 +86,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function test_SendRewards() public {
         // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
         rewardToken.transfer(address(rewardDistributor), 10 ether);
+        usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
         // WHEN foundation treasury calls sendRewards transferring 2 ethers of reward token and 1 of coinbase
         vm.startPrank(foundation);
@@ -113,6 +116,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function test_SendRewardsAndStartDistribution() public {
         // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token
         rewardToken.transfer(address(rewardDistributor), 10 ether);
+        usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         // AND a foundation with 5 ether of coinbase
         Address.sendValue(payable(foundation), 5 ether);
         // AND distribution window starts
@@ -133,6 +137,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function test_SendRewardsWithDefaultAmount() public {
         // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
         rewardToken.transfer(address(rewardDistributor), 10 ether);
+        usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
         // WHEN foundation treasury calls sendRewardsWithDefaultAmount
         // setting as default values 2 ethers of reward token and 1 of coinbase
@@ -164,6 +169,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function test_SendRewardsAndStartDistributionWithDefaultAmount() public {
         // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token
         rewardToken.transfer(address(rewardDistributor), 10 ether);
+        usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         // AND a foundation with 5 ether of coinbase
         Address.sendValue(payable(foundation), 5 ether);
         // AND distribution window starts
@@ -182,6 +188,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function test_RevertSendRewardsAndStartDistributionWithDefaultAmountTwicePerCycle() public {
         // GIVEN a funded Reward Distributor contract
         rewardToken.transfer(address(rewardDistributor), 10 ether);
+        usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(foundation), 5 ether);
         _skipToStartDistributionWindow();
         // WHEN cycle is funded with default amounts and distribution is started
@@ -200,6 +207,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function test_RevertSendRewardsWithDefaultAmountTwicePerCycle() public {
         // GIVEN a funded Reward Distributor contract
         rewardToken.transfer(address(rewardDistributor), 10 ether);
+        usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
         // WHEN the default rewards are set
         vm.startPrank(foundation);
@@ -220,6 +228,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function test_SendRewardsWithDefaultAmountInNewCycle() public {
         // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
         rewardToken.transfer(address(rewardDistributor), 10 ether);
+        usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
         // WHEN foundation treasury calls sendRewardsWithDefaultAmount
         vm.startPrank(foundation);
@@ -237,6 +246,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function test_FailSendRewardsWithDefaultAmountForTokens() public {
         // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
         rewardToken.transfer(address(rewardDistributor), 10 ether);
+        usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
         // WHEN foundation treasury calls sendRewardsWithDefaultAmount
         // setting as default values 6 ethers of reward token and 1 of coinbase
@@ -254,6 +264,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function test_FailSendRewardsWithDefaultAmountForCoinbase() public {
         // GIVEN a RewardDistributorRootstockCollective contract with 10 ether of reward token and 5 of coinbase
         rewardToken.transfer(address(rewardDistributor), 10 ether);
+        usdrifRewardToken.transfer(address(rewardDistributor), 10 ether);
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
         // WHEN foundation treasury calls sendRewardsWithDefaultAmount
         // setting as default values 6 ethers of reward token and 1 of coinbase
