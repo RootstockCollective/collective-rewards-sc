@@ -38,7 +38,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     // -----------------------------
 
     /// @notice address of the token rewarded to builder and backers
-    IERC20 public rewardToken;
+    IERC20 public rifToken;
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
     ///@notice default reward token amount
@@ -52,7 +52,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     // -----------------------------
 
     /// @notice address of the usdrif token rewarded to builder and backers
-    IERC20 public usdrifRewardToken;
+    IERC20 public usdrifToken;
     ///@notice default reward token amount
     uint256 public defaultUsdrifRewardTokenAmount;
 
@@ -83,8 +83,8 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     function initializeCollectiveRewardsAddresses(address backersManager_) external {
         if (address(backersManager) != address(0)) revert CollectiveRewardsAddressesAlreadyInitialized();
         backersManager = BackersManagerRootstockCollective(backersManager_);
-        rewardToken = IERC20(BackersManagerRootstockCollective(backersManager_).rewardToken());
-        usdrifRewardToken = IERC20(BackersManagerRootstockCollective(backersManager_).usdrifRewardToken());
+        rifToken = IERC20(BackersManagerRootstockCollective(backersManager_).rifToken());
+        usdrifToken = IERC20(BackersManagerRootstockCollective(backersManager_).usdrifToken());
     }
 
     // -----------------------------
@@ -176,8 +176,8 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @param amountCoinbase_ amount of Coinbase reward token to send
      */
     function _sendRewards(uint256 amountERC20_, uint256 amountUsdrifToken_, uint256 amountCoinbase_) internal {
-        rewardToken.approve(address(backersManager), amountERC20_);
-        usdrifRewardToken.approve(address(backersManager), amountUsdrifToken_);
+        rifToken.approve(address(backersManager), amountERC20_);
+        usdrifToken.approve(address(backersManager), amountUsdrifToken_);
         backersManager.notifyRewardAmount{ value: amountCoinbase_ }(amountERC20_, amountUsdrifToken_);
     }
 

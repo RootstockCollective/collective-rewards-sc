@@ -14,7 +14,7 @@ contract Deploy is Broadcaster {
         returns (BackersManagerRootstockCollective proxy_, BackersManagerRootstockCollective implementation_)
     {
         address _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
-        address _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
+        address _rifTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
 
         uint32 _cycleDuration = uint32(vm.envUint("CYCLE_DURATION"));
@@ -23,7 +23,7 @@ contract Deploy is Broadcaster {
 
         (proxy_, implementation_) = run(
             _governanceManager,
-            _rewardTokenAddress,
+            _rifTokenAddress,
             _stakingTokenAddress,
             _cycleDuration,
             _cycleStartOffset,
@@ -33,7 +33,7 @@ contract Deploy is Broadcaster {
 
     function run(
         address governanceManager_,
-        address rewardToken_,
+        address rifToken_,
         address stakingToken_,
         uint32 cycleDuration_,
         uint24 cycleStartOffset_,
@@ -44,14 +44,14 @@ contract Deploy is Broadcaster {
         returns (BackersManagerRootstockCollective, BackersManagerRootstockCollective)
     {
         require(governanceManager_ != address(0), "Governance Manager address cannot be empty");
-        require(rewardToken_ != address(0), "Reward token address cannot be empty");
+        require(rifToken_ != address(0), "Reward token address cannot be empty");
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
 
         bytes memory _initializerData = abi.encodeCall(
             BackersManagerRootstockCollective.initialize,
             (
                 IGovernanceManagerRootstockCollective(governanceManager_),
-                rewardToken_,
+                rifToken_,
                 stakingToken_,
                 cycleDuration_,
                 cycleStartOffset_,

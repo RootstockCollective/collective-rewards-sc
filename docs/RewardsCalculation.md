@@ -5,6 +5,9 @@ from backers. The support during a cycle impacts the rewards they receive at the
 their rewards ready to claim immediately after the distribution while backers will receive them based on the amount of
 time they support the builder during that cycle.
 
+The system supports three types of rewards: RIF (`rewardsRif`), USDRIF (`rewardsUsdrif`), and coinbase (`rewardsCoinbase`).
+All are distributed proportionally to each gauge's `rewardShares` over the `totalPotentialReward` for the cycle.
+
 To calculate the amount of rewards to distribute to each builder and its backers, each Gauge keeps track of its rewards
 shares. They are calculated based on the amount of votes per time left in the cycle that the gauge has
 
@@ -23,16 +26,23 @@ time left to end the cycle and after a distribution:
 
 The `BackersManager` keeps track of the total amount of shares of every `Gauge` combined in `totalPotentialReward`.
 
-On the other hand, the `BackersManager` also keeps track of the `rewardsERC20` and `rewardsCoinbase`. They get updated
-each time the `BackersManager` receives rewards through `notifyRewardAmount` and after each distribution, when they get
+On the other hand, the `BackersManager` also keeps track of the `rewardsRif`, `rewardsUsdrif`, and `rewardsCoinbase`.
+These represent the RIF, USDRIF, and coinbase (native token) rewards to be distributed.
+They get updated each time the `BackersManager` receives rewards through `notifyRewardAmount` and after each distribution, when they get
 reset to 0.
 
 This way, rewards for each Gauge are calculated based on their `rewardShares` and the `totalPotentialRewards`.
 
-ERC20 rewards:
+RIF rewards:
 
 ```text
-(rewardShares * rewardsERC20) / totalPotentialReward
+(rewardShares * rewardsRif) / totalPotentialReward
+```
+
+USDRIF rewards:
+
+```text
+(rewardShares * rewardsUsdrif) / totalPotentialReward
 ```
 
 Coinbase rewards:

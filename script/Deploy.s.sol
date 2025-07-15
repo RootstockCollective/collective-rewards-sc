@@ -19,8 +19,8 @@ import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
     "script/governance/GovernanceManagerRootstockCollective.s.sol";
 
 contract Deploy is Broadcaster, OutputWriter {
-    address private _rewardTokenAddress;
-    address private _usdrifRewardTokenAddress;
+    address private _rifTokenAddress;
+    address private _usdrifTokenAddress;
     address private _stakingTokenAddress;
     address private _kycApproverAddress;
     address private _governorAddress;
@@ -33,8 +33,8 @@ contract Deploy is Broadcaster, OutputWriter {
     uint256 private _maxDistributionsPerBatch;
 
     function setUp() public {
-        _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
-        _usdrifRewardTokenAddress = vm.envAddress("USDRIF_REWARD_TOKEN_ADDRESS");
+        _rifTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
+        _usdrifTokenAddress = vm.envAddress("USDRIF_REWARD_TOKEN_ADDRESS");
         _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
         _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
@@ -65,7 +65,7 @@ contract Deploy is Broadcaster, OutputWriter {
         save("GaugeBeaconRootstockCollective", address(_gaugeBeacon));
 
         GaugeFactoryRootstockCollective _gaugeFactory =
-            new GaugeFactoryRootstockCollectiveDeployer().run(address(_gaugeBeacon), _rewardTokenAddress);
+            new GaugeFactoryRootstockCollectiveDeployer().run(address(_gaugeBeacon), _rifTokenAddress);
         save("GaugeFactoryRootstockCollective", address(_gaugeFactory));
 
         (
@@ -79,7 +79,7 @@ contract Deploy is Broadcaster, OutputWriter {
         (BackersManagerRootstockCollective _backersManagerProxy, BackersManagerRootstockCollective _backersManagerImpl)
         = new BackersManagerRootstockCollectiveDeployer().run(
             address(_governanceManagerProxy),
-            _rewardTokenAddress,
+            _rifTokenAddress,
             _stakingTokenAddress,
             _cycleDuration,
             _cycleStartOffset,
@@ -103,7 +103,7 @@ contract Deploy is Broadcaster, OutputWriter {
         vm.startBroadcast();
 
         _backersManagerProxy.initializeBuilderRegistry(_builderRegistryProxy);
-        _backersManagerProxy.initializeV3(_maxDistributionsPerBatch, _usdrifRewardTokenAddress);
+        _backersManagerProxy.initializeV3(_maxDistributionsPerBatch, _usdrifTokenAddress);
 
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
 

@@ -94,7 +94,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
 
     /// @notice address of the token rewarded to builder and voters
-    address public usdrifRewardToken;
+    address public usdrifToken;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -131,7 +131,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      */
     function initializeV3(address usdrifRewardToken_) external reinitializer(3) {
         __ReentrancyGuard_init();
-        usdrifRewardToken = usdrifRewardToken_;
+        usdrifToken = usdrifRewardToken_;
     }
 
     // NOTE: This contract previously included an `initializeV2()` function using `reinitializer(2)`
@@ -265,7 +265,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      */
     function claimBackerReward(address backer_) external {
         claimBackerReward(rewardToken, backer_);
-        claimBackerReward(usdrifRewardToken, backer_);
+        claimBackerReward(usdrifToken, backer_);
         claimBackerReward(UtilsLib._COINBASE_ADDRESS, backer_);
     }
 
@@ -299,7 +299,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      */
     function claimBuilderReward() external {
         claimBuilderReward(rewardToken);
-        claimBuilderReward(usdrifRewardToken);
+        claimBuilderReward(usdrifToken);
         claimBuilderReward(UtilsLib._COINBASE_ADDRESS);
     }
 
@@ -331,7 +331,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      */
     function moveBuilderUnclaimedRewards(address to_) external onlyAuthorizedContract {
         _moveBuilderUnclaimedRewards(rewardToken, to_);
-        _moveBuilderUnclaimedRewards(usdrifRewardToken, to_);
+        _moveBuilderUnclaimedRewards(usdrifToken, to_);
         _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
     }
 
@@ -359,12 +359,12 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
             _updateRewardMissing(rewardToken, _periodFinish);
-            _updateRewardMissing(usdrifRewardToken, _periodFinish);
+            _updateRewardMissing(usdrifToken, _periodFinish);
             _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
         }
 
         _updateRewards(rewardToken, backer_, _periodFinish);
-        _updateRewards(usdrifRewardToken, backer_, _periodFinish);
+        _updateRewards(usdrifToken, backer_, _periodFinish);
         _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
 
         // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
@@ -408,7 +408,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param amount_ amount of reward tokens
      */
     function incentivizeWithUsdrifRewardToken(uint256 amount_) external {
-        _incentivizeWithToken(amount_, usdrifRewardToken);
+        _incentivizeWithToken(amount_, usdrifToken);
     }
 
     /**
@@ -472,7 +472,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             _resetRewardMissing
         );
         _notifyRewardAmount(
-            usdrifRewardToken,
+            usdrifToken,
             amountUsdrif_ - _backerAmountUsdrif,
             _backerAmountUsdrif,
             periodFinish_,
@@ -492,7 +492,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         rewardShares = newGaugeRewardShares_;
 
         SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amountERC20_);
-        SafeERC20.safeTransferFrom(IERC20(usdrifRewardToken), msg.sender, address(this), amountUsdrif_);
+        SafeERC20.safeTransferFrom(IERC20(usdrifToken), msg.sender, address(this), amountUsdrif_);
     }
 
     // -----------------------------

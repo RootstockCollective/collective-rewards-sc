@@ -102,13 +102,13 @@ contract BackersManagerRootstockCollective is
     /// @notice address of the token used to stake
     IERC20 public stakingToken;
     /// @notice address of the token rewarded to builder and voters
-    address public rewardToken;
+    address public rifToken;
     /// @notice total potential reward
     uint256 public totalPotentialReward;
     /// @notice on a paginated distribution we need to temporarily store the totalPotentialReward
     uint256 public tempTotalPotentialReward;
     /// @notice ERC20 rewards to distribute [N]
-    uint256 public rewardsERC20;
+    uint256 public rewardsRif;
     /// @notice Coinbase rewards to distribute [N]
     uint256 public rewardsCoinbase;
     /// @notice index of tha last gauge distributed during a distribution period
@@ -136,7 +136,7 @@ contract BackersManagerRootstockCollective is
     uint256 public rewardsUsdrif;
 
     /// @notice address of the USDRIF token rewarded to builder and voters
-    address public usdrifRewardToken;
+    address public usdrifToken;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -173,7 +173,7 @@ contract BackersManagerRootstockCollective is
         __CycleTimeKeeperRootstockCollective_init(
             governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
         );
-        rewardToken = rewardToken_;
+        rifToken = rewardToken_;
         stakingToken = IERC20(stakingToken_);
         _periodFinish = cycleNext(block.timestamp);
     }
@@ -200,7 +200,7 @@ contract BackersManagerRootstockCollective is
     function initializeV3(uint256 maxDistributionsPerBatch_, address usdrifRewardToken_) external reinitializer(3) {
         if (address(usdrifRewardToken_) == address(0)) revert ZeroAddressNotAllowed();
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
-        usdrifRewardToken = usdrifRewardToken_;
+        usdrifToken = usdrifRewardToken_;
     }
 
     // -----------------------------
@@ -506,7 +506,7 @@ contract BackersManagerRootstockCollective is
         uint256 _batchLength = _lastDistribution - _gaugeIndex;
 
         // cache variables read in the loop
-        uint256 _rewardsERC20 = rewardsERC20;
+        uint256 _rewardsERC20 = rewardsRif;
         uint256 _rewardsUsdrif = rewardsUsdrif;
         uint256 _rewardsCoinbase = rewardsCoinbase;
         uint256 _totalPotentialReward = totalPotentialReward;
@@ -543,7 +543,7 @@ contract BackersManagerRootstockCollective is
         if (_lastDistribution == _gaugesLength) {
             _finishDistribution();
             totalPotentialReward = _newTotalPotentialReward;
-            rewardsERC20 = rewardsUsdrif = rewardsCoinbase = 0;
+            rewardsRif = rewardsUsdrif = rewardsCoinbase = 0;
             return true;
         }
 
@@ -610,9 +610,9 @@ contract BackersManagerRootstockCollective is
      * @param amount_ The amount of RIF tokens to transfer and notify.
      */
     function _notifyRewardAmount(uint256 amount_) internal {
-        rewardsERC20 += amount_;
-        emit NotifyReward(rewardToken, msg.sender, amount_);
-        SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
+        rewardsRif += amount_;
+        emit NotifyReward(rifToken, msg.sender, amount_);
+        SafeERC20.safeTransferFrom(IERC20(rifToken), msg.sender, address(this), amount_);
     }
 
     /**
@@ -621,8 +621,8 @@ contract BackersManagerRootstockCollective is
      */
     function _notifyRewardAmountUsdrif(uint256 amount_) internal {
         rewardsUsdrif += amount_;
-        emit NotifyReward(usdrifRewardToken, msg.sender, amount_);
-        SafeERC20.safeTransferFrom(IERC20(usdrifRewardToken), msg.sender, address(this), amount_);
+        emit NotifyReward(usdrifToken, msg.sender, amount_);
+        SafeERC20.safeTransferFrom(IERC20(usdrifToken), msg.sender, address(this), amount_);
     }
 
     /**
@@ -633,7 +633,7 @@ contract BackersManagerRootstockCollective is
      * @param value_ amount of rewardTokens to approve
      */
     function rewardTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
-        if (!IERC20(rewardToken).approve(gauge_, value_) || !IERC20(usdrifRewardToken).approve(gauge_, value_)) {
+        if (!IERC20(rifToken).approve(gauge_, value_) || !IERC20(usdrifToken).approve(gauge_, value_)) {
             revert RewardTokenNotApproved();
         }
     }

@@ -398,7 +398,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         emit NotifyReward(address(rewardToken), address(this), 2 ether);
         backersManager.notifyRewardAmount(2 ether, 0);
         // THEN rewards is 2 ether
-        assertEq(backersManager.rewardsERC20(), 2 ether);
+        assertEq(backersManager.rewardsRif(), 2 ether);
         // THEN Coinbase rewards is 0
         assertEq(backersManager.rewardsCoinbase(), 0);
         // THEN reward token balance of backersManager is 2 ether
@@ -416,7 +416,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //    THEN it does not revert and rewards don't change
         backersManager.notifyRewardAmount(0 ether, 0);
         // THEN reward for reward token is 0 ether
-        assertEq(backersManager.rewardsERC20(), 0 ether);
+        assertEq(backersManager.rewardsRif(), 0 ether);
         // THEN Coinbase reward is 0
         assertEq(backersManager.rewardsCoinbase(), 0);
     }
@@ -469,7 +469,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN Coinbase rewards is 2 ether
         assertEq(backersManager.rewardsCoinbase(), 2 ether);
         // THEN ERC20 rewards is 0
-        assertEq(backersManager.rewardsERC20(), 0);
+        assertEq(backersManager.rewardsRif(), 0);
         // THEN Coinbase balance of backersManager is 2 ether
         assertEq(address(backersManager).balance, 2 ether);
         // THEN reward token balance of backersManager is 0
@@ -490,7 +490,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // WHEN 10 ether reward are more added
         backersManager.notifyRewardAmount(10 ether, 0);
         // THEN rewards is is 12 ether
-        assertEq(backersManager.rewardsERC20(), 12 ether);
+        assertEq(backersManager.rewardsRif(), 12 ether);
         // THEN reward token balance of backersManager is 12 ether
         assertEq(rewardToken.balanceOf(address(backersManager)), 12 ether);
     }
@@ -1750,7 +1750,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN Coinbase balance of backersManager is 0 ether
         assertEq(address(backersManager).balance, 0);
         // THEN backersManager rewardsERC20 is 0 ether
-        assertEq(backersManager.rewardsERC20(), 0);
+        assertEq(backersManager.rewardsRif(), 0 ether);
         // THEN backersManager rewardsCoinbase is 0 ether
         assertEq(backersManager.rewardsCoinbase(), 0);
 
@@ -1786,7 +1786,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // THEN Coinbase balance of backersManager is 50 ether
         assertEq(address(backersManager).balance, 50 ether);
         // THEN backersManager rewardsERC20 is 50 ether
-        assertEq(backersManager.rewardsERC20(), 50 ether);
+        assertEq(backersManager.rewardsRif(), 50 ether);
         // THEN backersManager rewardsCoinbase is 50 ether
         assertEq(backersManager.rewardsCoinbase(), 50 ether);
 
