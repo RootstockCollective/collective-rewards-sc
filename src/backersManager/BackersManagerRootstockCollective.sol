@@ -109,8 +109,8 @@ contract BackersManagerRootstockCollective is
     uint256 public tempTotalPotentialReward;
     /// @notice ERC20 rewards to distribute [N]
     uint256 public rewardsRif;
-    /// @notice Coinbase rewards to distribute [N]
-    uint256 public rewardsCoinbase;
+    /// @notice Native rewards to distribute [N]
+    uint256 public rewardsNative;
     /// @notice index of tha last gauge distributed during a distribution period
     uint256 public indexLastGaugeDistributed;
     /// @notice timestamp end of current rewards period
@@ -300,7 +300,7 @@ contract BackersManagerRootstockCollective is
     function notifyRewardAmount(uint256 amount_, uint256 amountUsdrif_) external payable notInDistributionPeriod {
         if (builderRegistry.getGaugesLength() == 0) revert NoGaugesForDistribution();
         if (msg.value > 0) {
-            rewardsCoinbase += msg.value;
+            rewardsNative += msg.value;
             emit NotifyReward(UtilsLib._COINBASE_ADDRESS, msg.sender, msg.value);
         }
         // transfering rif tokens
@@ -508,7 +508,7 @@ contract BackersManagerRootstockCollective is
         // cache variables read in the loop
         uint256 _rewardsERC20 = rewardsRif;
         uint256 _rewardsUsdrif = rewardsUsdrif;
-        uint256 _rewardsCoinbase = rewardsCoinbase;
+        uint256 _rewardsNative = rewardsNative;
         uint256 _totalPotentialReward = totalPotentialReward;
         uint256 __periodFinish = _periodFinish;
         (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
@@ -528,7 +528,7 @@ contract BackersManagerRootstockCollective is
                 GaugeRootstockCollective(_gauges[i]),
                 _rewardsERC20,
                 _rewardsUsdrif,
-                _rewardsCoinbase,
+                _rewardsNative,
                 _totalPotentialReward,
                 __periodFinish,
                 _cycleStart,
@@ -543,7 +543,7 @@ contract BackersManagerRootstockCollective is
         if (_lastDistribution == _gaugesLength) {
             _finishDistribution();
             totalPotentialReward = _newTotalPotentialReward;
-            rewardsRif = rewardsUsdrif = rewardsCoinbase = 0;
+            rewardsRif = rewardsUsdrif = rewardsNative = 0;
             return true;
         }
 
@@ -564,7 +564,7 @@ contract BackersManagerRootstockCollective is
      * @notice internal function used to distribute reward tokens to a gauge
      * @param gauge_ address of the gauge to distribute
      * @param rewardsERC20_ ERC20 rewards to distribute
-     * @param rewardsCoinbase_ Coinbase rewards to distribute
+     * @param rewardsNative_ Native rewards to distribute
      * @param totalPotentialReward_ cached total potential reward
      * @param periodFinish_ cached period finish
      * @param cycleStart_ cached cycle start timestamp
@@ -575,7 +575,7 @@ contract BackersManagerRootstockCollective is
         GaugeRootstockCollective gauge_,
         uint256 rewardsERC20_,
         uint256 rewardsUsdrif_,
-        uint256 rewardsCoinbase_,
+        uint256 rewardsNative_,
         uint256 totalPotentialReward_,
         uint256 periodFinish_,
         uint256 cycleStart_,
@@ -592,10 +592,10 @@ contract BackersManagerRootstockCollective is
         // [N] = [N] * [N] / [N]
         // uint256 _amountUsdrif = (_rewardShares * rewardsUsdrif_) / totalPotentialReward_;
         // [N] = [N] * [N] / [N]
-        uint256 _amountCoinbase = (_rewardShares * rewardsCoinbase_) / totalPotentialReward_;
+        uint256 _amountNative = (_rewardShares * rewardsNative_) / totalPotentialReward_;
         uint256 _backerRewardPercentage =
             builderRegistry.getRewardPercentageToApply(builderRegistry.gaugeToBuilder(gauge_));
-        return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountCoinbase }(
+        return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountNative }(
             (_rewardShares * rewardsERC20_) / totalPotentialReward_,
             (_rewardShares * rewardsUsdrif_) / totalPotentialReward_,
             _backerRewardPercentage,

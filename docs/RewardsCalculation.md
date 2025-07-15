@@ -5,7 +5,7 @@ from backers. The support during a cycle impacts the rewards they receive at the
 their rewards ready to claim immediately after the distribution while backers will receive them based on the amount of
 time they support the builder during that cycle.
 
-The system supports three types of rewards: RIF (`rewardsRif`), USDRIF (`rewardsUsdrif`), and coinbase (`rewardsCoinbase`).
+The system supports three types of rewards: RIF (`rewardsRif`), USDRIF (`rewardsUsdrif`), and native (`rewardsNative`).
 All are distributed proportionally to each gauge's `rewardShares` over the `totalPotentialReward` for the cycle.
 
 To calculate the amount of rewards to distribute to each builder and its backers, each Gauge keeps track of its rewards
@@ -26,8 +26,8 @@ time left to end the cycle and after a distribution:
 
 The `BackersManager` keeps track of the total amount of shares of every `Gauge` combined in `totalPotentialReward`.
 
-On the other hand, the `BackersManager` also keeps track of the `rewardsRif`, `rewardsUsdrif`, and `rewardsCoinbase`.
-These represent the RIF, USDRIF, and coinbase (native token) rewards to be distributed.
+On the other hand, the `BackersManager` also keeps track of the `rewardsRif`, `rewardsUsdrif`, and `rewardsNative`.
+These represent the RIF, USDRIF, and native token rewards to be distributed.
 They get updated each time the `BackersManager` receives rewards through `notifyRewardAmount` and after each distribution, when they get
 reset to 0.
 
@@ -45,10 +45,10 @@ USDRIF rewards:
 (rewardShares * rewardsUsdrif) / totalPotentialReward
 ```
 
-Coinbase rewards:
+Native rewards:
 
 ```text
- (rewardShares * rewardsCoinbase) / totalPotentialReward
+(rewardShares * rewardsNative) / totalPotentialReward
 ```
 
 The `BackersManager` also keeps track of the `backerRewardPercentage`. This is passed to each gauge alongside the
@@ -57,13 +57,13 @@ rewards during the distribution so each gauge can calculate how much goes to the
 ## Builder Rewards
 
 Their rewards calculation is pretty straightforward: it's based on the `backerRewardPercentage`. For instance, if there
-was a distribution to a Gauge of 10 tokens and 10 coinbase with a `backerRewardPercentage` of 40%, the builder would get
-6 tokens and 6 coinbase. The rest gets distributed during the cycle among all the backers based on their amount of votes
+was a distribution to a Gauge of 10 tokens and 10 native tokens with a `backerRewardPercentage` of 40%, the builder would get
+6 tokens and 6 native tokens. The rest gets distributed during the cycle among all the backers based on their amount of votes
 and time they maintained those votes.
 
 ## Backer Rewards
 
-Backers can receive rewards through the distribution and through incentives in reward token and coinbase.
+Backers can receive rewards through the distribution and through incentives in reward token and native tokens.
 
 Their rewards are calculated per asset based on a `rewardRate`. What a builder earns in a cycle is in simple terms the
 time they have spent supporting the builder multiplied by the reward rate and their allocation rate.

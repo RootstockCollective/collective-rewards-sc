@@ -399,8 +399,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.notifyRewardAmount(2 ether, 0);
         // THEN rewards is 2 ether
         assertEq(backersManager.rewardsRif(), 2 ether);
-        // THEN Coinbase rewards is 0
-        assertEq(backersManager.rewardsCoinbase(), 0);
+        // THEN Native rewards is 0
+        assertEq(backersManager.rewardsNative(), 0);
         // THEN reward token balance of backersManager is 2 ether
         assertEq(rewardToken.balanceOf(address(backersManager)), 2 ether);
         // THEN Coinbase balance of backersManager is 0
@@ -417,8 +417,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.notifyRewardAmount(0 ether, 0);
         // THEN reward for reward token is 0 ether
         assertEq(backersManager.rewardsRif(), 0 ether);
-        // THEN Coinbase reward is 0
-        assertEq(backersManager.rewardsCoinbase(), 0);
+        // THEN Native reward is 0
+        assertEq(backersManager.rewardsNative(), 0);
     }
 
     /**
@@ -466,8 +466,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.expectEmit();
         emit NotifyReward(UtilsLib._COINBASE_ADDRESS, address(this), 2 ether);
         backersManager.notifyRewardAmount{ value: 2 ether }(0, 0);
-        // THEN Coinbase rewards is 2 ether
-        assertEq(backersManager.rewardsCoinbase(), 2 ether);
+        // THEN Native rewards is 2 ether
+        assertEq(backersManager.rewardsNative(), 2 ether);
         // THEN ERC20 rewards is 0
         assertEq(backersManager.rewardsRif(), 0);
         // THEN Coinbase balance of backersManager is 2 ether
@@ -1751,8 +1751,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(address(backersManager).balance, 0);
         // THEN backersManager rewardsERC20 is 0 ether
         assertEq(backersManager.rewardsRif(), 0 ether);
-        // THEN backersManager rewardsCoinbase is 0 ether
-        assertEq(backersManager.rewardsCoinbase(), 0);
+        // THEN backersManager rewardsNative is 0 ether
+        assertEq(backersManager.rewardsNative(), 0);
 
         // AND alice removes allocations from gauge
         vm.startPrank(alice);
@@ -1787,8 +1787,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(address(backersManager).balance, 50 ether);
         // THEN backersManager rewardsERC20 is 50 ether
         assertEq(backersManager.rewardsRif(), 50 ether);
-        // THEN backersManager rewardsCoinbase is 50 ether
-        assertEq(backersManager.rewardsCoinbase(), 50 ether);
+        // THEN backersManager rewardsNative is 50 ether
+        assertEq(backersManager.rewardsNative(), 50 ether);
 
         // THEN last gauge distributed is gauge 0
         assertEq(backersManager.indexLastGaugeDistributed(), 0);
