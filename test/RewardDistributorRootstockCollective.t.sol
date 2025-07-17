@@ -50,7 +50,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
                 IERC20Errors.ERC20InsufficientBalance.selector, address(rewardDistributor), 1 ether, 2 ether
             )
         );
-        rewardDistributor.sendRewards(2 ether, 0, 0 ether);
+        rewardDistributor.sendRewards(2 ether, 2 ether, 0 ether);
 
         // WHEN foundation treasury calls sendRewardsAndStartDistribution trying to transfer 2 ethers
         //  THEN tx reverts because insufficient balance
@@ -59,7 +59,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
                 IERC20Errors.ERC20InsufficientBalance.selector, address(rewardDistributor), 1 ether, 2 ether
             )
         );
-        rewardDistributor.sendRewardsAndStartDistribution(2 ether, 0, 0 ether);
+        rewardDistributor.sendRewardsAndStartDistribution(2 ether, 2 ether, 0 ether);
     }
 
     /**
@@ -90,20 +90,24 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         Address.sendValue(payable(address(rewardDistributor)), 5 ether);
         // WHEN foundation treasury calls sendRewards transferring 2 ethers of rif token and 1 of native tokens
         vm.startPrank(foundation);
-        rewardDistributor.sendRewards(2 ether, 0, 1 ether);
+        rewardDistributor.sendRewards(2 ether, 2 ether, 1 ether);
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
         // AND foundation treasury calls sendRewards transferring 1 ethers of rif token and 0.5 of native tokens
-        rewardDistributor.sendRewards(1 ether, 0, 0.5 ether);
+        rewardDistributor.sendRewards(1 ether, 1 ether, 0.5 ether);
         // AND cycle finish
         _skipAndStartNewCycle();
         // AND foundation treasury calls sendRewards transferring 4 ethers of rif token and 2 of native tokens
-        rewardDistributor.sendRewards(4 ether, 0, 2 ether);
+        rewardDistributor.sendRewards(4 ether, 4 ether, 2 ether);
 
         // THEN rif token balance of rewardDistributor is 3 ether
         assertEq(rifToken.balanceOf(address(rewardDistributor)), 3 ether);
         // THEN rif token balance of backersManager is 7 ether
         assertEq(rifToken.balanceOf(address(backersManager)), 7 ether);
+        // THEN usdrif token balance of rewardDistributor is 3 ether
+        assertEq(usdrifToken.balanceOf(address(rewardDistributor)), 3 ether);
+        // THEN usdrif token balance of backersManager is 7 ether
+        assertEq(usdrifToken.balanceOf(address(backersManager)), 7 ether);
         // THEN native tokens balance of rewardDistributor is 1.5 ether
         assertEq(address(rewardDistributor).balance, 1.5 ether);
         // THEN native tokens balance of backersManager is 3.5 ether
@@ -142,21 +146,25 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         // WHEN foundation treasury calls sendRewardsWithDefaultAmount
         // setting as default values 2 ethers of rif token and 1 of native tokens
         vm.startPrank(foundation);
-        rewardDistributor.setDefaultRewardAmount(2 ether, 0, 1 ether);
+        rewardDistributor.setDefaultRewardAmount(2 ether, 2 ether, 1 ether);
         rewardDistributor.sendRewardsWithDefaultAmount();
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
         // AND foundation treasury calls sendRewards transferring 1 ethers of rif token and 0.5 of native tokens
-        rewardDistributor.sendRewards(1 ether, 0, 0.5 ether);
+        rewardDistributor.sendRewards(1 ether, 1 ether, 0.5 ether);
         // AND cycle finish
         _skipAndStartNewCycle();
         // AND foundation treasury calls sendRewards transferring 4 ethers of rif token and 2 of native tokens
-        rewardDistributor.sendRewards(4 ether, 0, 2 ether);
+        rewardDistributor.sendRewards(4 ether, 4 ether, 2 ether);
 
         // THEN rif token balance of rewardDistributor is 3 ether
         assertEq(rifToken.balanceOf(address(rewardDistributor)), 3 ether);
         // THEN rif token balance of backersManager is 7 ether
         assertEq(rifToken.balanceOf(address(backersManager)), 7 ether);
+        // THEN usdrif token balance of rewardDistributor is 3 ether
+        assertEq(usdrifToken.balanceOf(address(rewardDistributor)), 3 ether);
+        // THEN usdrif token balance of backersManager is 7 ether
+        assertEq(usdrifToken.balanceOf(address(backersManager)), 7 ether);
         // THEN native tokens balance of rewardDistributor is 1.5 ether
         assertEq(address(rewardDistributor).balance, 1.5 ether);
         // THEN native tokens balance of backersManager is 3.5 ether

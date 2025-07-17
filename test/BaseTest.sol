@@ -212,7 +212,14 @@ contract BaseTest is Test {
     }
 
     /// @dev if any amount is zero, it will not be skipped
-    function _incentivize(GaugeRootstockCollective gauge_, uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_) internal {
+    function _incentivize(
+        GaugeRootstockCollective gauge_,
+        uint256 amountRif_,
+        uint256 amountUsdrif_,
+        uint256 amountNative_
+    )
+        internal
+    {
         if (amountNative_ > 0) {
             vm.deal(incentivizer, amountNative_);
             gauge_.incentivizeWithNative{ value: amountNative_ }();

@@ -140,10 +140,14 @@ contract PauseBuilderKYCTest is BaseTest {
 
         // THEN builder rifToken balance is 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rifToken.balanceOf(builder), 6.25 ether);
+        // THEN builder usdrifToken balance is 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(builder), 6.25 ether);
         // THEN builder native tokens balance is 0.625 = (10 * 2 / 16) * 0.5
         assertEq(builder.balance, 0.625 ether);
         // THEN builder rifToken pending to claim are 0
         assertEq(gauge.builderRewards(address(rifToken)), 0);
+        // THEN builder usdrifToken pending to claim are 0
+        assertEq(gauge.builderRewards(address(usdrifToken)), 0);
         // THEN builder native tokens pending to claim are 0
         assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 0);
     }
@@ -174,10 +178,14 @@ contract PauseBuilderKYCTest is BaseTest {
 
         // THEN builder rifToken balance is 12.5 = (200 * 2 / 16) * 0.5
         assertEq(rifToken.balanceOf(builder), 12.5 ether);
+        // THEN builder usdrifToken balance is 12.5 = (200 * 2 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(builder), 12.5 ether);
         // THEN builder native tokens balance is 1.25 = (20 * 2 / 16) * 0.5
         assertEq(builder.balance, 1.25 ether);
         // THEN builder rifToken pending to claim are 0
         assertEq(gauge.builderRewards(address(rifToken)), 0);
+        // THEN builder usdrifToken pending to claim are 0
+        assertEq(gauge.builderRewards(address(usdrifToken)), 0);
         // THEN builder native tokens pending to claim are 0
         assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 0);
     }

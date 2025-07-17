@@ -48,6 +48,8 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // THEN builder rifToken balance is 0 because rewards were sent to rewardDistributor
         assertEq(rifToken.balanceOf(builder), 0 ether);
+        // THEN builder usdrifToken balance is 0 because rewards were sent to rewardDistributor
+        assertEq(usdrifToken.balanceOf(builder), 0 ether);
         // THEN builder native tokens balance is 0 because rewards were sent to rewardDistributor
         assertEq(builder.balance, 0 ether);
 
@@ -68,6 +70,8 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // THEN rewardDistributor rifToken balance is 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rifToken.balanceOf(address(rewardDistributor)), 6.25 ether);
+        // THEN rewardDistributor usdrifToken balance is 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(address(rewardDistributor)), 6.25 ether);
         // THEN rewardDistributor native tokens balance is 0.625 = (10 * 2 / 16) * 0.5
         assertEq(address(rewardDistributor).balance, 0.625 ether);
     }
@@ -102,11 +106,15 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // THEN builder rifToken balance is 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rifToken.balanceOf(builder), 6.25 ether);
+        // THEN builder usdrifToken balance is 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(builder), 6.25 ether);
         // THEN builder native balance is 0.625 = (10 * 2 / 16) * 0.5
         assertEq(builder.balance, 0.625 ether);
 
         // THEN builder2Receiver rifToken balance is 87.5 = (200 * 14 / 16) * 0.5
         assertEq(rifToken.balanceOf(builder2Receiver), 87.5 ether);
+        // THEN builder2Receiver usdrifToken balance is 87.5 = (200 * 14 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(builder2Receiver), 87.5 ether);
         // THEN builder2Receiver native tokens balance is 8.75 = (20 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 8.75 ether);
     }
@@ -129,6 +137,8 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // THEN rewardDistributor rifToken balance is 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rifToken.balanceOf(address(rewardDistributor)), 6.25 ether);
+        // THEN rewardDistributor usdrifToken balance is 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(address(rewardDistributor)), 6.25 ether);
         // THEN rewardDistributor native balance is 0.625 = (10 * 2 / 16) * 0.5
         assertEq(address(rewardDistributor).balance, 0.625 ether);
 
@@ -142,11 +152,15 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // THEN gauge rifToken balance is the same, it didn't receive distributions
         assertEq(rifToken.balanceOf(address(gauge)), _gaugerifTokenBalanceBefore);
+        // THEN gauge usdrifToken balance is the same, it didn't receive distributions
+        assertEq(usdrifToken.balanceOf(address(gauge)), _gaugerifTokenBalanceBefore);
         // THEN gauge native balance is the same, it didn't receive distributions
         assertEq(address(gauge).balance, _gaugeNativeBalanceBefore);
 
         // THEN gauge2 rifToken balance increases 100 ether, it received all the distributions
         assertEq(rifToken.balanceOf(address(gauge2)), _gauge2rifTokenBalanceBefore + 100 ether);
+        // THEN gauge2 usdrifToken balance increases 100 ether, it received all the distributions
+        assertEq(usdrifToken.balanceOf(address(gauge2)), _gauge2rifTokenBalanceBefore + 100 ether);
         // THEN gauge2 native balance 10 ether, it received all the distributions
         assertEq(address(gauge2).balance, _gauge2NativeBalanceBefore + 10 ether);
     }
@@ -169,6 +183,8 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // THEN rewardDistributor rifToken balance is 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rifToken.balanceOf(address(rewardDistributor)), 6.25 ether);
+        // THEN rewardDistributor usdrifToken balance is 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(address(rewardDistributor)), 6.25 ether);
         // THEN rewardDistributor native balance is 0.625 = (10 * 2 / 16) * 0.5
         assertEq(address(rewardDistributor).balance, 0.625 ether);
 
@@ -182,11 +198,15 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         // THEN gauge rifToken balance is the same, it didn't receive distributions
         assertEq(rifToken.balanceOf(address(gauge)), _gaugerifTokenBalanceBefore);
+        // THEN gauge usdrifToken balance is the same, it didn't receive distributions
+        assertEq(usdrifToken.balanceOf(address(gauge)), _gaugerifTokenBalanceBefore);
         // THEN gauge native balance is the same, it didn't receive distributions
         assertEq(address(gauge).balance, _gaugeNativeBalanceBefore);
 
         // THEN gauge2 rifToken balance increases 100 ether, it received all the distributions
         assertEq(rifToken.balanceOf(address(gauge2)), _gauge2rifTokenBalanceBefore + 100 ether);
+        // THEN gauge2 usdrifToken balance increases 100 ether, it received all the distributions
+        assertEq(usdrifToken.balanceOf(address(gauge2)), _gauge2rifTokenBalanceBefore + 100 ether);
         // THEN gauge2 native balance 10 ether, it received all the distributions
         assertEq(address(gauge2).balance, _gauge2NativeBalanceBefore + 10 ether);
     }

@@ -151,6 +151,8 @@ contract SetBackerRewardPercentageTest is BaseTest {
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 6.25 = (100 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearERC20Balance(alice), 6.25 ether, 100);
+        // THEN alice receives 50% of usdrifToken 6.25 = (100 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 6.25 ether, 100);
         // THEN alice receives 50% of native tokens 0.625 = (10 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearNativeBalance(alice), 0.625 ether, 100);
 
@@ -175,6 +177,8 @@ contract SetBackerRewardPercentageTest is BaseTest {
         gauge.claimBackerReward(alice);
         // THEN alice receives 80% of rifToken 10 = (100 * 2 / 16) * 0.8
         assertApproxEqAbs(_clearERC20Balance(alice), 10 ether, 100);
+        // THEN alice receives 80% of usdrifToken 10 = (100 * 2 / 16) * 0.8
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 10 ether, 100);
         // THEN alice receives 80% of native tokens 1 = (10 * 2 / 16) * 0.8
         assertApproxEqAbs(_clearNativeBalance(alice), 1 ether, 100);
     }
@@ -223,6 +227,8 @@ contract SetBackerRewardPercentageTest is BaseTest {
         gauge.claimBackerReward(alice);
         // THEN alice receives 10% of rifToken 1.25 = (100 * 2 / 16) * 0.1
         assertApproxEqAbs(_clearERC20Balance(alice), 1.25 ether, 100);
+        // THEN alice receives 10% of usdrifToken 1.25 = (100 * 2 / 16) * 0.1
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 1.25 ether, 100);
         // THEN alice receives 10% of native tokens 0.125 = (10 * 2 / 16) * 0.1
         assertApproxEqAbs(_clearNativeBalance(alice), 0.125 ether, 100);
     }
@@ -255,6 +261,8 @@ contract SetBackerRewardPercentageTest is BaseTest {
         gauge.claimBackerReward(alice);
         // THEN alice receives 10% of rifToken 1.25 = (100 * 2 / 16) * 0.1
         assertApproxEqAbs(_clearERC20Balance(alice), 1.25 ether, 100);
+        // THEN alice receives 10% of usdrifToken 1.25 = (100 * 2 / 16) * 0.1
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 1.25 ether, 100);
         // THEN alice receives 10% of native tokens 0.125 = (10 * 2 / 16) * 0.1
         assertApproxEqAbs(_clearNativeBalance(alice), 0.125 ether, 100);
 
@@ -274,6 +282,8 @@ contract SetBackerRewardPercentageTest is BaseTest {
         gauge.claimBackerReward(alice);
         // THEN alice receives 10% of rifToken 1.25 = (100 * 2 / 16) * 0.1
         assertApproxEqAbs(_clearERC20Balance(alice), 1.25 ether, 100);
+        // THEN alice receives 10% of usdrifToken 1.25 = (100 * 2 / 16) * 0.1
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 1.25 ether, 100);
         // THEN alice receives 10% of native tokens 0.125 = (10 * 2 / 16) * 0.1
         assertApproxEqAbs(_clearNativeBalance(alice), 0.125 ether, 100);
     }

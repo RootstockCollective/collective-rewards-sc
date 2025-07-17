@@ -80,9 +80,8 @@ contract UpgradeV3 {
     }
 
     function _upgradeBackersManager() internal {
-        bytes memory _backersManagerInitializeData = abi.encodeCall(
-            BackersManagerRootstockCollective.initializeV3, (MAX_DISTRIBUTIONS_PER_BATCH, usdrifToken)
-        );
+        bytes memory _backersManagerInitializeData =
+            abi.encodeCall(BackersManagerRootstockCollective.initializeV3, (MAX_DISTRIBUTIONS_PER_BATCH, usdrifToken));
 
         backersManagerProxy.upgradeToAndCall(address(backersManagerImplV3), _backersManagerInitializeData);
     }

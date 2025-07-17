@@ -41,6 +41,8 @@ abstract contract ResumeBuilderBehavior is BaseTest {
 
         // THEN alice rifToken balance is 50 = (200 * 8 / 16) * 0.5
         assertApproxEqAbs(rifToken.balanceOf(alice), 50 ether, 100);
+        // THEN alice usdrifToken balance is 50 = (200 * 8 / 16) * 0.5
+        assertApproxEqAbs(usdrifToken.balanceOf(alice), 50 ether, 100);
         // THEN alice native tokens balance is 5 = (20 * 8 / 16) * 0.5
         assertApproxEqAbs(alice.balance, 5 ether, 100);
 
@@ -50,6 +52,8 @@ abstract contract ResumeBuilderBehavior is BaseTest {
 
         // THEN bob rifToken balance is 50 = (200 * 8 / 16) * 0.5
         assertApproxEqAbs(rifToken.balanceOf(bob), 50 ether, 100);
+        // THEN bob usdrifToken balance is 50 = (200 * 8 / 16) * 0.5
+        assertApproxEqAbs(usdrifToken.balanceOf(bob), 50 ether, 100);
         // THEN bob native tokens balance is 5 = (10 * 8 / 16) * 0.5
         assertApproxEqAbs(bob.balance, 5 ether, 100);
 
@@ -58,6 +62,8 @@ abstract contract ResumeBuilderBehavior is BaseTest {
 
         // THEN builder2Receiver rifToken balance is 87.5 = (200 * 14 / 16) * 0.5
         assertEq(rifToken.balanceOf(builder2Receiver), 87.5 ether);
+        // THEN builder2Receiver usdrifToken balance is 87.5 = (200 * 14 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(builder2Receiver), 87.5 ether);
         // THEN builder2Receiver native tokens balance is 8.75 = (20 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 8.75 ether);
     }
@@ -102,6 +108,12 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         //  cycle 3 = 21.42 = (100 * 6 / 14) * 0.5
         //  cycle 4 = 25 = (100 * 8 / 16) * 0.5
         assertEq(rifToken.balanceOf(alice), 92_857_142_857_142_857_120);
+        // THEN alice usdrifToken balance is:
+        //  cycle 1 = 25 = (100 * 8 / 16) * 0.5
+        //  cycle 2 = 21.42 = (100 * 6 / 14) * 0.5
+        //  cycle 3 = 21.42 = (100 * 6 / 14) * 0.5
+        //  cycle 4 = 25 = (100 * 8 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(alice), 92_857_142_857_142_857_120);
         // THEN alice native tokens balance is:
         //  cycle 1 = 2.5 = (10 * 8 / 16) * 0.5
         //  cycle 2 = 2.142 = (10 * 6 / 14) * 0.5
@@ -119,6 +131,12 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         //  cycle 3 = 28.57 = (100 * 8 / 14) * 0.5
         //  cycle 4 = 25 = (100 * 8 / 16) * 0.5
         assertEq(rifToken.balanceOf(bob), 107_142_857_142_857_142_832);
+        // THEN bob usdrifToken balance is:
+        //  cycle 1 = 25 = (100 * 8 / 16) * 0.5
+        //  cycle 2 = 28.57 = (100 * 8 / 14) * 0.5
+        //  cycle 3 = 28.57 = (100 * 8 / 14) * 0.5
+        //  cycle 4 = 25 = (100 * 8 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(bob), 107_142_857_142_857_142_832);
         // THEN bob native tokens balance is:
         //  cycle 1 = 2.5 = (10 * 8 / 16) * 0.5
         //  cycle 2 = 2.857 = (10 * 8 / 14) * 0.5
@@ -135,6 +153,12 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         //  cycle 3 = 50 = (100 * 14 / 14) * 0.5
         //  cycle 4 = 43.75 = (100 * 14 / 16) * 0.5
         assertEq(rifToken.balanceOf(builder2Receiver), 187.5 ether);
+        // THEN builder2Receiver usdrifToken balance is:
+        //  cycle 1 = 43.75 = (100 * 14 / 16) * 0.5
+        //  cycle 2 = 50 = (100 * 14 / 14) * 0.5
+        //  cycle 3 = 50 = (100 * 14 / 14) * 0.5
+        //  cycle 4 = 43.75 = (100 * 14 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(builder2Receiver), 187.5 ether);
         // THEN builder2Receiver native tokens balance is:
         //  cycle 1 = 4.375 = (10 * 14 / 16) * 0.5
         //  cycle 2 = 5 = (10 * 14 / 14) * 0.5
@@ -183,6 +207,11 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         //  cycle 2 = 21.42 = (100 * 6 / 14) * 0.5
         //  cycle 3 = 28.125 = 3.125(missingRewards) + (100 * 8 / 16) * 0.5
         assertEq(rifToken.balanceOf(alice), 71_428_571_428_571_428_550);
+        // THEN alice usdrifToken balance is:
+        //  cycle 1 = 21.875 = 3.125 + 18.75 = (100 * 2 / 16) * 0.5 * 0.5 WEEKS + (100 * 6 / 16) * 0.5
+        //  cycle 2 = 21.42 = (100 * 6 / 14) * 0.5
+        //  cycle 3 = 28.125 = 3.125(missingRewards) + (100 * 8 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(alice), 71_428_571_428_571_428_550);
         // THEN alice native tokens balance is:
         //  cycle 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
         //  cycle 2 = 2.142 = (10 * 6 / 14) * 0.5
@@ -198,7 +227,8 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         //  cycle 2 = 28.57 = (100 * 8 / 14) * 0.5
         //  cycle 3 = 25 = (100 * 8 / 16) * 0.5
         assertEq(rifToken.balanceOf(bob), 78_571_428_571_428_571_408);
-        // THEN bob native tokens balance is:
+        assertEq(usdrifToken.balanceOf(bob), 78_571_428_571_428_571_408);
+        // THEN bob usdrifToken balance is:
         //  cycle 1 = 2.5 = (10 * 8 / 16) * 0.5
         //  cycle 2 = 2.857 = (10 * 8 / 14) * 0.5
         //  cycle 3 = 2.5 = (10 * 8 / 16) * 0.5
@@ -209,6 +239,8 @@ abstract contract ResumeBuilderBehavior is BaseTest {
 
         // THEN gauge rifToken balance is 0, there is no remaining rewards
         assertApproxEqAbs(rifToken.balanceOf(address(gauge)), 0, 100);
+        // THEN gauge usdrifToken balance is 0, there is no remaining rewards
+        assertApproxEqAbs(usdrifToken.balanceOf(address(gauge)), 0, 100);
         // THEN gauge native tokens balance is 0, there is no remaining rewards
         assertApproxEqAbs(address(gauge).balance, 0, 100);
     }

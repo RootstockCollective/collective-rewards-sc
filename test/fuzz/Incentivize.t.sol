@@ -64,9 +64,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
         // THEN they receive the rewards after deducting the backers reward percentage, rewards added are not
         // considered
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            assertApproxEqAbs(
-                rifToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 2, i), 100
-            );
+            assertApproxEqAbs(rifToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 2, i), 100);
             assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT * 2, i), 100);
         }
 
@@ -80,9 +78,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rifToken.balanceOf(backersArray[i]),
-                _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 2, i),
-                0.000000001 ether
+                rifToken.balanceOf(backersArray[i]), _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether
             );
             assertApproxEqAbs(
                 backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether

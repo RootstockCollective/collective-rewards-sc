@@ -396,13 +396,17 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //    THEN NotifyReward event is emitted
         vm.expectEmit();
         emit NotifyReward(address(rifToken), address(this), 2 ether);
-        backersManager.notifyRewardAmount(2 ether, 0);
+        backersManager.notifyRewardAmount(2 ether, 2 ether);
         // THEN rewards is 2 ether
         assertEq(backersManager.rewardsRif(), 2 ether);
+        // THEN usdrifToken rewards is 2 ether
+        assertEq(backersManager.rewardsUsdrif(), 2 ether);
         // THEN Native rewards is 0
         assertEq(backersManager.rewardsNative(), 0);
         // THEN reward token balance of backersManager is 2 ether
         assertEq(rifToken.balanceOf(address(backersManager)), 2 ether);
+        // THEN usdrifToken balance of backersManager is 2 ether
+        assertEq(usdrifToken.balanceOf(address(backersManager)), 2 ether);
         // THEN native tokens balance of backersManager is 0
         assertEq(address(backersManager).balance, 0);
     }
@@ -417,6 +421,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.notifyRewardAmount(0 ether, 0);
         // THEN reward for reward token is 0 ether
         assertEq(backersManager.rewardsRif(), 0 ether);
+        // THEN usdrifToken rewards is 0 ether
+        assertEq(backersManager.rewardsUsdrif(), 0 ether);
         // THEN Native reward is 0
         assertEq(backersManager.rewardsNative(), 0);
     }
@@ -470,6 +476,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(backersManager.rewardsNative(), 2 ether);
         // THEN ERC20 rewards is 0
         assertEq(backersManager.rewardsRif(), 0);
+        // THEN usdrifToken rewards is 0
+        assertEq(backersManager.rewardsUsdrif(), 0);
         // THEN native tokens balance of backersManager is 2 ether
         assertEq(address(backersManager).balance, 2 ether);
         // THEN reward token balance of backersManager is 0
@@ -486,13 +494,17 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.prank(alice);
         backersManager.allocate(gauge, 0.1 ether);
         // AND 2 ether reward are added
-        backersManager.notifyRewardAmount(2 ether, 0);
+        backersManager.notifyRewardAmount(2 ether, 2 ether);
         // WHEN 10 ether reward are more added
-        backersManager.notifyRewardAmount(10 ether, 0);
+        backersManager.notifyRewardAmount(10 ether, 10 ether);
         // THEN rewards is is 12 ether
         assertEq(backersManager.rewardsRif(), 12 ether);
+        // THEN usdrifToken rewards is 12 ether
+        assertEq(backersManager.rewardsUsdrif(), 12 ether);
         // THEN reward token balance of backersManager is 12 ether
         assertEq(rifToken.balanceOf(address(backersManager)), 12 ether);
+        // THEN usdrifToken balance of backersManager is 12 ether
+        assertEq(usdrifToken.balanceOf(address(backersManager)), 12 ether);
     }
 
     /**
@@ -520,7 +532,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         builderRegistry.pauseSelf();
 
         //  AND 2 ether reward are added
-        backersManager.notifyRewardAmount(2 ether, 0);
+        backersManager.notifyRewardAmount(2 ether, 2 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
         //  AND distribution start
@@ -533,7 +545,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // WHEN tries to add more reward
         //  THEN tx reverts because NotInDistributionPeriod
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
-        backersManager.notifyRewardAmount(2 ether, 0);
+        backersManager.notifyRewardAmount(2 ether, 2 ether);
         // WHEN tries to start distribution again
         //  THEN tx reverts because NotInDistributionPeriod
         vm.expectRevert(BackersManagerRootstockCollective.NotInDistributionPeriod.selector);
@@ -592,7 +604,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         //  AND 100 ether reward are added
-        backersManager.notifyRewardAmount(100 ether, 0);
+        backersManager.notifyRewardAmount(100 ether, 100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 
@@ -1229,6 +1241,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN alice rifToken balance is 50% of the distributed amount
         assertEq(rifToken.balanceOf(alice), 49_999_999_999_999_999_992);
+        // THEN alice usdrifToken balance is 0 of the distributed amount
+        assertEq(usdrifToken.balanceOf(alice), 0);
 
         // THEN native tokens balance is 0 of the distributed amount
         assertEq(alice.balance, 0);
@@ -1264,9 +1278,10 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN alice native tokens balance is 50% of the distributed amount
         assertEq(alice.balance, 24_999_999_999_999_999_992);
-
-        // THEN rifToken balance is 0 of the distributed amount
+        // THEN alice rifToken balance is 0 of the distributed amount
         assertEq(rifToken.balanceOf(alice), 0);
+        // THEN alice usdrifToken balance is 0 of the distributed amount
+        assertEq(usdrifToken.balanceOf(alice), 0);
     }
 
     /**
@@ -1356,14 +1371,16 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 2 = 46.66 = (100 * 14 / 15) * 0.5
         //  cycle 3 = 43.75 = (100 * 14 / 16) * 0.5
         assertEq(rifToken.balanceOf(builder2Receiver), 134_166_666_666_666_666_667);
+        assertEq(usdrifToken.balanceOf(builder2Receiver), 134_166_666_666_666_666_667);
         // THEN builder2Receiver native tokens balance is:
         //  cycle 1 = 4.375 = (10 * 14 / 16) * 0.5
         //  cycle 2 = 4.66 = (10 * 14 / 15) * 0.5
         //  cycle 3 = 4.375 = (10 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 13_416_666_666_666_666_667);
-
         // THEN gauge rifToken balance is 0, there is no remaining rewards
         assertApproxEqAbs(rifToken.balanceOf(address(gauge)), 0, 100);
+        // THEN gauge usdrifToken balance is 0, there is no remaining rewards
+        assertApproxEqAbs(usdrifToken.balanceOf(address(gauge)), 0, 100);
         // THEN gauge native tokens balance is 0, there is no remaining rewards
         assertApproxEqAbs(address(gauge).balance, 0, 100);
     }
@@ -1418,6 +1435,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 3 = 6.455 + 21.42  = (3.33 + 3.125)(missingRewards) + (100 * 6 / 14) * 0.5
         //  cycle 4 = 6.25 + 18.75 = (100 * 2 / 16) * 0.5 + (100 * 6 / 16) * 0.5
         assertEq(rifToken.balanceOf(alice), 94_761_904_761_904_761_882);
+        assertEq(usdrifToken.balanceOf(alice), 94_761_904_761_904_761_882);
         // THEN alice native tokens balance is:
         //  cycle 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
         //  cycle 2 = 2 = (10 * 6 / 15) * 0.5
@@ -1435,6 +1453,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 3 = 28.57 = (100 * 8 / 14) * 0.5
         //  cycle 4 = 25 = (100 * 8 / 16) * 0.5
         assertEq(rifToken.balanceOf(bob), 105_238_095_238_095_238_072);
+        assertEq(usdrifToken.balanceOf(bob), 105_238_095_238_095_238_072);
         // THEN bob native tokens balance is:
         //  cycle 1 = 2.5 = (10 * 8 / 16) * 0.5
         //  cycle 2 = 2.66 = (10 * 8 / 15) * 0.5
@@ -1464,6 +1483,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 3 = 50 = (100 * 14 / 14) * 0.5
         //  cycle 4 = 43.75 = (100 * 14 / 16) * 0.5
         assertEq(rifToken.balanceOf(builder2Receiver), 184_166_666_666_666_666_667);
+        assertEq(usdrifToken.balanceOf(builder2Receiver), 184_166_666_666_666_666_667);
         // THEN builder2Receiver native tokens balance is:
         //  cycle 1 = 4.375 = (10 * 14 / 16) * 0.5
         //  cycle 2 = 4.66 = (10 * 14 / 15) * 0.5
@@ -1500,6 +1520,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         _distribute(100 ether, 10 ether);
         // THEN rifToken's rewardRate is 0.0000103 = (50 * 2 / 16) / 604800
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 10_333_994_708_994);
+        // THEN usdrifToken's rewardRate is 0.0000103 = (50 * 2 / 16) / 604800
+        assertEq(gauge.rewardRate(address(usdrifToken)) / 10 ** 18, 10_333_994_708_994);
         // THEN native tokens's rewardRate is 0.00000103 = (5 * 2 / 16) / 604800
         assertEq(gauge.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 1_033_399_470_899);
 
@@ -1516,6 +1538,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN rifToken's rewardMissing is 0.89 = 0.0000103 * 1 day
         assertEq(gauge.rewardMissing(address(rifToken)) / 10 ** 18, 892_857_142_857_142_857);
+        // THEN usdrifToken's rewardMissing is 0.89 = 0.0000103 * 1 day
+        assertEq(gauge.rewardMissing(address(usdrifToken)) / 10 ** 18, 892_857_142_857_142_857);
         // THEN native tokens's rewardMissing is 0.089 = 0.00000103 * 1 day
         assertEq(gauge.rewardMissing(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 89_285_714_285_714_285);
 
@@ -1532,6 +1556,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN rifToken's rewardMissing is 1.78 = 0.0000103 * 2 days
         assertEq(gauge.rewardMissing(address(rifToken)) / 10 ** 18, 1_785_714_285_714_285_714);
+        // THEN usdrifToken's rewardMissing is 1.78 = 0.0000103 * 2 days
+        assertEq(gauge.rewardMissing(address(usdrifToken)) / 10 ** 18, 1_785_714_285_714_285_714);
         // THEN native tokens's rewardMissing is 0.178 = 0.00000103 * 2 days
         assertEq(gauge.rewardMissing(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 178_571_428_571_428_571);
     }
@@ -1631,7 +1657,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // AND gauge is incentive with 100 ether of rifToken
         rifToken.approve(address(gauge), 100 ether);
         gauge.incentivizeWithRifToken(100 ether);
-
+        // AND gauge is incentive with 100 ether of usdrifToken
+        usdrifToken.approve(address(gauge), 100 ether);
+        gauge.incentivizeWithUsdrifToken(100 ether);
         // AND alice allocates 2 ether to builder
         vm.startPrank(alice);
         backersManager.allocate(gauge, 2 ether);
@@ -1654,6 +1682,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN alice rifToken balance is 100% of the distributed amount
         assertApproxEqAbs(rifToken.balanceOf(alice), 100 ether, 100);
+
+        // THEN alice usdrifToken balance is 100% of the distributed amount
+        assertApproxEqAbs(usdrifToken.balanceOf(alice), 100 ether, 100);
     }
 
     /**
@@ -1737,7 +1768,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 1_209_600 ether);
 
         //  AND 50 ether rifToken and 50 ether native tokens are added
-        backersManager.notifyRewardAmount{ value: 50 ether }(50 ether, 0);
+        backersManager.notifyRewardAmount{ value: 50 ether }(50 ether, 50 ether);
 
         // AND a new cycle
         _skipAndStartNewCycle();
@@ -1751,6 +1782,8 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(address(backersManager).balance, 0);
         // THEN backersManager rewardsRif is 0 ether
         assertEq(backersManager.rewardsRif(), 0 ether);
+        // THEN backersManager rewardsUsdrif is 0 ether
+        assertEq(backersManager.rewardsUsdrif(), 0 ether);
         // THEN backersManager rewardsNative is 0 ether
         assertEq(backersManager.rewardsNative(), 0);
 
@@ -1770,7 +1803,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 0);
 
         //  AND 50 ether rifToken and 50 ether native tokens are added
-        backersManager.notifyRewardAmount{ value: 50 ether }(50 ether, 0);
+        backersManager.notifyRewardAmount{ value: 50 ether }(50 ether, 50 ether);
 
         //  WHEN distribute is executed
         //   THEN RewardDistributionStarted event is emitted
@@ -1783,10 +1816,14 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
 
         // THEN reward token balance of backersManager is 50 ether
         assertEq(rifToken.balanceOf(address(backersManager)), 50 ether);
+        // THEN usdrifToken balance of backersManager is 50 ether
+        assertEq(usdrifToken.balanceOf(address(backersManager)), 50 ether);
         // THEN native tokens balance of backersManager is 50 ether
         assertEq(address(backersManager).balance, 50 ether);
         // THEN backersManager rewardsRif is 50 ether
         assertEq(backersManager.rewardsRif(), 50 ether);
+        // THEN backersManager rewardsUsdrif is 50 ether
+        assertEq(backersManager.rewardsUsdrif(), 50 ether);
         // THEN backersManager rewardsNative is 50 ether
         assertEq(backersManager.rewardsNative(), 50 ether);
 
@@ -1813,7 +1850,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         // AND 100 ether reward are added
-        backersManager.notifyRewardAmount(100 ether, 0);
+        backersManager.notifyRewardAmount(100 ether, 100 ether);
         // AND distribution window starts
         _skipToStartDistributionWindow();
 

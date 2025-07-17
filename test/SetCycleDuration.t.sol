@@ -245,6 +245,8 @@ contract SetCycleDurationTest is BaseTest {
         _buildersClaim();
         // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
         assertEq(_clearERC20Balance(builder), 18.75 ether);
+        // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearUsdrifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
         assertEq(_clearNativeBalance(builder), 1.875 ether);
 
@@ -253,6 +255,8 @@ contract SetCycleDurationTest is BaseTest {
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearNativeBalance(alice), 1.875 ether, 100);
     }
@@ -314,6 +318,8 @@ contract SetCycleDurationTest is BaseTest {
         _buildersClaim();
         // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
         assertEq(_clearERC20Balance(builder), 18.75 ether);
+        // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearUsdrifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
         assertEq(_clearNativeBalance(builder), 1.875 ether);
 
@@ -322,6 +328,8 @@ contract SetCycleDurationTest is BaseTest {
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearNativeBalance(alice), 1.875 ether, 100);
     }
@@ -369,6 +377,8 @@ contract SetCycleDurationTest is BaseTest {
         _buildersClaim();
         // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
         assertEq(_clearERC20Balance(builder), 18.75 ether);
+        // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearUsdrifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
         assertEq(_clearNativeBalance(builder), 1.875 ether);
 
@@ -377,6 +387,8 @@ contract SetCycleDurationTest is BaseTest {
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearNativeBalance(alice), 1.875 ether, 100);
     }
@@ -424,6 +436,8 @@ contract SetCycleDurationTest is BaseTest {
         _buildersClaim();
         // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
         assertEq(_clearERC20Balance(builder), 18.75 ether);
+        // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearUsdrifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
         assertEq(_clearNativeBalance(builder), 1.875 ether);
 
@@ -432,6 +446,8 @@ contract SetCycleDurationTest is BaseTest {
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearNativeBalance(alice), 1.875 ether, 100);
     }
@@ -479,6 +495,8 @@ contract SetCycleDurationTest is BaseTest {
         _buildersClaim();
         // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
         assertEq(_clearERC20Balance(builder), 18.75 ether);
+        // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearUsdrifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
         assertEq(_clearNativeBalance(builder), 1.875 ether);
 
@@ -487,6 +505,8 @@ contract SetCycleDurationTest is BaseTest {
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearNativeBalance(alice), 1.875 ether, 100);
     }

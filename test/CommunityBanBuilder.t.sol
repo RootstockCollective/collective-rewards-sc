@@ -37,11 +37,15 @@ contract CommunityBanBuilderTest is HaltedBuilderBehavior {
 
         // THEN builder rifToken balance is 6.25 = (100 * 2 / 16) * 0.5
         assertEq(rifToken.balanceOf(builder), 6.25 ether);
+        // THEN builder usdrifToken balance is 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(builder), 6.25 ether);
         // THEN builder native tokens balance is 0.625 = (10 * 2 / 16) * 0.5
         assertEq(builder.balance, 0.625 ether);
 
         // THEN builder2Receiver rifToken balance is 43.75 = (100 * 14 / 16) * 0.5
         assertEq(rifToken.balanceOf(builder2Receiver), 43.75 ether);
+        // THEN builder2Receiver usdrifToken balance is 43.75 = (100 * 14 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(builder2Receiver), 43.75 ether);
         // THEN builder2Receiver native tokens balance is 4.375 = (10 * 14 / 16) * 0.5
         assertEq(builder2Receiver.balance, 4.375 ether);
     }
@@ -64,11 +68,15 @@ contract CommunityBanBuilderTest is HaltedBuilderBehavior {
 
         // THEN builder rifToken balance is the same. It didn't receive rewards
         assertEq(rifToken.balanceOf(builder), 6.25 ether);
+        // THEN builder usdrifToken balance is the same. It didn't receive rewards
+        assertEq(usdrifToken.balanceOf(builder), 6.25 ether);
         // THEN builder native tokens balance is the same. It didn't receive rewards
         assertEq(builder.balance, 0.625 ether);
 
         // THEN builder2Receiver rifToken balance is 43.75 + 50. All the rewards are to him
         assertEq(rifToken.balanceOf(builder2Receiver), 93.75 ether);
+        // THEN builder2Receiver usdrifToken balance is 43.75 + 50. All the rewards are to him
+        assertEq(usdrifToken.balanceOf(builder2Receiver), 93.75 ether);
         // THEN builder2Receiver native tokens balance is 43.75 + 50. All the rewards are to him
         assertEq(builder2Receiver.balance, 9.375 ether);
     }
