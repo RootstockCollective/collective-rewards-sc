@@ -85,6 +85,7 @@ contract DifferentRewardPercentages is BaseTest {
         // gauge 5 (1/3 votes - 100% br%) = 1/3 * (30 eth * 100%) = 10 eth
         // total = 163.33
         assertEq(_clearERC20Balance(alice), 163_333_333_333_333_333_327);
+        assertEq(_clearUsdrifBalance(alice), 163_333_333_333_333_333_327);
         // THEN alice receives native tokens
         // gauge 1 (1/3 votes - 50% br%) = 1/3 * (30 eth * 50% + 100 eth) = 38.33 eth
         // gauge 2 (1/1 votes - 50% br%) = 1/1 * (10 eth * 50% + 100 eth) = 105 eth
@@ -105,6 +106,7 @@ contract DifferentRewardPercentages is BaseTest {
         // gauge 5 (2/3 votes - 100% br%) = 2/3 * (30 eth * 100%) = 20 eth
         // total = 96.66 eth
         assertEq(_clearERC20Balance(bob), 99_666_666_666_666_666_661);
+        assertEq(_clearUsdrifBalance(bob), 99_666_666_666_666_666_661);
         // THEN bob receives native tokens
         // gauge 1 (2/3 votes - 50% br%) = 2/3 * (30 eth * 50% + 100 eth) = 76.66 eth
         // gauge 2 (0 votes - 50% br%) = 0
@@ -118,26 +120,31 @@ contract DifferentRewardPercentages is BaseTest {
         _buildersClaim();
         // THEN builder receives rifToken: 30 eth * 50% = 15 eth
         assertEq(_clearERC20Balance(builder), 15 ether);
+        assertEq(_clearUsdrifBalance(builder), 15 ether);
         // THEN builder receives native tokens: 30 eth * 50% = 15 eth
         assertEq(_clearNativeBalance(builder), 15 ether);
 
         // THEN builder2 receives rifToken: 10 eth * 50% = 5 eth
         assertEq(_clearERC20Balance(builder2Receiver), 5 ether);
+        assertEq(_clearUsdrifBalance(builder2Receiver), 5 ether);
         // THEN builder receives native tokens: 10 eth * 50% = 5 eth
         assertEq(_clearNativeBalance(builder2Receiver), 5 ether);
 
         // THEN builder 3 receives rifToken: 20 eth * 70% = 14 eth
         assertEq(_clearERC20Balance(builders[2]), 14 ether);
+        assertEq(_clearUsdrifBalance(builders[2]), 14 ether);
         // THEN builder 3 receives native tokens: 20 eth * 70% = 14 eth
         assertEq(_clearNativeBalance(builders[2]), 14 ether);
 
         // THEN builder 4 receives rifToken: 10 eth * 30% = 3 eth
         assertEq(_clearERC20Balance(builders[3]), 3 ether);
+        assertEq(_clearUsdrifBalance(builders[3]), 3 ether);
         // THEN builder 4 receives native tokens: 10 eth * 30% = 3 eth
         assertEq(_clearNativeBalance(builders[3]), 3 ether);
 
         // THEN builder 5 receives 0 rifToken: 30 * 0%
         assertEq(_clearERC20Balance(builders[4]), 0 ether);
+        assertEq(_clearUsdrifBalance(builders[4]), 0 ether);
         // THEN builder 5 receives 0 native tokens: 30 * 0%
         assertEq(_clearNativeBalance(builders[4]), 0 ether);
     }
@@ -214,6 +221,7 @@ contract DifferentRewardPercentages is BaseTest {
         // gauge 5 (2/4 votes - 100% br%) = 2/4 * (35 eth * 100%) = 17.5 eth
         // total = 120.91 eth
         assertEq(_clearERC20Balance(alice), 120_916_666_666_666_666_658);
+        assertEq(_clearUsdrifBalance(alice), 120_916_666_666_666_666_658);
         // THEN alice receives native tokens
         // gauge 1 (2/4 votes - 50% br%) = 1/3 * 50 ether (incentive for half cycle) + 2/4 * (35 eth * 50% + 50 eth) =
         // 50.41 eth
@@ -236,6 +244,7 @@ contract DifferentRewardPercentages is BaseTest {
         // gauge 5 (2/4 votes - 100% br%) = 2/4 * (35 eth * 100%) = 17.5 eth
         // total = 87.58 eth
         assertEq(_clearERC20Balance(bob), 87_583_333_333_333_333_325);
+        assertEq(_clearUsdrifBalance(bob), 87_583_333_333_333_333_325);
         // THEN bob receives native tokens
         // gauge 1 (2/4 votes - 50% br%) = 2/3 * 50 ether (incentive for half cycle) + 2/4 * (35 eth * 50% + 50 eth) =
         // 67.08 eth
@@ -250,26 +259,31 @@ contract DifferentRewardPercentages is BaseTest {
         _buildersClaim();
         // THEN builder receives rifToken: 35 eth * 50% = 17.5 eth
         assertEq(_clearERC20Balance(builder), 17.5 ether);
+        assertEq(_clearUsdrifBalance(builder), 17.5 ether);
         // THEN builder receives native tokens: 35 eth * 50% = 17.5 eth
         assertEq(_clearNativeBalance(builder), 17.5 ether);
 
         // THEN builder2 receives rifToken: 5 eth * 50% = 2.5 eth
         assertEq(_clearERC20Balance(builder2Receiver), 2.5 ether);
+        assertEq(_clearUsdrifBalance(builder2Receiver), 2.5 ether);
         // THEN builder receives native tokens: 5 eth * 50% = 2.5 eth
         assertEq(_clearNativeBalance(builder2Receiver), 2.5 ether);
 
         // THEN builder 3 receives rifToken: 20 eth * 70% = 14 eth
         assertEq(_clearERC20Balance(builders[2]), 14 ether);
+        assertEq(_clearUsdrifBalance(builders[2]), 14 ether);
         // THEN builder 3 receives native tokens: 20 eth * 70% = 14 eth
         assertEq(_clearNativeBalance(builders[2]), 14 ether);
 
         // THEN builder 4 receives rifToken: 5 eth * 30% = 1.5 eth
         assertEq(_clearERC20Balance(builders[3]), 1.5 ether);
+        assertEq(_clearUsdrifBalance(builders[3]), 1.5 ether);
         // THEN builder 4 receives native tokens: 5 eth * 30% = 1.5 eth
         assertEq(_clearNativeBalance(builders[3]), 1.5 ether);
 
         // THEN builder 5 receives 0 rifToken: 35 * 0%
         assertEq(_clearERC20Balance(builders[4]), 0 ether);
+        assertEq(_clearUsdrifBalance(builders[4]), 0 ether);
         // THEN builder 5 receives 0 native tokens: 35 * 0%
         assertEq(_clearNativeBalance(builders[4]), 0 ether);
     }

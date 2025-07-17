@@ -260,7 +260,7 @@ contract BaseTest is Test {
     function _clearBalance(address address_, ERC20Mock token_) private returns (uint256 balance_) {
         balance_ = token_.balanceOf(address_);
         vm.prank(address_);
-        rifToken.transfer(address(this), balance_);
+        token_.transfer(address(this), balance_);
     }
 
     /**
