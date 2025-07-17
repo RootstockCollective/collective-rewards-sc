@@ -48,8 +48,8 @@ contract DifferentRewardPercentages is BaseTest {
         // THEN totalPotentialReward is 10 ether (votes) * 604800 (cycle duration)
         assertEq(backersManager.totalPotentialReward(), 6_048_000 ether);
         // AND gauge and gauge 2 are incetivized with 100 ether in rifToken and 100 native tokens
-        _incentivize(gauge, 100 ether, 100 ether);
-        _incentivize(gauge2, 100 ether, 100 ether);
+        _incentivize(gauge, 100 ether, 100 ether, 100 ether);
+        _incentivize(gauge2, 100 ether, 100 ether, 100 ether);
         // AND there is a distribution of 100 rifToken and 100 native tokens
         _distribute(100 ether, 100 ether);
 
@@ -162,8 +162,8 @@ contract DifferentRewardPercentages is BaseTest {
         // THEN totalPotentialReward is 10 ether (votes) * 604800 (cycle duration)
         assertEq(backersManager.totalPotentialReward(), 6_048_000 ether);
         // AND gauge and gauge 2 are incetivized with 100 ether in rifToken and 100 native tokens
-        _incentivize(gauge, 100 ether, 100 ether);
-        _incentivize(gauge2, 100 ether, 100 ether);
+        _incentivize(gauge, 100 ether, 100 ether, 100 ether);
+        _incentivize(gauge2, 100 ether, 100 ether, 100 ether);
 
         // AND half a cycle pases
         _skipRemainingCycleFraction(2);

@@ -523,7 +523,7 @@ contract SkipDistribution is BaseTest {
         _distribute(100, 0);
 
         // AND gauge is incentivized
-        _incentivize(gauge, 100 ether, 0);
+        _incentivize(gauge, 100 ether, 100 ether, 0);
 
         // AND half an cycle passes
         _skipRemainingCycleFraction(2);
@@ -595,7 +595,7 @@ contract SkipDistribution is BaseTest {
         _distribute(100 ether, 0);
 
         // AND gauge is incentivized
-        _incentivize(gauge, 100 ether, 0);
+        _incentivize(gauge, 100 ether, 100 ether, 0);
 
         // AND half an cycle passes
         _skipRemainingCycleFraction(2);
@@ -676,7 +676,7 @@ contract SkipDistribution is BaseTest {
         _distribute(100, 0);
 
         // AND gauge is incentivized
-        _incentivize(gauge, 100 ether, 0);
+        _incentivize(gauge, 100 ether, 100 ether, 0);
 
         // CYCLE 3
         // AND cycle finishes
@@ -730,7 +730,7 @@ contract SkipDistribution is BaseTest {
         _distribute(100 ether, 0);
 
         // AND gauge is incentivized
-        _incentivize(gauge, 100 ether, 0);
+        _incentivize(gauge, 100 ether, 100 ether, 0);
 
         // CYCLE 3
         // AND cycle finishes

@@ -779,6 +779,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.prank(incentivizer);
         gauge.incentivizeWithRifToken(100 ether);
 
+        vm.prank(incentivizer);
+        gauge.incentivizeWithUsdrifToken(100 ether);
+
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 192_901_234_567_901);
 
@@ -807,7 +810,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewardPerTokenStored(address(rifToken)), 16_666_666_666_666_666_666);
         // THEN rewardMissing is 0
         assertEq(gauge.rewardMissing(address(rifToken)), 0);
-
+        
         // AND cycle finishes
         _skipAndStartNewCycle();
 
