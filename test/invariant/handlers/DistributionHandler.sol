@@ -8,6 +8,7 @@ import { RewardDistributorRootstockCollective } from "src/RewardDistributorRoots
 
 contract DistributionHandler is BaseHandler {
     ERC20Mock public rifToken;
+    ERC20Mock public usdrifToken;
     RewardDistributorRootstockCollective public rewardDistributor;
 
     uint256 public totalAmountDistributed;
@@ -15,10 +16,12 @@ contract DistributionHandler is BaseHandler {
     constructor(BaseTest baseTest_, TimeManager timeManager_) BaseHandler(baseTest_, timeManager_) {
         rifToken = baseTest_.rifToken();
         rewardDistributor = baseTest_.rewardDistributor();
+        usdrifToken = baseTest_.usdrifToken();
     }
 
     function startDistribution(
         uint256 amountRif_,
+        uint256 amountUsdrif_,
         uint256 amountNative_,
         uint256 timeToSkip_
     )
@@ -36,8 +39,9 @@ contract DistributionHandler is BaseHandler {
         totalAmountDistributed += amountRif_;
 
         rifToken.mint(address(rewardDistributor), amountRif_);
+        usdrifToken.mint(address(rewardDistributor), amountUsdrif_);
         vm.deal(address(rewardDistributor), amountNative_);
         vm.prank(baseTest.foundation());
-        rewardDistributor.sendRewardsAndStartDistribution(amountRif_, 0, amountNative_);
+        rewardDistributor.sendRewardsAndStartDistribution(amountRif_, amountUsdrif_, amountNative_);
     }
 }

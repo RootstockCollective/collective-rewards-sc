@@ -65,7 +65,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);
-        gauge.notifyRewardAmountAndUpdateShares(1 ether, 0, 1 ether, block.timestamp, _cycleStart, _cycleDuration);
+        gauge.notifyRewardAmountAndUpdateShares(1 ether, 1 ether, 1 ether, block.timestamp, _cycleStart, _cycleDuration);
         // WHEN alice calls moveBuilderUnclaimedRewards
         //  THEN tx reverts because caller is not the BackersManagerRootstockCollective contract
         vm.expectRevert(GaugeRootstockCollective.NotAuthorized.selector);

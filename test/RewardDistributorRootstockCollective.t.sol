@@ -28,12 +28,12 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         // WHEN alice calls sendRewards
         //  THEN tx reverts because caller is not the foundation treasury address
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotFoundationTreasury.selector);
-        rewardDistributor.sendRewards(1 ether, 0, 1 ether);
+        rewardDistributor.sendRewards(1 ether, 1 ether, 1 ether);
         // WHEN alice calls sendRewardsAndStartDistribution
         //  THEN tx reverts because caller is not the foundation treasury address
 
         vm.expectRevert(IGovernanceManagerRootstockCollective.NotFoundationTreasury.selector);
-        rewardDistributor.sendRewardsAndStartDistribution(1 ether, 0, 1 ether);
+        rewardDistributor.sendRewardsAndStartDistribution(1 ether, 1 ether, 1 ether);
     }
 
     /**

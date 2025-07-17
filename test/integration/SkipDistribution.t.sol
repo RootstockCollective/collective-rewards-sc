@@ -862,7 +862,7 @@ contract SkipDistribution is BaseTest {
         rifToken.mint(address(rewardDistributor), 100 ether);
         usdrifToken.mint(address(rewardDistributor), 100 ether);
         vm.prank(foundation);
-        rewardDistributor.sendRewardsAndStartDistribution(100 ether, 0, 10 ether);
+        rewardDistributor.sendRewardsAndStartDistribution(100 ether, 100 ether, 10 ether);
 
         // THEN distribution is ongoing
         assertTrue(backersManager.onDistributionPeriod());
