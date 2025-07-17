@@ -74,11 +74,11 @@ contract SelfPauseBuilderFuzzTest is BaseFuzz {
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (pausedBuilders[builders[i]] < SelfPauseState.paused) {
                 assertApproxEqAbs(
-                    rewardToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(RT_DISTRIBUTION_AMOUNT, i), 100
+                    rifToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(RT_DISTRIBUTION_AMOUNT, i), 100
                 );
                 assertApproxEqAbs(address(gaugesArray[i]).balance, _calcGaugeReward(CB_DISTRIBUTION_AMOUNT, i), 100);
             } else {
-                assertApproxEqAbs(rewardToken.balanceOf(address(gaugesArray[i])), 0, 100);
+                assertApproxEqAbs(rifToken.balanceOf(address(gaugesArray[i])), 0, 100);
                 assertApproxEqAbs(address(gaugesArray[i]).balance, 0, 100);
             }
         }

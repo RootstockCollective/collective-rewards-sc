@@ -25,8 +25,8 @@ import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceM
 
 contract BaseTest is Test {
     StakingTokenMock public stakingToken;
-    ERC20Mock public rewardToken;
-    ERC20Mock public usdrifRewardToken;
+    ERC20Mock public rifToken;
+    ERC20Mock public usdrifToken;
 
     GovernanceManagerRootstockCollective public governanceManager;
     GaugeBeaconRootstockCollective public gaugeBeacon;
@@ -73,24 +73,24 @@ contract BaseTest is Test {
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         MockStakingTokenDeployer _mockStakingTokenDeployer = new MockStakingTokenDeployer();
         stakingToken = _mockStakingTokenDeployer.run(0);
-        rewardToken = _mockTokenDeployer.run(1);
-        usdrifRewardToken = _mockTokenDeployer.run(2);
+        rifToken = _mockTokenDeployer.run(1);
+        usdrifToken = _mockTokenDeployer.run(2);
         gaugeBeacon = new GaugeBeaconRootstockCollectiveDeployer().run(address(governanceManager));
-        gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(address(gaugeBeacon), address(rewardToken));
+        gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(address(gaugeBeacon), address(rifToken));
 
         (rewardDistributor, rewardDistributorImpl) =
             new RewardDistributorRootstockCollectiveDeployer().run(address(governanceManager));
 
         (backersManager, backersManagerImpl) = new BackersManagerRootstockCollectiveDeployer().run(
             address(governanceManager),
-            address(rewardToken),
+            address(rifToken),
             address(stakingToken),
             cycleDuration,
             cycleStartOffset,
             distributionDuration
         );
 
-        backersManager.initializeV3(maxDistributionsPerBatch, address(usdrifRewardToken));
+        backersManager.initializeV3(maxDistributionsPerBatch, address(usdrifToken));
         rewardDistributor.initializeCollectiveRewardsAddresses(address(backersManager));
 
         (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer().run(
@@ -108,13 +108,13 @@ contract BaseTest is Test {
         stakingToken.mint(alice, 100_000 ether);
         stakingToken.mint(bob, 100_000 ether);
 
-        // mint some rewardTokens to this contract for reward distribution
-        rewardToken.mint(address(this), 100_000 ether);
-        rewardToken.approve(address(backersManager), 100_000 ether);
+        // mint some rifTokens to this contract for reward distribution
+        rifToken.mint(address(this), 100_000 ether);
+        rifToken.approve(address(backersManager), 100_000 ether);
 
-        // mint some usdrifRewardTokens to this contract for reward distribution
-        usdrifRewardToken.mint(address(this), 100_000 ether);
-        usdrifRewardToken.approve(address(backersManager), 100_000 ether);
+        // mint some usdrifTokens to this contract for reward distribution
+        usdrifToken.mint(address(this), 100_000 ether);
+        usdrifToken.approve(address(backersManager), 100_000 ether);
 
         _setUp();
     }
@@ -155,7 +155,7 @@ contract BaseTest is Test {
         builders.push(builder_);
         vm.prank(governor);
         newGauge_ = builderRegistry.communityApproveBuilder(builder_);
-        newGauge_.initializeV3(address(usdrifRewardToken));
+        newGauge_.initializeV3(address(usdrifToken));
         gaugesArray.push(newGauge_);
     }
 
@@ -182,7 +182,7 @@ contract BaseTest is Test {
         vm.prank(bob);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
-        // AND 100 rewardToken and 10 native tokens are distributed
+        // AND 100 rifToken and 10 native tokens are distributed
         _distribute(100 ether, 10 ether);
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
@@ -200,8 +200,8 @@ contract BaseTest is Test {
      */
     function _distribute(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_) internal {
         _skipToStartDistributionWindow();
-        rewardToken.mint(address(rewardDistributor), amountRif_);
-        usdrifRewardToken.mint(address(rewardDistributor), amountUsdrif_);
+        rifToken.mint(address(rewardDistributor), amountRif_);
+        usdrifToken.mint(address(rewardDistributor), amountUsdrif_);
         vm.deal(address(rewardDistributor), amountNative_ + address(rewardDistributor).balance);
         vm.startPrank(foundation);
         rewardDistributor.sendRewardsAndStartDistribution(amountRif_, amountUsdrif_, amountNative_);
@@ -218,9 +218,9 @@ contract BaseTest is Test {
             gauge_.incentivizeWithNative{ value: amountNative_ }();
         }
         if (amountRif_ > 0) {
-            rewardToken.mint(address(incentivizer), amountRif_);
+            rifToken.mint(address(incentivizer), amountRif_);
             vm.prank(address(incentivizer));
-            rewardToken.approve(address(gauge_), amountRif_);
+            rifToken.approve(address(gauge_), amountRif_);
             vm.prank(address(incentivizer));
             gauge_.incentivizeWithRifToken(amountRif_);
         }
@@ -239,7 +239,7 @@ contract BaseTest is Test {
      *  Used to simplify maths and asserts considering only tokens received
      */
     function _clearERC20Balance(address address_) internal returns (uint256) {
-        return _clearBalance(address_, rewardToken);
+        return _clearBalance(address_, rifToken);
     }
 
     /**
@@ -247,13 +247,13 @@ contract BaseTest is Test {
      *  Used to simplify maths and asserts considering only tokens received
      */
     function _clearUsdrifBalance(address address_) internal returns (uint256) {
-        return _clearBalance(address_, usdrifRewardToken);
+        return _clearBalance(address_, usdrifToken);
     }
 
     function _clearBalance(address address_, ERC20Mock token_) private returns (uint256 balance_) {
         balance_ = token_.balanceOf(address_);
         vm.prank(address_);
-        rewardToken.transfer(address(this), balance_);
+        rifToken.transfer(address(this), balance_);
     }
 
     /**

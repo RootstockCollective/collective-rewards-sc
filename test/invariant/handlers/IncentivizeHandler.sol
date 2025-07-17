@@ -8,12 +8,12 @@ import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol
 import { UtilsLib } from "src/libraries/UtilsLib.sol";
 
 contract IncentivizeHandler is BaseHandler {
-    ERC20Mock public rewardToken;
+    ERC20Mock public rifToken;
 
-    mapping(GaugeRootstockCollective gauge => uint256 amount) public rewardTokenIncentives;
+    mapping(GaugeRootstockCollective gauge => uint256 amount) public rifTokenIncentives;
 
     constructor(BaseTest baseTest_, TimeManager timeManager_) BaseHandler(baseTest_, timeManager_) {
-        rewardToken = baseTest_.rewardToken();
+        rifToken = baseTest_.rifToken();
     }
 
     function incentivize(
@@ -34,13 +34,13 @@ contract IncentivizeHandler is BaseHandler {
         GaugeRootstockCollective _gauge = baseTest.gaugesArray(gaugeIndex_);
         if (builderRegistry.isGaugeHalted(address(_gauge))) return;
 
-        rewardTokenIncentives[_gauge] += amountRif_;
+        rifTokenIncentives[_gauge] += amountRif_;
 
-        rewardToken.mint(msg.sender, amountRif_);
+        rifToken.mint(msg.sender, amountRif_);
         vm.deal(msg.sender, amountNative_);
 
         vm.startPrank(msg.sender);
-        rewardToken.approve(address(_gauge), amountRif_);
+        rifToken.approve(address(_gauge), amountRif_);
         _gauge.incentivizeWithRifToken(amountRif_);
         _gauge.incentivizeWithNative{ value: amountNative_ }();
         vm.stopPrank();

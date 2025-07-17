@@ -40,7 +40,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
         // AND there are random incentivize calls
         for (uint256 i = 0; i < _qIncentives; i++) {
             uint256 _randomGauge = uint256(keccak256(abi.encodePacked(seed_, i))) % gaugesArray.length;
-            rewardToken.approve(address(gaugesArray[_randomGauge]), incentiveAmount_);
+            rifToken.approve(address(gaugesArray[_randomGauge]), incentiveAmount_);
             gaugesArray[_randomGauge].incentivizeWithRifToken(incentiveAmount_);
             gaugesArray[_randomGauge].incentivizeWithNative{ value: incentiveAmount_ }();
             rewardsAdded[gaugesArray[_randomGauge]] += incentiveAmount_;
@@ -54,7 +54,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
             uint256 _rewardsOnRewardToken =
                 rewardsAdded[gaugesArray[i]] + _calcGaugeReward(RT_DISTRIBUTION_AMOUNT * 2, i);
             uint256 _rewardsOnNative = rewardsAdded[gaugesArray[i]] + _calcGaugeReward(CB_DISTRIBUTION_AMOUNT * 2, i);
-            assertApproxEqAbs(rewardToken.balanceOf(address(gaugesArray[i])), _rewardsOnRewardToken, 100);
+            assertApproxEqAbs(rifToken.balanceOf(address(gaugesArray[i])), _rewardsOnRewardToken, 100);
             assertApproxEqAbs(address(gaugesArray[i]).balance, _rewardsOnNative, 100);
         }
 
@@ -65,7 +65,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
         // considered
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             assertApproxEqAbs(
-                rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 2, i), 100
+                rifToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 2, i), 100
             );
             assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT * 2, i), 100);
         }
@@ -80,7 +80,7 @@ contract IncentivizeFuzzTest is BaseFuzz {
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rewardToken.balanceOf(backersArray[i]),
+                rifToken.balanceOf(backersArray[i]),
                 _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 2, i),
                 0.000000001 ether
             );
@@ -93,11 +93,11 @@ contract IncentivizeFuzzTest is BaseFuzz {
         //  otherwise, they are considered in the rewardRate for following allocations(aka rewardMissing)
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (gaugesArray[i].totalAllocation() > 0) {
-                assertApproxEqAbs(rewardToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
+                assertApproxEqAbs(rifToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
                 assertApproxEqAbs(address(gaugesArray[i]).balance, 0, 0.000000001 ether);
             } else {
                 assertApproxEqAbs(
-                    gaugesArray[i].rewardRate(address(rewardToken)) / 10 ** 18,
+                    gaugesArray[i].rewardRate(address(rifToken)) / 10 ** 18,
                     rewardsAdded[gaugesArray[i]] / cycleDuration,
                     0.000000001 ether
                 );

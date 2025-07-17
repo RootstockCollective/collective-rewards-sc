@@ -38,13 +38,13 @@ contract BackersManagerRootstockCollective is
     error AlreadyOptedInRewards();
     error BackerHasAllocations();
     error ZeroAddressNotAllowed();
-    error RewardTokenNotApproved();
+    error RifTokenNotApproved();
 
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
     event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_);
-    event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
+    event NotifyReward(address indexed rifToken_, address indexed sender_, uint256 amount_);
     event RewardDistributionStarted(address indexed sender_);
     event RewardDistributed(address indexed sender_);
     event RewardDistributionFinished(address indexed sender_);
@@ -150,7 +150,7 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice contract initializer
      * @param governanceManager_ contract with permissioned roles
-     * @param rewardToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20
+     * @param rifToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20
      * standard are supported.
      * @notice For more info on supported tokens, see:
      * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
@@ -161,7 +161,7 @@ contract BackersManagerRootstockCollective is
      */
     function initialize(
         IGovernanceManagerRootstockCollective governanceManager_,
-        address rewardToken_,
+        address rifToken_,
         address stakingToken_,
         uint32 cycleDuration_,
         uint24 cycleStartOffset_,
@@ -173,7 +173,7 @@ contract BackersManagerRootstockCollective is
         __CycleTimeKeeperRootstockCollective_init(
             governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
         );
-        rifToken = rewardToken_;
+        rifToken = rifToken_;
         stakingToken = IERC20(stakingToken_);
         _periodFinish = cycleNext(block.timestamp);
     }
@@ -195,12 +195,12 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice contract version 3 initializer
      * @param maxDistributionsPerBatch_ maximum number of distributions allowed per batch
-     * @param usdrifRewardToken_ address of the USDRIF reward token
+     * @param usdrifToken_ address of the USDRIF reward token
      */
-    function initializeV3(uint256 maxDistributionsPerBatch_, address usdrifRewardToken_) external reinitializer(3) {
-        if (address(usdrifRewardToken_) == address(0)) revert ZeroAddressNotAllowed();
+    function initializeV3(uint256 maxDistributionsPerBatch_, address usdrifToken_) external reinitializer(3) {
+        if (address(usdrifToken_) == address(0)) revert ZeroAddressNotAllowed();
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
-        usdrifToken = usdrifRewardToken_;
+        usdrifToken = usdrifToken_;
     }
 
     // -----------------------------
@@ -351,17 +351,17 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice claims backer rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native address
      */
-    function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external {
+    function claimBackerRewards(address rifToken_, GaugeRootstockCollective[] memory gauges_) external {
         uint256 _length = gauges_.length;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             if (_builderRegistry.gaugeToBuilder(gauges_[i]) == address(0)) {
                 revert BuilderRegistryRootstockCollective.GaugeDoesNotExist();
             }
-            gauges_[i].claimBackerReward(rewardToken_, msg.sender);
+            gauges_[i].claimBackerReward(rifToken_, msg.sender);
         }
     }
 
@@ -619,15 +619,15 @@ contract BackersManagerRootstockCollective is
     }
 
     /**
-     * @notice approves rewardTokens to a given gauge
+     * @notice approves rifTokens to a given gauge
      * @dev give full allowance when it is community approved and remove it when it is community banned
      * reverts if the reward token contract returns false on the approval
-     * @param gauge_ gauge contract to approve rewardTokens
-     * @param value_ amount of rewardTokens to approve
+     * @param gauge_ gauge contract to approve rifTokens
+     * @param value_ amount of rifTokens to approve
      */
-    function rewardTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
+    function rifTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
         if (!IERC20(rifToken).approve(gauge_, value_) || !IERC20(usdrifToken).approve(gauge_, value_)) {
-            revert RewardTokenNotApproved();
+            revert RifTokenNotApproved();
         }
     }
 

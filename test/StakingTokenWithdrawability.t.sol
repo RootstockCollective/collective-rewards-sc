@@ -8,7 +8,7 @@ contract StakingTokenWithdrawabilityTest is BaseTest {
     function _setUp() internal override {
         stakingToken.setCollectiveRewardsAddress(address(backersManager));
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rewardToken and 10 native tokens are distributed
+        //  AND 100 rifToken and 10 native tokens are distributed
         //   AND half cycle pass
         _initialDistribution();
 

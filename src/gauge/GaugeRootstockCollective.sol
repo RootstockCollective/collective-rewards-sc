@@ -27,10 +27,10 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event BackerRewardsClaimed(address indexed rewardToken_, address indexed backer_, uint256 amount_);
-    event BuilderRewardsClaimed(address indexed rewardToken_, address indexed builder_, uint256 amount_);
+    event BackerRewardsClaimed(address indexed rifToken_, address indexed backer_, uint256 amount_);
+    event BuilderRewardsClaimed(address indexed rifToken_, address indexed builder_, uint256 amount_);
     event NewAllocation(address indexed backer_, uint256 allocation_);
-    event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 backersAmount_);
+    event NotifyReward(address indexed rifToken_, uint256 builderAmount_, uint256 backersAmount_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -53,7 +53,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // ---------- Structs ----------
     // -----------------------------
     struct RewardData {
-        /// @notice current reward rate of rewardToken to distribute per second [PREC]
+        /// @notice current reward rate of rifToken to distribute per second [PREC]
         uint256 rewardRate;
         /// @notice most recent stored value of rewardPerToken [PREC]
         uint256 rewardPerTokenStored;
@@ -65,7 +65,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         uint256 builderRewards;
         /// @notice cached rewardPerTokenStored for a backer based on their most recent action [PREC]
         mapping(address backer => uint256 rewardPerTokenPaid) backerRewardPerTokenPaid;
-        /// @notice cached amount of rewardToken earned for a backer
+        /// @notice cached amount of rifToken earned for a backer
         mapping(address backer => uint256 rewards) rewards;
     }
 
@@ -85,7 +85,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     mapping(address backer => uint256 allocation) public allocationOf;
     /// @notice rewards data to each token
     /// @dev address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
-    mapping(address rewardToken => RewardData rewardData) public rewardData;
+    mapping(address rifToken => RewardData rewardData) public rewardData;
     /// @notice BuilderRegistryRootstockCollective contract address
     BuilderRegistryRootstockCollective public builderRegistry;
 
@@ -107,15 +107,15 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice contract initializer
-     * @param rewardToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20
+     * @param rifToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20
      * standard are supported.
      * @notice For more info on supported tokens, see:
      * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
      * @param builderRegistry_ address of the builder registry contract
      */
-    function initialize(address rewardToken_, address builderRegistry_) external initializer {
+    function initialize(address rifToken_, address builderRegistry_) external initializer {
         __ReentrancyGuard_init();
-        rifToken = rewardToken_;
+        rifToken = rifToken_;
 
         builderRegistry = BuilderRegistryRootstockCollective(builderRegistry_);
         backersManager = BackersManagerRootstockCollective(builderRegistry.backersManager());
@@ -123,15 +123,15 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice contract initializer
-     * @param usdrifRewardToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the
+     * @param usdrifToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the
      * ERC-20
      * standard are supported.
      * @notice For more info on supported tokens, see:
      * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
      */
-    function initializeV3(address usdrifRewardToken_) external reinitializer(3) {
+    function initializeV3(address usdrifToken_) external reinitializer(3) {
         __ReentrancyGuard_init();
-        usdrifToken = usdrifRewardToken_;
+        usdrifToken = usdrifToken_;
     }
 
     // NOTE: This contract previously included an `initializeV2()` function using `reinitializer(2)`
@@ -144,81 +144,81 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice gets reward rate
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      */
-    function rewardRate(address rewardToken_) external view returns (uint256) {
-        return rewardData[rewardToken_].rewardRate;
+    function rewardRate(address rifToken_) external view returns (uint256) {
+        return rewardData[rifToken_].rewardRate;
     }
 
     /**
      * @notice gets reward per token stored
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      */
-    function rewardPerTokenStored(address rewardToken_) external view returns (uint256) {
-        return rewardData[rewardToken_].rewardPerTokenStored;
+    function rewardPerTokenStored(address rifToken_) external view returns (uint256) {
+        return rewardData[rifToken_].rewardPerTokenStored;
     }
 
     /**
      * @notice gets reward missing
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      */
-    function rewardMissing(address rewardToken_) external view returns (uint256) {
-        return rewardData[rewardToken_].rewardMissing;
+    function rewardMissing(address rifToken_) external view returns (uint256) {
+        return rewardData[rifToken_].rewardMissing;
     }
 
     /**
      * @notice gets last update time
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      */
-    function lastUpdateTime(address rewardToken_) external view returns (uint256) {
-        return rewardData[rewardToken_].lastUpdateTime;
+    function lastUpdateTime(address rifToken_) external view returns (uint256) {
+        return rewardData[rifToken_].lastUpdateTime;
     }
 
     /**
      * @notice gets builder rewards
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      */
-    function builderRewards(address rewardToken_) external view returns (uint256) {
-        return rewardData[rewardToken_].builderRewards;
+    function builderRewards(address rifToken_) external view returns (uint256) {
+        return rewardData[rifToken_].builderRewards;
     }
 
     /**
      * @notice gets backer reward per token paid
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      */
-    function backerRewardPerTokenPaid(address rewardToken_, address backer_) external view returns (uint256) {
-        return rewardData[rewardToken_].backerRewardPerTokenPaid[backer_];
+    function backerRewardPerTokenPaid(address rifToken_, address backer_) external view returns (uint256) {
+        return rewardData[rifToken_].backerRewardPerTokenPaid[backer_];
     }
 
     /**
-     * @notice gets the estimated amount of rewardToken left to earn for a backer in current cycle
-     * @param rewardToken_ address of the token rewarded
+     * @notice gets the estimated amount of rifToken left to earn for a backer in current cycle
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      * @param backer_ address of the backer
      */
-    function estimatedBackerRewards(address rewardToken_, address backer_) external view returns (uint256) {
+    function estimatedBackerRewards(address rifToken_, address backer_) external view returns (uint256) {
         // No allocations or a new cycle started without a distribution
         if (totalAllocation == 0 || backersManager.periodFinish() <= block.timestamp) {
             return 0;
         }
         // [N] = [N] * [N] / [N]
-        return (_left(rewardToken_) * allocationOf[backer_]) / totalAllocation;
+        return (_left(rifToken_) * allocationOf[backer_]) / totalAllocation;
     }
 
     /**
-     * @notice gets amount of rewardToken earned for a backer
-     * @param rewardToken_ address of the token rewarded
+     * @notice gets amount of rifToken earned for a backer
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      * @param backer_ address of the backer
      */
-    function rewards(address rewardToken_, address backer_) external view returns (uint256) {
-        return rewardData[rewardToken_].rewards[backer_];
+    function rewards(address rifToken_, address backer_) external view returns (uint256) {
+        return rewardData[rifToken_].rewards[backer_];
     }
 
     /**
@@ -231,31 +231,31 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice gets the current reward rate per unit of stakingToken allocated
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
-     * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
+     * @return rewardPerToken rifToken:stakingToken ratio [PREC]
      */
-    function rewardPerToken(address rewardToken_) external view returns (uint256) {
-        return _rewardPerToken(rewardToken_, backersManager.periodFinish());
+    function rewardPerToken(address rifToken_) external view returns (uint256) {
+        return _rewardPerToken(rifToken_, backersManager.periodFinish());
     }
 
     /**
      * @notice gets total amount of rewards to distribute for the current rewards period
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      */
-    function left(address rewardToken_) external view returns (uint256) {
-        return _left(rewardToken_);
+    function left(address rifToken_) external view returns (uint256) {
+        return _left(rifToken_);
     }
 
     /**
      * @notice gets `backer_` rewards missing to claim
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      * @param backer_ address who earned the rewards
      */
-    function earned(address rewardToken_, address backer_) external view returns (uint256) {
-        return _earned(rewardToken_, backer_, backersManager.periodFinish());
+    function earned(address rifToken_, address backer_) external view returns (uint256) {
+        return _earned(rifToken_, backer_, backersManager.periodFinish());
     }
 
     /**
@@ -272,22 +272,22 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice claim rewards for a `backer_` address
      * @dev reverts if is not called by the `backer_` or the backersManager
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      * @param backer_ address who receives the rewards
      */
-    function claimBackerReward(address rewardToken_, address backer_) public {
+    function claimBackerReward(address rifToken_, address backer_) public {
         if (msg.sender != backer_ && msg.sender != address(backersManager)) revert NotAuthorized();
 
-        RewardData storage _rewardData = rewardData[rewardToken_];
+        RewardData storage _rewardData = rewardData[rifToken_];
 
-        _updateRewards(rewardToken_, backer_, backersManager.periodFinish());
+        _updateRewards(rifToken_, backer_, backersManager.periodFinish());
 
         uint256 _reward = _rewardData.rewards[backer_];
         if (_reward > 0) {
             _rewardData.rewards[backer_] = 0;
-            _transferRewardToken(rewardToken_, backer_, _reward);
-            emit BackerRewardsClaimed(rewardToken_, backer_, _reward);
+            _transferRewardToken(rifToken_, backer_, _reward);
+            emit BackerRewardsClaimed(rifToken_, backer_, _reward);
         }
     }
 
@@ -307,19 +307,19 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @notice claim rewards for a builder
      * @dev reverts if is not called by the builder or reward receiver
      * @dev rewards are transferred to the builder reward receiver
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      */
-    function claimBuilderReward(address rewardToken_) public {
+    function claimBuilderReward(address rifToken_) public {
         address _rewardReceiver = builderRegistry.canClaimBuilderReward(msg.sender);
 
-        RewardData storage _rewardData = rewardData[rewardToken_];
+        RewardData storage _rewardData = rewardData[rifToken_];
 
         uint256 _reward = _rewardData.builderRewards;
         if (_reward > 0) {
             _rewardData.builderRewards = 0;
-            _transferRewardToken(rewardToken_, _rewardReceiver, _reward);
-            emit BuilderRewardsClaimed(rewardToken_, _rewardReceiver, _reward);
+            _transferRewardToken(rifToken_, _rewardReceiver, _reward);
+            emit BuilderRewardsClaimed(rifToken_, _rewardReceiver, _reward);
         }
     }
 
@@ -510,13 +510,13 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice gets the current reward rate per unit of stakingToken allocated
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      * @param periodFinish_ timestamp end of current rewards period
-     * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
+     * @return rewardPerToken rifToken:stakingToken ratio [PREC]
      */
-    function _rewardPerToken(address rewardToken_, uint256 periodFinish_) internal view returns (uint256) {
-        RewardData storage _rewardData = rewardData[rewardToken_];
+    function _rewardPerToken(address rifToken_, uint256 periodFinish_) internal view returns (uint256) {
+        RewardData storage _rewardData = rewardData[rifToken_];
 
         uint256 _lastUpdateTime = _rewardData.lastUpdateTime;
         uint256 __lastTimeRewardApplicable = _lastTimeRewardApplicable(periodFinish_);
@@ -534,18 +534,18 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice gets `backer_` rewards missing to claim
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      * @param backer_ address who earned the rewards
      * @param periodFinish_ timestamp end of current rewards period
      */
-    function _earned(address rewardToken_, address backer_, uint256 periodFinish_) internal view returns (uint256) {
-        RewardData storage _rewardData = rewardData[rewardToken_];
+    function _earned(address rifToken_, address backer_, uint256 periodFinish_) internal view returns (uint256) {
+        RewardData storage _rewardData = rewardData[rifToken_];
 
         // [N] = ([N] * ([PREC] - [PREC]) / [PREC])
         uint256 _currentReward = UtilsLib._mulPrec(
             allocationOf[backer_],
-            _rewardPerToken(rewardToken_, periodFinish_) - _rewardData.backerRewardPerTokenPaid[backer_]
+            _rewardPerToken(rifToken_, periodFinish_) - _rewardData.backerRewardPerTokenPaid[backer_]
         );
         // [N] = [N] + [N]
         return _rewardData.rewards[backer_] + _currentReward;
@@ -553,12 +553,12 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice gets total amount of rewards to distribute for the current rewards period
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      */
-    function _left(address rewardToken_) internal view returns (uint256) {
+    function _left(address rifToken_) internal view returns (uint256) {
         // [N] = ([N] - [N]) * [PREC] / [PREC]
-        return UtilsLib._mulPrec(backersManager.periodFinish() - block.timestamp, rewardData[rewardToken_].rewardRate);
+        return UtilsLib._mulPrec(backersManager.periodFinish() - block.timestamp, rewardData[rifToken_].rewardRate);
     }
 
     /**
@@ -619,28 +619,28 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice update rewards variables when a backer interacts
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      * @param backer_ address of the backers
      * @param periodFinish_ timestamp end of current rewards period
      */
-    function _updateRewards(address rewardToken_, address backer_, uint256 periodFinish_) internal {
-        RewardData storage _rewardData = rewardData[rewardToken_];
+    function _updateRewards(address rifToken_, address backer_, uint256 periodFinish_) internal {
+        RewardData storage _rewardData = rewardData[rifToken_];
 
-        _rewardData.rewardPerTokenStored = _rewardPerToken(rewardToken_, periodFinish_);
+        _rewardData.rewardPerTokenStored = _rewardPerToken(rifToken_, periodFinish_);
         _rewardData.lastUpdateTime = _lastTimeRewardApplicable(periodFinish_);
-        _rewardData.rewards[backer_] = _earned(rewardToken_, backer_, periodFinish_);
+        _rewardData.rewards[backer_] = _earned(rifToken_, backer_, periodFinish_);
         _rewardData.backerRewardPerTokenPaid[backer_] = _rewardData.rewardPerTokenStored;
     }
 
     /**
      * @notice update reward missing variable
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      * @param periodFinish_ timestamp end of current rewards period
      */
-    function _updateRewardMissing(address rewardToken_, uint256 periodFinish_) internal {
-        RewardData storage _rewardData = rewardData[rewardToken_];
+    function _updateRewardMissing(address rifToken_, uint256 periodFinish_) internal {
+        RewardData storage _rewardData = rewardData[rifToken_];
         uint256 _lastUpdateTime = _rewardData.lastUpdateTime;
         uint256 __lastTimeRewardApplicable = _lastTimeRewardApplicable(periodFinish_);
         if (_lastUpdateTime >= __lastTimeRewardApplicable) {
@@ -652,34 +652,34 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice transfers reward token
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      * @param to_ address who receives the tokens
      * @param amount_ amount of tokens to send
      */
-    function _transferRewardToken(address rewardToken_, address to_, uint256 amount_) internal nonReentrant {
-        if (rewardToken_ == UtilsLib._NATIVE_ADDRESS) {
+    function _transferRewardToken(address rifToken_, address to_, uint256 amount_) internal nonReentrant {
+        if (rifToken_ == UtilsLib._NATIVE_ADDRESS) {
             Address.sendValue(payable(to_), amount_);
         } else {
-            SafeERC20.safeTransfer(IERC20(rewardToken_), to_, amount_);
+            SafeERC20.safeTransfer(IERC20(rifToken_), to_, amount_);
         }
     }
 
     /**
      * @notice moves builder rewards to another address
-     * @param rewardToken_ address of the token rewarded
+     * @param rifToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      * @param to_ address who receives the rewards
      */
-    function _moveBuilderUnclaimedRewards(address rewardToken_, address to_) internal {
-        uint256 _rewardTokenAmount = rewardData[rewardToken_].builderRewards;
-        if (_rewardTokenAmount > 0) {
-            rewardData[rewardToken_].builderRewards = 0;
-            _transferRewardToken(rewardToken_, to_, _rewardTokenAmount);
+    function _moveBuilderUnclaimedRewards(address rifToken_, address to_) internal {
+        uint256 _rifTokenAmount = rewardData[rifToken_].builderRewards;
+        if (_rifTokenAmount > 0) {
+            rewardData[rifToken_].builderRewards = 0;
+            _transferRewardToken(rifToken_, to_, _rifTokenAmount);
         }
     }
 
-    function _incentivizeWithToken(uint256 amount_, address rewardToken_) internal minIncentiveAmount(amount_) {
+    function _incentivizeWithToken(uint256 amount_, address rifToken_) internal minIncentiveAmount(amount_) {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
@@ -688,14 +688,14 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
 
         if (
-            IERC20(rewardToken_).balanceOf(msg.sender) < amount_
-                || IERC20(rewardToken_).allowance(msg.sender, address(this)) < amount_
+            IERC20(rifToken_).balanceOf(msg.sender) < amount_
+                || IERC20(rifToken_).allowance(msg.sender, address(this)) < amount_
         ) {
             revert NotEnoughAmount();
         }
 
         _notifyRewardAmount(
-            rewardToken_,
+            rifToken_,
             0, /*builderAmount_*/
             amount_,
             backersManager.periodFinish(),
@@ -703,7 +703,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             false /*resetRewardMissing_*/
         );
 
-        SafeERC20.safeTransferFrom(IERC20(rewardToken_), msg.sender, address(this), amount_);
+        SafeERC20.safeTransferFrom(IERC20(rifToken_), msg.sender, address(this), amount_);
     }
 
     /**

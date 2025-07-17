@@ -14,11 +14,11 @@ contract GaugeFactoryRootstockCollective {
     /**
      * @notice constructor
      * @param beacon_ address of the beacon
-     * @param rewardToken_ address of the token rewarded to builder and voters
+     * @param rifToken_ address of the token rewarded to builder and voters
      */
-    constructor(address beacon_, address rewardToken_) {
+    constructor(address beacon_, address rifToken_) {
         beacon = beacon_;
-        rifToken = rewardToken_;
+        rifToken = rifToken_;
     }
 
     function createGauge() external returns (GaugeRootstockCollective gauge_) {

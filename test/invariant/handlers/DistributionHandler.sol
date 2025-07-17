@@ -7,13 +7,13 @@ import { ERC20Mock } from "test/mock/ERC20Mock.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 
 contract DistributionHandler is BaseHandler {
-    ERC20Mock public rewardToken;
+    ERC20Mock public rifToken;
     RewardDistributorRootstockCollective public rewardDistributor;
 
     uint256 public totalAmountDistributed;
 
     constructor(BaseTest baseTest_, TimeManager timeManager_) BaseHandler(baseTest_, timeManager_) {
-        rewardToken = baseTest_.rewardToken();
+        rifToken = baseTest_.rifToken();
         rewardDistributor = baseTest_.rewardDistributor();
     }
 
@@ -35,7 +35,7 @@ contract DistributionHandler is BaseHandler {
 
         totalAmountDistributed += amountRif_;
 
-        rewardToken.mint(address(rewardDistributor), amountRif_);
+        rifToken.mint(address(rewardDistributor), amountRif_);
         vm.deal(address(rewardDistributor), amountNative_);
         vm.prank(baseTest.foundation());
         rewardDistributor.sendRewardsAndStartDistribution(amountRif_, 0, amountNative_);
