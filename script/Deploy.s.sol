@@ -33,8 +33,8 @@ contract Deploy is Broadcaster, OutputWriter {
     uint256 private _maxDistributionsPerBatch;
 
     function setUp() public {
-        _rifTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
-        _usdrifTokenAddress = vm.envAddress("USDRIF_REWARD_TOKEN_ADDRESS");
+        _rifTokenAddress = vm.envAddress("RIF_TOKEN_ADDRESS");
+        _usdrifTokenAddress = vm.envAddress("USDRIF_TOKEN_ADDRESS");
         _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
         _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
@@ -101,13 +101,12 @@ contract Deploy is Broadcaster, OutputWriter {
             "BuilderRegistryRootstockCollective", address(_builderRegistryImpl), address(_builderRegistryProxy)
         );
 
-        vm.startBroadcast();
+        vm.broadcast();
 
         _backersManagerProxy.initializeBuilderRegistry(_builderRegistryProxy);
         _backersManagerProxy.initializeV3(_maxDistributionsPerBatch, _usdrifTokenAddress);
 
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
 
-        vm.stopBroadcast();
     }
 }
