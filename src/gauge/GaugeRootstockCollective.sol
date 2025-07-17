@@ -113,9 +113,10 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
      * @param builderRegistry_ address of the builder registry contract
      */
-    function initialize(address rifToken_, address builderRegistry_) external initializer {
+    function initialize(address rifToken_, address usdrifToken_, address builderRegistry_) external initializer {
         __ReentrancyGuard_init();
         rifToken = rifToken_;
+        usdrifToken = usdrifToken_;
 
         builderRegistry = BuilderRegistryRootstockCollective(builderRegistry_);
         backersManager = BackersManagerRootstockCollective(builderRegistry.backersManager());

@@ -64,8 +64,9 @@ contract Deploy is Broadcaster, OutputWriter {
             new GaugeBeaconRootstockCollectiveDeployer().run(address(_governanceManagerProxy));
         save("GaugeBeaconRootstockCollective", address(_gaugeBeacon));
 
-        GaugeFactoryRootstockCollective _gaugeFactory =
-            new GaugeFactoryRootstockCollectiveDeployer().run(address(_gaugeBeacon), _rifTokenAddress);
+        GaugeFactoryRootstockCollective _gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(
+            address(_gaugeBeacon), _rifTokenAddress, _usdrifTokenAddress
+        );
         save("GaugeFactoryRootstockCollective", address(_gaugeFactory));
 
         (

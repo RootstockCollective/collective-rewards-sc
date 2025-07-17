@@ -76,7 +76,9 @@ contract BaseTest is Test {
         rifToken = _mockTokenDeployer.run(1);
         usdrifToken = _mockTokenDeployer.run(2);
         gaugeBeacon = new GaugeBeaconRootstockCollectiveDeployer().run(address(governanceManager));
-        gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(address(gaugeBeacon), address(rifToken));
+        gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(
+            address(gaugeBeacon), address(rifToken), address(usdrifToken)
+        );
 
         (rewardDistributor, rewardDistributorImpl) =
             new RewardDistributorRootstockCollectiveDeployer().run(address(governanceManager));
