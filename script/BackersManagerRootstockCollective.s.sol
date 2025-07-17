@@ -14,7 +14,7 @@ contract Deploy is Broadcaster {
         returns (BackersManagerRootstockCollective proxy_, BackersManagerRootstockCollective implementation_)
     {
         address _governanceManager = vm.envAddress("GOVERNANCE_MANAGER_ADDRESS");
-        address _rifTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
+        address _rifTokenAddress = vm.envAddress("RIF_TOKEN_ADDRESS");
         address _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
 
         uint32 _cycleDuration = uint32(vm.envUint("CYCLE_DURATION"));

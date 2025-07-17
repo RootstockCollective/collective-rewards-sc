@@ -95,7 +95,7 @@ and change the values to
 # Required
 export DEPLOYMENT_CONTEXT="regtest"
 export RPC_URL="https://dolphinnet.node"
-export REWARD_TOKEN_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA70"
+export RIF_TOKEN_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA70"
 export STAKING_TOKEN_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA71"
 export GOVERNOR_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA72"
 export CHANGE_EXECUTOR_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA73"
@@ -240,7 +240,7 @@ For instructions on how to deploy to a testnet or mainnet, check out the
 
 In order to use the Deploy script as is, you will need to configure the addresses of:
 
-1. Reward token - see [glossary](#reward-token) - use environment variable `REWARD_TOKEN_ADDRESS`
+1. Reward token - see [glossary](#reward-token) - use environment variable `RIF_TOKEN_ADDRESS`
 2. Staking token - see [glossary](#staking-token) - use environment variable `STAKING_TOKEN_ADDRESS`
 3. Governor - see [glossary](#governor) - use environment variable `GOVERNOR_ADDRESS`
 4. KYC Approver - see [glossary](#kyc-approver) - use environment variable `KYC_APPROVER_ADDRESS`
