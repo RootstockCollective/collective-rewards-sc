@@ -31,6 +31,22 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         rifToken.approve(address(gauge), 100_000 ether);
         vm.prank(address(backersManager));
         rifToken.approve(address(gauge2), 100_000 ether);
+
+        // mint some usdrifTokens and deal to incentivizer
+        usdrifToken.mint(address(incentivizer), 100_000 ether);
+        vm.deal(address(incentivizer), 100_000 ether);
+        vm.prank(address(incentivizer));
+        usdrifToken.approve(address(gauge), 100_000 ether);
+        vm.prank(address(incentivizer));
+        usdrifToken.approve(address(gauge2), 100_000 ether);
+
+        // mint some usdrifTokens and deal to backersManager
+        usdrifToken.mint(address(backersManager), 100_000 ether);
+        vm.deal(address(backersManager), 100_000 ether);
+        vm.prank(address(backersManager));
+        usdrifToken.approve(address(gauge), 100_000 ether);
+        vm.prank(address(backersManager));
+        usdrifToken.approve(address(gauge2), 100_000 ether);
     }
 
     /**
