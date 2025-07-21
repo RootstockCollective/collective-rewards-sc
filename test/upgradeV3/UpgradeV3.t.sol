@@ -21,6 +21,7 @@ contract UpgradeV3Test is Test {
     address public upgrader;
     address public configurator = makeAddr("configurator");
     address public alice = makeAddr("alice");
+    address public usdrifToken = vm.envAddress("USDRIF_TOKEN_ADDRESS");
 
     function setUp() public {
         backersManager =
@@ -40,7 +41,7 @@ contract UpgradeV3Test is Test {
 
         // Setup UpgradeV3
         UpgradeV3Deployer _upgradeV3Deployer = new UpgradeV3Deployer();
-        upgradeV3 = _upgradeV3Deployer.run(backersManager, rewardDistributor, configurator, false);
+        upgradeV3 = _upgradeV3Deployer.run(backersManager, rewardDistributor, configurator, usdrifToken, false);
     }
 
     /**

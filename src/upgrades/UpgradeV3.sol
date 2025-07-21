@@ -39,7 +39,8 @@ contract UpgradeV3 {
         GaugeRootstockCollective gaugeImplV3_,
         RewardDistributorRootstockCollective rewardDistributorProxy_,
         RewardDistributorRootstockCollective rewardDistributorImplV3_,
-        address configurator_
+        address configurator_,
+        address usdrifToken_
     ) {
         backersManagerProxy = backersManagerProxy_;
         backersManagerImplV3 = backersManagerImplV3_;
@@ -55,6 +56,7 @@ contract UpgradeV3 {
         rewardDistributorImplV3 = rewardDistributorImplV3_;
         upgrader = governanceManagerProxy.upgrader();
         configurator = configurator_;
+        usdrifToken = usdrifToken_;
     }
 
     function run() public {
