@@ -12,6 +12,7 @@ contract DistributionHandler is BaseHandler {
     RewardDistributorRootstockCollective public rewardDistributor;
 
     uint256 public totalAmountDistributed;
+    uint256 public totalAmountDistributedUsdrif;
 
     constructor(BaseTest baseTest_, TimeManager timeManager_) BaseHandler(baseTest_, timeManager_) {
         rifToken = baseTest_.rifToken();
@@ -38,6 +39,7 @@ contract DistributionHandler is BaseHandler {
         );
 
         totalAmountDistributed += amountRif_;
+        totalAmountDistributedUsdrif += amountUsdrif_;
 
         rifToken.mint(address(rewardDistributor), amountRif_);
         usdrifToken.mint(address(rewardDistributor), amountUsdrif_);

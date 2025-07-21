@@ -107,6 +107,5 @@ contract Deploy is Broadcaster, OutputWriter {
         _backersManagerProxy.initializeV3(_maxDistributionsPerBatch, _usdrifTokenAddress);
 
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
-
     }
 }
