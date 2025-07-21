@@ -30,6 +30,7 @@ contract DistributionHandler is BaseHandler {
     {
         if (backersManager.totalPotentialReward() == 0) return;
         amountRif_ = bound(amountRif_, 0, type(uint64).max);
+        amountUsdrif_ = bound(amountUsdrif_, 0, type(uint64).max);
         amountNative_ = bound(amountNative_, 0, type(uint64).max);
 
         timeManager.increaseTimestamp(
