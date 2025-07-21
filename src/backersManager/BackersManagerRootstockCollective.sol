@@ -304,7 +304,7 @@ contract BackersManagerRootstockCollective is
             emit NotifyReward(UtilsLib._NATIVE_ADDRESS, msg.sender, msg.value);
         }
         // transfering rif tokens
-        _notifyRewardAmount(amountRif_);
+        _notifyRewardAmountRif(amountRif_);
         // transfering usdrif tokens
         _notifyRewardAmountUsdrif(amountUsdrif_);
     }
@@ -602,10 +602,9 @@ contract BackersManagerRootstockCollective is
      * @notice Internal function to notify and transfer RIF reward tokens to this contract.
      * @param amount_ The amount of RIF tokens to transfer and notify.
      */
-    function _notifyRewardAmount(uint256 amount_) internal {
+    function _notifyRewardAmountRif(uint256 amount_) internal {
         rewardsRif += amount_;
-        emit NotifyReward(rifToken, msg.sender, amount_);
-        SafeERC20.safeTransferFrom(IERC20(rifToken), msg.sender, address(this), amount_);
+        _notifyRewardAmount(rifToken, msg.sender, amount_);
     }
 
     /**
@@ -614,8 +613,12 @@ contract BackersManagerRootstockCollective is
      */
     function _notifyRewardAmountUsdrif(uint256 amount_) internal {
         rewardsUsdrif += amount_;
-        emit NotifyReward(usdrifToken, msg.sender, amount_);
-        SafeERC20.safeTransferFrom(IERC20(usdrifToken), msg.sender, address(this), amount_);
+        _notifyRewardAmount(usdrifToken, msg.sender, amount_);
+    }
+
+    function _notifyRewardAmount(address token_, address sender_, uint256 amount_) internal {
+        emit NotifyReward(token_, sender_, amount_);
+        SafeERC20.safeTransferFrom(IERC20(token_), sender_, address(this), amount_);
     }
 
     /**
