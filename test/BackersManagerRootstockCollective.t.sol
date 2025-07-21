@@ -394,19 +394,20 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge, 0.1 ether);
         //   WHEN 2 ether reward are added
         //    THEN NotifyReward event is emitted
+        uint256 _rifAmount = 2 ether;
         vm.expectEmit();
-        emit NotifyReward(address(rifToken), address(this), 2 ether);
-        backersManager.notifyRewardAmount(2 ether, 2 ether);
+        emit NotifyReward(address(rifToken), address(this), _rifAmount);
+        backersManager.notifyRewardAmount(_rifAmount, 0);
         // THEN rewards is 2 ether
-        assertEq(backersManager.rewardsRif(), 2 ether);
-        // THEN usdrifToken rewards is 2 ether
-        assertEq(backersManager.rewardsUsdrif(), 2 ether);
+        assertEq(backersManager.rewardsRif(), _rifAmount);
+        // THEN usdrifToken rewards is 0
+        assertEq(backersManager.rewardsUsdrif(), 0);
         // THEN Native rewards is 0
         assertEq(backersManager.rewardsNative(), 0);
         // THEN reward token balance of backersManager is 2 ether
-        assertEq(rifToken.balanceOf(address(backersManager)), 2 ether);
-        // THEN usdrifToken balance of backersManager is 2 ether
-        assertEq(usdrifToken.balanceOf(address(backersManager)), 2 ether);
+        assertEq(rifToken.balanceOf(address(backersManager)), _rifAmount);
+        // THEN usdrifToken balance of backersManager is 0
+        assertEq(usdrifToken.balanceOf(address(backersManager)), 0);
         // THEN native tokens balance of backersManager is 0
         assertEq(address(backersManager).balance, 0);
     }
