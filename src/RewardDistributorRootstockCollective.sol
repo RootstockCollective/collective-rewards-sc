@@ -54,7 +54,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /// @notice address of the usdrif token rewarded to builder and backers
     IERC20 public usdrifToken;
     ///@notice default reward token amount
-    uint256 public defaultUsdrifRewardTokenAmount;
+    uint256 public defaultUsdrifAmount;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -145,7 +145,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         onlyFoundationTreasury
     {
         defaultRifAmount = tokenAmount_;
-        defaultUsdrifRewardTokenAmount = usdrifTokenAmount_;
+        defaultUsdrifAmount = usdrifTokenAmount_;
         defaultNativeAmount = nativeAmount_;
     }
 
@@ -154,7 +154,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @dev reverts if is called more than once per cycle
      */
     function sendRewardsWithDefaultAmount() external payable onlyOncePerCycle {
-        _sendRewards(defaultRifAmount, defaultUsdrifRewardTokenAmount, defaultNativeAmount);
+        _sendRewards(defaultRifAmount, defaultUsdrifAmount, defaultNativeAmount);
     }
 
     /**
@@ -162,7 +162,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @dev reverts if is called more than once per cycle
      */
     function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyOncePerCycle {
-        _sendRewards(defaultRifAmount, defaultUsdrifRewardTokenAmount, defaultNativeAmount);
+        _sendRewards(defaultRifAmount, defaultUsdrifAmount, defaultNativeAmount);
         backersManager.startDistribution();
     }
 
