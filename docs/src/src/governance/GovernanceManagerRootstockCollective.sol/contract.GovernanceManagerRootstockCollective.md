@@ -1,5 +1,5 @@
 # GovernanceManagerRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/governance/GovernanceManagerRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/f946f53322702b68bdb68a4c01ed6360683360e6/src/governance/GovernanceManagerRootstockCollective.sol)
 
 **Inherits:**
 UUPSUpgradeable, [IGovernanceManagerRootstockCollective](/src/interfaces/IGovernanceManagerRootstockCollective.sol/interface.IGovernanceManagerRootstockCollective.md)
@@ -57,6 +57,15 @@ The upgrader address with contract upgradeability permissions
 
 ```solidity
 address public upgrader;
+```
+
+
+### configurator
+The address with the right to change contract parameters
+
+
+```solidity
+address public configurator;
 ```
 
 
@@ -126,6 +135,13 @@ function initialize(
     initializer;
 ```
 
+### initializeV2
+
+
+```solidity
+function initializeV2(address configurator_) public reinitializer(2) onlyAuthorizedUpgrader;
+```
+
 ### executeChange
 
 
@@ -161,6 +177,13 @@ function updateKYCApprover(address kycApprover_) public onlyAuthorizedChanger;
 function updateUpgrader(address upgrader_) public;
 ```
 
+### updateConfigurator
+
+
+```solidity
+function updateConfigurator(address configurator_) public;
+```
+
 ### validateGovernor
 
 
@@ -187,6 +210,13 @@ function validateAuthorizedUpgrader(address account_) public view;
 
 ```solidity
 function validateKycApprover(address account_) external view;
+```
+
+### validateConfigurator
+
+
+```solidity
+function validateConfigurator(address account_) external view;
 ```
 
 ### validateFoundationTreasury
@@ -231,6 +261,13 @@ function _updateKYCApprover(address kycApprover_) private onlyNonZeroAddress(kyc
 function _updateUpgrader(address upgrader_) private onlyNonZeroAddress(upgrader_);
 ```
 
+### _updateConfigurator
+
+
+```solidity
+function _updateConfigurator(address configurator_) private onlyNonZeroAddress(configurator_);
+```
+
 ### _authorizeChanger
 
 
@@ -243,5 +280,12 @@ function _authorizeChanger(address authorizedChanger_) internal;
 
 ```solidity
 function _authorizeUpgrade(address newImplementation_) internal override onlyAuthorizedUpgrader;
+```
+
+### _validateConfigurator
+
+
+```solidity
+function _validateConfigurator(address account_) internal view;
 ```
 

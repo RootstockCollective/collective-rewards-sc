@@ -22,4 +22,6 @@
     - [IGovernanceManagerRootstockCollective](src/interfaces/IGovernanceManagerRootstockCollective.sol/interface.IGovernanceManagerRootstockCollective.md)
   - [❱ libraries](src/libraries/README.md)
     - [UtilsLib](src/libraries/UtilsLib.sol/library.UtilsLib.md)
+  - [❱ upgrades](src/upgrades/README.md)
+    - [UpgradeV3](src/upgrades/UpgradeV3.sol/contract.UpgradeV3.md)
   - [RewardDistributorRootstockCollective](src/RewardDistributorRootstockCollective.sol/contract.RewardDistributorRootstockCollective.md)

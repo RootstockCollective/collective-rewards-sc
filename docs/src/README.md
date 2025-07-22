@@ -8,7 +8,7 @@
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/RootstockCollective/collective-rewards-sc/badge)](https://scorecard.dev/viewer/?uri=github.com/RootstockCollective/collective-rewards-sc)
 
-A set of Solidity smart [contracts](./specs/CONTRACTS.md), to implement builder incentives and staker rewards mechanisms to be integrated with the DAO. For technical detail, please refer to the [specifications](./specs/SPECIFICATION.md).
+A set of Solidity smart [contracts](./specs/CONTRACTS.md), to implement builder incentives and staker rewards mechanisms to be integrated with the DAO. For technical details, please refer to the [specifications](./specs/SPECIFICATION.md).
 
 ## What's Inside
 
@@ -96,6 +96,7 @@ and change the values to
 export DEPLOYMENT_CONTEXT="regtest"
 export RPC_URL="https://dolphinnet.node"
 export RIF_TOKEN_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA70"
+export USDRIF_TOKEN_ADDRESS="0x2ca054b47a89d9E8C2956Fefe5e569FC3796eC0E"
 export STAKING_TOKEN_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA71"
 export GOVERNOR_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA72"
 export CHANGE_EXECUTOR_ADDRESS="0x14f6504A7ca4e574868cf8b49e85187d3Da9FA73"
@@ -240,11 +241,12 @@ For instructions on how to deploy to a testnet or mainnet, check out the
 
 In order to use the Deploy script as is, you will need to configure the addresses of:
 
-1. Reward token - see [glossary](#reward-token) - use environment variable `RIF_TOKEN_ADDRESS`
-2. Staking token - see [glossary](#staking-token) - use environment variable `STAKING_TOKEN_ADDRESS`
-3. Governor - see [glossary](#governor) - use environment variable `GOVERNOR_ADDRESS`
-4. KYC Approver - see [glossary](#kyc-approver) - use environment variable `KYC_APPROVER_ADDRESS`
-5. Foundation treasury - see [glossary](#foundation-treasury) - use environment variable `FOUNDATION_TREASURY_ADDRESS`
+1. RIF token - see [glossary](#reward-tokens) - use environment variable `RIF_TOKEN_ADDRESS`
+2. USDRIF token - see [glossary](#reward-tokens) - use environment variable `USDRIF_TOKEN_ADDRESS`
+3. Staking token - see [glossary](#staking-token) - use environment variable `STAKING_TOKEN_ADDRESS`
+4. Governor - see [glossary](#governor) - use environment variable `GOVERNOR_ADDRESS`
+5. KYC Approver - see [glossary](#kyc-approver) - use environment variable `KYC_APPROVER_ADDRESS`
+6. Foundation treasury - see [glossary](#foundation-treasury) - use environment variable `FOUNDATION_TREASURY_ADDRESS`
 
 For development and testing purposes you may like to deploy some of the mock contracts:
 
@@ -354,9 +356,9 @@ Generate coverage report:
 
 ## Glossary
 
-### Reward token
+### Reward tokens
 
-The reward token for the collective incentives program is `RIF`. Only tokens that adhere to the ERC-20 standard are supported.
+The reward token for the collective incentives program is `RIF` and `USDRIF`. Only tokens that adhere to the ERC-20 standard are supported.
 Unsupported Token Types:
 
 - Fee-on-transfer tokens (e.g., those that deduct a fee per transfer).

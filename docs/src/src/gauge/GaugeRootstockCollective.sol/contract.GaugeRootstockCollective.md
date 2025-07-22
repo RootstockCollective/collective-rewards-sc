@@ -1,5 +1,5 @@
 # GaugeRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/gauge/GaugeRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/f946f53322702b68bdb68a4c01ed6360683360e6/src/gauge/GaugeRootstockCollective.sol)
 
 **Inherits:**
 ReentrancyGuardUpgradeable
@@ -9,12 +9,12 @@ It receives all the rewards obtained for that project and allows the builder and
 
 
 ## State Variables
-### rewardToken
+### rifToken
 address of the token rewarded to builder and voters
 
 
 ```solidity
-address public rewardToken;
+address public rifToken;
 ```
 
 
@@ -61,7 +61,7 @@ rewards data to each token
 
 
 ```solidity
-mapping(address rewardToken => RewardData rewardData) public rewardData;
+mapping(address rifToken => RewardData rewardData) public rewardData;
 ```
 
 
@@ -71,6 +71,15 @@ BuilderRegistryRootstockCollective contract address
 
 ```solidity
 BuilderRegistryRootstockCollective public builderRegistry;
+```
+
+
+### usdrifToken
+address of the token rewarded to builder and voters
+
+
+```solidity
+address public usdrifToken;
 ```
 
 
@@ -123,14 +132,33 @@ https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md
 
 
 ```solidity
-function initialize(address rewardToken_, address builderRegistry_) external initializer;
+function initialize(address rifToken_, address usdrifToken_, address builderRegistry_) external initializer;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20 standard are supported.|
+|`rifToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20 standard are supported.|
+|`usdrifToken_`|`address`||
 |`builderRegistry_`|`address`|address of the builder registry contract|
+
+
+### initializeV3
+
+contract initializer
+
+For more info on supported tokens, see:
+https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
+
+
+```solidity
+function initializeV3(address usdrifToken_) external reinitializer(3);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`usdrifToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20 standard are supported.|
 
 
 ### rewardRate
@@ -139,13 +167,13 @@ gets reward rate
 
 
 ```solidity
-function rewardRate(address rewardToken_) external view returns (uint256);
+function rewardRate(address rifToken_) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 
 
 ### rewardPerTokenStored
@@ -154,13 +182,13 @@ gets reward per token stored
 
 
 ```solidity
-function rewardPerTokenStored(address rewardToken_) external view returns (uint256);
+function rewardPerTokenStored(address rifToken_) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 
 
 ### rewardMissing
@@ -169,13 +197,13 @@ gets reward missing
 
 
 ```solidity
-function rewardMissing(address rewardToken_) external view returns (uint256);
+function rewardMissing(address rifToken_) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 
 
 ### lastUpdateTime
@@ -184,13 +212,13 @@ gets last update time
 
 
 ```solidity
-function lastUpdateTime(address rewardToken_) external view returns (uint256);
+function lastUpdateTime(address rifToken_) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 
 
 ### builderRewards
@@ -199,13 +227,13 @@ gets builder rewards
 
 
 ```solidity
-function builderRewards(address rewardToken_) external view returns (uint256);
+function builderRewards(address rifToken_) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 
 
 ### backerRewardPerTokenPaid
@@ -214,45 +242,45 @@ gets backer reward per token paid
 
 
 ```solidity
-function backerRewardPerTokenPaid(address rewardToken_, address backer_) external view returns (uint256);
+function backerRewardPerTokenPaid(address rifToken_, address backer_) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`||
 
 
 ### estimatedBackerRewards
 
-gets the estimated amount of rewardToken left to earn for a backer in current cycle
+gets the estimated amount of rifToken left to earn for a backer in current cycle
 
 
 ```solidity
-function estimatedBackerRewards(address rewardToken_, address backer_) external view returns (uint256);
+function estimatedBackerRewards(address rifToken_, address backer_) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address of the backer|
 
 
 ### rewards
 
-gets amount of rewardToken earned for a backer
+gets amount of rifToken earned for a backer
 
 
 ```solidity
-function rewards(address rewardToken_, address backer_) external view returns (uint256);
+function rewards(address rifToken_, address backer_) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address of the backer|
 
 
@@ -277,19 +305,19 @@ gets the current reward rate per unit of stakingToken allocated
 
 
 ```solidity
-function rewardPerToken(address rewardToken_) external view returns (uint256);
+function rewardPerToken(address rifToken_) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`<none>`|`uint256`|rewardPerToken rewardToken:stakingToken ratio [PREC]|
+|`<none>`|`uint256`|rewardPerToken rifToken:stakingToken ratio [PREC]|
 
 
 ### left
@@ -298,13 +326,13 @@ gets total amount of rewards to distribute for the current rewards period
 
 
 ```solidity
-function left(address rewardToken_) external view returns (uint256);
+function left(address rifToken_) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 
 
 ### earned
@@ -313,13 +341,13 @@ gets `backer_` rewards missing to claim
 
 
 ```solidity
-function earned(address rewardToken_, address backer_) external view returns (uint256);
+function earned(address rifToken_, address backer_) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address who earned the rewards|
 
 
@@ -348,13 +376,13 @@ claim rewards for a `backer_` address
 
 
 ```solidity
-function claimBackerReward(address rewardToken_, address backer_) public;
+function claimBackerReward(address rifToken_, address backer_) public;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address who receives the rewards|
 
 
@@ -382,13 +410,13 @@ claim rewards for a builder
 
 
 ```solidity
-function claimBuilderReward(address rewardToken_) public;
+function claimBuilderReward(address rifToken_) public;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 
 
 ### moveBuilderUnclaimedRewards
@@ -443,7 +471,7 @@ function allocate(
 |`isNegative_`|`bool`|true if new allocation is lesser than the current one|
 
 
-### incentivizeWithRewardToken
+### incentivizeWithRifToken
 
 transfers reward tokens to this contract to incentivize backers
 
@@ -452,7 +480,25 @@ reverts if distribution for the cycle has not finished*
 
 
 ```solidity
-function incentivizeWithRewardToken(uint256 amount_) external minIncentiveAmount(amount_);
+function incentivizeWithRifToken(uint256 amount_) external;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amount_`|`uint256`|amount of reward tokens|
+
+
+### incentivizeWithUsdrifToken
+
+transfers reward tokens to this contract to incentivize backers
+
+*reverts if Gauge is halted
+reverts if distribution for the cycle has not finished*
+
+
+```solidity
+function incentivizeWithUsdrifToken(uint256 amount_) external;
 ```
 **Parameters**
 
@@ -483,6 +529,7 @@ called on the reward distribution. Transfers reward tokens from backerManger to 
 ```solidity
 function notifyRewardAmountAndUpdateShares(
     uint256 amountRif_,
+    uint256 amountUsdrif_,
     uint256 backerRewardPercentage_,
     uint256 periodFinish_,
     uint256 cycleStart_,
@@ -498,6 +545,7 @@ function notifyRewardAmountAndUpdateShares(
 |Name|Type|Description|
 |----|----|-----------|
 |`amountRif_`|`uint256`|amount of ERC20 rewards|
+|`amountUsdrif_`|`uint256`||
 |`backerRewardPercentage_`|`uint256`| backers reward percentage|
 |`periodFinish_`|`uint256`|timestamp end of current rewards period|
 |`cycleStart_`|`uint256`|Collective Rewards cycle start timestamp|
@@ -537,20 +585,20 @@ gets the current reward rate per unit of stakingToken allocated
 
 
 ```solidity
-function _rewardPerToken(address rewardToken_, uint256 periodFinish_) internal view returns (uint256);
+function _rewardPerToken(address rifToken_, uint256 periodFinish_) internal view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`periodFinish_`|`uint256`|timestamp end of current rewards period|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`<none>`|`uint256`|rewardPerToken rewardToken:stakingToken ratio [PREC]|
+|`<none>`|`uint256`|rewardPerToken rifToken:stakingToken ratio [PREC]|
 
 
 ### _earned
@@ -559,13 +607,13 @@ gets `backer_` rewards missing to claim
 
 
 ```solidity
-function _earned(address rewardToken_, address backer_, uint256 periodFinish_) internal view returns (uint256);
+function _earned(address rifToken_, address backer_, uint256 periodFinish_) internal view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address who earned the rewards|
 |`periodFinish_`|`uint256`|timestamp end of current rewards period|
 
@@ -576,13 +624,13 @@ gets total amount of rewards to distribute for the current rewards period
 
 
 ```solidity
-function _left(address rewardToken_) internal view returns (uint256);
+function _left(address rifToken_) internal view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 
 
 ### _notifyRewardAmount
@@ -592,7 +640,7 @@ transfers reward tokens to this contract
 
 ```solidity
 function _notifyRewardAmount(
-    address rewardToken_,
+    address rifToken_,
     uint256 builderAmount_,
     uint256 backersAmount_,
     uint256 periodFinish_,
@@ -605,7 +653,7 @@ function _notifyRewardAmount(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`builderAmount_`|`uint256`|amount of rewards for the builder|
 |`backersAmount_`|`uint256`|amount of rewards for the backers|
 |`periodFinish_`|`uint256`|timestamp end of current rewards period|
@@ -619,13 +667,13 @@ update rewards variables when a backer interacts
 
 
 ```solidity
-function _updateRewards(address rewardToken_, address backer_, uint256 periodFinish_) internal;
+function _updateRewards(address rifToken_, address backer_, uint256 periodFinish_) internal;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address of the backers|
 |`periodFinish_`|`uint256`|timestamp end of current rewards period|
 
@@ -636,13 +684,13 @@ update reward missing variable
 
 
 ```solidity
-function _updateRewardMissing(address rewardToken_, uint256 periodFinish_) internal;
+function _updateRewardMissing(address rifToken_, uint256 periodFinish_) internal;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`periodFinish_`|`uint256`|timestamp end of current rewards period|
 
 
@@ -652,13 +700,13 @@ transfers reward token
 
 
 ```solidity
-function _transferRewardToken(address rewardToken_, address to_, uint256 amount_) internal nonReentrant;
+function _transferRewardToken(address rifToken_, address to_, uint256 amount_) internal nonReentrant;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`to_`|`address`|address who receives the tokens|
 |`amount_`|`uint256`|amount of tokens to send|
 
@@ -669,27 +717,34 @@ moves builder rewards to another address
 
 
 ```solidity
-function _moveBuilderUnclaimedRewards(address rewardToken_, address to_) internal;
+function _moveBuilderUnclaimedRewards(address rifToken_, address to_) internal;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
 |`to_`|`address`|address who receives the rewards|
 
+
+### _incentivizeWithToken
+
+
+```solidity
+function _incentivizeWithToken(uint256 amount_, address rifToken_) internal minIncentiveAmount(amount_);
+```
 
 ## Events
 ### BackerRewardsClaimed
 
 ```solidity
-event BackerRewardsClaimed(address indexed rewardToken_, address indexed backer_, uint256 amount_);
+event BackerRewardsClaimed(address indexed rifToken_, address indexed backer_, uint256 amount_);
 ```
 
 ### BuilderRewardsClaimed
 
 ```solidity
-event BuilderRewardsClaimed(address indexed rewardToken_, address indexed builder_, uint256 amount_);
+event BuilderRewardsClaimed(address indexed rifToken_, address indexed builder_, uint256 amount_);
 ```
 
 ### NewAllocation
@@ -701,7 +756,7 @@ event NewAllocation(address indexed backer_, uint256 allocation_);
 ### NotifyReward
 
 ```solidity
-event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 backersAmount_);
+event NotifyReward(address indexed rifToken_, uint256 builderAmount_, uint256 backersAmount_);
 ```
 
 ## Errors

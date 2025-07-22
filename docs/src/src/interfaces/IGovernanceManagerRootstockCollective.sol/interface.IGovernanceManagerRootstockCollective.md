@@ -1,5 +1,5 @@
 # IGovernanceManagerRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/interfaces/IGovernanceManagerRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/f946f53322702b68bdb68a4c01ed6360683360e6/src/interfaces/IGovernanceManagerRootstockCollective.sol)
 
 
 ## Functions
@@ -100,6 +100,21 @@ function upgrader() external view returns (address);
 |`<none>`|`address`|The upgrader address.|
 
 
+### configurator
+
+The configurator address with contract upgradeability permissions.
+
+
+```solidity
+function configurator() external view returns (address);
+```
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|The configurator address.|
+
+
 ### validateAuthorizedChanger
 
 Validates if the given account is authorized as a changer
@@ -183,6 +198,24 @@ function validateAuthorizedUpgrader(address account_) external view;
 |Name|Type|Description|
 |----|----|-----------|
 |`account_`|`address`|The address to be validated.|
+
+
+### validateConfigurator
+
+Validates if the given account is authorized as the configurator.
+
+*Reverts with `NotAuthorizedConfigurator` if the account is not the configurator, governor or a valid
+changer.*
+
+
+```solidity
+function validateConfigurator(address account_) external view;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`account_`|`address`|The address to be validated as the configurator.|
 
 
 ### updateGovernor
@@ -278,6 +311,25 @@ function updateUpgrader(address upgrader_) external;
 |`upgrader_`|`address`|The new upgrader address.|
 
 
+### updateConfigurator
+
+Updates the configurator address
+
+*Reverts if caller is not a valid configurator, governor or a valid changer.*
+
+*Reverts if the new address is zero.*
+
+
+```solidity
+function updateConfigurator(address configurator_) external;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`configurator_`|`address`|The new configurator address.|
+
+
 ## Events
 ### GovernorUpdated
 
@@ -301,6 +353,12 @@ event KycApproverUpdated(address kycApprover_, address updatedBy_);
 
 ```solidity
 event UpgraderUpdated(address upgrader_, address updatedBy_);
+```
+
+### ConfiguratorUpdated
+
+```solidity
+event ConfiguratorUpdated(address configurator_, address updatedBy_);
 ```
 
 ### ChangeExecuted
@@ -364,5 +422,13 @@ Thrown when the caller is not the upgrader.
 
 ```solidity
 error NotUpgrader();
+```
+
+### NotAuthorizedConfigurator
+Thrown when the caller is not the configurator.
+
+
+```solidity
+error NotAuthorizedConfigurator(address account_);
 ```
 

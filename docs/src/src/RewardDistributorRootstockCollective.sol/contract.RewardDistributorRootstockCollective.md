@@ -1,5 +1,5 @@
 # RewardDistributorRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/RewardDistributorRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/f946f53322702b68bdb68a4c01ed6360683360e6/src/RewardDistributorRootstockCollective.sol)
 
 **Inherits:**
 [UpgradeableRootstockCollective](/src/governance/UpgradeableRootstockCollective.sol/abstract.UpgradeableRootstockCollective.md)
@@ -8,12 +8,12 @@ Accumulates all the rewards to be distributed for each cycle
 
 
 ## State Variables
-### rewardToken
+### rifToken
 address of the token rewarded to builder and backers
 
 
 ```solidity
-IERC20 public rewardToken;
+IERC20 public rifToken;
 ```
 
 
@@ -26,21 +26,46 @@ BackersManagerRootstockCollective public backersManager;
 ```
 
 
-### defaultRewardTokenAmount
+### defaultRifAmount
 default reward token amount
 
 
 ```solidity
-uint256 public defaultRewardTokenAmount;
+uint256 public defaultRifAmount;
 ```
 
 
-### defaultRewardnativeTokensAmount
-default reward native tokens amount
+### defaultNativeAmount
+default reward native amount
 
 
 ```solidity
-uint256 public defaultRewardnativeTokensAmount;
+uint256 public defaultNativeAmount;
+```
+
+
+### lastFundedCycleStart
+
+```solidity
+uint256 public lastFundedCycleStart;
+```
+
+
+### usdrifToken
+address of the usdrif token rewarded to builder and backers
+
+
+```solidity
+IERC20 public usdrifToken;
+```
+
+
+### defaultUsdrifAmount
+default reward token amount
+
+
+```solidity
+uint256 public defaultUsdrifAmount;
 ```
 
 
@@ -61,6 +86,13 @@ uint256[50] private __gap;
 
 ```solidity
 modifier onlyFoundationTreasury();
+```
+
+### onlyOncePerCycle
+
+
+```solidity
+modifier onlyOncePerCycle();
 ```
 
 ### constructor
@@ -112,33 +144,13 @@ function initializeCollectiveRewardsAddresses(address backersManager_) external;
 
 sends rewards to backersManager contract to be distributed to the gauges
 
-*reverts if is not called by foundation treasury address
-reverts if rewards balance is insufficient*
+*reverts if is not called by foundation treasury address*
 
 
 ```solidity
-function sendRewards(uint256 amountRif_, uint256 amountNative_) external payable onlyFoundationTreasury;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`amountRif_`|`uint256`|amount of ERC20 reward token to send|
-|`amountNative_`|`uint256`|amount of native tokens reward token to send|
-
-
-### sendRewardsAndStartDistribution
-
-sends rewards to backersManager contract and starts the distribution to the gauges
-
-*reverts if is not called by foundation treasury address
-reverts if rewards balance is insufficient
-reverts if is not in the distribution window*
-
-
-```solidity
-function sendRewardsAndStartDistribution(
+function sendRewards(
     uint256 amountRif_,
+    uint256 amountUsdrif_,
     uint256 amountNative_
 )
     external
@@ -150,7 +162,35 @@ function sendRewardsAndStartDistribution(
 |Name|Type|Description|
 |----|----|-----------|
 |`amountRif_`|`uint256`|amount of ERC20 reward token to send|
-|`amountNative_`|`uint256`|amount of native tokens reward token to send|
+|`amountUsdrif_`|`uint256`||
+|`amountNative_`|`uint256`|amount of Native reward token to send|
+
+
+### sendRewardsAndStartDistribution
+
+sends rewards to backersManager contract and starts the distribution to the gauges
+
+*reverts if is not called by foundation treasury address
+reverts if is not in the distribution window*
+
+
+```solidity
+function sendRewardsAndStartDistribution(
+    uint256 amountRif_,
+    uint256 amountUsdrif_,
+    uint256 amountNative_
+)
+    external
+    payable
+    onlyFoundationTreasury;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amountRif_`|`uint256`|amount of ERC20 reward token to send|
+|`amountUsdrif_`|`uint256`||
+|`amountNative_`|`uint256`|amount of Native reward token to send|
 
 
 ### setDefaultRewardAmount
@@ -163,7 +203,8 @@ sets the default reward amounts
 ```solidity
 function setDefaultRewardAmount(
     uint256 tokenAmount_,
-    uint256 nativeTokensAmount_
+    uint256 usdrifTokenAmount_,
+    uint256 nativeAmount_
 )
     external
     payable
@@ -174,29 +215,30 @@ function setDefaultRewardAmount(
 |Name|Type|Description|
 |----|----|-----------|
 |`tokenAmount_`|`uint256`|default amount of ERC20 reward token to send|
-|`nativeTokensAmount_`|`uint256`|default amount of native tokens reward token to send|
+|`usdrifTokenAmount_`|`uint256`||
+|`nativeAmount_`|`uint256`|default amount of Native reward token to send|
 
 
 ### sendRewardsWithDefaultAmount
 
 sends rewards to backersManager contract with default amounts
 
-*reverts if is not called by foundation treasury address*
+*reverts if is called more than once per cycle*
 
 
 ```solidity
-function sendRewardsWithDefaultAmount() external payable onlyFoundationTreasury;
+function sendRewardsWithDefaultAmount() external payable onlyOncePerCycle;
 ```
 
 ### sendRewardsAndStartDistributionWithDefaultAmount
 
 sends rewards to backersManager contract with default amounts and starts the distribution
 
-*reverts if is not called by foundation treasury address*
+*reverts if is called more than once per cycle*
 
 
 ```solidity
-function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyFoundationTreasury;
+function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyOncePerCycle;
 ```
 
 ### _sendRewards
@@ -205,14 +247,15 @@ internal function to send rewards to backersManager contract
 
 
 ```solidity
-function _sendRewards(uint256 amountRif_, uint256 amountNative_) internal;
+function _sendRewards(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_) internal;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`amountRif_`|`uint256`|amount of ERC20 reward token to send|
-|`amountNative_`|`uint256`|amount of native tokens reward token to send|
+|`amountUsdrif_`|`uint256`||
+|`amountNative_`|`uint256`|amount of Native reward token to send|
 
 
 ### receive
@@ -235,5 +278,11 @@ error NotFoundationTreasury();
 
 ```solidity
 error CollectiveRewardsAddressesAlreadyInitialized();
+```
+
+### CycleAlreadyFunded
+
+```solidity
+error CycleAlreadyFunded();
 ```
 

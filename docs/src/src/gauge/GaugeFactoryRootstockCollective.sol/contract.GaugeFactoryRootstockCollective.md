@@ -1,5 +1,5 @@
 # GaugeFactoryRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/gauge/GaugeFactoryRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/f946f53322702b68bdb68a4c01ed6360683360e6/src/gauge/GaugeFactoryRootstockCollective.sol)
 
 
 ## State Variables
@@ -13,12 +13,21 @@ address public immutable beacon;
 ```
 
 
-### rewardToken
+### rifToken
 address of the token rewarded to builder and voters
 
 
 ```solidity
-address public immutable rewardToken;
+address public immutable rifToken;
+```
+
+
+### usdrifToken
+address of the token rewarded to builder and voters
+
+
+```solidity
+address public immutable usdrifToken;
 ```
 
 
@@ -29,14 +38,15 @@ constructor
 
 
 ```solidity
-constructor(address beacon_, address rewardToken_);
+constructor(address beacon_, address rifToken_, address usdrifToken_);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`beacon_`|`address`|address of the beacon|
-|`rewardToken_`|`address`|address of the token rewarded to builder and voters|
+|`rifToken_`|`address`|address of the token rewarded to builder and voters|
+|`usdrifToken_`|`address`|address of the token rewarded to builder and voters|
 
 
 ### createGauge
