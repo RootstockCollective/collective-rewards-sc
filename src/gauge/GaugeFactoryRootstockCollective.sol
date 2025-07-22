@@ -8,9 +8,9 @@ contract GaugeFactoryRootstockCollective {
     /// @notice address of beacon contract who stores gauge implementation address which is where gauge proxies will
     /// delegate all function calls
     address public immutable beacon;
-    /// @notice address of the token rewarded to builder and voters
+    /// @notice address of rif token rewarded to builder and backers
     address public immutable rifToken;
-    /// @notice address of the token rewarded to builder and voters
+    /// @notice address of usdRif token rewarded to builder and backers
     address public immutable usdrifToken;
 
     /**

@@ -44,7 +44,7 @@ contract BackersManagerRootstockCollective is
     // ----------- Events ----------
     // -----------------------------
     event NewAllocation(address indexed backer_, address indexed gauge_, uint256 allocation_);
-    event NotifyReward(address indexed rifToken_, address indexed sender_, uint256 amount_);
+    event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
     event RewardDistributionStarted(address indexed sender_);
     event RewardDistributed(address indexed sender_);
     event RewardDistributionFinished(address indexed sender_);
@@ -101,7 +101,7 @@ contract BackersManagerRootstockCollective is
     uint256[64] private __gapUpgrade;
     /// @notice address of the token used to stake
     IERC20 public stakingToken;
-    /// @notice address of the token rewarded to builder and voters
+    /// @notice address of rif token rewarded to builder and backers
     address public rifToken;
     /// @notice total potential reward
     uint256 public totalPotentialReward;
@@ -151,6 +151,7 @@ contract BackersManagerRootstockCollective is
      * @notice contract initializer
      * @param governanceManager_ contract with permissioned roles
      * @param rifToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20
+     * standard are supported.
      * @param usdrifToken_ address of the USDRIF token rewarded to builder and voters. Only tokens that adhere to the
      * standard are supported.
      * @notice For more info on supported tokens, see:
@@ -359,17 +360,17 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice claims backer rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
-     * @param rifToken_ address of the token rewarded
+     * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native address
      */
-    function claimBackerRewards(address rifToken_, GaugeRootstockCollective[] memory gauges_) external {
+    function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external {
         uint256 _length = gauges_.length;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
             if (_builderRegistry.gaugeToBuilder(gauges_[i]) == address(0)) {
                 revert BuilderRegistryRootstockCollective.GaugeDoesNotExist();
             }
-            gauges_[i].claimBackerReward(rifToken_, msg.sender);
+            gauges_[i].claimBackerReward(rewardToken_, msg.sender);
         }
     }
 

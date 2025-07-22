@@ -73,7 +73,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // ---------- Storage ----------
     // -----------------------------
 
-    /// @notice address of the token rewarded to builder and voters
+    /// @notice address of rif token rewarded to builder and backers
     address public rifToken;
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
@@ -93,7 +93,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -------- V2 Storage ---------
     // -----------------------------
 
-    /// @notice address of the token rewarded to builder and voters
+    /// @notice address of usdRif token rewarded to builder and backers
     address public usdrifToken;
 
     // -----------------------------
@@ -108,9 +108,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice contract initializer
      * @param rifToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20
-     * @param usdrifToken_ address of the USDRIF token rewarded to builder and voters. Only tokens that adhere to the
-     * ERC-20
      * standard are supported.
+     * @param usdrifToken_ address of the USDRIF token rewarded to builder and voters. Only tokens that adhere to the
+     * ERC-20 standard are supported.
      * @notice For more info on supported tokens, see:
      * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
      * @param builderRegistry_ address of the builder registry contract

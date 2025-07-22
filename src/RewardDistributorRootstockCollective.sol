@@ -37,7 +37,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     // ---------- Storage ----------
     // -----------------------------
 
-    /// @notice address of the token rewarded to builder and backers
+    /// @notice address of rif token rewarded to builder and backers
     IERC20 public rifToken;
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
@@ -134,12 +134,12 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /**
      * @notice sets the default reward amounts
      * @dev reverts if is not called by foundation treasury address
-     * @param tokenAmount_ default amount of ERC20 rif token to send
+     * @param rifTokenAmount_ default amount of ERC20 rif token to send
      * @param usdrifTokenAmount_ default amount of ERC20 usdrif token to send
      * @param nativeAmount_ default amount of Native token to send
      */
     function setDefaultRewardAmount(
-        uint256 tokenAmount_,
+        uint256 rifTokenAmount_,
         uint256 usdrifTokenAmount_,
         uint256 nativeAmount_
     )
@@ -147,7 +147,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         payable
         onlyFoundationTreasury
     {
-        defaultRifAmount = tokenAmount_;
+        defaultRifAmount = rifTokenAmount_;
         defaultUsdrifAmount = usdrifTokenAmount_;
         defaultNativeAmount = nativeAmount_;
     }
