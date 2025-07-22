@@ -44,7 +44,7 @@ contract Deploy is Broadcaster {
         returns (BackersManagerRootstockCollective, BackersManagerRootstockCollective)
     {
         require(governanceManager_ != address(0), "Governance Manager address cannot be empty");
-        require(rifToken_ != address(0), "Reward token address cannot be empty");
+        require(rifToken_ != address(0), "Rif token address cannot be empty");
         require(stakingToken_ != address(0), "Staking token address cannot be empty");
 
         bytes memory _initializerData = abi.encodeCall(

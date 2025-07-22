@@ -195,7 +195,7 @@ contract BackersManagerRootstockCollective is
     /**
      * @notice contract version 3 initializer
      * @param maxDistributionsPerBatch_ maximum number of distributions allowed per batch
-     * @param usdrifToken_ address of the USDRIF reward token
+     * @param usdrifToken_ address of the USDRIF token
      */
     function initializeV3(uint256 maxDistributionsPerBatch_, address usdrifToken_) external reinitializer(3) {
         if (address(usdrifToken_) == address(0)) revert ZeroAddressNotAllowed();
@@ -296,6 +296,8 @@ contract BackersManagerRootstockCollective is
      * @notice transfers reward tokens from the sender to be distributed to the gauges
      * @dev reverts if it is called during the distribution period
      *  reverts if there are no gauges available for the distribution
+     * @param amountRif_ amount of ERC20 rif token to send
+     * @param amountUsdrif_ amount of ERC20 usdrif token to send
      */
     function notifyRewardAmount(uint256 amountRif_, uint256 amountUsdrif_) external payable notInDistributionPeriod {
         if (builderRegistry.getGaugesLength() == 0) revert NoGaugesForDistribution();
@@ -564,6 +566,7 @@ contract BackersManagerRootstockCollective is
      * @notice internal function used to distribute reward tokens to a gauge
      * @param gauge_ address of the gauge to distribute
      * @param rewardsRif_ ERC20 rewards to distribute
+     * @param rewardsUsdrif_ ERC20 usdrif rewards to distribute
      * @param rewardsNative_ Native rewards to distribute
      * @param totalPotentialReward_ cached total potential reward
      * @param periodFinish_ cached period finish
@@ -622,11 +625,11 @@ contract BackersManagerRootstockCollective is
     }
 
     /**
-     * @notice approves rifTokens to a given gauge
+     * @notice approves RIF tokens to a given gauge
      * @dev give full allowance when it is community approved and remove it when it is community banned
-     * reverts if the reward token contract returns false on the approval
-     * @param gauge_ gauge contract to approve rifTokens
-     * @param value_ amount of rifTokens to approve
+     * reverts if the RIF ERC-20 contract returns false on the approval
+     * @param gauge_ gauge contract to approve RIF tokens
+     * @param value_ amount of RIF tokens to approve
      */
     function rifTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
         if (!IERC20(rifToken).approve(gauge_, value_) || !IERC20(usdrifToken).approve(gauge_, value_)) {

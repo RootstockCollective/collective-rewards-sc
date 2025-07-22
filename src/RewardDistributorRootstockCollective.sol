@@ -41,9 +41,9 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     IERC20 public rifToken;
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
-    ///@notice default reward token amount
+    ///@notice default RIF amount to be distributed per cycle
     uint256 public defaultRifAmount;
-    ///@notice default reward native amount
+    ///@notice default native amount to be distributed per cycle
     uint256 public defaultNativeAmount;
     uint256 public lastFundedCycleStart;
 
@@ -53,7 +53,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
 
     /// @notice address of the usdrif token rewarded to builder and backers
     IERC20 public usdrifToken;
-    ///@notice default reward token amount
+    ///@notice default USDRIF amount to be distributed per cycle
     uint256 public defaultUsdrifAmount;
 
     // -----------------------------
@@ -94,8 +94,9 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /**
      * @notice sends rewards to backersManager contract to be distributed to the gauges
      * @dev reverts if is not called by foundation treasury address
-     * @param amountRif_ amount of ERC20 reward token to send
-     * @param amountNative_ amount of Native reward token to send
+     * @param amountRif_ amount of ERC20 rif token to send
+     * @param amountUsdrif_ amount of ERC20 usdrif token to send
+     * @param amountNative_ amount of Native token to send
      */
     function sendRewards(
         uint256 amountRif_,
@@ -113,8 +114,9 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @notice sends rewards to backersManager contract and starts the distribution to the gauges
      * @dev reverts if is not called by foundation treasury address
      *  reverts if is not in the distribution window
-     * @param amountRif_ amount of ERC20 reward token to send
-     * @param amountNative_ amount of Native reward token to send
+     * @param amountRif_ amount of ERC20 rif token to send
+     * @param amountUsdrif_ amount of ERC20 usdrif token to send
+     * @param amountNative_ amount of Native token to send
      */
     function sendRewardsAndStartDistribution(
         uint256 amountRif_,
@@ -132,8 +134,9 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /**
      * @notice sets the default reward amounts
      * @dev reverts if is not called by foundation treasury address
-     * @param tokenAmount_ default amount of ERC20 reward token to send
-     * @param nativeAmount_ default amount of Native reward token to send
+     * @param tokenAmount_ default amount of ERC20 rif token to send
+     * @param usdrifTokenAmount_ default amount of ERC20 usdrif token to send
+     * @param nativeAmount_ default amount of Native token to send
      */
     function setDefaultRewardAmount(
         uint256 tokenAmount_,
@@ -172,8 +175,9 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
 
     /**
      * @notice internal function to send rewards to backersManager contract
-     * @param amountRif_ amount of ERC20 reward token to send
-     * @param amountNative_ amount of Native reward token to send
+     * @param amountRif_ amount of ERC20 rif token to send
+     * @param amountUsdrif_ amount of ERC20 usdrif token to send
+     * @param amountNative_ amount of Native token to send
      */
     function _sendRewards(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_) internal {
         rifToken.approve(address(backersManager), amountRif_);
