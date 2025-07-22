@@ -44,7 +44,7 @@ contract Deploy is Broadcaster, OutputWriter {
         _cycleStartOffset = uint24(vm.envUint("CYCLE_START_OFFSET"));
         _distributionDuration = uint32(vm.envUint("DISTRIBUTION_DURATION"));
         _rewardPercentageCooldown = uint128(vm.envUint("REWARD_PERCENTAGE_COOLDOWN"));
-        _maxDistributionsPerBatch = uint256(vm.envUint("MAX_DISTRIBUTION_PER_BATCH"));
+        _maxDistributionsPerBatch = vm.envUint("MAX_DISTRIBUTION_PER_BATCH");
 
         outputWriterSetup();
     }
