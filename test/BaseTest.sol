@@ -86,13 +86,14 @@ contract BaseTest is Test {
         (backersManager, backersManagerImpl) = new BackersManagerRootstockCollectiveDeployer().run(
             address(governanceManager),
             address(rifToken),
+            address(usdrifToken),
             address(stakingToken),
             cycleDuration,
             cycleStartOffset,
-            distributionDuration
+            distributionDuration,
+            maxDistributionsPerBatch
         );
 
-        backersManager.initializeV3(maxDistributionsPerBatch, address(usdrifToken));
         rewardDistributor.initializeCollectiveRewardsAddresses(address(backersManager));
 
         (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer().run(

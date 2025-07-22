@@ -81,10 +81,12 @@ contract Deploy is Broadcaster, OutputWriter {
         = new BackersManagerRootstockCollectiveDeployer().run(
             address(_governanceManagerProxy),
             _rifTokenAddress,
+            _usdrifTokenAddress,
             _stakingTokenAddress,
             _cycleDuration,
             _cycleStartOffset,
-            _distributionDuration
+            _distributionDuration,
+            _maxDistributionsPerBatch
         );
         saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
 
@@ -104,7 +106,6 @@ contract Deploy is Broadcaster, OutputWriter {
         vm.broadcast();
 
         _backersManagerProxy.initializeBuilderRegistry(_builderRegistryProxy);
-        _backersManagerProxy.initializeV3(_maxDistributionsPerBatch, _usdrifTokenAddress);
 
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
     }

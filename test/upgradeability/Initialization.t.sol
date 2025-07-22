@@ -16,10 +16,12 @@ contract InitializationTest is BaseTest {
         backersManager.initialize(
             governanceManager,
             address(rifToken),
+            address(usdrifToken),
             address(stakingToken),
             cycleDuration,
             cycleStartOffset,
-            distributionDuration
+            distributionDuration,
+            maxDistributionsPerBatch
         );
     }
 

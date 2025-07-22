@@ -151,6 +151,7 @@ contract BackersManagerRootstockCollective is
      * @notice contract initializer
      * @param governanceManager_ contract with permissioned roles
      * @param rifToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20
+     * @param usdrifToken_ address of the USDRIF token rewarded to builder and voters. Only tokens that adhere to the
      * standard are supported.
      * @notice For more info on supported tokens, see:
      * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
@@ -158,14 +159,17 @@ contract BackersManagerRootstockCollective is
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
      * @param distributionDuration_ duration of the distribution window
+     * @param maxDistributionsPerBatch_ maximum number of distributions allowed per batch
      */
     function initialize(
         IGovernanceManagerRootstockCollective governanceManager_,
         address rifToken_,
+        address usdrifToken_,
         address stakingToken_,
         uint32 cycleDuration_,
         uint24 cycleStartOffset_,
-        uint32 distributionDuration_
+        uint32 distributionDuration_,
+        uint256 maxDistributionsPerBatch_
     )
         external
         initializer
@@ -174,8 +178,10 @@ contract BackersManagerRootstockCollective is
             governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
         );
         rifToken = rifToken_;
+        usdrifToken = usdrifToken_;
         stakingToken = IERC20(stakingToken_);
         _periodFinish = cycleNext(block.timestamp);
+        maxDistributionsPerBatch = maxDistributionsPerBatch_;
     }
 
     /**
