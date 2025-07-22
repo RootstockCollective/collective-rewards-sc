@@ -1,5 +1,5 @@
 # BackersManagerRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/f946f53322702b68bdb68a4c01ed6360683360e6/src/backersManager/BackersManagerRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b0132a87539388dafe86f79d095cab28f13e5989/src/backersManager/BackersManagerRootstockCollective.sol)
 
 **Inherits:**
 [CycleTimeKeeperRootstockCollective](/src/backersManager/CycleTimeKeeperRootstockCollective.sol/abstract.CycleTimeKeeperRootstockCollective.md), [ICollectiveRewardsCheckRootstockCollective](/src/interfaces/ICollectiveRewardsCheckRootstockCollective.sol/interface.ICollectiveRewardsCheckRootstockCollective.md), ERC165Upgradeable
@@ -228,10 +228,12 @@ https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md
 function initialize(
     IGovernanceManagerRootstockCollective governanceManager_,
     address rifToken_,
+    address usdrifToken_,
     address stakingToken_,
     uint32 cycleDuration_,
     uint24 cycleStartOffset_,
-    uint32 distributionDuration_
+    uint32 distributionDuration_,
+    uint256 maxDistributionsPerBatch_
 )
     external
     initializer;
@@ -241,11 +243,13 @@ function initialize(
 |Name|Type|Description|
 |----|----|-----------|
 |`governanceManager_`|`IGovernanceManagerRootstockCollective`|contract with permissioned roles|
-|`rifToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20 standard are supported.|
+|`rifToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20|
+|`usdrifToken_`|`address`|address of the USDRIF token rewarded to builder and voters. Only tokens that adhere to the standard are supported.|
 |`stakingToken_`|`address`|address of the staking token for builder and voters|
 |`cycleDuration_`|`uint32`|Collective Rewards cycle time duration|
 |`cycleStartOffset_`|`uint24`|offset to add to the first cycle, used to set an specific day to start the cycles|
 |`distributionDuration_`|`uint32`|duration of the distribution window|
+|`maxDistributionsPerBatch_`|`uint256`|maximum number of distributions allowed per batch|
 
 
 ### initializeBuilderRegistry
@@ -276,7 +280,7 @@ function initializeV3(uint256 maxDistributionsPerBatch_, address usdrifToken_) e
 |Name|Type|Description|
 |----|----|-----------|
 |`maxDistributionsPerBatch_`|`uint256`|maximum number of distributions allowed per batch|
-|`usdrifToken_`|`address`|address of the USDRIF reward token|
+|`usdrifToken_`|`address`|address of the USDRIF token|
 
 
 ### supportsInterface
@@ -368,6 +372,13 @@ reverts if there are no gauges available for the distribution*
 ```solidity
 function notifyRewardAmount(uint256 amountRif_, uint256 amountUsdrif_) external payable notInDistributionPeriod;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amountRif_`|`uint256`|amount of ERC20 rif token to send|
+|`amountUsdrif_`|`uint256`|amount of ERC20 usdrif token to send|
+
 
 ### startDistribution
 
@@ -595,7 +606,7 @@ function _gaugeDistribute(
 |----|----|-----------|
 |`gauge_`|`GaugeRootstockCollective`|address of the gauge to distribute|
 |`rewardsRif_`|`uint256`|ERC20 rewards to distribute|
-|`rewardsUsdrif_`|`uint256`||
+|`rewardsUsdrif_`|`uint256`|ERC20 usdrif rewards to distribute|
 |`rewardsNative_`|`uint256`|Native rewards to distribute|
 |`totalPotentialReward_`|`uint256`|cached total potential reward|
 |`periodFinish_`|`uint256`|cached period finish|
@@ -648,10 +659,10 @@ function _notifyRewardAmount(address token_, address sender_, uint256 amount_) i
 
 ### rifTokenApprove
 
-approves rifTokens to a given gauge
+approves RIF tokens to a given gauge
 
 *give full allowance when it is community approved and remove it when it is community banned
-reverts if the reward token contract returns false on the approval*
+reverts if the RIF ERC-20 contract returns false on the approval*
 
 
 ```solidity
@@ -661,8 +672,8 @@ function rifTokenApprove(address gauge_, uint256 value_) external onlyBuilderReg
 
 |Name|Type|Description|
 |----|----|-----------|
-|`gauge_`|`address`|gauge contract to approve rifTokens|
-|`value_`|`uint256`|amount of rifTokens to approve|
+|`gauge_`|`address`|gauge contract to approve RIF tokens|
+|`value_`|`uint256`|amount of RIF tokens to approve|
 
 
 ### haltGaugeShares

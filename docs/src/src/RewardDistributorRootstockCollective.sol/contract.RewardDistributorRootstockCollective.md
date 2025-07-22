@@ -1,5 +1,5 @@
 # RewardDistributorRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/f946f53322702b68bdb68a4c01ed6360683360e6/src/RewardDistributorRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b0132a87539388dafe86f79d095cab28f13e5989/src/RewardDistributorRootstockCollective.sol)
 
 **Inherits:**
 [UpgradeableRootstockCollective](/src/governance/UpgradeableRootstockCollective.sol/abstract.UpgradeableRootstockCollective.md)
@@ -27,7 +27,7 @@ BackersManagerRootstockCollective public backersManager;
 
 
 ### defaultRifAmount
-default reward token amount
+default RIF amount to be distributed per cycle
 
 
 ```solidity
@@ -36,7 +36,7 @@ uint256 public defaultRifAmount;
 
 
 ### defaultNativeAmount
-default reward native amount
+default native amount to be distributed per cycle
 
 
 ```solidity
@@ -61,7 +61,7 @@ IERC20 public usdrifToken;
 
 
 ### defaultUsdrifAmount
-default reward token amount
+default USDRIF amount to be distributed per cycle
 
 
 ```solidity
@@ -161,9 +161,9 @@ function sendRewards(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`amountRif_`|`uint256`|amount of ERC20 reward token to send|
-|`amountUsdrif_`|`uint256`||
-|`amountNative_`|`uint256`|amount of Native reward token to send|
+|`amountRif_`|`uint256`|amount of ERC20 rif token to send|
+|`amountUsdrif_`|`uint256`|amount of ERC20 usdrif token to send|
+|`amountNative_`|`uint256`|amount of Native token to send|
 
 
 ### sendRewardsAndStartDistribution
@@ -188,9 +188,9 @@ function sendRewardsAndStartDistribution(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`amountRif_`|`uint256`|amount of ERC20 reward token to send|
-|`amountUsdrif_`|`uint256`||
-|`amountNative_`|`uint256`|amount of Native reward token to send|
+|`amountRif_`|`uint256`|amount of ERC20 rif token to send|
+|`amountUsdrif_`|`uint256`|amount of ERC20 usdrif token to send|
+|`amountNative_`|`uint256`|amount of Native token to send|
 
 
 ### setDefaultRewardAmount
@@ -214,9 +214,9 @@ function setDefaultRewardAmount(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`tokenAmount_`|`uint256`|default amount of ERC20 reward token to send|
-|`usdrifTokenAmount_`|`uint256`||
-|`nativeAmount_`|`uint256`|default amount of Native reward token to send|
+|`tokenAmount_`|`uint256`|default amount of ERC20 rif token to send|
+|`usdrifTokenAmount_`|`uint256`|default amount of ERC20 usdrif token to send|
+|`nativeAmount_`|`uint256`|default amount of Native token to send|
 
 
 ### sendRewardsWithDefaultAmount
@@ -253,9 +253,9 @@ function _sendRewards(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountN
 
 |Name|Type|Description|
 |----|----|-----------|
-|`amountRif_`|`uint256`|amount of ERC20 reward token to send|
-|`amountUsdrif_`|`uint256`||
-|`amountNative_`|`uint256`|amount of Native reward token to send|
+|`amountRif_`|`uint256`|amount of ERC20 rif token to send|
+|`amountUsdrif_`|`uint256`|amount of ERC20 usdrif token to send|
+|`amountNative_`|`uint256`|amount of Native token to send|
 
 
 ### receive

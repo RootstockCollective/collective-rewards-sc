@@ -358,7 +358,7 @@ Generate coverage report:
 
 ### Reward tokens
 
-The reward token for the collective incentives program is `RIF` and `USDRIF`. Only tokens that adhere to the ERC-20 standard are supported.
+The reward tokens for the collective incentives program are `RIF` and `USDRIF`. Only tokens that adhere to the ERC-20 standard are supported.
 Unsupported Token Types:
 
 - Fee-on-transfer tokens (e.g., those that deduct a fee per transfer).
