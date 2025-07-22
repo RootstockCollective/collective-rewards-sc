@@ -38,7 +38,7 @@ contract BackersManagerRootstockCollective is
     error AlreadyOptedInRewards();
     error BackerHasAllocations();
     error ZeroAddressNotAllowed();
-    error RifTokenNotApproved();
+    error RewardTokenNotApproved();
 
     // -----------------------------
     // ----------- Events ----------
@@ -631,15 +631,15 @@ contract BackersManagerRootstockCollective is
     }
 
     /**
-     * @notice approves RIF tokens to a given gauge
+     * @notice approves reward tokens to a given gauge
      * @dev give full allowance when it is community approved and remove it when it is community banned
-     * reverts if the RIF ERC-20 contract returns false on the approval
-     * @param gauge_ gauge contract to approve RIF tokens
-     * @param value_ amount of RIF tokens to approve
+     * reverts if the ERC-20 reward tokens returns false on the approval
+     * @param gauge_ gauge contract to approve reward tokens
+     * @param value_ amount to approve
      */
-    function rifTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
+    function rewardTokensApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
         if (!IERC20(rifToken).approve(gauge_, value_) || !IERC20(usdrifToken).approve(gauge_, value_)) {
-            revert RifTokenNotApproved();
+            revert RewardTokenNotApproved();
         }
     }
 

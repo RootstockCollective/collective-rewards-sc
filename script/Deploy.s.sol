@@ -107,6 +107,7 @@ contract Deploy is Broadcaster, OutputWriter {
         _backersManagerProxy.initializeBuilderRegistry(_builderRegistryProxy);
 
         vm.broadcast();
+        // Order is important here, we need to initialize the backers manager first
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
     }
 }

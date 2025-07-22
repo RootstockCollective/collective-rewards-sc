@@ -694,7 +694,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         builderState[builder_].communityApproved = true;
         gauge_ = _createGauge(builder_);
 
-        backersManager.rifTokenApprove(address(gauge_), type(uint256).max);
+        backersManager.rewardTokensApprove(address(gauge_), type(uint256).max);
 
         emit CommunityApproved(builder_);
     }
@@ -711,7 +711,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         builderState[builder_].communityApproved = false;
 
         _haltGauge(_gauge);
-        backersManager.rifTokenApprove(address(_gauge), 0);
+        backersManager.rewardTokensApprove(address(_gauge), 0);
 
         emit CommunityBanned(builder_);
     }

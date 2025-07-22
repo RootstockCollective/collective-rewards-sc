@@ -109,15 +109,15 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
      * a new quantity of allowance
      * The function will revert if called before negating the previous allowance
      */
-    function test_RevertRifTokenApprove() public {
+    function test_RevertRewardTokensApprove() public {
         // Should not revert, as the allowance is negated before approving a new amount
         vm.startPrank(address(builderRegistry));
-        backersManager.rifTokenApprove(address(gauge), 0);
-        backersManager.rifTokenApprove(address(gauge), type(uint256).max);
+        backersManager.rewardTokensApprove(address(gauge), 0);
+        backersManager.rewardTokensApprove(address(gauge), type(uint256).max);
 
         // Should revert, as the allowance is not negated before approving a new amount
-        vm.expectRevert(BackersManagerRootstockCollective.RifTokenNotApproved.selector);
-        backersManager.rifTokenApprove(address(gauge), type(uint256).max);
+        vm.expectRevert(BackersManagerRootstockCollective.RewardTokenNotApproved.selector);
+        backersManager.rewardTokensApprove(address(gauge), type(uint256).max);
     }
 
     /**

@@ -180,8 +180,9 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @param amountNative_ amount of Native token to send
      */
     function _sendRewards(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_) internal {
-        rifToken.approve(address(backersManager), amountRif_);
-        usdrifToken.approve(address(backersManager), amountUsdrif_);
+        address _backersManager = address(backersManager);
+        rifToken.approve(_backersManager, amountRif_);
+        usdrifToken.approve(_backersManager, amountUsdrif_);
         backersManager.notifyRewardAmount{ value: amountNative_ }(amountRif_, amountUsdrif_);
     }
 
