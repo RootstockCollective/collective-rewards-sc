@@ -238,6 +238,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 115_740_740_740_740);
         // THEN builderRewards is 30% of 100 ether
         assertEq(gauge.builderRewards(address(rifToken)), 30 ether);
+        // THEN builderRewards usdrifToken is 30% of 100 ether
+        assertEq(gauge.builderRewards(address(usdrifToken)), 30 ether);
 
         // AND half cycle passes
         _skipRemainingCycleFraction(2);
@@ -257,6 +259,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewardPerToken(address(usdrifToken)), 11_666_666_666_666_666_666);
         // THEN builderRewards is 30% of 100 ether
         assertEq(gauge.builderRewards(address(rifToken)), 30 ether);
+        // THEN builderRewards usdrifToken is 30% of 100 ether
+        assertEq(gauge.builderRewards(address(usdrifToken)), 30 ether);
     }
 
     /**
@@ -586,7 +590,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewardMissing(address(rifToken)) / 10 ** 18, 49_999_999_999_999_999_999);
 
         // AND 0 rifToken are distributed
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // THEN rewardRate is 0.000082671957671957 = 50 ether / 604800 sec
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 82_671_957_671_957);
@@ -937,7 +941,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
         // AND 300 rifToken are distributed
-        _distribute(300 ether, 0 ether);
+        _distribute(300 ether, 300 ether, 0);
 
         // WHEN builder claims rewards on gauge
         vm.startPrank(builder);
@@ -972,13 +976,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge, 2 ether);
 
         // AND 100 rifToken and 100 native tokens are distributed
-        _distribute(100 ether, 100 ether);
+        _distribute(100 ether, 100 ether, 100 ether);
 
         // AND half cycle passes
         _skipRemainingCycleFraction(2);
 
         // THEN builderRewards is 70 ether
         assertEq(gauge.builderRewards(address(rifToken)), 70 ether);
+        // THEN builderRewards usdrifToken is 70 ether
+        assertEq(gauge.builderRewards(address(usdrifToken)), 70 ether);
 
         // AND another cycle finish without a new distribution
         _skipAndStartNewCycle();
@@ -1006,10 +1012,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge, 1 ether);
 
         // AND 100 rifToken and 100 native tokens are distributed
-        _distribute(100 ether, 100 ether);
+        _distribute(100 ether, 100 ether, 100 ether);
 
         // THEN builderRewards is 70 ether in rifToken and 70 ether in native tokens
         assertEq(gauge.builderRewards(address(rifToken)), 70 ether);
+        // THEN builderRewards usdrifToken is 70 ether
+        assertEq(gauge.builderRewards(address(usdrifToken)), 70 ether);
         assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 70 ether);
 
         // AND another cycle finishes without a new distribution
@@ -1022,6 +1030,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(rifToken.balanceOf(builder), 70 ether);
         // THEN builderRewards in rifToken is 0
         assertEq(gauge.builderRewards(address(rifToken)), 0 ether);
+        // THEN builderRewards usdrifToken is 70 ether
+        assertEq(gauge.builderRewards(address(usdrifToken)), 70 ether);
         // THEN builder native tokens balance is 0 ether
         assertEq(builder.balance, 0 ether);
         // THEN builderRewards in native tokens is 70 ether
@@ -1042,10 +1052,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge, 1 ether);
 
         // AND 100 rifToken and 100 native tokens are distributed
-        _distribute(100 ether, 100 ether);
+        _distribute(100 ether, 100 ether, 100 ether);
 
         // THEN builderRewards is 70 ether in rifToken and 70 ether in native tokens
         assertEq(gauge.builderRewards(address(rifToken)), 70 ether);
+        // THEN builderRewards usdrifToken is 70 ether
+        assertEq(gauge.builderRewards(address(usdrifToken)), 70 ether);
         assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 70 ether);
 
         // AND another cycle finishes without a new distribution
@@ -1058,6 +1070,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(rifToken.balanceOf(builder), 0 ether);
         // THEN builderRewards in rifToken is 70 ether
         assertEq(gauge.builderRewards(address(rifToken)), 70 ether);
+        // THEN builderRewards usdrifToken is 70 ether
+        assertEq(gauge.builderRewards(address(usdrifToken)), 70 ether);
         // THEN builder native tokens balance is 70 ether
         assertEq(builder.balance, 70 ether);
         // THEN builderRewards in native tokens is 0 ether
@@ -1077,13 +1091,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge2, 2 ether);
 
         // AND 100 rifToken and 100 native tokens are distributed
-        _distribute(100 ether, 100 ether);
+        _distribute(100 ether, 100 ether, 100 ether);
 
         // AND half cycle passes
         _skipRemainingCycleFraction(2);
 
         // THEN builderRewards is 70 ether
         assertEq(gauge2.builderRewards(address(rifToken)), 70 ether);
+        // THEN builderRewards usdrifToken is 70 ether
+        assertEq(gauge2.builderRewards(address(usdrifToken)), 70 ether);
 
         // AND another cycle finishes without a new distribution
         _skipAndStartNewCycle();
@@ -1097,7 +1113,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(builder2Receiver.balance, 70 ether);
 
         // AND 100 rifToken and 100 native tokens are distributed
-        _distribute(100 ether, 100 ether);
+        _distribute(100 ether, 100 ether, 100 ether);
 
         // WHEN builder2 claims rewards
         vm.startPrank(builder2);
@@ -1122,13 +1138,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge2, 2 ether);
 
         // AND 100 rifToken and 100 native tokens are distributed
-        _distribute(100 ether, 100 ether);
+        _distribute(100 ether, 100 ether, 100 ether);
 
         // AND half cycle passes
         _skipRemainingCycleFraction(2);
 
         // THEN builderRewards is 70 ether
         assertEq(gauge2.builderRewards(address(rifToken)), 70 ether);
+        // THEN builderRewards usdrifToken is 70 ether
+        assertEq(gauge2.builderRewards(address(usdrifToken)), 70 ether);
 
         // AND another cycle finishes without a new distribution
         _skipAndStartNewCycle();
@@ -1155,7 +1173,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         builderRegistry.approveNewRewardReceiver(builder2, _newRewardReceiver);
 
         // AND 100 rifToken and 100 native tokens are distributed
-        _distribute(100 ether, 100 ether);
+        _distribute(100 ether, 100 ether, 100 ether);
 
         // WHEN newRewardReceiver claims his rewards
         vm.prank(_newRewardReceiver);
@@ -1177,7 +1195,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge, 2 ether);
 
         // AND 100 rifToken and 100 native tokens are distributed
-        _distribute(100 ether, 100 ether);
+        _distribute(100 ether, 100 ether, 100 ether);
 
         // AND 100 rifToken and 100 native tokens are distributed in the same distribution window
         vm.warp(backersManager.endDistributionWindow(block.timestamp) - 1);
@@ -1189,6 +1207,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN builderRewards rifToken is 140 ether
         assertEq(gauge.builderRewards(address(rifToken)), 140 ether);
+        // THEN builderRewards usdrifToken is 140 ether
+        assertEq(gauge.builderRewards(address(usdrifToken)), 140 ether);
         // THEN builderRewards native tokens is 140 ether
         assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 140 ether);
 
@@ -1223,13 +1243,15 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge, 2 ether);
 
         // AND 100 rifToken and 100 native tokens are distributed
-        _distribute(100 ether, 100 ether);
+        _distribute(100 ether, 100 ether, 100 ether);
 
         // AND 100 rifToken and 100 native tokens are distributed
-        _distribute(100 ether, 100 ether);
+        _distribute(100 ether, 100 ether, 100 ether);
 
         // THEN builderRewards rifToken is 140 ether
         assertEq(gauge.builderRewards(address(rifToken)), 140 ether);
+        // THEN builderRewards usdrifToken is 140 ether
+        assertEq(gauge.builderRewards(address(usdrifToken)), 140 ether);
         // THEN builderRewards native tokens is 140 ether
         assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 140 ether);
 
@@ -1267,7 +1289,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         gauge.incentivizeWithRifToken(100 ether);
 
         // AND there is a distribution
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -1397,7 +1419,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         _skipAndStartNewCycle();
 
         // AND 0 rifToken are distributed
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // AND 200 ether more are distributed for backers
         vm.prank(address(incentivizer));
@@ -1410,7 +1432,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 330_687_830_687_830);
 
         // AND 0 rifToken are distributed
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // THEN rewardRate is 0
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 0);
@@ -1474,7 +1496,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND cycle finishes
         _skipAndStartNewCycle();
         // AND 0 ether are distributed for backers
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // THEN rewardPerToken is
         // rewardPerTokenStored = 8.333333333333333333
@@ -1525,7 +1547,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewardPerToken(address(rifToken)), 8_333_333_333_333_333_333);
 
         // AND 0 ether are distributed for backers
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // THEN rewardPerToken is
         //  18.333333333333333332 = 8.333333333333333333 + 518400 / 2 * 0.000192901234567901 / 5 ether
@@ -1573,7 +1595,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewardPerToken(address(rifToken)), 8_333_333_333_333_333_333);
 
         // AND 0 ether are distributed for backers
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // THEN rewardPerToken is
         //  15.476190476190476190 = 8.333333333333333333 + 518400 / 2 * 0.000192901234567901 / 7 ether
@@ -1627,7 +1649,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewardPerToken(address(rifToken)), 24_999_999_999_999_999_999);
 
         // AND 0 ether are distributed for backers
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // AND alice allocates 1 ether
         vm.prank(alice);
@@ -1648,7 +1670,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         gauge.incentivizeWithRifToken(100 ether);
 
         // AND 0 ether are distributed for backers
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // THEN rewardRate is 0
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 0);
@@ -1758,7 +1780,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge, 5 ether);
 
         // AND 200 ether with 50% reward percentage are distributed for backers
-        _distribute(200 ether, 0);
+        _distribute(200 ether, 200 ether, 0);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -1911,7 +1933,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge, 5 ether);
 
         // WHEN there is a distribution of 200 reward token with 50% reward percentage
-        _distribute(200 ether, 0 ether);
+        _distribute(200 ether, 200 ether, 0);
 
         // THEN alice estimated rewards left to earn is
         // 16.666666666666666666 = allocation * rewardPerToken = 1 * 16.666666666666666666
@@ -1952,7 +1974,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         backersManager.allocate(gauge, 5 ether);
 
         // WHEN there is a distribution of 100 reward token with 50% reward percentage
-        _distribute(100 ether, 0 ether);
+        _distribute(100 ether, 100 ether, 0);
 
         // AND gauge is incentivized
         vm.prank(address(incentivizer));

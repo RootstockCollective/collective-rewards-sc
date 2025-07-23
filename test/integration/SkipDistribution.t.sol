@@ -34,8 +34,8 @@ contract SkipDistribution is BaseTest {
         backersManager.allocate(gauge, 2 ether);
 
         // CYCLE 2
-        // AND 100 rifTokens and 10 native tokens are distributed in next cycle
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed in next cycle
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // CYCLE 3
         // AND new cycle finishes
@@ -47,8 +47,8 @@ contract SkipDistribution is BaseTest {
         backersManager.allocate(gauge2, 1 ether);
 
         // CYCLE 4
-        // AND 100 rifTokens and 10 native tokens are distributed in next cycle
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed in next cycle
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -63,7 +63,7 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = 0 (no new distribution)
         // cycle 4 = 50 * 2 / 5 = 20
         // total = 45
-        assertEq(_clearERC20Balance(alice), 44_994_040_524_433_849_818);
+        assertEq(_clearRifBalance(alice), 44_994_040_524_433_849_818);
         // THEN alice receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5
@@ -81,7 +81,7 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = 0 (no new distribution)
         // cycle 4 = 50 * 3 / 5 = 30
         // total = 55
-        assertEq(_clearERC20Balance(bob), 55_005_959_475_566_150_175);
+        assertEq(_clearRifBalance(bob), 55_005_959_475_566_150_175);
         // THEN bob receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5
@@ -98,7 +98,7 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = 0 (no new distribution)
         // cycle 4 = 50 * 3 / 5 = 30
         // total = 67.5
-        assertEq(_clearERC20Balance(builder), 67_535_756_853_396_901_073);
+        assertEq(_clearRifBalance(builder), 67_535_756_853_396_901_073);
         // THEN gauge builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 3 / 4 = 3.75
@@ -113,7 +113,7 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = 0 (no new distribution)
         // cycle 4 = 50 * 2 / 5 = 20
         // total = 32.5
-        assertEq(_clearERC20Balance(builder2Receiver), 32_464_243_146_603_098_927);
+        assertEq(_clearRifBalance(builder2Receiver), 32_464_243_146_603_098_927);
         // THEN gauge2 builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 1 / 4 = 1.25
@@ -146,8 +146,8 @@ contract SkipDistribution is BaseTest {
         backersManager.allocate(gauge, 2 ether);
 
         // CYCLE 2
-        // AND 100 rifTokens and 10 native tokens are distributed in next cycle
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed in next cycle
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // CYCLE 3
         // AND new cycle finishes
@@ -162,8 +162,8 @@ contract SkipDistribution is BaseTest {
         backersManager.allocate(gauge2, 1 ether);
 
         // CYCLE 5
-        // AND 100 rifTokens and 10 native tokens are distributed in next cycle
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed in next cycle
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -179,7 +179,7 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 0 (no new distribution)
         // cycle 5 = 50 * 2 / 5 = 20
         // total = 45
-        assertEq(_clearERC20Balance(alice), 44_994_040_524_433_849_818);
+        assertEq(_clearRifBalance(alice), 44_994_040_524_433_849_818);
         // THEN alice receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5
@@ -199,7 +199,7 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 0 (no new distribution)
         // cycle 5 = 50 * 3 / 5 = 30
         // total = 55
-        assertEq(_clearERC20Balance(bob), 55_005_959_475_566_150_175);
+        assertEq(_clearRifBalance(bob), 55_005_959_475_566_150_175);
         // THEN bob receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5
@@ -218,7 +218,7 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 0 (no new distribution)
         // cycle 5 = 50 * 3 / 5 = 30
         // total = 67.5
-        assertEq(_clearERC20Balance(builder), 67_535_756_853_396_901_073);
+        assertEq(_clearRifBalance(builder), 67_535_756_853_396_901_073);
         // THEN gauge builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 3 / 4 = 3.75
@@ -235,7 +235,7 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 0 (no new distribution)
         // cycle 5 = 50 * 2 / 5 = 20
         // total = 32.5
-        assertEq(_clearERC20Balance(builder2Receiver), 32_464_243_146_603_098_927);
+        assertEq(_clearRifBalance(builder2Receiver), 32_464_243_146_603_098_927);
         // THEN gauge2 builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 1 / 4 = 1.25
@@ -268,8 +268,8 @@ contract SkipDistribution is BaseTest {
         backersManager.allocate(gauge, 2 ether);
 
         // CYCLE 2
-        // AND 100 rifTokens and 10 native tokens are distributed in next cycle
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed in next cycle
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND half an cycle passes
         _skipRemainingCycleFraction(2);
         // AND alice removes all votes
@@ -293,8 +293,8 @@ contract SkipDistribution is BaseTest {
         vm.stopPrank();
 
         // CYCLE 4
-        // AND 100 rifTokens and 10 native tokens are distributed in next cycle
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed in next cycle
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND cycle finishes
         _skipAndStartNewCycle();
 
@@ -308,7 +308,7 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = (50 / 2) * 2 / 2 = 25 (missingRewards)
         // cycle 4 = 50 * 2 / 2 = 50
         // total = 87.5
-        assertEq(_clearERC20Balance(alice), 87_499_999_999_999_999_995);
+        assertEq(_clearRifBalance(alice), 87_499_999_999_999_999_995);
         // THEN alice receives native tokens
         // cycle 1 = 0
         // cycle 2 = (5 / 2) * 2 / 4 = 1.25
@@ -326,7 +326,7 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = 0
         // cycle 4 = 0
         // total = 12.5
-        assertEq(_clearERC20Balance(bob), 12_499_999_999_999_999_998);
+        assertEq(_clearRifBalance(bob), 12_499_999_999_999_999_998);
         // THEN bob receives native tokens
         // cycle 1 = 0
         // cycle 2 = (5 / 2) * 2 / 4 = 1.25
@@ -343,7 +343,7 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = 0 (shares are not updated since there are is no distribution)
         // cycle 4 = 50 * 2 / 3 = 33.33 (3 votes for half of cycle 2 and 1 vote por half of cycle 3)
         // total = 70.08
-        assertEq(_clearERC20Balance(builder), 70_833_333_333_333_333_333);
+        assertEq(_clearRifBalance(builder), 70_833_333_333_333_333_333);
         // THEN gauge builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 3 / 4 = 3.75
@@ -358,7 +358,7 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = 0 (shares are not updated since there are is no distribution)
         // cycle 4 = 50 * 1 / 3 = 16.66 (1 vote for half of cycle 2 and 1 vote por half of cycle 3)
         // total = 29.16
-        assertEq(_clearERC20Balance(builder2Receiver), 29_166_666_666_666_666_667);
+        assertEq(_clearRifBalance(builder2Receiver), 29_166_666_666_666_666_667);
         // THEN gauge2 builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 1 / 4 = 1.25
@@ -390,8 +390,8 @@ contract SkipDistribution is BaseTest {
         backersManager.allocate(gauge, 2 ether);
 
         // CYCLE 2
-        // AND 100 rifTokens and 10 native tokens are distributed in next cycle
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed in next cycle
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND half an cycle passes
         _skipRemainingCycleFraction(2);
         // AND alice removes all votes
@@ -419,8 +419,8 @@ contract SkipDistribution is BaseTest {
         _skipAndStartNewCycle();
 
         // CYCLE 5
-        // AND 100 rifTokens and 10 native tokens are distributed in next cycle
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed in next cycle
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND cycle finishes
         _skipAndStartNewCycle();
 
@@ -435,7 +435,7 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = (50 / 2) * 2 / 2 = 25 (missingRewards)
         // cycle 5 = 50 * 2 / 2 = 50
         // total = 87.5
-        assertEq(_clearERC20Balance(alice), 87_499_999_999_999_999_995);
+        assertEq(_clearRifBalance(alice), 87_499_999_999_999_999_995);
         // THEN alice receives native tokens
         // cycle 1 = 0
         // cycle 2 = (5 / 2) * 2 / 4 = 1.25
@@ -455,7 +455,7 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 0
         // cycle 5 = 0
         // total = 12.5
-        assertEq(_clearERC20Balance(bob), 12_499_999_999_999_999_998);
+        assertEq(_clearRifBalance(bob), 12_499_999_999_999_999_998);
         // THEN bob receives native tokens
         // cycle 1 = 0
         // cycle 2 = (50 / 2) * 2 / 4 = 1.25
@@ -474,7 +474,7 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 0
         // cycle 5 = 50 * 2 / 3 = 33.33 (3 votes for half of cycle 2 and 1 vote por half of cycle 3)
         // total = 70.08
-        assertEq(_clearERC20Balance(builder), 70_833_333_333_333_333_333);
+        assertEq(_clearRifBalance(builder), 70_833_333_333_333_333_333);
         // THEN gauge builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 3 / 4 = 3.75
@@ -491,7 +491,7 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 0
         // cycle 5 = 50 * 1 / 3 = 16.66 (1 vote for half of cycle 2 and 1 vote por half of cycle 3)
         // total = 29.16
-        assertEq(_clearERC20Balance(builder2Receiver), 29_166_666_666_666_666_667);
+        assertEq(_clearRifBalance(builder2Receiver), 29_166_666_666_666_666_667);
         // THEN gauge2 builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 1 / 4 = 1.25
@@ -520,7 +520,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 2
         // AND there is a distribution - won't affect gauge, only gauge2
-        _distribute(100, 0);
+        _distribute(100, 0, 0);
 
         // AND gauge is incentivized
         _incentivize(gauge, 100 ether, 100 ether, 0);
@@ -543,7 +543,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 4
         // AND there is a distribution
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // AND builder unpauses himself again
         vm.prank(builder);
@@ -555,7 +555,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 5
         // AND there is a distribution
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -567,12 +567,12 @@ contract SkipDistribution is BaseTest {
         // THEN alice receives rifToken
         // cycle 5 = 100 (missingRewards)
         // total = 100
-        assertEq(_clearERC20Balance(alice), 99_999_999_999_999_999_999);
+        assertEq(_clearRifBalance(alice), 99_999_999_999_999_999_999);
 
         // WHEN all the builders claim
         _buildersClaim();
         // THEN gauge builder receives 0 rifToken since it only got incentives for sponsors
-        assertEq(_clearERC20Balance(builder), 0);
+        assertEq(_clearRifBalance(builder), 0);
     }
 
     /**
@@ -592,7 +592,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 2
         // AND there is a distribution - won't affect gauge, only gauge2
-        _distribute(100 ether, 0);
+        _distribute(100 ether, 0, 0);
 
         // AND gauge is incentivized
         _incentivize(gauge, 100 ether, 100 ether, 0);
@@ -609,7 +609,7 @@ contract SkipDistribution is BaseTest {
         _skipAndStartNewCycle();
         // CYCLE 4
         // AND there is a distribution
-        _distribute(0, 0);
+        _distribute(0, 0, 0);
 
         // AND builder is self unpaused again
         vm.prank(builder);
@@ -621,7 +621,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 5
         // AND there is a distribution
-        _distribute(100 ether, 0 ether);
+        _distribute(100 ether, 0, 0);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -634,7 +634,7 @@ contract SkipDistribution is BaseTest {
         // cycle 1 = 50
         // cycle 5 = 50 / 2 * 1 = 25
         // total = 75
-        assertEq(_clearERC20Balance(bob), 74_999_999_999_999_999_998);
+        assertEq(_clearRifBalance(bob), 74_999_999_999_999_999_998);
 
         // WHEN alice claims the rewards
         vm.prank(alice);
@@ -643,18 +643,18 @@ contract SkipDistribution is BaseTest {
         // cycle 2 = 100 (incentive)
         // cycle 5 = 50 / 2 * 1 = 25
         // total = 125
-        assertEq(_clearERC20Balance(alice), 124_999_999_999_999_999_998);
+        assertEq(_clearRifBalance(alice), 124_999_999_999_999_999_998);
 
         // WHEN all the builders claim
         _buildersClaim();
         // THEN gauge builder receives rifToken
         // cycle 5 = 50 / 2 = 25
-        assertEq(_clearERC20Balance(builder), 25_000_000_000_000_000_000);
+        assertEq(_clearRifBalance(builder), 25_000_000_000_000_000_000);
         // THEN gauge builder receives rifToken
         // cycle 1 = 50
         // cycle 5 = 50 / 2
         // total = 75
-        assertEq(_clearERC20Balance(builder2Receiver), 75_000_000_000_000_000_000);
+        assertEq(_clearRifBalance(builder2Receiver), 75_000_000_000_000_000_000);
     }
 
     /**
@@ -673,7 +673,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 2
         // AND there is a distribution - won't affect gauge, only gauge2
-        _distribute(100, 0);
+        _distribute(100, 0, 0);
 
         // AND gauge is incentivized
         _incentivize(gauge, 100 ether, 100 ether, 0);
@@ -694,7 +694,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 4
         // AND there is a distribution
-        _distribute(100, 0);
+        _distribute(100, 0, 0);
 
         //CYCLE 5
         _skipAndStartNewCycle();
@@ -702,12 +702,12 @@ contract SkipDistribution is BaseTest {
         // THEN alice gets no rewards
         vm.prank(alice);
         backersManager.claimBackerRewards(gaugesArray);
-        assertEq(_clearERC20Balance(alice), 0);
+        assertEq(_clearRifBalance(alice), 0);
 
         // WHEN all the builders claim
         _buildersClaim();
         // THEN gauge builder receives 0 rifToken since it only got incentives
-        assertEq(_clearERC20Balance(builder), 17);
+        assertEq(_clearRifBalance(builder), 17);
     }
 
     /**
@@ -727,7 +727,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 2
         // AND there is a distribution - won't affect gauge, only gauge2
-        _distribute(100 ether, 0);
+        _distribute(100 ether, 0, 0);
 
         // AND gauge is incentivized
         _incentivize(gauge, 100 ether, 100 ether, 0);
@@ -750,7 +750,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 5
         // AND there is a distribution
-        _distribute(100 ether, 0);
+        _distribute(100 ether, 0, 0);
 
         // CYCLE 6
         // AND cycle finishes
@@ -759,12 +759,12 @@ contract SkipDistribution is BaseTest {
         // THEN alice gets no rewards
         vm.prank(alice);
         backersManager.claimBackerRewards(gaugesArray);
-        assertEq(_clearERC20Balance(alice), 0);
+        assertEq(_clearRifBalance(alice), 0);
 
         // WHEN all the builders claim
         _buildersClaim();
         // THEN gauge builder receives 0 rifToken since it only got incentives
-        assertEq(_clearERC20Balance(builder), 0);
+        assertEq(_clearRifBalance(builder), 0);
     }
 
     /**
@@ -792,8 +792,8 @@ contract SkipDistribution is BaseTest {
         backersManager.allocate(gauge2, 1 ether);
 
         // CYCLE 3
-        // AND 100 rifTokens and 10 native tokens are distributed in next cycle
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed in next cycle
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -806,7 +806,7 @@ contract SkipDistribution is BaseTest {
         // cycle 2 = 0
         // cycle 3 = 50 * 1 / 2 = 25
         // total = 25
-        assertEq(_clearERC20Balance(builder), 25_000_000_000_000_000_000);
+        assertEq(_clearRifBalance(builder), 25_000_000_000_000_000_000);
         // THEN gauge builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 0
@@ -819,7 +819,7 @@ contract SkipDistribution is BaseTest {
         // cycle 2 = 0
         // cycle 3 = 50 * 1 / 2 = 25
         // total = 25
-        assertEq(_clearERC20Balance(builder2Receiver), 25_000_000_000_000_000_000);
+        assertEq(_clearRifBalance(builder2Receiver), 25_000_000_000_000_000_000);
         // THEN gauge2 builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 0
@@ -877,8 +877,8 @@ contract SkipDistribution is BaseTest {
         assertFalse(backersManager.onDistributionPeriod());
 
         // CYCLE 4
-        // AND 100 rifTokens and 10 native tokens are distributed in next cycle
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed in next cycle
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -893,7 +893,7 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = 50 * 2 / 4 = 25 (should not have received this rewards)
         // cycle 4 = 50 * 2 / 4 = 25
         // total = 75
-        assertEq(_clearERC20Balance(alice), 74_999_999_999_999_999_996);
+        assertEq(_clearRifBalance(alice), 74_999_999_999_999_999_996);
         // THEN alice receives more native tokens than she should
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5
@@ -911,7 +911,7 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = 50 * 2 / 4 = 25 (should not have received these rewards)
         // cycle 4 = 50 * 2 / 4 = 25
         // total = 75
-        assertEq(_clearERC20Balance(bob), 74_999_999_999_999_999_996);
+        assertEq(_clearRifBalance(bob), 74_999_999_999_999_999_996);
         // THEN bob receives more native tokens than he should
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5

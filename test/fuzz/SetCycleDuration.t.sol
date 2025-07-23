@@ -23,7 +23,7 @@ contract SetCycleDurationFuzzTest is BaseFuzz {
         _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         // AND there is a distribution
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
         // AND governor sets a random cycle duration and offset
         vm.prank(governor);
         backersManager.setCycleDuration(newCycleDuration_, cycleStartOffset_);
@@ -49,7 +49,7 @@ contract SetCycleDurationFuzzTest is BaseFuzz {
         assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks);
 
         // AND there is a distribution
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is newCycleDuration_ + cycleStartOffset_
@@ -62,7 +62,7 @@ contract SetCycleDurationFuzzTest is BaseFuzz {
         assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + newCycleDuration_ + cycleStartOffset_);
 
         // AND there is a distribution
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is the new random cycle duration
         assertEq(_cycleDuration, newCycleDuration_);
@@ -79,6 +79,9 @@ contract SetCycleDurationFuzzTest is BaseFuzz {
         // THEN they receive the rewards after deducting the backers reward percentage
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             assertApproxEqAbs(rifToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 3, i), 100);
+            assertApproxEqAbs(
+                usdrifToken.balanceOf(builders[i]), _calcBuilderReward(URT_DISTRIBUTION_AMOUNT * 3, i), 100
+            );
             assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT * 3, i), 100);
         }
 
@@ -95,6 +98,11 @@ contract SetCycleDurationFuzzTest is BaseFuzz {
                 rifToken.balanceOf(backersArray[i]), _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 3, i), 0.000000001 ether
             );
             assertApproxEqAbs(
+                usdrifToken.balanceOf(backersArray[i]),
+                _calcBackerReward(URT_DISTRIBUTION_AMOUNT * 3, i),
+                0.000000001 ether
+            );
+            assertApproxEqAbs(
                 backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 3, i), 0.000000001 ether
             );
         }
@@ -102,6 +110,7 @@ contract SetCycleDurationFuzzTest is BaseFuzz {
         // THEN gauges balances are empty
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             assertApproxEqAbs(rifToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
+            assertApproxEqAbs(usdrifToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
             assertApproxEqAbs(address(gaugesArray[i]).balance, 0, 0.000000001 ether);
         }
     }

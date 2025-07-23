@@ -185,21 +185,14 @@ contract BaseTest is Test {
         vm.prank(bob);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
-        // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken and 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
     }
 
     /**
      * @notice skips to new cycle and executes a distribution.
-     */
-    function _distribute(uint256 amountRif_, uint256 amountNative_) internal {
-        _distribute(amountRif_, amountRif_, amountNative_);
-    }
-
-    /**
-     * @notice skips to new cycle and executes a distribution with usdrif tokens.
      */
     function _distribute(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_) internal {
         _skipToStartDistributionWindow();
@@ -252,15 +245,15 @@ contract BaseTest is Test {
     }
 
     /**
-     * @notice returns reward token balance and clear it.
+     * @notice returns rif reward token balance and clear it.
      *  Used to simplify maths and asserts considering only tokens received
      */
-    function _clearERC20Balance(address address_) internal returns (uint256) {
+    function _clearRifBalance(address address_) internal returns (uint256) {
         return _clearBalance(address_, rifToken);
     }
 
     /**
-     * @notice returns usdrifReward token balance and clear it.
+     * @notice returns usdrif reward token balance and clear it.
      *  Used to simplify maths and asserts considering only tokens received
      */
     function _clearUsdrifBalance(address address_) internal returns (uint256) {

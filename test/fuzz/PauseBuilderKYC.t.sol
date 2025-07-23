@@ -37,7 +37,7 @@ contract PauseBuilderKYCFuzzTest is BaseFuzz {
         _randomUnpause(seed_);
 
         // AND there is a distribution
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND unpaused builders claims their rewards
         for (uint256 i = 0; i < builders.length; i++) {
@@ -46,6 +46,9 @@ contract PauseBuilderKYCFuzzTest is BaseFuzz {
                 gaugesArray[i].claimBuilderReward();
                 // THEN they receive the rewards after deducting the backers reward percentage
                 assertApproxEqAbs(rifToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT, i), 100);
+                assertApproxEqAbs(
+                    usdrifToken.balanceOf(builders[i]), _calcBuilderReward(URT_DISTRIBUTION_AMOUNT, i), 100
+                );
                 assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT, i), 100);
             } else {
                 vm.prank(builders[i]);
@@ -66,6 +69,9 @@ contract PauseBuilderKYCFuzzTest is BaseFuzz {
             // THEN they receive the rewards
             assertApproxEqAbs(
                 rifToken.balanceOf(backersArray[i]), _calcBackerReward(RT_DISTRIBUTION_AMOUNT, i), 0.000000001 ether
+            );
+            assertApproxEqAbs(
+                usdrifToken.balanceOf(backersArray[i]), _calcBackerReward(URT_DISTRIBUTION_AMOUNT, i), 0.000000001 ether
             );
             assertApproxEqAbs(backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT, i), 0.000000001 ether);
         }
@@ -95,7 +101,7 @@ contract PauseBuilderKYCFuzzTest is BaseFuzz {
         _randomPause(seed_);
 
         // AND there is a distribution
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND a random time passes
         skip(randomTime_);
@@ -104,7 +110,7 @@ contract PauseBuilderKYCFuzzTest is BaseFuzz {
         _randomUnpause(seed_);
 
         // AND there is a distribution
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND unpaused builders claims their rewards
         for (uint256 i = 0; i < builders.length; i++) {
@@ -114,6 +120,9 @@ contract PauseBuilderKYCFuzzTest is BaseFuzz {
                 // THEN they receive the rewards after deducting the backers reward percentage
                 assertApproxEqAbs(
                     rifToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 2, i), 100
+                );
+                assertApproxEqAbs(
+                    usdrifToken.balanceOf(builders[i]), _calcBuilderReward(URT_DISTRIBUTION_AMOUNT * 2, i), 100
                 );
                 assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT * 2, i), 100);
             } else {
@@ -135,6 +144,11 @@ contract PauseBuilderKYCFuzzTest is BaseFuzz {
             // THEN they receive the rewards
             assertApproxEqAbs(
                 rifToken.balanceOf(backersArray[i]), _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether
+            );
+            assertApproxEqAbs(
+                usdrifToken.balanceOf(backersArray[i]),
+                _calcBackerReward(URT_DISTRIBUTION_AMOUNT * 2, i),
+                0.000000001 ether
             );
             assertApproxEqAbs(
                 backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether

@@ -61,7 +61,7 @@ contract CommunityBanBuilderTest is HaltedBuilderBehavior {
         //    AND builder is community banned
         _initialState();
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builders claim rewards
         _buildersClaim();

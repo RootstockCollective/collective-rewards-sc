@@ -195,18 +195,18 @@ contract SetCycleDurationTest is BaseTest {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a new cycle duration of 3 weeks
         vm.prank(governor);
         backersManager.setCycleDuration(3 weeks, 0 days);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 3 weeks
         assertEq(_cycleDuration, 3 weeks);
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // THEN cycles start time is 3 weeks ago
         assertEq(_cycleStart, block.timestamp - 3 weeks);
@@ -244,7 +244,7 @@ contract SetCycleDurationTest is BaseTest {
         // WHEN builder claim rewards
         _buildersClaim();
         // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
-        assertEq(_clearERC20Balance(builder), 18.75 ether);
+        assertEq(_clearRifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
         assertEq(_clearUsdrifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
@@ -254,7 +254,7 @@ contract SetCycleDurationTest is BaseTest {
         vm.prank(alice);
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
+        assertApproxEqAbs(_clearRifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
@@ -268,18 +268,18 @@ contract SetCycleDurationTest is BaseTest {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a new cycle duration of 0.5 weeks
         vm.prank(governor);
         backersManager.setCycleDuration(0.5 weeks, 0 days);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         // THEN cycle duration is 0.5 week
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         assertEq(_cycleDuration, 0.5 weeks);
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // THEN cycles start time is 0.5 weeks ago
         assertEq(_cycleStart, block.timestamp - 0.5 weeks);
@@ -317,7 +317,7 @@ contract SetCycleDurationTest is BaseTest {
         // WHEN builder claim rewards
         _buildersClaim();
         // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
-        assertEq(_clearERC20Balance(builder), 18.75 ether);
+        assertEq(_clearRifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
         assertEq(_clearUsdrifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
@@ -327,7 +327,7 @@ contract SetCycleDurationTest is BaseTest {
         vm.prank(alice);
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
+        assertApproxEqAbs(_clearRifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
@@ -341,13 +341,13 @@ contract SetCycleDurationTest is BaseTest {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a same cycle duration of 1 weeks adding an offset of 3 days
         vm.prank(governor);
         backersManager.setCycleDuration(1 weeks, 3 days);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1 week + 3 days
         assertEq(_cycleDuration, 1 weeks + 3 days);
@@ -359,7 +359,7 @@ contract SetCycleDurationTest is BaseTest {
         assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks + 3 days);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1 week
         assertEq(_cycleDuration, 1 weeks);
@@ -376,7 +376,7 @@ contract SetCycleDurationTest is BaseTest {
         // WHEN builder claim rewards
         _buildersClaim();
         // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
-        assertEq(_clearERC20Balance(builder), 18.75 ether);
+        assertEq(_clearRifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
         assertEq(_clearUsdrifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
@@ -386,7 +386,7 @@ contract SetCycleDurationTest is BaseTest {
         vm.prank(alice);
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
+        assertApproxEqAbs(_clearRifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
@@ -400,13 +400,13 @@ contract SetCycleDurationTest is BaseTest {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a longer cycle duration of 1.5 weeks adding an offset of 3 days
         vm.prank(governor);
         backersManager.setCycleDuration(1.5 weeks, 3 days);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1.5 week + 3 days
         assertEq(_cycleDuration, 1.5 weeks + 3 days);
@@ -418,7 +418,7 @@ contract SetCycleDurationTest is BaseTest {
         assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1.5 weeks + 3 days);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1.5 week
         assertEq(_cycleDuration, 1.5 weeks);
@@ -435,7 +435,7 @@ contract SetCycleDurationTest is BaseTest {
         // WHEN builder claim rewards
         _buildersClaim();
         // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
-        assertEq(_clearERC20Balance(builder), 18.75 ether);
+        assertEq(_clearRifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
         assertEq(_clearUsdrifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
@@ -445,7 +445,7 @@ contract SetCycleDurationTest is BaseTest {
         vm.prank(alice);
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
+        assertApproxEqAbs(_clearRifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
@@ -459,13 +459,13 @@ contract SetCycleDurationTest is BaseTest {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a shorter cycle duration of 0.75 weeks adding an offset of 3 days
         vm.prank(governor);
         backersManager.setCycleDuration(0.75 weeks, 3 days);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 0.75 week + 3 days
         assertEq(_cycleDuration, 0.75 weeks + 3 days);
@@ -477,7 +477,7 @@ contract SetCycleDurationTest is BaseTest {
         assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 0.75 weeks + 3 days);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 0.75 week
         assertEq(_cycleDuration, 0.75 weeks);
@@ -494,7 +494,7 @@ contract SetCycleDurationTest is BaseTest {
         // WHEN builder claim rewards
         _buildersClaim();
         // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
-        assertEq(_clearERC20Balance(builder), 18.75 ether);
+        assertEq(_clearRifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
         assertEq(_clearUsdrifBalance(builder), 18.75 ether);
         // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
@@ -504,7 +504,7 @@ contract SetCycleDurationTest is BaseTest {
         vm.prank(alice);
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
+        assertApproxEqAbs(_clearRifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
         // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5

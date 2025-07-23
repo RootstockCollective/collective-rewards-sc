@@ -30,7 +30,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 9_676_800 ether);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finish
         _skipAndStartNewCycle();
@@ -80,9 +80,9 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         _initialState();
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN gauge is resumed
         _resumeGauge();
@@ -93,7 +93,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 9_676_800 ether);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finish
         _skipAndStartNewCycle();
@@ -183,7 +183,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         backersManager.allocate(gauge, 0);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // AND gauge is resumed
         _resumeGauge();
@@ -193,7 +193,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         backersManager.allocate(gauge, 2 ether);
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finish
         _skipAndStartNewCycle();

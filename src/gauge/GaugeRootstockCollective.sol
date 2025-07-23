@@ -53,7 +53,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // ---------- Structs ----------
     // -----------------------------
     struct RewardData {
-        /// @notice current reward rate of rifToken to distribute per second [PREC]
+        /// @notice current reward rate of reward token to distribute per second [PREC]
         uint256 rewardRate;
         /// @notice most recent stored value of rewardPerToken [PREC]
         uint256 rewardPerTokenStored;
@@ -61,11 +61,11 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         uint256 rewardMissing;
         /// @notice most recent timestamp contract has updated state
         uint256 lastUpdateTime;
-        /// @notice amount of unclaimed token reward earned for the builder
+        /// @notice amount of unclaimed reward token earned for the builder
         uint256 builderRewards;
         /// @notice cached rewardPerTokenStored for a backer based on their most recent action [PREC]
         mapping(address backer => uint256 rewardPerTokenPaid) backerRewardPerTokenPaid;
-        /// @notice cached amount of rifToken earned for a backer
+        /// @notice cached amount of reward token earned for a backer
         mapping(address backer => uint256 rewards) rewards;
     }
 
@@ -236,7 +236,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @notice gets the current reward rate per unit of stakingToken allocated
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
-     * @return rewardPerToken rifToken:stakingToken ratio [PREC]
+     * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
      */
     function rewardPerToken(address rewardToken_) external view returns (uint256) {
         return _rewardPerToken(rewardToken_, backersManager.periodFinish());
@@ -517,7 +517,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
      * @param periodFinish_ timestamp end of current rewards period
-     * @return rewardPerToken rifToken:stakingToken ratio [PREC]
+     * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
      */
     function _rewardPerToken(address rewardToken_, uint256 periodFinish_) internal view returns (uint256) {
         RewardData storage _rewardData = rewardData[rewardToken_];

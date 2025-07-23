@@ -59,7 +59,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         _initialState();
 
         // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        _distribute(100 ether, 100 ether, 10 ether);
         // THEN total allocation is 8467200 ether = 14 * 1 WEEK
         assertEq(backersManager.totalPotentialReward(), 8_467_200 ether);
 

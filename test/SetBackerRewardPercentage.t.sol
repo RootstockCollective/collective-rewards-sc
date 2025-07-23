@@ -135,13 +135,13 @@ contract SetBackerRewardPercentageTest is BaseTest {
         // THEN backer reward percentage to apply is 50%
         assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.5 ether);
 
-        // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rif, usdrif and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builder claim rewards
         _buildersClaim();
         // THEN builder receives 50% of rifToken 6.25 = (100 * 2 / 16) * 0.5
-        assertEq(_clearERC20Balance(builder), 6.25 ether);
+        assertEq(_clearRifBalance(builder), 6.25 ether);
         // THEN builder receives 50% of native tokens 0.625 = (10 * 2 / 16) * 0.5
         assertEq(_clearNativeBalance(builder), 0.625 ether);
 
@@ -150,7 +150,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         vm.prank(alice);
         gauge.claimBackerReward(alice);
         // THEN alice receives 50% of rifToken 6.25 = (100 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearERC20Balance(alice), 6.25 ether, 100);
+        assertApproxEqAbs(_clearRifBalance(alice), 6.25 ether, 100);
         // THEN alice receives 50% of usdrifToken 6.25 = (100 * 2 / 16) * 0.5
         assertApproxEqAbs(_clearUsdrifBalance(alice), 6.25 ether, 100);
         // THEN alice receives 50% of native tokens 0.625 = (10 * 2 / 16) * 0.5
@@ -161,13 +161,13 @@ contract SetBackerRewardPercentageTest is BaseTest {
         vm.warp(_cooldownEndTime);
         // THEN backer reward percentage to apply is 80%
         assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.8 ether);
-        // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rif, usdrif and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builder claim rewards
         _buildersClaim();
         // THEN builder receives 20% of rewards 2.5 = (100 * 2 / 16) * 0.2
-        assertEq(_clearERC20Balance(builder), 2.5 ether);
+        assertEq(_clearRifBalance(builder), 2.5 ether);
         // THEN builder receives 20% of native tokens 0.25 = (10 * 2 / 16) * 0.2
         assertEq(_clearNativeBalance(builder), 0.25 ether);
 
@@ -176,7 +176,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         vm.prank(alice);
         gauge.claimBackerReward(alice);
         // THEN alice receives 80% of rifToken 10 = (100 * 2 / 16) * 0.8
-        assertApproxEqAbs(_clearERC20Balance(alice), 10 ether, 100);
+        assertApproxEqAbs(_clearRifBalance(alice), 10 ether, 100);
         // THEN alice receives 80% of usdrifToken 10 = (100 * 2 / 16) * 0.8
         assertApproxEqAbs(_clearUsdrifBalance(alice), 10 ether, 100);
         // THEN alice receives 80% of native tokens 1 = (10 * 2 / 16) * 0.8
@@ -203,8 +203,8 @@ contract SetBackerRewardPercentageTest is BaseTest {
         (_previous, _next, _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
 
-        // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rif, usdrif and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
 
         (_previous, _next, _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         // THEN previous backer reward percentage is 10%
@@ -217,7 +217,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         // WHEN builder claim rewards
         _buildersClaim();
         // THEN builder receives 90% of rifToken 11.25 = (100 * 2 / 16) * 0.9
-        assertEq(_clearERC20Balance(builder), 11.25 ether);
+        assertEq(_clearRifBalance(builder), 11.25 ether);
         // THEN builder receives 90% of native tokens 1.125 = (10 * 2 / 16) * 0.9
         assertEq(_clearNativeBalance(builder), 1.125 ether);
 
@@ -226,7 +226,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         vm.prank(alice);
         gauge.claimBackerReward(alice);
         // THEN alice receives 10% of rifToken 1.25 = (100 * 2 / 16) * 0.1
-        assertApproxEqAbs(_clearERC20Balance(alice), 1.25 ether, 100);
+        assertApproxEqAbs(_clearRifBalance(alice), 1.25 ether, 100);
         // THEN alice receives 10% of usdrifToken 1.25 = (100 * 2 / 16) * 0.1
         assertApproxEqAbs(_clearUsdrifBalance(alice), 1.25 ether, 100);
         // THEN alice receives 10% of native tokens 0.125 = (10 * 2 / 16) * 0.1
@@ -245,13 +245,13 @@ contract SetBackerRewardPercentageTest is BaseTest {
         vm.warp(_cooldownEndTime);
         // THEN backer reward percentage to apply is 10%
         assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.1 ether);
-        // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rif, usdrif and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builder claim rewards
         _buildersClaim();
         // THEN builder receives 90% of rifToken 11.125 = (100 * 2 / 16) * 0.9
-        assertEq(_clearERC20Balance(builder), 11.25 ether);
+        assertEq(_clearRifBalance(builder), 11.25 ether);
         // THEN builder receives 90% of native tokens 1.125 = (10 * 2 / 16) * 0.9
         assertEq(_clearNativeBalance(builder), 1.125 ether);
 
@@ -260,19 +260,19 @@ contract SetBackerRewardPercentageTest is BaseTest {
         vm.prank(alice);
         gauge.claimBackerReward(alice);
         // THEN alice receives 10% of rifToken 1.25 = (100 * 2 / 16) * 0.1
-        assertApproxEqAbs(_clearERC20Balance(alice), 1.25 ether, 100);
+        assertApproxEqAbs(_clearRifBalance(alice), 1.25 ether, 100);
         // THEN alice receives 10% of usdrifToken 1.25 = (100 * 2 / 16) * 0.1
         assertApproxEqAbs(_clearUsdrifBalance(alice), 1.25 ether, 100);
         // THEN alice receives 10% of native tokens 0.125 = (10 * 2 / 16) * 0.1
         assertApproxEqAbs(_clearNativeBalance(alice), 0.125 ether, 100);
 
-        // AND 100 rifToken and 10 native tokens are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rif, usdrif and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builder claim rewards
         _buildersClaim();
         // THEN builder receives 90% of rifToken 11.125 = (100 * 2 / 16) * 0.9
-        assertEq(_clearERC20Balance(builder), 11.25 ether);
+        assertEq(_clearRifBalance(builder), 11.25 ether);
         // THEN builder receives 90% of native tokens 1.125 = (10 * 2 / 16) * 0.9
         assertEq(_clearNativeBalance(builder), 1.125 ether);
 
@@ -281,7 +281,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         vm.prank(alice);
         gauge.claimBackerReward(alice);
         // THEN alice receives 10% of rifToken 1.25 = (100 * 2 / 16) * 0.1
-        assertApproxEqAbs(_clearERC20Balance(alice), 1.25 ether, 100);
+        assertApproxEqAbs(_clearRifBalance(alice), 1.25 ether, 100);
         // THEN alice receives 10% of usdrifToken 1.25 = (100 * 2 / 16) * 0.1
         assertApproxEqAbs(_clearUsdrifBalance(alice), 1.25 ether, 100);
         // THEN alice receives 10% of native tokens 0.125 = (10 * 2 / 16) * 0.1
