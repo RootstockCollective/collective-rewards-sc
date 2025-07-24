@@ -1301,7 +1301,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.prank(bob);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken and 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
@@ -1310,14 +1310,14 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.prank(alice);
         backersManager.allocate(gauge, 0);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken and 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // AND alice adds allocations again
         vm.prank(alice);
         backersManager.allocate(gauge, 2 ether);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken and 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finish
@@ -1402,7 +1402,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.prank(bob);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken and 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
@@ -1411,9 +1411,9 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.prank(alice);
         backersManager.allocate(gauge, 0);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken and 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken and 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // AND alice adds allocations again
@@ -1517,7 +1517,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.allocateBatch(gaugesArray, allocationsArray);
         vm.stopPrank();
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken and 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         // THEN rifToken's rewardRate is 0.0000103 = (50 * 2 / 16) / 604800
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 10_333_994_708_994);
