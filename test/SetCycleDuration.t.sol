@@ -194,18 +194,18 @@ contract SetCycleDurationTest is BaseTest {
     function test_SetCycleDurationLonger() public {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a new cycle duration of 3 weeks
         vm.prank(governor);
         backersManager.setCycleDuration(3 weeks, 0 days);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 3 weeks
         assertEq(_cycleDuration, 3 weeks);
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // THEN cycles start time is 3 weeks ago
@@ -267,18 +267,18 @@ contract SetCycleDurationTest is BaseTest {
     function test_SetCycleDurationShorter() public {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a new cycle duration of 0.5 weeks
         vm.prank(governor);
         backersManager.setCycleDuration(0.5 weeks, 0 days);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         // THEN cycle duration is 0.5 week
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         assertEq(_cycleDuration, 0.5 weeks);
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // THEN cycles start time is 0.5 weeks ago
@@ -340,13 +340,13 @@ contract SetCycleDurationTest is BaseTest {
     function test_SameCycleDurationWithOffset() public {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a same cycle duration of 1 weeks adding an offset of 3 days
         vm.prank(governor);
         backersManager.setCycleDuration(1 weeks, 3 days);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1 week + 3 days
@@ -358,7 +358,7 @@ contract SetCycleDurationTest is BaseTest {
         // THEN next cycle is in 1 week + 3 days
         assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks + 3 days);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1 week
@@ -399,13 +399,13 @@ contract SetCycleDurationTest is BaseTest {
     function test_LongerCycleDurationWithOffset() public {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a longer cycle duration of 1.5 weeks adding an offset of 3 days
         vm.prank(governor);
         backersManager.setCycleDuration(1.5 weeks, 3 days);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1.5 week + 3 days
@@ -417,7 +417,7 @@ contract SetCycleDurationTest is BaseTest {
         // THEN next cycle is in 1.5 week + 3 days
         assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1.5 weeks + 3 days);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1.5 week
@@ -458,13 +458,13 @@ contract SetCycleDurationTest is BaseTest {
     function test_ShorterCycleDurationWithOffset() public {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a shorter cycle duration of 0.75 weeks adding an offset of 3 days
         vm.prank(governor);
         backersManager.setCycleDuration(0.75 weeks, 3 days);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 0.75 week + 3 days
@@ -476,7 +476,7 @@ contract SetCycleDurationTest is BaseTest {
         // THEN next cycle is in 0.75 week + 3 days
         assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 0.75 weeks + 3 days);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 0.75 week

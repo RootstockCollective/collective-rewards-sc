@@ -413,6 +413,34 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     }
 
     /**
+     * SCENARIO: notifyRewardAmount is called with usdrifToken amount
+     */
+    function test_NotifyRewardAmountUsdrifToken() public {
+        // GIVEN a BackerManager contract
+        //  AND alice allocates 0.1 ether
+        vm.prank(alice);
+        backersManager.allocate(gauge, 0.1 ether);
+        //   WHEN 2 ether reward are added
+        //    THEN NotifyReward event is emitted
+        uint256 _usdrifAmount = 2 ether;
+        vm.expectEmit();
+        emit NotifyReward(address(usdrifToken), address(this), _usdrifAmount);
+        backersManager.notifyRewardAmount(0, _usdrifAmount);
+        // THEN rifToken rewards is 0
+        assertEq(backersManager.rewardsRif(), 0);
+        // THEN usdrifToken rewards is 2 ether
+        assertEq(backersManager.rewardsUsdrif(), _usdrifAmount);
+        // THEN Native rewards is 0
+        assertEq(backersManager.rewardsNative(), 0);
+        // THEN rifToken balance of backersManager is 0
+        assertEq(rifToken.balanceOf(address(backersManager)), 0);
+        // THEN usdrifToken balance of backersManager is 2 ether
+        assertEq(usdrifToken.balanceOf(address(backersManager)), _usdrifAmount);
+        // THEN native tokens balance of backersManager is 0
+        assertEq(address(backersManager).balance, 0);
+    }
+
+    /**
      * SCENARIO: notifyRewardAmount is called with zero value - should not revert and rewards don't change
      */
     function test_NotifyRewardAmountZeroValue() public {
@@ -1133,7 +1161,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
      * SCENARIO: alice claims all the rewards from a backersManager distribution and
      * incentivized gauge with rifToken
      */
-    function test_ClaimBackerRewardsWithIncentivizerInrifToken() public {
+    function test_ClaimBackerRewardsWithIncentivizerInRifToken() public {
         // GIVEN builder and builder2 and reward percentage of 50%
         //  AND a backer alice
         vm.startPrank(alice);
@@ -1169,6 +1197,48 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         // and 100% of the rewards incentivized directly to the first gauge
         // 149.999999999999999990 = 100 ether * 0.5 + 100 ether
         assertEq(rifToken.balanceOf(alice), 149_999_999_999_999_999_990);
+    }
+
+    /**
+     * SCENARIO: alice claims all the rewards from a backersManager distribution and
+     * incentivized gauge in usdrifToken
+     */
+    function test_ClaimBackerRewardsWithIncentivizerInUsdrifToken() public {
+        // GIVEN builder and builder2 and reward percentage of 50%
+        //  AND a backer alice
+        vm.startPrank(alice);
+        allocationsArray[0] = 2 ether;
+        allocationsArray[1] = 6 ether;
+        // AND alice allocates 2 ether to builder and 6 ether to builder2
+        backersManager.allocateBatch(gaugesArray, allocationsArray);
+        vm.stopPrank();
+
+        // AND 100 ether reward are added
+        backersManager.notifyRewardAmount(0, 100 ether);
+        // AND 100 ether are added directly to first gauge by incentivizer
+        vm.startPrank(incentivizer);
+        usdrifToken.mint(address(incentivizer), 100 ether);
+        usdrifToken.approve(address(gaugesArray[0]), 100 ether);
+        gauge.incentivizeWithUsdrifToken(100 ether);
+        vm.stopPrank();
+
+        // AND distribution window starts
+        _skipToStartDistributionWindow();
+
+        // AND distribute is executed
+        backersManager.startDistribution();
+
+        // AND cycle finish
+        _skipAndStartNewCycle();
+
+        // WHEN alice claim rewards
+        vm.prank(alice);
+        backersManager.claimBackerRewards(gaugesArray);
+
+        // THEN alice usdrifToken balance is 50% of the distributed amount from the backersManager
+        // and 100% of the rewards incentivized directly to the first gauge
+        // 149.999999999999999990 = 100 ether * 0.5 + 100 ether
+        assertEq(usdrifToken.balanceOf(alice), 149_999_999_999_999_999_990);
     }
 
     /**
@@ -1425,7 +1495,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.prank(alice);
         backersManager.allocate(gauge, 2 ether);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finish
@@ -1612,7 +1682,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         vm.stopPrank();
 
         uint256 _timestampBefore = block.timestamp;
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         // THEN cycle was of 8 weeks
         assertEq(block.timestamp - _timestampBefore, 8 weeks);

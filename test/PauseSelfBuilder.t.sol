@@ -70,7 +70,7 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         //   AND half cycle pass
         //    AND builder is self pauses
         _initialState();
-        // AND 100 rif, usdrif and 10 native tokens are distributed
+        // AND 100 rif, 100 usdrif and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builders claim rewards
@@ -106,7 +106,7 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         vm.startPrank(builder);
         builderRegistry.unpauseSelf(0.5 ether);
 
-        // AND 100 rif, usdrif and 10 native tokens are distributed
+        // AND 100 rif, 100 usdrif and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builders claim rewards

@@ -29,7 +29,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         // THEN total allocation didn't change is 9676800 ether = 16 * 1 WEEK
         assertEq(backersManager.totalPotentialReward(), 9_676_800 ether);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finish
@@ -79,9 +79,9 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         //    AND builder is halted
         _initialState();
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN gauge is resumed
@@ -92,7 +92,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         // THEN total allocation didn't change is 9676800 ether = 16 * 1 WEEK
         assertEq(backersManager.totalPotentialReward(), 9_676_800 ether);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finish
@@ -182,7 +182,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         vm.prank(alice);
         backersManager.allocate(gauge, 0);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // AND gauge is resumed
@@ -192,7 +192,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 2 ether);
 
-        // AND 100 rifToken and 10 native tokens are distributed
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // AND cycle finish

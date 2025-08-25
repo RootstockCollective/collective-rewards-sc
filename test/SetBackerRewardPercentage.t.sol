@@ -135,7 +135,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         // THEN backer reward percentage to apply is 50%
         assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.5 ether);
 
-        // AND 100 rif, usdrif and 10 native tokens are distributed
+        // AND 100 rif, 100 usdrif and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builder claim rewards
@@ -161,7 +161,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         vm.warp(_cooldownEndTime);
         // THEN backer reward percentage to apply is 80%
         assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.8 ether);
-        // AND 100 rif, usdrif and 10 native tokens are distributed
+        // AND 100 rif, 100 usdrif and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builder claim rewards
@@ -203,7 +203,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         (_previous, _next, _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
         assertEq(_cooldownEndTime, block.timestamp + 2 weeks);
 
-        // AND 100 rif, usdrif and 10 native tokens are distributed
+        // AND 100 rif, 100 usdrif and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         (_previous, _next, _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
@@ -245,7 +245,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         vm.warp(_cooldownEndTime);
         // THEN backer reward percentage to apply is 10%
         assertEq(builderRegistry.getRewardPercentageToApply(builder), 0.1 ether);
-        // AND 100 rif, usdrif and 10 native tokens are distributed
+        // AND 100 rif, 100 usdrif and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builder claim rewards
@@ -266,7 +266,7 @@ contract SetBackerRewardPercentageTest is BaseTest {
         // THEN alice receives 10% of native tokens 0.125 = (10 * 2 / 16) * 0.1
         assertApproxEqAbs(_clearNativeBalance(alice), 0.125 ether, 100);
 
-        // AND 100 rif, usdrif and 10 native tokens are distributed
+        // AND 100 rif, 100 usdrif and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builder claim rewards

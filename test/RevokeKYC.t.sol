@@ -93,7 +93,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         vm.startPrank(kycApprover);
         builderRegistry.approveBuilderKYC(builder);
 
-        // AND 100 rif, usdrif and 10 native tokens are distributed
+        // AND 100 rif, 100 usdrif and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // WHEN builders claim rewards
@@ -147,7 +147,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         uint256 _gauge2rifTokenBalanceBefore = rifToken.balanceOf(address(gauge2));
         uint256 _gauge2NativeBalanceBefore = (address(gauge2)).balance;
-        // AND 100 rif, usdrif and 10 native tokens are distributed
+        // AND 100 rif, 100 usdrif and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // THEN gauge rifToken balance is the same, it didn't receive distributions
@@ -193,7 +193,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
 
         uint256 _gauge2rifTokenBalanceBefore = rifToken.balanceOf(address(gauge2));
         uint256 _gauge2NativeBalanceBefore = (address(gauge2)).balance;
-        // AND 100 rif, usdrif and 10 native tokens are distributed
+        // AND 100 rif, 100 usdrif and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // THEN gauge rifToken balance is the same, it didn't receive distributions
