@@ -975,7 +975,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 2 ether);
 
-        // AND 100 rifToken and 100 native tokens are distributed
+        // AND 100 rif, usdrif, and native tokens are distributed
         _distribute(100 ether, 100 ether, 100 ether);
 
         // AND half cycle passes
@@ -1011,7 +1011,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
 
-        // AND 100 rifToken and 100 native tokens are distributed
+        // AND 100 rif, usdrif, and native tokens are distributed
         _distribute(100 ether, 100 ether, 100 ether);
 
         // THEN builderRewards is 70 ether in rifToken and 70 ether in native tokens
@@ -1051,7 +1051,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
 
-        // AND 100 rifToken and 100 native tokens are distributed
+        // AND 100 rif, usdrif, and native tokens are distributed
         _distribute(100 ether, 100 ether, 100 ether);
 
         // THEN builderRewards is 70 ether in rifToken and 70 ether in native tokens
@@ -1090,7 +1090,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge2, 2 ether);
 
-        // AND 100 rifToken and 100 native tokens are distributed
+        // AND 100 rifToken, usdrifToken, and native tokens are distributed
         _distribute(100 ether, 100 ether, 100 ether);
 
         // AND half cycle passes
@@ -1112,7 +1112,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN builder2Receiver native tokens balance is 70 ether
         assertEq(builder2Receiver.balance, 70 ether);
 
-        // AND 100 rifToken and 100 native tokens are distributed
+        // AND 100 rifToken, usdrifToken, and native tokens are distributed
         _distribute(100 ether, 100 ether, 100 ether);
 
         // WHEN builder2 claims rewards
@@ -1137,7 +1137,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge2, 2 ether);
 
-        // AND 100 rifToken and 100 native tokens are distributed
+        // AND 100 rifToken, usdrifToken, and native tokens are distributed
         _distribute(100 ether, 100 ether, 100 ether);
 
         // AND half cycle passes
@@ -1172,7 +1172,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.prank(kycApprover);
         builderRegistry.approveNewRewardReceiver(builder2, _newRewardReceiver);
 
-        // AND 100 rifToken and 100 native tokens are distributed
+        // AND 100 rifToken, usdrifToken, and native tokens are distributed
         _distribute(100 ether, 100 ether, 100 ether);
 
         // WHEN newRewardReceiver claims his rewards
@@ -1194,10 +1194,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 2 ether);
 
-        // AND 100 rifToken and 100 native tokens are distributed
+        // AND 100 rifToken, usdrifToken, and native tokens are distributed
         _distribute(100 ether, 100 ether, 100 ether);
 
-        // AND 100 rifToken and 100 native tokens are distributed in the same distribution window
+        // AND 100 rifToken, usdrifToken, and native tokens are distributed in the same distribution window
         vm.warp(backersManager.endDistributionWindow(block.timestamp) - 1);
         rifToken.mint(address(rewardDistributor), 100 ether);
         usdrifToken.mint(address(rewardDistributor), 100 ether);
@@ -1242,10 +1242,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(alice);
         backersManager.allocate(gauge, 2 ether);
 
-        // AND 100 rifToken and 100 native tokens are distributed
+        // AND 100 rifToken, usdrifToken, and native tokens are distributed
         _distribute(100 ether, 100 ether, 100 ether);
 
-        // AND 100 rifToken and 100 native tokens are distributed
+        // AND 100 rifToken, usdrifToken, and native tokens are distributed
         _distribute(100 ether, 100 ether, 100 ether);
 
         // THEN builderRewards rifToken is 140 ether
