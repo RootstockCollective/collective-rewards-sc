@@ -254,7 +254,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: rewards variables for rifToken are updated in the middle and at the end of the cycle
      */
-    function test_IncentivizeWithrifToken() public {
+    function test_IncentivizeWithRifToken() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
@@ -304,7 +304,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
      * SCENARIO: rewards variables for rifToken are updated by incentivizer that is not the
      * BackersManagerRootstockCollective
      */
-    function test_IncentivizeWithrifTokenNotFromBackersManagerRootstockCollective() public {
+    function test_IncentivizeWithRifTokenNotFromBackersManagerRootstockCollective() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
