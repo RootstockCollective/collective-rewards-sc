@@ -67,6 +67,7 @@ contract DistributionFuzzTest is BaseFuzz {
         // THEN gauges balances are empty
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             assertApproxEqAbs(rifToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
+            assertApproxEqAbs(usdrifToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
             assertApproxEqAbs(address(gaugesArray[i]).balance, 0, 0.000000001 ether);
         }
     }

@@ -1332,6 +1332,11 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         //  cycle 2 = 23.33 = 3.333 + 20 = (100 * 1 / 15) * 0.5 + (100 * 6 / 15) * 0.5
         //  cycle 3 = 3.125 + 25 = 3.125(missingRewards) + (100 * 8 / 16) * 0.5
         assertEq(rifToken.balanceOf(alice), 73_333_333_333_333_333_314);
+        // THEN alice usdrifToken balance is:
+        //  cycle 1 = 21.875 = 3.125 + 18.75 = (100 * 2 / 16) * 0.5 * 0.5 WEEKS + (100 * 6 / 16) * 0.5
+        //  cycle 2 = 23.33 = 3.333 + 20 = (100 * 1 / 15) * 0.5 + (100 * 6 / 15) * 0.5
+        //  cycle 3 = 3.125 + 25 = 3.125(missingRewards) + (100 * 8 / 16) * 0.5
+        assertEq(usdrifToken.balanceOf(alice), 73_333_333_333_333_333_314);
         // THEN alice native tokens balance is:
         //  cycle 1 = 2.1875 = 0.3125 + 1.875 = (10 * 2 / 16) * 0.5 * 0.5 WEEKS + (10 * 6 / 16) * 0.5
         //  cycle 2 = 2.333 = 0.3333 + 2 = (10 * 1 / 15) * 0.5 + (10 * 6 / 15) * 0.5

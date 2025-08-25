@@ -64,6 +64,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 50 * 2 / 5 = 20
         // total = 45
         assertEq(_clearRifBalance(alice), 44_994_040_524_433_849_818);
+        // THEN alice receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 2 / 4 = 25
+        // cycle 3 = 0 (no new distribution)
+        // cycle 4 = 50 * 2 / 5 = 20
+        // total = 45
+        assertEq(_clearUsdrifBalance(alice), 44_994_040_524_433_849_818);
         // THEN alice receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5
@@ -82,6 +89,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 50 * 3 / 5 = 30
         // total = 55
         assertEq(_clearRifBalance(bob), 55_005_959_475_566_150_175);
+        // THEN bob receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 2 / 4 = 25
+        // cycle 3 = 0 (no new distribution)
+        // cycle 4 = 50 * 3 / 5 = 30
+        // total = 55
+        assertEq(_clearUsdrifBalance(bob), 55_005_959_475_566_150_175);
         // THEN bob receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5
@@ -180,6 +194,14 @@ contract SkipDistribution is BaseTest {
         // cycle 5 = 50 * 2 / 5 = 20
         // total = 45
         assertEq(_clearRifBalance(alice), 44_994_040_524_433_849_818);
+        // THEN alice receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 2 / 4 = 25
+        // cycle 3 = 0 (no new distribution)
+        // cycle 4 = 0 (no new distribution)
+        // cycle 5 = 50 * 2 / 5 = 20
+        // total = 45
+        assertEq(_clearUsdrifBalance(alice), 44_994_040_524_433_849_818);
         // THEN alice receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5
@@ -200,6 +222,14 @@ contract SkipDistribution is BaseTest {
         // cycle 5 = 50 * 3 / 5 = 30
         // total = 55
         assertEq(_clearRifBalance(bob), 55_005_959_475_566_150_175);
+        // THEN bob receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 2 / 4 = 25
+        // cycle 3 = 0 (no new distribution)
+        // cycle 4 = 0 (no new distribution)
+        // cycle 5 = 50 * 3 / 5 = 30
+        // total = 55
+        assertEq(_clearUsdrifBalance(bob), 55_005_959_475_566_150_175);
         // THEN bob receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5
@@ -309,6 +339,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 50 * 2 / 2 = 50
         // total = 87.5
         assertEq(_clearRifBalance(alice), 87_499_999_999_999_999_995);
+        // THEN alice receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = (50 / 2) * 2 / 4 = 12.5
+        // cycle 3 = (50 / 2) * 2 / 2 = 25 (missingRewards)
+        // cycle 4 = 50 * 2 / 2 = 50
+        // total = 87.5
+        assertEq(_clearUsdrifBalance(alice), 87_499_999_999_999_999_995);
         // THEN alice receives native tokens
         // cycle 1 = 0
         // cycle 2 = (5 / 2) * 2 / 4 = 1.25
@@ -327,6 +364,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 0
         // total = 12.5
         assertEq(_clearRifBalance(bob), 12_499_999_999_999_999_998);
+        // THEN bob receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = (50 / 2) * 2 / 4 = 12.5
+        // cycle 3 = 0
+        // cycle 4 = 0
+        // total = 12.5
+        assertEq(_clearUsdrifBalance(bob), 12_499_999_999_999_999_998);
         // THEN bob receives native tokens
         // cycle 1 = 0
         // cycle 2 = (5 / 2) * 2 / 4 = 1.25
@@ -436,6 +480,14 @@ contract SkipDistribution is BaseTest {
         // cycle 5 = 50 * 2 / 2 = 50
         // total = 87.5
         assertEq(_clearRifBalance(alice), 87_499_999_999_999_999_995);
+        // THEN alice receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = (50 / 2) * 2 / 4 = 12.5
+        // cycle 3 = 0
+        // cycle 4 = (50 / 2) * 2 / 2 = 25 (missingRewards)
+        // cycle 5 = 50 * 2 / 2 = 50
+        // total = 87.5
+        assertEq(_clearUsdrifBalance(alice), 87_499_999_999_999_999_995);
         // THEN alice receives native tokens
         // cycle 1 = 0
         // cycle 2 = (5 / 2) * 2 / 4 = 1.25
@@ -456,9 +508,17 @@ contract SkipDistribution is BaseTest {
         // cycle 5 = 0
         // total = 12.5
         assertEq(_clearRifBalance(bob), 12_499_999_999_999_999_998);
+        // THEN bob receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = (50 / 2) * 2 / 4 = 12.5
+        // cycle 3 = 0
+        // cycle 4 = 0
+        // cycle 5 = 0
+        // total = 12.5
+        assertEq(_clearUsdrifBalance(bob), 12_499_999_999_999_999_998);
         // THEN bob receives native tokens
         // cycle 1 = 0
-        // cycle 2 = (50 / 2) * 2 / 4 = 1.25
+        // cycle 2 = (5 / 2) * 2 / 4 = 1.25
         // cycle 3 = 0
         // cycle 4 = 0
         // cycle 5 = 0
@@ -568,6 +628,10 @@ contract SkipDistribution is BaseTest {
         // cycle 5 = 100 (missingRewards)
         // total = 100
         assertEq(_clearRifBalance(alice), 99_999_999_999_999_999_999);
+        // THEN alice receives usdrifToken
+        // cycle 5 = 100 (missingRewards)
+        // total = 100
+        assertEq(_clearUsdrifBalance(alice), 99_999_999_999_999_999_999);
 
         // WHEN all the builders claim
         _buildersClaim();
@@ -635,6 +699,11 @@ contract SkipDistribution is BaseTest {
         // cycle 5 = 50 / 2 * 1 = 25
         // total = 75
         assertEq(_clearRifBalance(bob), 74_999_999_999_999_999_998);
+        // THEN bob receives usdrifToken
+        // cycle 1 = 0 (no usdrif distributed in cycle 1)
+        // cycle 5 = 0 (no usdrif distributed in cycle 5)
+        // total = 0
+        assertEq(_clearUsdrifBalance(bob), 0);
 
         // WHEN alice claims the rewards
         vm.prank(alice);
@@ -644,6 +713,11 @@ contract SkipDistribution is BaseTest {
         // cycle 5 = 50 / 2 * 1 = 25
         // total = 125
         assertEq(_clearRifBalance(alice), 124_999_999_999_999_999_998);
+        // THEN alice receives usdrifToken
+        // cycle 2 = 100 (incentive)
+        // cycle 5 = 0 (no usdrif distributed in cycle 5)
+        // total = 100
+        assertEq(_clearUsdrifBalance(alice), 99_999_999_999_999_999_999);
 
         // WHEN all the builders claim
         _buildersClaim();
@@ -703,6 +777,7 @@ contract SkipDistribution is BaseTest {
         vm.prank(alice);
         backersManager.claimBackerRewards(gaugesArray);
         assertEq(_clearRifBalance(alice), 0);
+        assertEq(_clearUsdrifBalance(alice), 0);
 
         // WHEN all the builders claim
         _buildersClaim();
@@ -760,6 +835,7 @@ contract SkipDistribution is BaseTest {
         vm.prank(alice);
         backersManager.claimBackerRewards(gaugesArray);
         assertEq(_clearRifBalance(alice), 0);
+        assertEq(_clearUsdrifBalance(alice), 0);
 
         // WHEN all the builders claim
         _buildersClaim();
@@ -894,6 +970,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 50 * 2 / 4 = 25
         // total = 75
         assertEq(_clearRifBalance(alice), 74_999_999_999_999_999_996);
+        // THEN alice receives more usdrifToken than she should
+        // cycle 1 = 0
+        // cycle 2 = 50 * 2 / 4 = 25
+        // cycle 3 = 50 * 2 / 4 = 25 (should not have received this rewards)
+        // cycle 4 = 50 * 2 / 4 = 25
+        // total = 75
+        assertEq(_clearUsdrifBalance(alice), 74_999_999_999_999_999_996);
         // THEN alice receives more native tokens than she should
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5
