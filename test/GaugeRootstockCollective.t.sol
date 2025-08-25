@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 import { BaseTest, GaugeRootstockCollective } from "./BaseTest.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
+import { ERC20Mock } from "./mock/ERC20Mock.sol";
 
 contract GaugeRootstockCollectiveTest is BaseTest {
     using stdStorage for StdStorage;
@@ -15,38 +16,25 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     event NewAllocation(address indexed backer_, uint256 allocation_);
     event NotifyReward(address indexed rifToken_, uint256 builderAmount_, uint256 backersAmount_);
 
+    function _mintAndApproveTokens(ERC20Mock token_, address account_, uint256 amount_) internal {
+        token_.mint(account_, amount_);
+        vm.deal(account_, amount_);
+        vm.prank(account_);
+        token_.approve(address(gauge), amount_);
+        vm.prank(account_);
+        token_.approve(address(gauge2), amount_);
+    }
+
     function _setUp() internal override {
-        // mint some rifTokens and deal to incentivizer
-        rifToken.mint(address(incentivizer), 100_000 ether);
-        vm.deal(address(incentivizer), 100_000 ether);
-        vm.prank(address(incentivizer));
-        rifToken.approve(address(gauge), 100_000 ether);
-        vm.prank(address(incentivizer));
-        rifToken.approve(address(gauge2), 100_000 ether);
+        uint256 _tokenAmount = 100_000 ether;
 
-        // mint some rifTokens and deal to backersManager
-        rifToken.mint(address(backersManager), 100_000 ether);
-        vm.deal(address(backersManager), 100_000 ether);
-        vm.prank(address(backersManager));
-        rifToken.approve(address(gauge), 100_000 ether);
-        vm.prank(address(backersManager));
-        rifToken.approve(address(gauge2), 100_000 ether);
+        // Setup rifTokens for incentivizer and backersManager
+        _mintAndApproveTokens(rifToken, address(incentivizer), _tokenAmount);
+        _mintAndApproveTokens(rifToken, address(backersManager), _tokenAmount);
 
-        // mint some usdrifTokens and deal to incentivizer
-        usdrifToken.mint(address(incentivizer), 100_000 ether);
-        vm.deal(address(incentivizer), 100_000 ether);
-        vm.prank(address(incentivizer));
-        usdrifToken.approve(address(gauge), 100_000 ether);
-        vm.prank(address(incentivizer));
-        usdrifToken.approve(address(gauge2), 100_000 ether);
-
-        // mint some usdrifTokens and deal to backersManager
-        usdrifToken.mint(address(backersManager), 100_000 ether);
-        vm.deal(address(backersManager), 100_000 ether);
-        vm.prank(address(backersManager));
-        usdrifToken.approve(address(gauge), 100_000 ether);
-        vm.prank(address(backersManager));
-        usdrifToken.approve(address(gauge2), 100_000 ether);
+        // Setup usdrifTokens for incentivizer and backersManager
+        _mintAndApproveTokens(usdrifToken, address(incentivizer), _tokenAmount);
+        _mintAndApproveTokens(usdrifToken, address(backersManager), _tokenAmount);
     }
 
     /**
