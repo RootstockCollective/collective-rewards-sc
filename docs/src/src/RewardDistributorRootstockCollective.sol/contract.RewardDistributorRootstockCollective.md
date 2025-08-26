@@ -1,5 +1,5 @@
 # RewardDistributorRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b0132a87539388dafe86f79d095cab28f13e5989/src/RewardDistributorRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/dddd380a18864fe36c9ec409abd3170e82ca6a46/src/RewardDistributorRootstockCollective.sol)
 
 **Inherits:**
 [UpgradeableRootstockCollective](/src/governance/UpgradeableRootstockCollective.sol/abstract.UpgradeableRootstockCollective.md)
@@ -9,7 +9,7 @@ Accumulates all the rewards to be distributed for each cycle
 
 ## State Variables
 ### rifToken
-address of the token rewarded to builder and backers
+address of rif token rewarded to builder and backers
 
 
 ```solidity
@@ -202,7 +202,7 @@ sets the default reward amounts
 
 ```solidity
 function setDefaultRewardAmount(
-    uint256 tokenAmount_,
+    uint256 rifTokenAmount_,
     uint256 usdrifTokenAmount_,
     uint256 nativeAmount_
 )
@@ -214,7 +214,7 @@ function setDefaultRewardAmount(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`tokenAmount_`|`uint256`|default amount of ERC20 rif token to send|
+|`rifTokenAmount_`|`uint256`|default amount of ERC20 rif token to send|
 |`usdrifTokenAmount_`|`uint256`|default amount of ERC20 usdrif token to send|
 |`nativeAmount_`|`uint256`|default amount of Native token to send|
 

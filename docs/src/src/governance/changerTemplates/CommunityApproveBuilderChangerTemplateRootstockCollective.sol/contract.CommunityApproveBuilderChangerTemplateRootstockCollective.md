@@ -1,5 +1,5 @@
 # CommunityApproveBuilderChangerTemplateRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b0132a87539388dafe86f79d095cab28f13e5989/src/governance/changerTemplates/CommunityApproveBuilderChangerTemplateRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/dddd380a18864fe36c9ec409abd3170e82ca6a46/src/governance/changerTemplates/CommunityApproveBuilderChangerTemplateRootstockCollective.sol)
 
 **Inherits:**
 [IChangeContractRootstockCollective](/src/interfaces/IChangeContractRootstockCollective.sol/interface.IChangeContractRootstockCollective.md)

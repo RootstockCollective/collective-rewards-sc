@@ -1,5 +1,5 @@
 # GaugeRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b0132a87539388dafe86f79d095cab28f13e5989/src/gauge/GaugeRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/dddd380a18864fe36c9ec409abd3170e82ca6a46/src/gauge/GaugeRootstockCollective.sol)
 
 **Inherits:**
 ReentrancyGuardUpgradeable
@@ -10,7 +10,7 @@ It receives all the rewards obtained for that project and allows the builder and
 
 ## State Variables
 ### rifToken
-address of the token rewarded to builder and voters
+address of rif token rewarded to builder and backers
 
 
 ```solidity
@@ -57,7 +57,7 @@ mapping(address backer => uint256 allocation) public allocationOf;
 ### rewardData
 rewards data to each token
 
-*address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address*
+*address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address*
 
 
 ```solidity
@@ -75,7 +75,7 @@ BuilderRegistryRootstockCollective public builderRegistry;
 
 
 ### usdrifToken
-address of the token rewarded to builder and voters
+address of usdRif token rewarded to builder and backers
 
 
 ```solidity
@@ -138,7 +138,7 @@ function initialize(address rifToken_, address usdrifToken_, address builderRegi
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rifToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20|
+|`rifToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20 standard are supported.|
 |`usdrifToken_`|`address`|address of the USDRIF token rewarded to builder and voters. Only tokens that adhere to the ERC-20 standard are supported.|
 |`builderRegistry_`|`address`|address of the builder registry contract|
 
@@ -173,7 +173,7 @@ function rewardRate(address rewardToken_) external view returns (uint256);
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 
 
 ### rewardPerTokenStored
@@ -188,7 +188,7 @@ function rewardPerTokenStored(address rewardToken_) external view returns (uint2
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 
 
 ### rewardMissing
@@ -203,7 +203,7 @@ function rewardMissing(address rewardToken_) external view returns (uint256);
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 
 
 ### lastUpdateTime
@@ -218,7 +218,7 @@ function lastUpdateTime(address rewardToken_) external view returns (uint256);
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 
 
 ### builderRewards
@@ -233,7 +233,7 @@ function builderRewards(address rewardToken_) external view returns (uint256);
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 
 
 ### backerRewardPerTokenPaid
@@ -248,7 +248,7 @@ function backerRewardPerTokenPaid(address rewardToken_, address backer_) externa
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`||
 
 
@@ -264,7 +264,7 @@ function estimatedBackerRewards(address rewardToken_, address backer_) external 
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address of the backer|
 
 
@@ -280,7 +280,7 @@ function rewards(address rewardToken_, address backer_) external view returns (u
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address of the backer|
 
 
@@ -311,13 +311,13 @@ function rewardPerToken(address rewardToken_) external view returns (uint256);
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`<none>`|`uint256`|rewardPerToken rifToken:stakingToken ratio [PREC]|
+|`<none>`|`uint256`|rewardPerToken rewardToken:stakingToken ratio [PREC]|
 
 
 ### left
@@ -332,7 +332,7 @@ function left(address rewardToken_) external view returns (uint256);
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 
 
 ### earned
@@ -347,7 +347,7 @@ function earned(address rewardToken_, address backer_) external view returns (ui
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address who earned the rewards|
 
 
@@ -382,7 +382,7 @@ function claimBackerReward(address rewardToken_, address backer_) public;
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address who receives the rewards|
 
 
@@ -416,7 +416,7 @@ function claimBuilderReward(address rewardToken_) public;
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 
 
 ### moveBuilderUnclaimedRewards
@@ -591,14 +591,14 @@ function _rewardPerToken(address rewardToken_, uint256 periodFinish_) internal v
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`periodFinish_`|`uint256`|timestamp end of current rewards period|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`<none>`|`uint256`|rewardPerToken rifToken:stakingToken ratio [PREC]|
+|`<none>`|`uint256`|rewardPerToken rewardToken:stakingToken ratio [PREC]|
 
 
 ### _earned
@@ -613,7 +613,7 @@ function _earned(address rewardToken_, address backer_, uint256 periodFinish_) i
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address who earned the rewards|
 |`periodFinish_`|`uint256`|timestamp end of current rewards period|
 
@@ -630,7 +630,7 @@ function _left(address rewardToken_) internal view returns (uint256);
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 
 
 ### _notifyRewardAmount
@@ -653,7 +653,7 @@ function _notifyRewardAmount(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`builderAmount_`|`uint256`|amount of rewards for the builder|
 |`backersAmount_`|`uint256`|amount of rewards for the backers|
 |`periodFinish_`|`uint256`|timestamp end of current rewards period|
@@ -673,7 +673,7 @@ function _updateRewards(address rewardToken_, address backer_, uint256 periodFin
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`backer_`|`address`|address of the backers|
 |`periodFinish_`|`uint256`|timestamp end of current rewards period|
 
@@ -690,7 +690,7 @@ function _updateRewardMissing(address rewardToken_, uint256 periodFinish_) inter
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`periodFinish_`|`uint256`|timestamp end of current rewards period|
 
 
@@ -706,7 +706,7 @@ function _transferRewardToken(address rewardToken_, address to_, uint256 amount_
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`to_`|`address`|address who receives the tokens|
 |`amount_`|`uint256`|amount of tokens to send|
 
@@ -723,7 +723,7 @@ function _moveBuilderUnclaimedRewards(address rewardToken_, address to_) interna
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address|
 |`to_`|`address`|address who receives the rewards|
 
 

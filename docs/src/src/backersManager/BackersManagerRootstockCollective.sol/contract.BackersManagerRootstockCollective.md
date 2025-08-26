@@ -1,5 +1,5 @@
 # BackersManagerRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b0132a87539388dafe86f79d095cab28f13e5989/src/backersManager/BackersManagerRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/dddd380a18864fe36c9ec409abd3170e82ca6a46/src/backersManager/BackersManagerRootstockCollective.sol)
 
 **Inherits:**
 [CycleTimeKeeperRootstockCollective](/src/backersManager/CycleTimeKeeperRootstockCollective.sol/abstract.CycleTimeKeeperRootstockCollective.md), [ICollectiveRewardsCheckRootstockCollective](/src/interfaces/ICollectiveRewardsCheckRootstockCollective.sol/interface.ICollectiveRewardsCheckRootstockCollective.md), ERC165Upgradeable
@@ -27,7 +27,7 @@ IERC20 public stakingToken;
 
 
 ### rifToken
-address of the token rewarded to builder and voters
+address of rif token rewarded to builder and backers
 
 
 ```solidity
@@ -243,7 +243,7 @@ function initialize(
 |Name|Type|Description|
 |----|----|-----------|
 |`governanceManager_`|`IGovernanceManagerRootstockCollective`|contract with permissioned roles|
-|`rifToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20|
+|`rifToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20 standard are supported.|
 |`usdrifToken_`|`address`|address of the USDRIF token rewarded to builder and voters. Only tokens that adhere to the standard are supported.|
 |`stakingToken_`|`address`|address of the staking token for builder and voters|
 |`cycleDuration_`|`uint32`|Collective Rewards cycle time duration|
@@ -439,13 +439,13 @@ claims backer rewards from a batch of gauges
 
 
 ```solidity
-function claimBackerRewards(address rifToken_, GaugeRootstockCollective[] memory gauges_) external;
+function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rifToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native address|
 |`gauges_`|`GaugeRootstockCollective[]`|array of gauges to claim|
 
 
@@ -657,23 +657,23 @@ function _notifyRewardAmountUsdrif(uint256 amount_) internal;
 function _notifyRewardAmount(address token_, address sender_, uint256 amount_) internal;
 ```
 
-### rifTokenApprove
+### rewardTokensApprove
 
-approves RIF tokens to a given gauge
+approves reward tokens to a given gauge
 
 *give full allowance when it is community approved and remove it when it is community banned
-reverts if the RIF ERC-20 contract returns false on the approval*
+reverts if the ERC-20 reward tokens returns false on the approval*
 
 
 ```solidity
-function rifTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry;
+function rewardTokensApprove(address gauge_, uint256 value_) external onlyBuilderRegistry;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`gauge_`|`address`|gauge contract to approve RIF tokens|
-|`value_`|`uint256`|amount of RIF tokens to approve|
+|`gauge_`|`address`|gauge contract to approve reward tokens|
+|`value_`|`uint256`|amount to approve|
 
 
 ### haltGaugeShares
@@ -739,7 +739,7 @@ event NewAllocation(address indexed backer_, address indexed gauge_, uint256 all
 ### NotifyReward
 
 ```solidity
-event NotifyReward(address indexed rifToken_, address indexed sender_, uint256 amount_);
+event NotifyReward(address indexed rewardToken_, address indexed sender_, uint256 amount_);
 ```
 
 ### RewardDistributionStarted
@@ -857,9 +857,9 @@ error BackerHasAllocations();
 error ZeroAddressNotAllowed();
 ```
 
-### RifTokenNotApproved
+### RewardTokenNotApproved
 
 ```solidity
-error RifTokenNotApproved();
+error RewardTokenNotApproved();
 ```
 

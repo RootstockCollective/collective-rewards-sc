@@ -1,5 +1,5 @@
 # UtilsLib
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/b0132a87539388dafe86f79d095cab28f13e5989/src/libraries/UtilsLib.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/dddd380a18864fe36c9ec409abd3170e82ca6a46/src/libraries/UtilsLib.sol)
 
 
 ## State Variables
@@ -13,7 +13,7 @@ uint256 internal constant _PRECISION = 10 ** 18;
 ### _NATIVE_ADDRESS
 
 ```solidity
-address internal constant _NATIVE_ADDRESS = address(uint160(uint256(keccak256("NATIVE_ADDRESS"))));
+address internal constant _NATIVE_ADDRESS = address(uint160(uint256(keccak256("COINBASE_ADDRESS"))));
 ```
 
 
