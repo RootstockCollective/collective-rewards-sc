@@ -4,9 +4,11 @@ pragma solidity 0.8.20;
 library UtilsLib {
     // Constants may not be used in child contracts and that is fine as they are
     // not using any space in storage, so we disable the check
+    // COINBASE_ADDRESS is used to represent the native token address. COINBASE_ADDRESS string is used for legacy
+    // reasons and should not be changed.
     // slither-disable-next-line unused-state
     uint256 internal constant _PRECISION = 10 ** 18;
-    address internal constant _NATIVE_ADDRESS = address(uint160(uint256(keccak256("NATIVE_ADDRESS"))));
+    address internal constant _NATIVE_ADDRESS = address(uint160(uint256(keccak256("COINBASE_ADDRESS"))));
     uint256 public constant MIN_AMOUNT_INCENTIVES = 100;
 
     // Saves gas

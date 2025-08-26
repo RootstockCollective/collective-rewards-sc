@@ -361,7 +361,7 @@ contract BackersManagerRootstockCollective is
      * @notice claims backer rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native address
      */
     function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external {
         uint256 _length = gauges_.length;

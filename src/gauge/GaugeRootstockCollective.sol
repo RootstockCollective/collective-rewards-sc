@@ -84,7 +84,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /// @notice amount of stakingToken allocated by a backer
     mapping(address backer => uint256 allocation) public allocationOf;
     /// @notice rewards data to each token
-    /// @dev address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+    /// @dev address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
     mapping(address rifToken => RewardData rewardData) public rewardData;
     /// @notice BuilderRegistryRootstockCollective contract address
     BuilderRegistryRootstockCollective public builderRegistry;
@@ -148,7 +148,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets reward rate
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function rewardRate(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].rewardRate;
@@ -157,7 +157,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets reward per token stored
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function rewardPerTokenStored(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].rewardPerTokenStored;
@@ -166,7 +166,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets reward missing
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function rewardMissing(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].rewardMissing;
@@ -175,7 +175,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets last update time
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function lastUpdateTime(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].lastUpdateTime;
@@ -184,7 +184,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets builder rewards
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function builderRewards(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].builderRewards;
@@ -193,7 +193,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets backer reward per token paid
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function backerRewardPerTokenPaid(address rewardToken_, address backer_) external view returns (uint256) {
         return rewardData[rewardToken_].backerRewardPerTokenPaid[backer_];
@@ -202,7 +202,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets the estimated amount of rifToken left to earn for a backer in current cycle
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address of the backer
      */
     function estimatedBackerRewards(address rewardToken_, address backer_) external view returns (uint256) {
@@ -217,7 +217,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets amount of rifToken earned for a backer
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address of the backer
      */
     function rewards(address rewardToken_, address backer_) external view returns (uint256) {
@@ -235,7 +235,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets the current reward rate per unit of stakingToken allocated
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
      */
     function rewardPerToken(address rewardToken_) external view returns (uint256) {
@@ -245,7 +245,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets total amount of rewards to distribute for the current rewards period
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function left(address rewardToken_) external view returns (uint256) {
         return _left(rewardToken_);
@@ -254,7 +254,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets `backer_` rewards missing to claim
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address who earned the rewards
      */
     function earned(address rewardToken_, address backer_) external view returns (uint256) {
@@ -276,7 +276,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @notice claim rewards for a `backer_` address
      * @dev reverts if is not called by the `backer_` or the backersManager
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address who receives the rewards
      */
     function claimBackerReward(address rewardToken_, address backer_) public {
@@ -311,7 +311,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev reverts if is not called by the builder or reward receiver
      * @dev rewards are transferred to the builder reward receiver
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function claimBuilderReward(address rewardToken_) public {
         address _rewardReceiver = builderRegistry.canClaimBuilderReward(msg.sender);
@@ -515,7 +515,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets the current reward rate per unit of stakingToken allocated
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param periodFinish_ timestamp end of current rewards period
      * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
      */
@@ -539,7 +539,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets `backer_` rewards missing to claim
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address who earned the rewards
      * @param periodFinish_ timestamp end of current rewards period
      */
@@ -558,7 +558,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets total amount of rewards to distribute for the current rewards period
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function _left(address rewardToken_) internal view returns (uint256) {
         // [N] = ([N] - [N]) * [PREC] / [PREC]
@@ -568,7 +568,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice transfers reward tokens to this contract
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param builderAmount_ amount of rewards for the builder
      * @param backersAmount_ amount of rewards for the backers
      * @param periodFinish_ timestamp end of current rewards period
@@ -624,7 +624,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice update rewards variables when a backer interacts
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address of the backers
      * @param periodFinish_ timestamp end of current rewards period
      */
@@ -640,7 +640,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice update reward missing variable
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param periodFinish_ timestamp end of current rewards period
      */
     function _updateRewardMissing(address rewardToken_, uint256 periodFinish_) internal {
@@ -657,7 +657,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice transfers reward tokens
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param to_ address who receives the tokens
      * @param amount_ amount of tokens to send
      */
@@ -672,7 +672,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice moves builder rewards to another address
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("NATIVE_ADDRESS")))) is used for native tokens address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param to_ address who receives the rewards
      */
     function _moveBuilderUnclaimedRewards(address rewardToken_, address to_) internal {
