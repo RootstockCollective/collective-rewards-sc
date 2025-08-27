@@ -6,7 +6,7 @@ import { HaltedBuilderBehavior } from "./HaltedBuilderBehavior.t.sol";
 contract CommunityBanBuilderTest is HaltedBuilderBehavior {
     function _initialState() internal override {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         //   AND half cycle pass
         _initialDistribution();
 
@@ -27,7 +27,7 @@ contract CommunityBanBuilderTest is HaltedBuilderBehavior {
      */
     function test_BuildersReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is community banned
         _initialState();

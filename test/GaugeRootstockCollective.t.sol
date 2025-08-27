@@ -350,10 +350,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: rewards variables for rifToken are updated by incentivizer that is not the
+     * SCENARIO: rewards variables for rifToken and usdrifToken are updated by incentivizer that is not the
      * BackersManagerRootstockCollective
      */
-    function test_IncentivizeWithRifTokenNotFromBackersManagerRootstockCollective() public {
+    function test_IncentivizeWithERC20TokensNotFromBackersManagerRootstockCollective() public {
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
@@ -392,43 +392,6 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // THEN rewardPerToken is 16.666666666666666666 = 518400 * 0.000192901234567901 / 6 ether
         assertEq(gauge.rewardPerToken(address(rifToken)), 16_666_666_666_666_666_666);
         // THEN rewardPerToken is 8.333333333333333333 = 518400 / 2 * 0.000192901234567901 / 6 ether
-        assertEq(gauge.rewardPerToken(address(usdrifToken)), 16_666_666_666_666_666_666);
-    }
-
-    /**
-     * SCENARIO: rewards variables for usdrifToken are updated by incentivizer that is not the
-     * BackersManagerRootstockCollective
-     */
-    function test_IncentivizeWithUsdrifTokenNotFromBackersManagerRootstockCollective() public {
-        // GIVEN alice allocates 1 ether
-        vm.startPrank(alice);
-        backersManager.allocate(gauge, 1 ether);
-        // AND bob allocates 5 ether
-        vm.startPrank(bob);
-        backersManager.allocate(gauge, 5 ether);
-
-        // WHEN an Incentivizer has usdrifToken
-        vm.startPrank(incentivizer);
-        usdrifToken.mint(address(incentivizer), 100 ether);
-        usdrifToken.approve(address(gauge), 100 ether);
-
-        // AND 1 day passes
-        skip(1 days);
-
-        // WHEN 100 ether are distributed by Incentivizer
-        gauge.incentivizeWithUsdrifToken(100 ether);
-        // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
-        assertEq(gauge.rewardRate(address(usdrifToken)) / 10 ** 18, 192_901_234_567_901);
-        // AND half cycle passes
-        _skipRemainingCycleFraction(2);
-
-        // THEN rewardPerToken is 8.333333333333333333 = 518400 / 2 * 0.000192901234567901 / 6 ether
-        assertEq(gauge.rewardPerToken(address(usdrifToken)), 8_333_333_333_333_333_333);
-
-        // AND cycle finishes
-        _skipAndStartNewCycle();
-
-        // THEN rewardPerToken is 16.666666666666666666 = 518400 * 0.000192901234567901 / 6 ether
         assertEq(gauge.rewardPerToken(address(usdrifToken)), 16_666_666_666_666_666_666);
     }
 
@@ -674,8 +637,10 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN rewardMissing is 49999999999999999999 = 518400 / 2 *  0.000192901234567901
         assertEq(gauge.rewardMissing(address(rifToken)) / 10 ** 18, 49_999_999_999_999_999_999);
+        assertEq(gauge.rewardMissing(address(usdrifToken)) / 10 ** 18, 49_999_999_999_999_999_999);
         // THEN rewardPerToken is 0
         assertEq(gauge.rewardPerToken(address(rifToken)), 0);
+        assertEq(gauge.rewardPerToken(address(usdrifToken)), 0);
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 192_901_234_567_901);
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
@@ -687,26 +652,33 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // 8.333333333333333333 = (518400 sec / 2) * rewardRate
         // 8.333333333333333333 = 259200 sec * 0.000192901234567901
         assertEq(gauge.rewardPerToken(address(rifToken)), 8_333_333_333_333_333_333);
+        assertEq(gauge.rewardPerToken(address(usdrifToken)), 8_333_333_333_333_333_333);
         // THEN alice has 1 * rewardPerToken to claim: 8.333333333333333333 = 1 * 8.333333333333333333
         assertEq(gauge.earned(address(rifToken), alice), 8_333_333_333_333_333_333);
+        assertEq(gauge.earned(address(usdrifToken), alice), 8_333_333_333_333_333_333);
         // THEN bob has 5 * rewardPerToken to claim: 41.666666666666666665 = 5 * 8.333333333333333333
         assertEq(gauge.earned(address(rifToken), bob), 41_666_666_666_666_666_665);
+        assertEq(gauge.earned(address(usdrifToken), bob), 41_666_666_666_666_666_665);
 
         // THEN rewardMissing is 49.999999999999999999 = 518400 / 2 *  0.000192901234567901
         assertEq(gauge.rewardMissing(address(rifToken)) / 10 ** 18, 49_999_999_999_999_999_999);
+        assertEq(gauge.rewardMissing(address(usdrifToken)) / 10 ** 18, 49_999_999_999_999_999_999);
 
         // AND 0 rifToken are distributed
         _distribute(0, 0, 0);
 
         // THEN rewardRate is 0.000082671957671957 = 50 ether / 604800 sec
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 82_671_957_671_957);
+        assertEq(gauge.rewardRate(address(usdrifToken)) / 10 ** 18, 82_671_957_671_957);
 
         // THEN rewardPerTokenStored is
         // 8.333333333333333333 = rewardMissing / 6 ether
         // 8.333333333333333333 = 49.999999999999999999 / 6 ether
         assertEq(gauge.rewardPerTokenStored(address(rifToken)), 8_333_333_333_333_333_333);
+        assertEq(gauge.rewardPerTokenStored(address(usdrifToken)), 8_333_333_333_333_333_333);
         // THEN rewardMissing is 0
         assertEq(gauge.rewardMissing(address(rifToken)) / 10 ** 18, 0);
+        assertEq(gauge.rewardMissing(address(usdrifToken)) / 10 ** 18, 0);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -715,11 +687,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // 16.666666666666666666 = rewardPerTokenStored + 604800 * rewardRate / 6 ether
         // 16.666666666666666666 = 8.333333333333333333 + 604800 * 0.000082671957671957 / 6 ether
         assertEq(gauge.rewardPerToken(address(rifToken)), 16_666_666_666_666_666_666);
+        assertEq(gauge.rewardPerToken(address(usdrifToken)), 16_666_666_666_666_666_666);
 
         // THEN alice has 1 * rewardPerToken to claim: 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(gauge.earned(address(rifToken), alice), 16_666_666_666_666_666_666);
+        assertEq(gauge.earned(address(usdrifToken), alice), 16_666_666_666_666_666_666);
         // THEN bob has 5 * rewardPerToken to claim: 83.333333333333333333 = 5 * 16.666666666666666666
         assertEq(gauge.earned(address(rifToken), bob), 83_333_333_333_333_333_330);
+        assertEq(gauge.earned(address(usdrifToken), bob), 83_333_333_333_333_333_330);
     }
 
     /**
@@ -750,6 +725,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         _skipAndStartNewCycle();
         // THEN rewardMissing is 0 since there were no allocations
         assertEq(gauge.rewardMissing(address(rifToken)), 0);
+        assertEq(gauge.rewardMissing(address(usdrifToken)), 0);
 
         // AND 0 ether are distributed for backers
         vm.startPrank(address(backersManager));
@@ -764,12 +740,16 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN rewardPerToken is 0
         assertEq(gauge.rewardPerToken(address(rifToken)), 0);
+        assertEq(gauge.rewardPerToken(address(usdrifToken)), 0);
         // THEN rewardMissing is 0 since they were already included in the rewardRate during the distribution
         assertEq(gauge.rewardMissing(address(rifToken)), 0);
+        assertEq(gauge.rewardMissing(address(usdrifToken)), 0);
         // THEN rewardPerTokenStored is 0
         assertEq(gauge.rewardPerTokenStored(address(rifToken)), 0);
+        assertEq(gauge.rewardPerTokenStored(address(usdrifToken)), 0);
         // THEN rewardRate is 0.000165343915343915 = 100 ether / 604800 sec
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 165_343_915_343_915);
+        assertEq(gauge.rewardRate(address(usdrifToken)) / 10 ** 18, 165_343_915_343_915);
 
         // AND alice allocates 1 ether
         vm.startPrank(alice);
@@ -783,17 +763,22 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN rewardPerTokenStored is 0
         assertEq(gauge.rewardPerTokenStored(address(rifToken)), 0);
+        assertEq(gauge.rewardPerTokenStored(address(usdrifToken)), 0);
         // THEN rewardRate is 0.000165343915343915 = 100 ether / 604800 sec
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 165_343_915_343_915);
+        assertEq(gauge.rewardRate(address(usdrifToken)) / 10 ** 18, 165_343_915_343_915);
         // THEN rewardPerToken is
         // 16.666666666666666666 = rewardPerTokenStored + 604800 * rewardRate / 6 ether
         // 16.666666666666666666 = 0 + 604800 * 0.000165343915343915 / 6 ether
         assertEq(gauge.rewardPerToken(address(rifToken)), 16_666_666_666_666_666_666);
+        assertEq(gauge.rewardPerToken(address(usdrifToken)), 16_666_666_666_666_666_666);
 
         // THEN alice has 1 * rewardPerToken to claim: 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(gauge.earned(address(rifToken), alice), 16_666_666_666_666_666_666);
+        assertEq(gauge.earned(address(usdrifToken), alice), 16_666_666_666_666_666_666);
         // THEN bob has 5 * rewardPerToken to claim: 83.333333333333333333 = 5 * 16.666666666666666666
         assertEq(gauge.earned(address(rifToken), bob), 83_333_333_333_333_333_330);
+        assertEq(gauge.earned(address(usdrifToken), bob), 83_333_333_333_333_333_330);
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
@@ -802,14 +787,18 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(rifToken.balanceOf(alice), 16_666_666_666_666_666_666);
         // THEN alice has 0 rewards to claim
         assertEq(gauge.earned(address(rifToken), alice), 0);
+        assertEq(gauge.earned(address(usdrifToken), alice), 0);
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
         gauge.claimBackerReward(bob);
         // THEN bob rifToken balance is 5 * rewardPerToken
         assertEq(rifToken.balanceOf(bob), 83_333_333_333_333_333_330);
+        assertEq(usdrifToken.balanceOf(bob), 83_333_333_333_333_333_330);
+
         // THEN bob has 0 rewards to claim
         assertEq(gauge.earned(address(rifToken), bob), 0);
+        assertEq(gauge.earned(address(usdrifToken), bob), 0);
     }
 
     /**
@@ -926,12 +915,14 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 192_901_234_567_901);
+        assertEq(gauge.rewardRate(address(usdrifToken)) / 10 ** 18, 192_901_234_567_901);
 
         // AND half cycle passes
         _skipRemainingCycleFraction(2);
 
         // THEN rewardPerToken is 8.333333333333333333 = 518400 / 2 * 0.000192901234567901 / 6 ether
         assertEq(gauge.rewardPerToken(address(rifToken)), 8_333_333_333_333_333_333);
+        assertEq(gauge.rewardPerToken(address(usdrifToken)), 8_333_333_333_333_333_333);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -946,12 +937,16 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN rewardRate is 0.000165343915343915 = 100 ether / 604800 sec
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 165_343_915_343_915);
+        assertEq(gauge.rewardRate(address(usdrifToken)) / 10 ** 18, 165_343_915_343_915);
         // THEN rewardPerToken is 16.666666666666666666 = 604800 * 0.000165343915343915 / 6 ether//
         assertEq(gauge.rewardPerToken(address(rifToken)), 16_666_666_666_666_666_666);
+        assertEq(gauge.rewardPerToken(address(usdrifToken)), 16_666_666_666_666_666_666);
         // THEN rewardPerTokenStored is 16.666666666666666666 = 518400 * 0.000192901234567901 / 6 ether
         assertEq(gauge.rewardPerTokenStored(address(rifToken)), 16_666_666_666_666_666_666);
+        assertEq(gauge.rewardPerTokenStored(address(usdrifToken)), 16_666_666_666_666_666_666);
         // THEN rewardMissing is 0
         assertEq(gauge.rewardMissing(address(rifToken)), 0);
+        assertEq(gauge.rewardMissing(address(usdrifToken)), 0);
 
         // AND cycle finishes
         _skipAndStartNewCycle();
@@ -960,14 +955,17 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // 33.333333333333333332 = rewardPerTokenStored +  (604800 * rewardRate / 6 ether)
         // 33.333333333333333332 = 16.666666666666666666 +  (604800 * 0.000165343915343915 / 6 ether)
         assertEq(gauge.rewardPerToken(address(rifToken)), 33_333_333_333_333_333_332);
+        assertEq(gauge.rewardPerToken(address(usdrifToken)), 33_333_333_333_333_333_332);
 
         // THEN alice has rewards to claim:
         // 33.333333333333333332 = 1 * rewardPerToken = 1 * 33.333333333333333332
         assertEq(gauge.earned(address(rifToken), alice), 33_333_333_333_333_333_332);
+        assertEq(gauge.earned(address(usdrifToken), alice), 33_333_333_333_333_333_332);
 
         // THEN bob has rewards to claim:
         // 166.66666666666666666 = 5 * rewardPerToken = 5 * 33.333333333333333332
         assertEq(gauge.earned(address(rifToken), bob), 166_666_666_666_666_666_660);
+        assertEq(gauge.earned(address(usdrifToken), bob), 166_666_666_666_666_666_660);
     }
 
     /**
@@ -1100,6 +1098,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         gauge.claimBuilderReward();
         // THEN builder rifToken balance is 70 ether
         assertEq(rifToken.balanceOf(builder), 70 ether);
+        // THEN builder usdrifToken balance is 70 ether
+        assertEq(usdrifToken.balanceOf(builder), 70 ether);
         // THEN builder native tokens balance is 70 ether
         assertEq(builder.balance, 70 ether);
     }
@@ -1136,10 +1136,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(rifToken.balanceOf(builder), 70 ether);
         // THEN builderRewards in rifToken is 0
         assertEq(gauge.builderRewards(address(rifToken)), 0 ether);
-        // THEN builderRewards usdrifToken is 70 ether
-        assertEq(gauge.builderRewards(address(usdrifToken)), 70 ether);
+        // THEN builder usdrifToken balance is 0 ether
+        assertEq(usdrifToken.balanceOf(builder), 0 ether);
         // THEN builder native tokens balance is 0 ether
         assertEq(builder.balance, 0 ether);
+        // THEN builderRewards in usdrifToken is 70 ether
+        assertEq(gauge.builderRewards(address(usdrifToken)), 70 ether);
         // THEN builderRewards in native tokens is 70 ether
         assertEq(gauge.builderRewards(UtilsLib._NATIVE_ADDRESS), 70 ether);
     }
@@ -1332,6 +1334,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         gauge2.claimBuilderReward();
         // THEN he receives the reward in the new reward receiver address
         assertEq(rifToken.balanceOf(_newRewardReceiver), 70 ether);
+        // THEN newRewardReceiver usdrifToken balance is 70 ether
+        assertEq(usdrifToken.balanceOf(_newRewardReceiver), 70 ether);
     }
 
     /**
@@ -1369,6 +1373,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN rewardPerToken for rifToken is 30 = 60 / 2 ether
         assertApproxEqAbs(gauge.rewardPerToken(address(rifToken)), 30 ether, 100);
+        // THEN rewardPerToken for usdrifToken is 30 = 60 / 2 ether
+        assertApproxEqAbs(gauge.rewardPerToken(address(usdrifToken)), 30 ether, 100);
         // THEN rewardPerToken for native tokens is 30 = 60 / 2 ether
         assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 30 ether, 100);
 
@@ -1378,6 +1384,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN builder rifToken balance is 140 ether
         assertEq(rifToken.balanceOf(builder), 140 ether);
+        // THEN builder usdrifToken balance is 140 ether
+        assertEq(usdrifToken.balanceOf(builder), 140 ether);
         // THEN builder native tokens balance is 140 ether
         assertEq(builder.balance, 140 ether);
     }
@@ -1412,6 +1420,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN rewardPerToken for rifToken is 30 = 60 / 2 ether
         assertApproxEqAbs(gauge.rewardPerToken(address(rifToken)), 30 ether, 100);
+        // THEN rewardPerToken for usdrifToken is 30 = 60 / 2 ether
+        assertApproxEqAbs(gauge.rewardPerToken(address(usdrifToken)), 30 ether, 100);
         // THEN rewardPerToken for native tokens is 30 = 60 / 2 ether
         assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 30 ether, 100);
 
@@ -1421,6 +1431,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
 
         // THEN builder rifToken balance is 140 ether
         assertEq(rifToken.balanceOf(builder), 140 ether);
+        // THEN builder usdrifToken balance is 140 ether
+        assertEq(usdrifToken.balanceOf(builder), 140 ether);
         // THEN builder native tokens balance is 140 ether
         assertEq(builder.balance, 140 ether);
     }
@@ -1963,18 +1975,26 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // rewardRate is 0.000192901234567901 = 100 ether / 518400 sec
         // THEN rewardPerToken is 16.666666666666666666 = 518400 * 0.000192901234567901 / 6 ether
         assertEq(gauge.rewardPerToken(address(rifToken)), 16_666_666_666_666_666_666);
+        // THEN rewardPerToken for usdrifToken is 16.666666666666666666 = 518400 * 0.000192901234567901 / 6 ether
+        assertEq(gauge.rewardPerToken(address(usdrifToken)), 16_666_666_666_666_666_666);
+        // THEN rewardPerToken for native tokens is 0
+        assertEq(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 0);
 
         // WHEN alice claims rewards
         vm.startPrank(alice);
         gauge.claimBackerReward(alice);
         // THEN alice rifToken balance is 16.666666666666666666 = 1 * 16.666666666666666666
         assertEq(rifToken.balanceOf(alice), 16_666_666_666_666_666_666);
+        // THEN alice usdrifToken balance is 16.666666666666666666 = 1 * 16.666666666666666666
+        assertEq(usdrifToken.balanceOf(alice), 16_666_666_666_666_666_666);
 
         // WHEN bob claims rewards
         vm.startPrank(bob);
         gauge.claimBackerReward(bob);
         // THEN bob rifToken balance is 83.333333333333333330 = 5 * 16.666666666666666666
         assertEq(rifToken.balanceOf(bob), 83_333_333_333_333_333_330);
+        // THEN bob usdrifToken balance is 83.333333333333333330 = 5 * 16.666666666666666666
+        assertEq(usdrifToken.balanceOf(bob), 83_333_333_333_333_333_330);
 
         // AND alice and bob deallocate all
         // GIVEN alice allocates 1 ether
@@ -2006,8 +2026,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         gauge.claimBackerReward(alice);
         // THEN alice rifToken balance did not change
         assertEq(rifToken.balanceOf(alice), 16_666_666_666_666_666_666);
-        // THEN rewardRate is 0
+        // THEN alice usdrifToken balance is 16.666666666666666666 = 1 * 16.666666666666666666
+        assertEq(usdrifToken.balanceOf(alice), 16_666_666_666_666_666_666);
+        // THEN rifToken rewardRate is 0
         assertEq(gauge.rewardRate(address(rifToken)), 0);
+        // THEN usdrifToken rewardRate is 0
+        assertEq(gauge.rewardRate(address(usdrifToken)), 0);
     }
 
     /**

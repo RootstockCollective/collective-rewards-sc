@@ -113,6 +113,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 50 * 3 / 5 = 30
         // total = 67.5
         assertEq(_clearRifBalance(builder), 67_535_756_853_396_901_073);
+        // THEN gauge builder receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 3 / 4 = 37.5
+        // cycle 3 = 0 (no new distribution)
+        // cycle 4 = 50 * 3 / 5 = 30
+        // total = 67.5
+        assertEq(_clearUsdrifBalance(builder), 67_535_756_853_396_901_073);
         // THEN gauge builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 3 / 4 = 3.75
@@ -128,6 +135,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 50 * 2 / 5 = 20
         // total = 32.5
         assertEq(_clearRifBalance(builder2Receiver), 32_464_243_146_603_098_927);
+        // THEN gauge2 builder receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 1 / 4 = 12.5
+        // cycle 3 = 0 (no new distribution)
+        // cycle 4 = 50 * 2 / 5 = 20
+        // total = 32.5
+        assertEq(_clearUsdrifBalance(builder2Receiver), 32_464_243_146_603_098_927);
         // THEN gauge2 builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 1 / 4 = 1.25
@@ -249,6 +263,14 @@ contract SkipDistribution is BaseTest {
         // cycle 5 = 50 * 3 / 5 = 30
         // total = 67.5
         assertEq(_clearRifBalance(builder), 67_535_756_853_396_901_073);
+        // THEN gauge builder receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 3 / 4 = 37.5
+        // cycle 3 = 0 (no new distribution)
+        // cycle 4 = 0 (no new distribution)
+        // cycle 5 = 50 * 3 / 5 = 30
+        // total = 67.5
+        assertEq(_clearUsdrifBalance(builder), 67_535_756_853_396_901_073);
         // THEN gauge builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 3 / 4 = 3.75
@@ -266,6 +288,14 @@ contract SkipDistribution is BaseTest {
         // cycle 5 = 50 * 2 / 5 = 20
         // total = 32.5
         assertEq(_clearRifBalance(builder2Receiver), 32_464_243_146_603_098_927);
+        // THEN gauge2 builder receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 1 / 4 = 12.5
+        // cycle 3 = 0 (no new distribution)
+        // cycle 4 = 0 (no new distribution)
+        // cycle 5 = 50 * 2 / 5 = 20
+        // total = 32.5
+        assertEq(_clearUsdrifBalance(builder2Receiver), 32_464_243_146_603_098_927);
         // THEN gauge2 builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 1 / 4 = 1.25
@@ -388,6 +418,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 50 * 2 / 3 = 33.33 (3 votes for half of cycle 2 and 1 vote por half of cycle 3)
         // total = 70.08
         assertEq(_clearRifBalance(builder), 70_833_333_333_333_333_333);
+        // THEN gauge builder receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 3 / 4 = 37.5
+        // cycle 3 = 0 (shares are not updated since there are is no distribution)
+        // cycle 4 = 50 * 2 / 3 = 33.33 (3 votes for half of cycle 2 and 1 vote por half of cycle 3)
+        // total = 70.08
+        assertEq(_clearUsdrifBalance(builder), 70_833_333_333_333_333_333);
         // THEN gauge builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 3 / 4 = 3.75
@@ -403,6 +440,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 50 * 1 / 3 = 16.66 (1 vote for half of cycle 2 and 1 vote por half of cycle 3)
         // total = 29.16
         assertEq(_clearRifBalance(builder2Receiver), 29_166_666_666_666_666_667);
+        // THEN gauge2 builder receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 1 / 4 = 12.5
+        // cycle 3 = 0 (shares are not updated since there are is no distribution)
+        // cycle 4 = 50 * 1 / 3 = 16.66 (1 vote for half of cycle 2 and 1 vote por half of cycle 3)
+        // total = 29.16
+        assertEq(_clearUsdrifBalance(builder2Receiver), 29_166_666_666_666_666_667);
         // THEN gauge2 builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 1 / 4 = 1.25
@@ -535,6 +579,14 @@ contract SkipDistribution is BaseTest {
         // cycle 5 = 50 * 2 / 3 = 33.33 (3 votes for half of cycle 2 and 1 vote por half of cycle 3)
         // total = 70.08
         assertEq(_clearRifBalance(builder), 70_833_333_333_333_333_333);
+        // THEN gauge builder receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 3 / 4 = 37.5
+        // cycle 3 = 0 (shares are not updated since there are is no distribution)
+        // cycle 4 = 0
+        // cycle 5 = 50 * 2 / 3 = 33.33 (3 votes for half of cycle 2 and 1 vote por half of cycle 3)
+        // total = 70.08
+        assertEq(_clearUsdrifBalance(builder), 70_833_333_333_333_333_333);
         // THEN gauge builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 3 / 4 = 3.75
@@ -552,6 +604,14 @@ contract SkipDistribution is BaseTest {
         // cycle 5 = 50 * 1 / 3 = 16.66 (1 vote for half of cycle 2 and 1 vote por half of cycle 3)
         // total = 29.16
         assertEq(_clearRifBalance(builder2Receiver), 29_166_666_666_666_666_667);
+        // THEN gauge2 builder receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 1 / 4 = 12.5
+        // cycle 3 = 0 (shares are not updated since there are is no distribution)
+        // cycle 4 = 0
+        // cycle 5 = 50 * 1 / 3 = 16.66 (1 vote for half of cycle 2 and 1 vote por half of cycle 3)
+        // total = 29.16
+        assertEq(_clearUsdrifBalance(builder2Receiver), 29_166_666_666_666_666_667);
         // THEN gauge2 builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 1 / 4 = 1.25
@@ -637,6 +697,8 @@ contract SkipDistribution is BaseTest {
         _buildersClaim();
         // THEN gauge builder receives 0 rifToken since it only got incentives for sponsors
         assertEq(_clearRifBalance(builder), 0);
+        // THEN gauge builder receives usdrifToken since it only got incentives for sponsors
+        assertEq(_clearUsdrifBalance(builder), 0);
     }
 
     /**
@@ -724,11 +786,19 @@ contract SkipDistribution is BaseTest {
         // THEN gauge builder receives rifToken
         // cycle 5 = 50 / 2 = 25
         assertEq(_clearRifBalance(builder), 25_000_000_000_000_000_000);
+        // THEN gauge builder receives no usdrifToken
+        // cycle 5 = 0 / 2 = 25
+        assertEq(_clearUsdrifBalance(builder), 0);
         // THEN gauge builder receives rifToken
         // cycle 1 = 50
         // cycle 5 = 50 / 2
         // total = 75
         assertEq(_clearRifBalance(builder2Receiver), 75_000_000_000_000_000_000);
+        // THEN gauge builder receives no usdrifToken
+        // cycle 1 = 0
+        // cycle 5 = 0
+        // total = 0
+        assertEq(_clearUsdrifBalance(builder2Receiver), 0);
     }
 
     /**
@@ -747,7 +817,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 2
         // AND there is a distribution - won't affect gauge, only gauge2
-        _distribute(100, 0, 0);
+        _distribute(100, 100, 0);
 
         // AND gauge is incentivized
         _incentivize(gauge, 100 ether, 100 ether, 0);
@@ -768,7 +838,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 4
         // AND there is a distribution
-        _distribute(100, 0, 0);
+        _distribute(100, 100, 0);
 
         //CYCLE 5
         _skipAndStartNewCycle();
@@ -783,6 +853,8 @@ contract SkipDistribution is BaseTest {
         _buildersClaim();
         // THEN gauge builder receives 0 rifToken since it only got incentives
         assertEq(_clearRifBalance(builder), 17);
+        // THEN gauge builder receives 0 usdrifToken since it only got incentives
+        assertEq(_clearUsdrifBalance(builder), 17);
     }
 
     /**
@@ -802,7 +874,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 2
         // AND there is a distribution - won't affect gauge, only gauge2
-        _distribute(100 ether, 0, 0);
+        _distribute(100 ether, 100 ether, 0);
 
         // AND gauge is incentivized
         _incentivize(gauge, 100 ether, 100 ether, 0);
@@ -825,7 +897,7 @@ contract SkipDistribution is BaseTest {
 
         // CYCLE 5
         // AND there is a distribution
-        _distribute(100 ether, 0, 0);
+        _distribute(100 ether, 100 ether, 0);
 
         // CYCLE 6
         // AND cycle finishes
@@ -841,6 +913,8 @@ contract SkipDistribution is BaseTest {
         _buildersClaim();
         // THEN gauge builder receives 0 rifToken since it only got incentives
         assertEq(_clearRifBalance(builder), 0);
+        // THEN gauge builder receives 0 usdrifToken since it only got incentives
+        assertEq(_clearUsdrifBalance(builder), 0);
     }
 
     /**
@@ -883,6 +957,12 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = 50 * 1 / 2 = 25
         // total = 25
         assertEq(_clearRifBalance(builder), 25_000_000_000_000_000_000);
+        // THEN gauge builder receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 0
+        // cycle 3 = 50 * 1 / 2 = 25
+        // total = 25
+        assertEq(_clearUsdrifBalance(builder), 25_000_000_000_000_000_000);
         // THEN gauge builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 0
@@ -896,6 +976,14 @@ contract SkipDistribution is BaseTest {
         // cycle 3 = 50 * 1 / 2 = 25
         // total = 25
         assertEq(_clearRifBalance(builder2Receiver), 25_000_000_000_000_000_000);
+
+        // THEN gauge2 builder receives usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 0
+        // cycle 3 = 50 * 1 / 2 = 25
+        // total = 25
+        assertEq(_clearUsdrifBalance(builder2Receiver), 25_000_000_000_000_000_000);
+
         // THEN gauge2 builder receives native tokens
         // cycle 1 = 0
         // cycle 2 = 0
@@ -995,6 +1083,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 50 * 2 / 4 = 25
         // total = 75
         assertEq(_clearRifBalance(bob), 74_999_999_999_999_999_996);
+        // THEN bob receives more usdrifToken than he should
+        // cycle 1 = 0
+        // cycle 2 = 50 * 2 / 4 = 25
+        // cycle 3 = 50 * 2 / 4 = 25 (should not have received these rewards)
+        // cycle 4 = 50 * 2 / 4 = 25
+        // total = 75
+        assertEq(_clearUsdrifBalance(bob), 74_999_999_999_999_999_996);
         // THEN bob receives more native tokens than he should
         // cycle 1 = 0
         // cycle 2 = 5 * 2 / 4 = 2.5
@@ -1010,6 +1105,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 50 * 3 / 4 = 37.5
         // total = 75
         assertEq(gauge.builderRewards(address(rifToken)), 75_000_000_000_000_000_000);
+        // THEN gauge builder has earned usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 3 / 4 = 37.5
+        // cycle 3 = 0 (no new distribution)
+        // cycle 4 = 50 * 3 / 4 = 37.5
+        // total = 75
+        assertEq(gauge.builderRewards(address(usdrifToken)), 75_000_000_000_000_000_000);
         // THEN gauge builder has earned native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 3 / 4 = 3.75
@@ -1024,6 +1126,13 @@ contract SkipDistribution is BaseTest {
         // cycle 4 = 50 * 1 / 4 = 12.5
         // total = 25
         assertEq(gauge2.builderRewards(address(rifToken)), 25_000_000_000_000_000_000);
+        // THEN gauge2 builder has earned usdrifToken
+        // cycle 1 = 0
+        // cycle 2 = 50 * 1 / 4 = 12.5
+        // cycle 3 = 0 (no new distribution)
+        // cycle 4 = 50 * 1 / 4 = 12.5
+        // total = 25
+        assertEq(gauge2.builderRewards(address(usdrifToken)), 25_000_000_000_000_000_000);
         // THEN gauge2 builder has earned native tokens
         // cycle 1 = 0
         // cycle 2 = 5 * 1 / 4 = 1.25

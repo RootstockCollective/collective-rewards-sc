@@ -15,6 +15,8 @@ contract SetCycleDurationTest is BaseTest {
         // mint some rifTokens to this contract for reward distribution
         rifToken.mint(address(this), 100_000 ether);
         rifToken.approve(address(backersManager), 100_000 ether);
+        usdrifToken.mint(address(this), 100_000 ether);
+        usdrifToken.approve(address(backersManager), 100_000 ether);
     }
 
     function _initialState() internal {
@@ -223,10 +225,14 @@ contract SetCycleDurationTest is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 16 ether * 3 weeks);
         // THEN gauge rewardRate in rifToken is 6.25 / 3 weeks; 6.25 = (100 * 2 / 16) * 0.5
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 6.25 ether / uint256(3 weeks));
+        // THEN gauge rewardRate in usdrifToken is 6.25 / 3 weeks; 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(gauge.rewardRate(address(usdrifToken)) / 10 ** 18, 6.25 ether / uint256(3 weeks));
         // THEN gauge rewardRate in native tokens is 0.625 / 3 weeks; 0.625 = (10 * 2 / 16) * 0.5
         assertEq(gauge.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 0.625 ether / uint256(3 weeks));
         // THEN gauge2 rewardRate in rifToken is 43.75 / 3 weeks; 43.75 = (100 * 14 / 16) * 0.5
         assertEq(gauge2.rewardRate(address(rifToken)) / 10 ** 18, 43.75 ether / uint256(3 weeks));
+        // THEN gauge2 rewardRate in usdrifToken is 43.75 / 3 weeks; 43.75 = (100 * 14 / 16) * 0.5
+        assertEq(gauge2.rewardRate(address(usdrifToken)) / 10 ** 18, 43.75 ether / uint256(3 weeks));
         // THEN gauge2 rewardRate in native tokens is 4.375 / 3 weeks; 4.375 = (10 * 14 / 16) * 0.5
         assertEq(gauge2.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 4.375 ether / uint256(3 weeks));
 
@@ -234,10 +240,14 @@ contract SetCycleDurationTest is BaseTest {
         _skipAndStartNewCycle();
         // THEN gauge rewardPerToken in rifToken is 9.375 = 6.25 * 3 distributions / 2 allocations
         assertApproxEqAbs(gauge.rewardPerToken(address(rifToken)), 9.375 ether, 100);
+        // THEN gauge rewardPerToken in usdrifToken is 9.375 = 6.25 * 3 distributions / 2 allocations
+        assertApproxEqAbs(gauge.rewardPerToken(address(usdrifToken)), 9.375 ether, 100);
         // THEN gauge rewardPerToken in native tokens is 0.9375 = 0.625 * 3 distributions / 2 allocations
         assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 0.9375 ether, 100);
         // THEN gauge2 rewardPerToken in rifToken is 9.375 = 43.75 * 3 distributions / 14 allocations
         assertApproxEqAbs(gauge2.rewardPerToken(address(rifToken)), 9.375 ether, 100);
+        // THEN gauge2 rewardPerToken in usdrifToken is 9.375 = 43.75 * 3 distributions / 14 allocations
+        assertApproxEqAbs(gauge2.rewardPerToken(address(usdrifToken)), 9.375 ether, 100);
         // THEN gauge2 rewardPerToken in native tokens is 0.9375 = 4.375 * 3 distributions / 14 allocations
         assertApproxEqAbs(gauge2.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 0.9375 ether, 100);
 
@@ -296,10 +306,14 @@ contract SetCycleDurationTest is BaseTest {
         assertEq(backersManager.totalPotentialReward(), 16 ether * 0.5 weeks);
         // THEN gauge rewardRate in rifToken is 6.25 / 0.5 weeks; 6.25 = (100 * 2 / 16) * 0.5
         assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 6.25 ether / uint256(0.5 weeks));
+        // THEN gauge rewardRate in usdrifToken is 6.25 / 0.5 weeks; 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(gauge.rewardRate(address(usdrifToken)) / 10 ** 18, 6.25 ether / uint256(0.5 weeks));
         // THEN gauge rewardRate in native tokens is 0.625 / 0.5 weeks; 0.625 = (10 * 2 / 16) * 0.5
         assertEq(gauge.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 0.625 ether / uint256(0.5 weeks));
         // THEN gauge2 rewardRate in rifToken is 43.75 / 0.5 weeks; 43.75 = (100 * 14 / 16) * 0.5
         assertEq(gauge2.rewardRate(address(rifToken)) / 10 ** 18, 43.75 ether / uint256(0.5 weeks));
+        // THEN gauge2 rewardRate in usdrifToken is 43.75 / 0.5 weeks; 43.75 = (100 * 14 / 16) * 0.5
+        assertEq(gauge2.rewardRate(address(usdrifToken)) / 10 ** 18, 43.75 ether / uint256(0.5 weeks));
         // THEN gauge2 rewardRate in native tokens is 4.375 / 0.5 weeks; 4.375 = (10 * 14 / 16) * 0.5
         assertEq(gauge2.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 4.375 ether / uint256(0.5 weeks));
 

@@ -7,7 +7,7 @@ import { ResumeBuilderBehavior } from "./ResumeBuilderBehavior.t.sol";
 contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
     function _initialState() internal override(HaltedBuilderBehavior, ResumeBuilderBehavior) {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native are distributed
         //   AND half cycle pass
         _initialDistribution();
 
@@ -37,7 +37,7 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
      */
     function test_BuildersReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native are distributed
         //   AND half cycle pass
         //    AND builder is self paused
         _initialState();
@@ -66,7 +66,7 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
      */
     function test_BuilderDoesNotReceiveNextRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native are distributed
         //   AND half cycle pass
         //    AND builder is self pauses
         _initialState();
@@ -133,7 +133,7 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
      */
     function test_BuilderUnpauseSelfBeforeCooldown() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native are distributed
         //   AND half cycle pass
         //    AND builder pauses himself
         _initialState();
@@ -170,7 +170,7 @@ contract PauseSelfBuilderTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
      */
     function test_BuilderUnpauseSelfAfterCooldown() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native are distributed
         //   AND half cycle pass
         //    AND builder pauses himself
         _initialState();

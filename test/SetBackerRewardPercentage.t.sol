@@ -142,6 +142,8 @@ contract SetBackerRewardPercentageTest is BaseTest {
         _buildersClaim();
         // THEN builder receives 50% of rifToken 6.25 = (100 * 2 / 16) * 0.5
         assertEq(_clearRifBalance(builder), 6.25 ether);
+        // THEN builder receives 50% of usdrifToken 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(_clearUsdrifBalance(builder), 6.25 ether);
         // THEN builder receives 50% of native tokens 0.625 = (10 * 2 / 16) * 0.5
         assertEq(_clearNativeBalance(builder), 0.625 ether);
 
@@ -168,6 +170,8 @@ contract SetBackerRewardPercentageTest is BaseTest {
         _buildersClaim();
         // THEN builder receives 20% of rewards 2.5 = (100 * 2 / 16) * 0.2
         assertEq(_clearRifBalance(builder), 2.5 ether);
+        // THEN builder receives 20% of usdrifToken 2.5 = (100 * 2 / 16) * 0.2
+        assertEq(_clearUsdrifBalance(builder), 2.5 ether);
         // THEN builder receives 20% of native tokens 0.25 = (10 * 2 / 16) * 0.2
         assertEq(_clearNativeBalance(builder), 0.25 ether);
 
@@ -218,6 +222,8 @@ contract SetBackerRewardPercentageTest is BaseTest {
         _buildersClaim();
         // THEN builder receives 90% of rifToken 11.25 = (100 * 2 / 16) * 0.9
         assertEq(_clearRifBalance(builder), 11.25 ether);
+        // THEN builder receives 90% of usdrifToken 11.25 = (100 * 2 / 16) * 0.9
+        assertEq(_clearUsdrifBalance(builder), 11.25 ether);
         // THEN builder receives 90% of native tokens 1.125 = (10 * 2 / 16) * 0.9
         assertEq(_clearNativeBalance(builder), 1.125 ether);
 
@@ -252,6 +258,8 @@ contract SetBackerRewardPercentageTest is BaseTest {
         _buildersClaim();
         // THEN builder receives 90% of rifToken 11.125 = (100 * 2 / 16) * 0.9
         assertEq(_clearRifBalance(builder), 11.25 ether);
+        // THEN builder receives 90% of usdrifToken 11.25 = (100 * 2 / 16) * 0.9
+        assertEq(_clearUsdrifBalance(builder), 11.25 ether);
         // THEN builder receives 90% of native tokens 1.125 = (10 * 2 / 16) * 0.9
         assertEq(_clearNativeBalance(builder), 1.125 ether);
 
@@ -273,6 +281,8 @@ contract SetBackerRewardPercentageTest is BaseTest {
         _buildersClaim();
         // THEN builder receives 90% of rifToken 11.125 = (100 * 2 / 16) * 0.9
         assertEq(_clearRifBalance(builder), 11.25 ether);
+        // THEN builder receives 90% of usdrifToken 11.25 = (100 * 2 / 16) * 0.9
+        assertEq(_clearUsdrifBalance(builder), 11.25 ether);
         // THEN builder receives 90% of native tokens 1.125 = (10 * 2 / 16) * 0.9
         assertEq(_clearNativeBalance(builder), 1.125 ether);
 

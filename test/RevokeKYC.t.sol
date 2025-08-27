@@ -142,25 +142,27 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
         // THEN rewardDistributor native balance is 0.625 = (10 * 2 / 16) * 0.5
         assertEq(address(rewardDistributor).balance, 0.625 ether);
 
-        uint256 _gaugerifTokenBalanceBefore = rifToken.balanceOf(address(gauge));
+        uint256 _gaugeRifTokenBalanceBefore = rifToken.balanceOf(address(gauge));
+        uint256 _gaugeUsdrifTokenBalanceBefore = usdrifToken.balanceOf(address(gauge));
         uint256 _gaugeNativeBalanceBefore = (address(gauge)).balance;
 
-        uint256 _gauge2rifTokenBalanceBefore = rifToken.balanceOf(address(gauge2));
+        uint256 _gauge2RifTokenBalanceBefore = rifToken.balanceOf(address(gauge2));
+        uint256 _gauge2UsdrifTokenBalanceBefore = usdrifToken.balanceOf(address(gauge2));
         uint256 _gauge2NativeBalanceBefore = (address(gauge2)).balance;
         // AND 100 rif, 100 usdrif and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
 
         // THEN gauge rifToken balance is the same, it didn't receive distributions
-        assertEq(rifToken.balanceOf(address(gauge)), _gaugerifTokenBalanceBefore);
+        assertEq(rifToken.balanceOf(address(gauge)), _gaugeRifTokenBalanceBefore);
         // THEN gauge usdrifToken balance is the same, it didn't receive distributions
-        assertEq(usdrifToken.balanceOf(address(gauge)), _gaugerifTokenBalanceBefore);
+        assertEq(usdrifToken.balanceOf(address(gauge)), _gaugeUsdrifTokenBalanceBefore);
         // THEN gauge native balance is the same, it didn't receive distributions
         assertEq(address(gauge).balance, _gaugeNativeBalanceBefore);
 
         // THEN gauge2 rifToken balance increases 100 ether, it received all the distributions
-        assertEq(rifToken.balanceOf(address(gauge2)), _gauge2rifTokenBalanceBefore + 100 ether);
+        assertEq(rifToken.balanceOf(address(gauge2)), _gauge2RifTokenBalanceBefore + 100 ether);
         // THEN gauge2 usdrifToken balance increases 100 ether, it received all the distributions
-        assertEq(usdrifToken.balanceOf(address(gauge2)), _gauge2rifTokenBalanceBefore + 100 ether);
+        assertEq(usdrifToken.balanceOf(address(gauge2)), _gauge2UsdrifTokenBalanceBefore + 100 ether);
         // THEN gauge2 native balance 10 ether, it received all the distributions
         assertEq(address(gauge2).balance, _gauge2NativeBalanceBefore + 10 ether);
     }
@@ -217,7 +219,7 @@ contract RevokeKYCTest is HaltedBuilderBehavior, ResumeBuilderBehavior {
      */
     function test_HaltedGaugeDoNotResumeTwice() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken and 100 usdrifToken and 10 native tokens are distributed
         //   AND half cycle pass
         _initialDistribution();
         // AND builder pauses himself

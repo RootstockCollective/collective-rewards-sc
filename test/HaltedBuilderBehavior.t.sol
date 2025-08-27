@@ -14,7 +14,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_HaltedGaugeReceiveCurrentRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is halted
         _initialState();
@@ -53,7 +53,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_HaltedGaugeDoNotReceiveNextRewards() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is halted
         _initialState();
@@ -97,7 +97,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_NegativeAllocationOnHaltedGauge() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is halted
         _initialState();
@@ -119,7 +119,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_HaltedGaugeBeforeDistributionRewardPerToken() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _initialDistribution();
 
         // AND cycle finish
@@ -134,6 +134,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         // WHEN rewardPerToken is called
         // THEN tx does not revert
         gauge.rewardPerToken(address(rifToken));
+        gauge.rewardPerToken(address(usdrifToken));
 
         // WHEN alice claim rewards
         vm.startPrank(alice);
@@ -153,7 +154,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_HaltedGaugeBeforeDistributionRewardMissing() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _initialDistribution();
 
         // AND cycle finish
@@ -176,7 +177,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_GaugeIncreaseAllocationMiddleCycleBeforeHalt() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         //   AND half cycle pass
         _initialDistribution();
 
@@ -201,7 +202,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_GaugeDecreaseAllocationMiddleCycleBeforeHalt() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         _initialDistribution();
         // AND cycle finish
         _skipAndStartNewCycle();
@@ -233,7 +234,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_GaugeWithLotAllocationMiddleCycleBeforeHalt() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         //   AND half cycle pass
         _initialDistribution();
 
@@ -265,7 +266,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
      */
     function test_HaltedGaugeCannotIncreaseAllocations() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         //   AND half cycle pass
         _initialDistribution();
 

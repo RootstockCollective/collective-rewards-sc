@@ -13,7 +13,7 @@ abstract contract ResumeBuilderBehavior is BaseTest {
      */
     function test_ResumeGaugeInSameCycle() public {
         // GIVEN alice and bob allocate to builder and builder2
-        //  AND 100 rifToken and 10 native tokens are distributed
+        //  AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
         //   AND half cycle pass
         //    AND builder is halted
         _initialState();
