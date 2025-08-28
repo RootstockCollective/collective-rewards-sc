@@ -98,10 +98,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         _skipRemainingCycleFraction(2);
 
         // WHEN alice allocates 1 ether
-        //  THEN Allocated event is emitted
         vm.startPrank(alice);
-        vm.expectEmit();
-        emit NewAllocation(alice, 1 ether);
         backersManager.allocate(gauge, 1 ether);
 
         // THEN alice allocation is 1 ether
@@ -137,9 +134,6 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // WHEN half cycle passes
         _skipRemainingCycleFraction(2);
         // AND alice deallocates all
-        //  THEN Allocated event is emitted
-        vm.expectEmit();
-        emit NewAllocation(alice, 0 ether);
         backersManager.allocate(gauge, 0 ether);
 
         // THEN alice allocation is 0

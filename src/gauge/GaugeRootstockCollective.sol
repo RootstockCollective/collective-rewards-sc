@@ -29,8 +29,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // -----------------------------
     event BackerRewardsClaimed(address indexed rewardToken_, address indexed backer_, uint256 amount_);
     event BuilderRewardsClaimed(address indexed rewardToken_, address indexed builder_, uint256 amount_);
-    event NewAllocation(address indexed backer_, uint256 allocation_);
     event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 backersAmount_);
+    event RewardSharesUpdated(uint256 rewardShares_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -387,8 +387,6 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         }
 
         allocationOf[backer_] = allocation_;
-
-        emit NewAllocation(backer_, allocation_);
         return (allocationDeviation_, rewardSharesDeviation_, isNegative_);
     }
 
@@ -497,6 +495,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
         SafeERC20.safeTransferFrom(IERC20(rifToken), msg.sender, address(this), amountRif_);
         SafeERC20.safeTransferFrom(IERC20(usdrifToken), msg.sender, address(this), amountUsdrif_);
+
+        emit RewardSharesUpdated(rewardShares);
     }
 
     // -----------------------------
