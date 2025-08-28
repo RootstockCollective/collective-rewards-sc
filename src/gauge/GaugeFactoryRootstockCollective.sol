@@ -8,21 +8,26 @@ contract GaugeFactoryRootstockCollective {
     /// @notice address of beacon contract who stores gauge implementation address which is where gauge proxies will
     /// delegate all function calls
     address public immutable beacon;
-    /// @notice address of the token rewarded to builder and voters
-    address public immutable rewardToken;
+    /// @notice address of rif token rewarded to builder and backers
+    address public immutable rifToken;
+    /// @notice address of usdRif token rewarded to builder and backers
+    address public immutable usdrifToken;
 
     /**
      * @notice constructor
      * @param beacon_ address of the beacon
-     * @param rewardToken_ address of the token rewarded to builder and voters
+     * @param rifToken_ address of the token rewarded to builder and voters
+     * @param usdrifToken_ address of the token rewarded to builder and voters
      */
-    constructor(address beacon_, address rewardToken_) {
+    constructor(address beacon_, address rifToken_, address usdrifToken_) {
         beacon = beacon_;
-        rewardToken = rewardToken_;
+        rifToken = rifToken_;
+        usdrifToken = usdrifToken_;
     }
 
     function createGauge() external returns (GaugeRootstockCollective gauge_) {
-        bytes memory _initializerData = abi.encodeCall(GaugeRootstockCollective.initialize, (rewardToken, msg.sender));
+        bytes memory _initializerData =
+            abi.encodeCall(GaugeRootstockCollective.initialize, (rifToken, usdrifToken, msg.sender));
         gauge_ = GaugeRootstockCollective(address(new BeaconProxy(beacon, _initializerData)));
     }
 }

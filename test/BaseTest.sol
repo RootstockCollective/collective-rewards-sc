@@ -25,7 +25,8 @@ import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceM
 
 contract BaseTest is Test {
     StakingTokenMock public stakingToken;
-    ERC20Mock public rewardToken;
+    ERC20Mock public rifToken;
+    ERC20Mock public usdrifToken;
 
     GovernanceManagerRootstockCollective public governanceManager;
     GaugeBeaconRootstockCollective public gaugeBeacon;
@@ -72,20 +73,25 @@ contract BaseTest is Test {
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         MockStakingTokenDeployer _mockStakingTokenDeployer = new MockStakingTokenDeployer();
         stakingToken = _mockStakingTokenDeployer.run(0);
-        rewardToken = _mockTokenDeployer.run(1);
+        rifToken = _mockTokenDeployer.run(1);
+        usdrifToken = _mockTokenDeployer.run(2);
         gaugeBeacon = new GaugeBeaconRootstockCollectiveDeployer().run(address(governanceManager));
-        gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(address(gaugeBeacon), address(rewardToken));
+        gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(
+            address(gaugeBeacon), address(rifToken), address(usdrifToken)
+        );
 
         (rewardDistributor, rewardDistributorImpl) =
             new RewardDistributorRootstockCollectiveDeployer().run(address(governanceManager));
 
         (backersManager, backersManagerImpl) = new BackersManagerRootstockCollectiveDeployer().run(
             address(governanceManager),
-            address(rewardToken),
+            address(rifToken),
+            address(usdrifToken),
             address(stakingToken),
             cycleDuration,
             cycleStartOffset,
-            distributionDuration
+            distributionDuration,
+            maxDistributionsPerBatch
         );
 
         rewardDistributor.initializeCollectiveRewardsAddresses(address(backersManager));
@@ -95,7 +101,6 @@ contract BaseTest is Test {
         );
 
         backersManager.initializeBuilderRegistry(builderRegistry);
-        backersManager.initializeV3(maxDistributionsPerBatch);
 
         // allow to execute all the functions protected by governance
 
@@ -106,9 +111,13 @@ contract BaseTest is Test {
         stakingToken.mint(alice, 100_000 ether);
         stakingToken.mint(bob, 100_000 ether);
 
-        // mint some rewardTokens to this contract for reward distribution
-        rewardToken.mint(address(this), 100_000 ether);
-        rewardToken.approve(address(backersManager), 100_000 ether);
+        // mint some rifTokens to this contract for reward distribution
+        rifToken.mint(address(this), 100_000 ether);
+        rifToken.approve(address(backersManager), 100_000 ether);
+
+        // mint some usdrifTokens to this contract for reward distribution
+        usdrifToken.mint(address(this), 100_000 ether);
+        usdrifToken.approve(address(backersManager), 100_000 ether);
 
         _setUp();
     }
@@ -149,6 +158,7 @@ contract BaseTest is Test {
         builders.push(builder_);
         vm.prank(governor);
         newGauge_ = builderRegistry.communityApproveBuilder(builder_);
+        newGauge_.initializeV3(address(usdrifToken));
         gaugesArray.push(newGauge_);
     }
 
@@ -175,8 +185,8 @@ contract BaseTest is Test {
         vm.prank(bob);
         backersManager.allocateBatch(gaugesArray, allocationsArray);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken and 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND half cycle pass
         _skipRemainingCycleFraction(2);
     }
@@ -184,12 +194,13 @@ contract BaseTest is Test {
     /**
      * @notice skips to new cycle and executes a distribution.
      */
-    function _distribute(uint256 amountERC20_, uint256 amountCoinbase_) internal {
+    function _distribute(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_) internal {
         _skipToStartDistributionWindow();
-        rewardToken.mint(address(rewardDistributor), amountERC20_);
-        vm.deal(address(rewardDistributor), amountCoinbase_ + address(rewardDistributor).balance);
+        rifToken.mint(address(rewardDistributor), amountRif_);
+        usdrifToken.mint(address(rewardDistributor), amountUsdrif_);
+        vm.deal(address(rewardDistributor), amountNative_ + address(rewardDistributor).balance);
         vm.startPrank(foundation);
-        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountCoinbase_);
+        rewardDistributor.sendRewardsAndStartDistribution(amountRif_, amountUsdrif_, amountNative_);
         while (backersManager.onDistributionPeriod()) {
             backersManager.distribute();
         }
@@ -197,17 +208,31 @@ contract BaseTest is Test {
     }
 
     /// @dev if any amount is zero, it will not be skipped
-    function _incentivize(GaugeRootstockCollective gauge_, uint256 amountERC20_, uint256 amountCoinbase_) internal {
-        if (amountCoinbase_ > 0) {
-            vm.deal(incentivizer, amountCoinbase_);
-            gauge_.incentivizeWithCoinbase{ value: amountCoinbase_ }();
+    function _incentivize(
+        GaugeRootstockCollective gauge_,
+        uint256 amountRif_,
+        uint256 amountUsdrif_,
+        uint256 amountNative_
+    )
+        internal
+    {
+        if (amountNative_ > 0) {
+            vm.deal(incentivizer, amountNative_);
+            gauge_.incentivizeWithNative{ value: amountNative_ }();
         }
-        if (amountERC20_ > 0) {
-            rewardToken.mint(address(incentivizer), amountERC20_);
+        if (amountRif_ > 0) {
+            rifToken.mint(address(incentivizer), amountRif_);
             vm.prank(address(incentivizer));
-            rewardToken.approve(address(gauge_), amountERC20_);
+            rifToken.approve(address(gauge_), amountRif_);
             vm.prank(address(incentivizer));
-            gauge_.incentivizeWithRewardToken(amountERC20_);
+            gauge_.incentivizeWithRifToken(amountRif_);
+        }
+        if (amountUsdrif_ > 0) {
+            usdrifToken.mint(address(incentivizer), amountUsdrif_);
+            vm.prank(address(incentivizer));
+            usdrifToken.approve(address(gauge_), amountUsdrif_);
+            vm.prank(address(incentivizer));
+            gauge_.incentivizeWithUsdrifToken(amountUsdrif_);
         }
     }
 
@@ -220,20 +245,32 @@ contract BaseTest is Test {
     }
 
     /**
-     * @notice returns reward token balance and clear it.
+     * @notice returns rif reward token balance and clear it.
      *  Used to simplify maths and asserts considering only tokens received
      */
-    function _clearERC20Balance(address address_) internal returns (uint256 balance_) {
-        balance_ = rewardToken.balanceOf(address_);
+    function _clearRifBalance(address address_) internal returns (uint256) {
+        return _clearBalance(address_, rifToken);
+    }
+
+    /**
+     * @notice returns usdrif reward token balance and clear it.
+     *  Used to simplify maths and asserts considering only tokens received
+     */
+    function _clearUsdrifBalance(address address_) internal returns (uint256) {
+        return _clearBalance(address_, usdrifToken);
+    }
+
+    function _clearBalance(address address_, ERC20Mock token_) private returns (uint256 balance_) {
+        balance_ = token_.balanceOf(address_);
         vm.prank(address_);
-        rewardToken.transfer(address(this), balance_);
+        token_.transfer(address(this), balance_);
     }
 
     /**
      * @notice returns reward token balance and clear it.
      *  Used to simplify maths and asserts considering only tokens received
      */
-    function _clearCoinbaseBalance(address address_) internal returns (uint256 balance_) {
+    function _clearNativeBalance(address address_) internal returns (uint256 balance_) {
         balance_ = address_.balance;
         vm.prank(address_);
         Address.sendValue(payable(address(this)), balance_);

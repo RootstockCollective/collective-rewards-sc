@@ -1,5 +1,5 @@
 # RewardDistributorRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/RewardDistributorRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/dddd380a18864fe36c9ec409abd3170e82ca6a46/src/RewardDistributorRootstockCollective.sol)
 
 **Inherits:**
 [UpgradeableRootstockCollective](/src/governance/UpgradeableRootstockCollective.sol/abstract.UpgradeableRootstockCollective.md)
@@ -8,12 +8,12 @@ Accumulates all the rewards to be distributed for each cycle
 
 
 ## State Variables
-### rewardToken
-address of the token rewarded to builder and backers
+### rifToken
+address of rif token rewarded to builder and backers
 
 
 ```solidity
-IERC20 public rewardToken;
+IERC20 public rifToken;
 ```
 
 
@@ -26,21 +26,46 @@ BackersManagerRootstockCollective public backersManager;
 ```
 
 
-### defaultRewardTokenAmount
-default reward token amount
+### defaultRifAmount
+default RIF amount to be distributed per cycle
 
 
 ```solidity
-uint256 public defaultRewardTokenAmount;
+uint256 public defaultRifAmount;
 ```
 
 
-### defaultRewardCoinbaseAmount
-default reward coinbase amount
+### defaultNativeAmount
+default native amount to be distributed per cycle
 
 
 ```solidity
-uint256 public defaultRewardCoinbaseAmount;
+uint256 public defaultNativeAmount;
+```
+
+
+### lastFundedCycleStart
+
+```solidity
+uint256 public lastFundedCycleStart;
+```
+
+
+### usdrifToken
+address of the usdrif token rewarded to builder and backers
+
+
+```solidity
+IERC20 public usdrifToken;
+```
+
+
+### defaultUsdrifAmount
+default USDRIF amount to be distributed per cycle
+
+
+```solidity
+uint256 public defaultUsdrifAmount;
 ```
 
 
@@ -61,6 +86,13 @@ uint256[50] private __gap;
 
 ```solidity
 modifier onlyFoundationTreasury();
+```
+
+### onlyOncePerCycle
+
+
+```solidity
+modifier onlyOncePerCycle();
 ```
 
 ### constructor
@@ -112,34 +144,14 @@ function initializeCollectiveRewardsAddresses(address backersManager_) external;
 
 sends rewards to backersManager contract to be distributed to the gauges
 
-*reverts if is not called by foundation treasury address
-reverts if rewards balance is insufficient*
+*reverts if is not called by foundation treasury address*
 
 
 ```solidity
-function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) external payable onlyFoundationTreasury;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`amountERC20_`|`uint256`|amount of ERC20 reward token to send|
-|`amountCoinbase_`|`uint256`|amount of Coinbase reward token to send|
-
-
-### sendRewardsAndStartDistribution
-
-sends rewards to backersManager contract and starts the distribution to the gauges
-
-*reverts if is not called by foundation treasury address
-reverts if rewards balance is insufficient
-reverts if is not in the distribution window*
-
-
-```solidity
-function sendRewardsAndStartDistribution(
-    uint256 amountERC20_,
-    uint256 amountCoinbase_
+function sendRewards(
+    uint256 amountRif_,
+    uint256 amountUsdrif_,
+    uint256 amountNative_
 )
     external
     payable
@@ -149,8 +161,36 @@ function sendRewardsAndStartDistribution(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`amountERC20_`|`uint256`|amount of ERC20 reward token to send|
-|`amountCoinbase_`|`uint256`|amount of Coinbase reward token to send|
+|`amountRif_`|`uint256`|amount of ERC20 rif token to send|
+|`amountUsdrif_`|`uint256`|amount of ERC20 usdrif token to send|
+|`amountNative_`|`uint256`|amount of Native token to send|
+
+
+### sendRewardsAndStartDistribution
+
+sends rewards to backersManager contract and starts the distribution to the gauges
+
+*reverts if is not called by foundation treasury address
+reverts if is not in the distribution window*
+
+
+```solidity
+function sendRewardsAndStartDistribution(
+    uint256 amountRif_,
+    uint256 amountUsdrif_,
+    uint256 amountNative_
+)
+    external
+    payable
+    onlyFoundationTreasury;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amountRif_`|`uint256`|amount of ERC20 rif token to send|
+|`amountUsdrif_`|`uint256`|amount of ERC20 usdrif token to send|
+|`amountNative_`|`uint256`|amount of Native token to send|
 
 
 ### setDefaultRewardAmount
@@ -162,8 +202,9 @@ sets the default reward amounts
 
 ```solidity
 function setDefaultRewardAmount(
-    uint256 tokenAmount_,
-    uint256 coinbaseAmount_
+    uint256 rifTokenAmount_,
+    uint256 usdrifTokenAmount_,
+    uint256 nativeAmount_
 )
     external
     payable
@@ -173,30 +214,31 @@ function setDefaultRewardAmount(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`tokenAmount_`|`uint256`|default amount of ERC20 reward token to send|
-|`coinbaseAmount_`|`uint256`|default amount of Coinbase reward token to send|
+|`rifTokenAmount_`|`uint256`|default amount of ERC20 rif token to send|
+|`usdrifTokenAmount_`|`uint256`|default amount of ERC20 usdrif token to send|
+|`nativeAmount_`|`uint256`|default amount of Native token to send|
 
 
 ### sendRewardsWithDefaultAmount
 
 sends rewards to backersManager contract with default amounts
 
-*reverts if is not called by foundation treasury address*
+*reverts if is called more than once per cycle*
 
 
 ```solidity
-function sendRewardsWithDefaultAmount() external payable onlyFoundationTreasury;
+function sendRewardsWithDefaultAmount() external payable onlyOncePerCycle;
 ```
 
 ### sendRewardsAndStartDistributionWithDefaultAmount
 
 sends rewards to backersManager contract with default amounts and starts the distribution
 
-*reverts if is not called by foundation treasury address*
+*reverts if is called more than once per cycle*
 
 
 ```solidity
-function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyFoundationTreasury;
+function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyOncePerCycle;
 ```
 
 ### _sendRewards
@@ -205,19 +247,20 @@ internal function to send rewards to backersManager contract
 
 
 ```solidity
-function _sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) internal;
+function _sendRewards(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_) internal;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`amountERC20_`|`uint256`|amount of ERC20 reward token to send|
-|`amountCoinbase_`|`uint256`|amount of Coinbase reward token to send|
+|`amountRif_`|`uint256`|amount of ERC20 rif token to send|
+|`amountUsdrif_`|`uint256`|amount of ERC20 usdrif token to send|
+|`amountNative_`|`uint256`|amount of Native token to send|
 
 
 ### receive
 
-receives coinbase to distribute for rewards
+receives native tokens to distribute for rewards
 
 
 ```solidity
@@ -235,5 +278,11 @@ error NotFoundationTreasury();
 
 ```solidity
 error CollectiveRewardsAddressesAlreadyInitialized();
+```
+
+### CycleAlreadyFunded
+
+```solidity
+error CycleAlreadyFunded();
 ```
 

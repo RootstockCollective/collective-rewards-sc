@@ -19,7 +19,8 @@ import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
     "script/governance/GovernanceManagerRootstockCollective.s.sol";
 
 contract Deploy is Broadcaster, OutputWriter {
-    address private _rewardTokenAddress;
+    address private _rifTokenAddress;
+    address private _usdrifTokenAddress;
     address private _stakingTokenAddress;
     address private _kycApproverAddress;
     address private _governorAddress;
@@ -32,7 +33,8 @@ contract Deploy is Broadcaster, OutputWriter {
     uint256 private _maxDistributionsPerBatch;
 
     function setUp() public {
-        _rewardTokenAddress = vm.envAddress("REWARD_TOKEN_ADDRESS");
+        _rifTokenAddress = vm.envAddress("RIF_TOKEN_ADDRESS");
+        _usdrifTokenAddress = vm.envAddress("USDRIF_TOKEN_ADDRESS");
         _stakingTokenAddress = vm.envAddress("STAKING_TOKEN_ADDRESS");
         _governorAddress = vm.envAddress("GOVERNOR_ADDRESS");
         _foundationTreasuryAddress = vm.envAddress("FOUNDATION_TREASURY_ADDRESS");
@@ -42,7 +44,7 @@ contract Deploy is Broadcaster, OutputWriter {
         _cycleStartOffset = uint24(vm.envUint("CYCLE_START_OFFSET"));
         _distributionDuration = uint32(vm.envUint("DISTRIBUTION_DURATION"));
         _rewardPercentageCooldown = uint128(vm.envUint("REWARD_PERCENTAGE_COOLDOWN"));
-        _maxDistributionsPerBatch = 20;
+        _maxDistributionsPerBatch = vm.envUint("MAX_DISTRIBUTION_PER_BATCH");
 
         outputWriterSetup();
     }
@@ -62,8 +64,9 @@ contract Deploy is Broadcaster, OutputWriter {
             new GaugeBeaconRootstockCollectiveDeployer().run(address(_governanceManagerProxy));
         save("GaugeBeaconRootstockCollective", address(_gaugeBeacon));
 
-        GaugeFactoryRootstockCollective _gaugeFactory =
-            new GaugeFactoryRootstockCollectiveDeployer().run(address(_gaugeBeacon), _rewardTokenAddress);
+        GaugeFactoryRootstockCollective _gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(
+            address(_gaugeBeacon), _rifTokenAddress, _usdrifTokenAddress
+        );
         save("GaugeFactoryRootstockCollective", address(_gaugeFactory));
 
         (
@@ -77,11 +80,13 @@ contract Deploy is Broadcaster, OutputWriter {
         (BackersManagerRootstockCollective _backersManagerProxy, BackersManagerRootstockCollective _backersManagerImpl)
         = new BackersManagerRootstockCollectiveDeployer().run(
             address(_governanceManagerProxy),
-            _rewardTokenAddress,
+            _rifTokenAddress,
+            _usdrifTokenAddress,
             _stakingTokenAddress,
             _cycleDuration,
             _cycleStartOffset,
-            _distributionDuration
+            _distributionDuration,
+            _maxDistributionsPerBatch
         );
         saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
 
@@ -100,9 +105,9 @@ contract Deploy is Broadcaster, OutputWriter {
 
         vm.broadcast();
         _backersManagerProxy.initializeBuilderRegistry(_builderRegistryProxy);
-        _backersManagerProxy.initializeV3(_maxDistributionsPerBatch);
 
         vm.broadcast();
+        // Order is important here, we need to initialize the backers manager first
         _rewardDistributorProxy.initializeCollectiveRewardsAddresses(address(_backersManagerProxy));
     }
 }

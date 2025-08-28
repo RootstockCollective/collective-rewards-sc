@@ -67,18 +67,22 @@ contract SelfPauseBuilderFuzzTest is BaseFuzz {
         }
 
         // AND there is a distribution
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND each not self paused gauge receives its proportional share of rewards based on its allocation
         // AND self paused gauges don't receive rewards
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (pausedBuilders[builders[i]] < SelfPauseState.paused) {
                 assertApproxEqAbs(
-                    rewardToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(RT_DISTRIBUTION_AMOUNT, i), 100
+                    rifToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(RT_DISTRIBUTION_AMOUNT, i), 100
+                );
+                assertApproxEqAbs(
+                    usdrifToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(URT_DISTRIBUTION_AMOUNT, i), 100
                 );
                 assertApproxEqAbs(address(gaugesArray[i]).balance, _calcGaugeReward(CB_DISTRIBUTION_AMOUNT, i), 100);
             } else {
-                assertApproxEqAbs(rewardToken.balanceOf(address(gaugesArray[i])), 0, 100);
+                assertApproxEqAbs(rifToken.balanceOf(address(gaugesArray[i])), 0, 100);
+                assertApproxEqAbs(usdrifToken.balanceOf(address(gaugesArray[i])), 0, 100);
                 assertApproxEqAbs(address(gaugesArray[i]).balance, 0, 100);
             }
         }
@@ -150,7 +154,7 @@ contract SelfPauseBuilderFuzzTest is BaseFuzz {
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND there is a distribution
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         _expectedTotalPotentialReward = 0;
         // THEN rewardShares for each non self paused gauge is the entire cycle
@@ -211,7 +215,7 @@ contract SelfPauseBuilderFuzzTest is BaseFuzz {
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
         // AND there is a distribution
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         _expectedTotalPotentialReward = 0;
         // THEN rewardShares for each non self paused gauge is the entire cycle
@@ -252,7 +256,7 @@ contract SelfPauseBuilderFuzzTest is BaseFuzz {
         skip(randomTime_);
 
         // AND there is a distribution
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND a random time passes
         _skipLimitPeriodFinish(randomTime_);

@@ -8,18 +8,22 @@ import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol
 import { UtilsLib } from "src/libraries/UtilsLib.sol";
 
 contract IncentivizeHandler is BaseHandler {
-    ERC20Mock public rewardToken;
+    ERC20Mock public rifToken;
+    ERC20Mock public usdrifToken;
 
-    mapping(GaugeRootstockCollective gauge => uint256 amount) public rewardTokenIncentives;
+    mapping(GaugeRootstockCollective gauge => uint256 amount) public rifTokenIncentives;
+    mapping(GaugeRootstockCollective gauge => uint256 amount) public usdrifTokenIncentives;
 
     constructor(BaseTest baseTest_, TimeManager timeManager_) BaseHandler(baseTest_, timeManager_) {
-        rewardToken = baseTest_.rewardToken();
+        rifToken = baseTest_.rifToken();
+        usdrifToken = baseTest_.usdrifToken();
     }
 
     function incentivize(
         uint256 gaugeIndex_,
-        uint256 amountERC20_,
-        uint256 amountCoinbase_,
+        uint256 amountRif_,
+        uint256 amountUsdrif_,
+        uint256 amountNative_,
         uint256 timeToSkip_
     )
         external
@@ -28,21 +32,26 @@ contract IncentivizeHandler is BaseHandler {
         if (msg.sender.code.length != 0) return;
         if (backersManager.periodFinish() <= block.timestamp) return;
         gaugeIndex_ = bound(gaugeIndex_, 0, baseTest.gaugesArrayLength() - 1);
-        amountERC20_ = bound(amountERC20_, UtilsLib.MIN_AMOUNT_INCENTIVES, type(uint64).max);
-        amountCoinbase_ = bound(amountCoinbase_, UtilsLib.MIN_AMOUNT_INCENTIVES, type(uint64).max);
+        amountRif_ = bound(amountRif_, UtilsLib.MIN_AMOUNT_INCENTIVES, type(uint64).max);
+        amountUsdrif_ = bound(amountUsdrif_, UtilsLib.MIN_AMOUNT_INCENTIVES, type(uint64).max);
+        amountNative_ = bound(amountNative_, UtilsLib.MIN_AMOUNT_INCENTIVES, type(uint64).max);
 
         GaugeRootstockCollective _gauge = baseTest.gaugesArray(gaugeIndex_);
         if (builderRegistry.isGaugeHalted(address(_gauge))) return;
 
-        rewardTokenIncentives[_gauge] += amountERC20_;
+        rifTokenIncentives[_gauge] += amountRif_;
+        usdrifTokenIncentives[_gauge] += amountUsdrif_;
 
-        rewardToken.mint(msg.sender, amountERC20_);
-        vm.deal(msg.sender, amountCoinbase_);
+        rifToken.mint(msg.sender, amountRif_);
+        usdrifToken.mint(msg.sender, amountUsdrif_);
+        vm.deal(msg.sender, amountNative_);
 
         vm.startPrank(msg.sender);
-        rewardToken.approve(address(_gauge), amountERC20_);
-        _gauge.incentivizeWithRewardToken(amountERC20_);
-        _gauge.incentivizeWithCoinbase{ value: amountCoinbase_ }();
+        rifToken.approve(address(_gauge), amountRif_);
+        usdrifToken.approve(address(_gauge), amountUsdrif_);
+        _gauge.incentivizeWithRifToken(amountRif_);
+        _gauge.incentivizeWithUsdrifToken(amountUsdrif_);
+        _gauge.incentivizeWithNative{ value: amountNative_ }();
         vm.stopPrank();
     }
 }

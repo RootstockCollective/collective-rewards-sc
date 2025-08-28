@@ -37,15 +37,24 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     // ---------- Storage ----------
     // -----------------------------
 
-    /// @notice address of the token rewarded to builder and backers
-    IERC20 public rewardToken;
+    /// @notice address of rif token rewarded to builder and backers
+    IERC20 public rifToken;
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
-    ///@notice default reward token amount
-    uint256 public defaultRewardTokenAmount;
-    ///@notice default reward coinbase amount
-    uint256 public defaultRewardCoinbaseAmount;
+    ///@notice default RIF amount to be distributed per cycle
+    uint256 public defaultRifAmount;
+    ///@notice default native amount to be distributed per cycle
+    uint256 public defaultNativeAmount;
     uint256 public lastFundedCycleStart;
+
+    // -----------------------------
+    // -------- Storage V2 ---------
+    // -----------------------------
+
+    /// @notice address of the usdrif token rewarded to builder and backers
+    IERC20 public usdrifToken;
+    ///@notice default USDRIF amount to be distributed per cycle
+    uint256 public defaultUsdrifAmount;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -74,7 +83,8 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     function initializeCollectiveRewardsAddresses(address backersManager_) external {
         if (address(backersManager) != address(0)) revert CollectiveRewardsAddressesAlreadyInitialized();
         backersManager = BackersManagerRootstockCollective(backersManager_);
-        rewardToken = IERC20(BackersManagerRootstockCollective(backersManager_).rewardToken());
+        rifToken = IERC20(BackersManagerRootstockCollective(backersManager_).rifToken());
+        usdrifToken = IERC20(BackersManagerRootstockCollective(backersManager_).usdrifToken());
     }
 
     // -----------------------------
@@ -84,48 +94,62 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /**
      * @notice sends rewards to backersManager contract to be distributed to the gauges
      * @dev reverts if is not called by foundation treasury address
-     * @param amountERC20_ amount of ERC20 reward token to send
-     * @param amountCoinbase_ amount of Coinbase reward token to send
+     * @param amountRif_ amount of ERC20 rif token to send
+     * @param amountUsdrif_ amount of ERC20 usdrif token to send
+     * @param amountNative_ amount of Native token to send
      */
-    function sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) external payable onlyFoundationTreasury {
-        _sendRewards(amountERC20_, amountCoinbase_);
+    function sendRewards(
+        uint256 amountRif_,
+        uint256 amountUsdrif_,
+        uint256 amountNative_
+    )
+        external
+        payable
+        onlyFoundationTreasury
+    {
+        _sendRewards(amountRif_, amountUsdrif_, amountNative_);
     }
 
     /**
      * @notice sends rewards to backersManager contract and starts the distribution to the gauges
      * @dev reverts if is not called by foundation treasury address
      *  reverts if is not in the distribution window
-     * @param amountERC20_ amount of ERC20 reward token to send
-     * @param amountCoinbase_ amount of Coinbase reward token to send
+     * @param amountRif_ amount of ERC20 rif token to send
+     * @param amountUsdrif_ amount of ERC20 usdrif token to send
+     * @param amountNative_ amount of Native token to send
      */
     function sendRewardsAndStartDistribution(
-        uint256 amountERC20_,
-        uint256 amountCoinbase_
+        uint256 amountRif_,
+        uint256 amountUsdrif_,
+        uint256 amountNative_
     )
         external
         payable
         onlyFoundationTreasury
     {
-        _sendRewards(amountERC20_, amountCoinbase_);
+        _sendRewards(amountRif_, amountUsdrif_, amountNative_);
         backersManager.startDistribution();
     }
 
     /**
      * @notice sets the default reward amounts
      * @dev reverts if is not called by foundation treasury address
-     * @param tokenAmount_ default amount of ERC20 reward token to send
-     * @param coinbaseAmount_ default amount of Coinbase reward token to send
+     * @param rifTokenAmount_ default amount of ERC20 rif token to send
+     * @param usdrifTokenAmount_ default amount of ERC20 usdrif token to send
+     * @param nativeAmount_ default amount of Native token to send
      */
     function setDefaultRewardAmount(
-        uint256 tokenAmount_,
-        uint256 coinbaseAmount_
+        uint256 rifTokenAmount_,
+        uint256 usdrifTokenAmount_,
+        uint256 nativeAmount_
     )
         external
         payable
         onlyFoundationTreasury
     {
-        defaultRewardTokenAmount = tokenAmount_;
-        defaultRewardCoinbaseAmount = coinbaseAmount_;
+        defaultRifAmount = rifTokenAmount_;
+        defaultUsdrifAmount = usdrifTokenAmount_;
+        defaultNativeAmount = nativeAmount_;
     }
 
     /**
@@ -133,7 +157,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @dev reverts if is called more than once per cycle
      */
     function sendRewardsWithDefaultAmount() external payable onlyOncePerCycle {
-        _sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
+        _sendRewards(defaultRifAmount, defaultUsdrifAmount, defaultNativeAmount);
     }
 
     /**
@@ -141,7 +165,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @dev reverts if is called more than once per cycle
      */
     function sendRewardsAndStartDistributionWithDefaultAmount() external payable onlyOncePerCycle {
-        _sendRewards(defaultRewardTokenAmount, defaultRewardCoinbaseAmount);
+        _sendRewards(defaultRifAmount, defaultUsdrifAmount, defaultNativeAmount);
         backersManager.startDistribution();
     }
 
@@ -151,16 +175,19 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
 
     /**
      * @notice internal function to send rewards to backersManager contract
-     * @param amountERC20_ amount of ERC20 reward token to send
-     * @param amountCoinbase_ amount of Coinbase reward token to send
+     * @param amountRif_ amount of ERC20 rif token to send
+     * @param amountUsdrif_ amount of ERC20 usdrif token to send
+     * @param amountNative_ amount of Native token to send
      */
-    function _sendRewards(uint256 amountERC20_, uint256 amountCoinbase_) internal {
-        rewardToken.approve(address(backersManager), amountERC20_);
-        backersManager.notifyRewardAmount{ value: amountCoinbase_ }(amountERC20_);
+    function _sendRewards(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_) internal {
+        BackersManagerRootstockCollective _backersManager = backersManager;
+        rifToken.approve(address(_backersManager), amountRif_);
+        usdrifToken.approve(address(_backersManager), amountUsdrif_);
+        _backersManager.notifyRewardAmount{ value: amountNative_ }(amountRif_, amountUsdrif_);
     }
 
     /**
-     * @notice receives coinbase to distribute for rewards
+     * @notice receives native tokens to distribute for rewards
      */
     receive() external payable { }
 

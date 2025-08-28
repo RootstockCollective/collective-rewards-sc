@@ -15,11 +15,13 @@ contract InitializationTest is BaseTest {
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         backersManager.initialize(
             governanceManager,
-            address(rewardToken),
+            address(rifToken),
+            address(usdrifToken),
             address(stakingToken),
             cycleDuration,
             cycleStartOffset,
-            distributionDuration
+            distributionDuration,
+            maxDistributionsPerBatch
         );
     }
 
@@ -42,7 +44,7 @@ contract InitializationTest is BaseTest {
         //  WHEN tries to initialize the proxy again
         //   THEN tx reverts because InvalidInitialization
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        gauge.initialize(address(rewardToken), address(backersManager));
+        gauge.initialize(address(rifToken), address(usdrifToken), address(backersManager));
     }
 
     /**

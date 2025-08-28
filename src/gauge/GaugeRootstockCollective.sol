@@ -53,7 +53,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // ---------- Structs ----------
     // -----------------------------
     struct RewardData {
-        /// @notice current reward rate of rewardToken to distribute per second [PREC]
+        /// @notice current reward rate of reward token to distribute per second [PREC]
         uint256 rewardRate;
         /// @notice most recent stored value of rewardPerToken [PREC]
         uint256 rewardPerTokenStored;
@@ -61,11 +61,11 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         uint256 rewardMissing;
         /// @notice most recent timestamp contract has updated state
         uint256 lastUpdateTime;
-        /// @notice amount of unclaimed token reward earned for the builder
+        /// @notice amount of unclaimed reward token earned for the builder
         uint256 builderRewards;
         /// @notice cached rewardPerTokenStored for a backer based on their most recent action [PREC]
         mapping(address backer => uint256 rewardPerTokenPaid) backerRewardPerTokenPaid;
-        /// @notice cached amount of rewardToken earned for a backer
+        /// @notice cached amount of reward token earned for a backer
         mapping(address backer => uint256 rewards) rewards;
     }
 
@@ -73,8 +73,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     // ---------- Storage ----------
     // -----------------------------
 
-    /// @notice address of the token rewarded to builder and voters
-    address public rewardToken;
+    /// @notice address of rif token rewarded to builder and backers
+    address public rifToken;
     /// @notice BackersManagerRootstockCollective contract address
     BackersManagerRootstockCollective public backersManager;
     /// @notice total amount of stakingToken allocated for rewards
@@ -84,10 +84,17 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /// @notice amount of stakingToken allocated by a backer
     mapping(address backer => uint256 allocation) public allocationOf;
     /// @notice rewards data to each token
-    /// @dev address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
-    mapping(address rewardToken => RewardData rewardData) public rewardData;
+    /// @dev address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
+    mapping(address rifToken => RewardData rewardData) public rewardData;
     /// @notice BuilderRegistryRootstockCollective contract address
     BuilderRegistryRootstockCollective public builderRegistry;
+
+    // -----------------------------
+    // -------- V2 Storage ---------
+    // -----------------------------
+
+    /// @notice address of usdRif token rewarded to builder and backers
+    address public usdrifToken;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -100,18 +107,34 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
 
     /**
      * @notice contract initializer
-     * @param rewardToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20
+     * @param rifToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20
      * standard are supported.
+     * @param usdrifToken_ address of the USDRIF token rewarded to builder and voters. Only tokens that adhere to the
+     * ERC-20 standard are supported.
      * @notice For more info on supported tokens, see:
      * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
      * @param builderRegistry_ address of the builder registry contract
      */
-    function initialize(address rewardToken_, address builderRegistry_) external initializer {
+    function initialize(address rifToken_, address usdrifToken_, address builderRegistry_) external initializer {
         __ReentrancyGuard_init();
-        rewardToken = rewardToken_;
+        rifToken = rifToken_;
+        usdrifToken = usdrifToken_;
 
         builderRegistry = BuilderRegistryRootstockCollective(builderRegistry_);
         backersManager = BackersManagerRootstockCollective(builderRegistry.backersManager());
+    }
+
+    /**
+     * @notice contract initializer
+     * @param usdrifToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the
+     * ERC-20
+     * standard are supported.
+     * @notice For more info on supported tokens, see:
+     * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
+     */
+    function initializeV3(address usdrifToken_) external reinitializer(3) {
+        __ReentrancyGuard_init();
+        usdrifToken = usdrifToken_;
     }
 
     // NOTE: This contract previously included an `initializeV2()` function using `reinitializer(2)`
@@ -125,7 +148,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets reward rate
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function rewardRate(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].rewardRate;
@@ -134,7 +157,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets reward per token stored
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function rewardPerTokenStored(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].rewardPerTokenStored;
@@ -143,7 +166,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets reward missing
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function rewardMissing(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].rewardMissing;
@@ -152,7 +175,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets last update time
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function lastUpdateTime(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].lastUpdateTime;
@@ -161,7 +184,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets builder rewards
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function builderRewards(address rewardToken_) external view returns (uint256) {
         return rewardData[rewardToken_].builderRewards;
@@ -170,16 +193,16 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets backer reward per token paid
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function backerRewardPerTokenPaid(address rewardToken_, address backer_) external view returns (uint256) {
         return rewardData[rewardToken_].backerRewardPerTokenPaid[backer_];
     }
 
     /**
-     * @notice gets the estimated amount of rewardToken left to earn for a backer in current cycle
+     * @notice gets the estimated amount of rifToken left to earn for a backer in current cycle
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address of the backer
      */
     function estimatedBackerRewards(address rewardToken_, address backer_) external view returns (uint256) {
@@ -192,9 +215,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     }
 
     /**
-     * @notice gets amount of rewardToken earned for a backer
+     * @notice gets amount of rifToken earned for a backer
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address of the backer
      */
     function rewards(address rewardToken_, address backer_) external view returns (uint256) {
@@ -212,7 +235,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets the current reward rate per unit of stakingToken allocated
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
      */
     function rewardPerToken(address rewardToken_) external view returns (uint256) {
@@ -222,7 +245,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets total amount of rewards to distribute for the current rewards period
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function left(address rewardToken_) external view returns (uint256) {
         return _left(rewardToken_);
@@ -231,7 +254,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets `backer_` rewards missing to claim
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address who earned the rewards
      */
     function earned(address rewardToken_, address backer_) external view returns (uint256) {
@@ -244,15 +267,16 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param backer_ address who receives the rewards
      */
     function claimBackerReward(address backer_) external {
-        claimBackerReward(rewardToken, backer_);
-        claimBackerReward(UtilsLib._COINBASE_ADDRESS, backer_);
+        claimBackerReward(rifToken, backer_);
+        claimBackerReward(usdrifToken, backer_);
+        claimBackerReward(UtilsLib._NATIVE_ADDRESS, backer_);
     }
 
     /**
      * @notice claim rewards for a `backer_` address
      * @dev reverts if is not called by the `backer_` or the backersManager
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address who receives the rewards
      */
     function claimBackerReward(address rewardToken_, address backer_) public {
@@ -277,8 +301,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev rewards are transferred to the builder reward receiver
      */
     function claimBuilderReward() external {
-        claimBuilderReward(rewardToken);
-        claimBuilderReward(UtilsLib._COINBASE_ADDRESS);
+        claimBuilderReward(rifToken);
+        claimBuilderReward(usdrifToken);
+        claimBuilderReward(UtilsLib._NATIVE_ADDRESS);
     }
 
     /**
@@ -286,7 +311,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @dev reverts if is not called by the builder or reward receiver
      * @dev rewards are transferred to the builder reward receiver
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function claimBuilderReward(address rewardToken_) public {
         address _rewardReceiver = builderRegistry.canClaimBuilderReward(msg.sender);
@@ -308,8 +333,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param to_ address who receives the rewards
      */
     function moveBuilderUnclaimedRewards(address to_) external onlyAuthorizedContract {
-        _moveBuilderUnclaimedRewards(rewardToken, to_);
-        _moveBuilderUnclaimedRewards(UtilsLib._COINBASE_ADDRESS, to_);
+        _moveBuilderUnclaimedRewards(rifToken, to_);
+        _moveBuilderUnclaimedRewards(usdrifToken, to_);
+        _moveBuilderUnclaimedRewards(UtilsLib._NATIVE_ADDRESS, to_);
     }
 
     /**
@@ -335,12 +361,14 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         // if backers quit before cycle finish we need to store the remaining rewards on first allocation
         // to add it on the next reward distribution
         if (totalAllocation == 0) {
-            _updateRewardMissing(rewardToken, _periodFinish);
-            _updateRewardMissing(UtilsLib._COINBASE_ADDRESS, _periodFinish);
+            _updateRewardMissing(rifToken, _periodFinish);
+            _updateRewardMissing(usdrifToken, _periodFinish);
+            _updateRewardMissing(UtilsLib._NATIVE_ADDRESS, _periodFinish);
         }
 
-        _updateRewards(rewardToken, backer_, _periodFinish);
-        _updateRewards(UtilsLib._COINBASE_ADDRESS, backer_, _periodFinish);
+        _updateRewards(rifToken, backer_, _periodFinish);
+        _updateRewards(usdrifToken, backer_, _periodFinish);
+        _updateRewards(UtilsLib._NATIVE_ADDRESS, backer_, _periodFinish);
 
         // to avoid dealing with signed integers we add allocation if the new one is bigger than the previous one
         uint256 _previousAllocation = allocationOf[backer_];
@@ -364,45 +392,34 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         return (allocationDeviation_, rewardSharesDeviation_, isNegative_);
     }
 
+    // NOTE: incentivize functions should be generalized into one which takes the address of the corresponding reward
+    // function
     /**
-     * @notice transfers reward tokens to this contract to incentivize backers
+     * @notice transfers RIF tokens to this contract to incentivize backers
      * @dev reverts if Gauge is halted
      *  reverts if distribution for the cycle has not finished
-     * @param amount_ amount of reward tokens
+     * @param amount_ amount of RIF tokens
      */
-    function incentivizeWithRewardToken(uint256 amount_) external minIncentiveAmount(amount_) {
-        // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
-        // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
-        // calculate rewardPerToken
-        if (builderRegistry.isGaugeHalted(address(this))) revert GaugeHalted();
-        // Gauges cannot be incentivized before the distribution of the cycle finishes
-        if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
-
-        if (
-            IERC20(rewardToken).balanceOf(msg.sender) < amount_
-                || IERC20(rewardToken).allowance(msg.sender, address(this)) < amount_
-        ) {
-            revert NotEnoughAmount();
-        }
-
-        _notifyRewardAmount(
-            rewardToken,
-            0, /*builderAmount_*/
-            amount_,
-            backersManager.periodFinish(),
-            backersManager.timeUntilNextCycle(block.timestamp),
-            false /*resetRewardMissing_*/
-        );
-
-        SafeERC20.safeTransferFrom(IERC20(rewardToken), msg.sender, address(this), amount_);
+    function incentivizeWithRifToken(uint256 amount_) external {
+        _incentivizeWithRewardToken(amount_, rifToken);
     }
 
     /**
-     * @notice transfers coinbase to this contract to incentivize backers
+     * @notice transfers USDRIF tokens to this contract to incentivize backers
+     * @dev reverts if Gauge is halted
+     *  reverts if distribution for the cycle has not finished
+     * @param amount_ amount of USDRIF tokens
+     */
+    function incentivizeWithUsdrifToken(uint256 amount_) external {
+        _incentivizeWithRewardToken(amount_, usdrifToken);
+    }
+
+    /**
+     * @notice transfers native tokens to this contract to incentivize backers
      * @dev reverts if Gauge is halted
      *  reverts if distribution for the cycle has not finished
      */
-    function incentivizeWithCoinbase() external payable minIncentiveAmount(msg.value) {
+    function incentivizeWithNative() external payable minIncentiveAmount(msg.value) {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken
@@ -411,7 +428,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
 
         _notifyRewardAmount(
-            UtilsLib._COINBASE_ADDRESS,
+            UtilsLib._NATIVE_ADDRESS,
             0, /*builderAmount_*/
             msg.value,
             backersManager.periodFinish(),
@@ -423,7 +440,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice called on the reward distribution. Transfers reward tokens from backerManger to this contract
      * @dev reverts if caller is not the backersManager contract
-     * @param amountERC20_ amount of ERC20 rewards
+     * @param amountRif_ amount of ERC20 RIF rewards
+     * @param amountUsdrif_ amount of ERC20 USDRIF rewards
      * @param backerRewardPercentage_  backers reward percentage
      * @param periodFinish_ timestamp end of current rewards period
      * @param cycleStart_ Collective Rewards cycle start timestamp
@@ -431,7 +449,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
      */
     function notifyRewardAmountAndUpdateShares(
-        uint256 amountERC20_,
+        uint256 amountRif_,
+        uint256 amountUsdrif_,
         uint256 backerRewardPercentage_,
         uint256 periodFinish_,
         uint256 cycleStart_,
@@ -442,24 +461,32 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         onlyAuthorizedContract
         returns (uint256 newGaugeRewardShares_)
     {
-        address _rewardToken = rewardToken;
-        uint256 _backerAmountERC20 = UtilsLib._mulPrec(backerRewardPercentage_, amountERC20_);
-        uint256 _backerAmountCoinbase = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
+        uint256 _backerAmountRif = UtilsLib._mulPrec(backerRewardPercentage_, amountRif_);
+        uint256 _backerAmountUsdrif = UtilsLib._mulPrec(backerRewardPercentage_, amountUsdrif_);
+        uint256 _backerAmountNative = UtilsLib._mulPrec(backerRewardPercentage_, msg.value);
         uint256 _timeUntilNextCycle = UtilsLib._calcTimeUntilNextCycle(cycleStart_, cycleDuration_, block.timestamp);
         // On a distribution, we include any reward missing into the new reward rate and reset it
         bool _resetRewardMissing = true;
         _notifyRewardAmount(
-            _rewardToken,
-            amountERC20_ - _backerAmountERC20,
-            _backerAmountERC20,
+            rifToken,
+            amountRif_ - _backerAmountRif,
+            _backerAmountRif,
             periodFinish_,
             _timeUntilNextCycle,
             _resetRewardMissing
         );
         _notifyRewardAmount(
-            UtilsLib._COINBASE_ADDRESS,
-            msg.value - _backerAmountCoinbase,
-            _backerAmountCoinbase,
+            usdrifToken,
+            amountUsdrif_ - _backerAmountUsdrif,
+            _backerAmountUsdrif,
+            periodFinish_,
+            _timeUntilNextCycle,
+            _resetRewardMissing
+        );
+        _notifyRewardAmount(
+            UtilsLib._NATIVE_ADDRESS,
+            msg.value - _backerAmountNative,
+            _backerAmountNative,
             periodFinish_,
             _timeUntilNextCycle,
             _resetRewardMissing
@@ -468,7 +495,8 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         newGaugeRewardShares_ = totalAllocation * cycleDuration_;
         rewardShares = newGaugeRewardShares_;
 
-        SafeERC20.safeTransferFrom(IERC20(_rewardToken), msg.sender, address(this), amountERC20_);
+        SafeERC20.safeTransferFrom(IERC20(rifToken), msg.sender, address(this), amountRif_);
+        SafeERC20.safeTransferFrom(IERC20(usdrifToken), msg.sender, address(this), amountUsdrif_);
     }
 
     // -----------------------------
@@ -487,7 +515,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets the current reward rate per unit of stakingToken allocated
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param periodFinish_ timestamp end of current rewards period
      * @return rewardPerToken rewardToken:stakingToken ratio [PREC]
      */
@@ -511,7 +539,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets `backer_` rewards missing to claim
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address who earned the rewards
      * @param periodFinish_ timestamp end of current rewards period
      */
@@ -530,7 +558,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice gets total amount of rewards to distribute for the current rewards period
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      */
     function _left(address rewardToken_) internal view returns (uint256) {
         // [N] = ([N] - [N]) * [PREC] / [PREC]
@@ -540,7 +568,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice transfers reward tokens to this contract
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param builderAmount_ amount of rewards for the builder
      * @param backersAmount_ amount of rewards for the backers
      * @param periodFinish_ timestamp end of current rewards period
@@ -596,7 +624,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice update rewards variables when a backer interacts
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address of the backers
      * @param periodFinish_ timestamp end of current rewards period
      */
@@ -612,7 +640,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice update reward missing variable
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param periodFinish_ timestamp end of current rewards period
      */
     function _updateRewardMissing(address rewardToken_, uint256 periodFinish_) internal {
@@ -627,14 +655,14 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     }
 
     /**
-     * @notice transfers reward token
+     * @notice transfers reward tokens
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param to_ address who receives the tokens
      * @param amount_ amount of tokens to send
      */
     function _transferRewardToken(address rewardToken_, address to_, uint256 amount_) internal nonReentrant {
-        if (rewardToken_ == UtilsLib._COINBASE_ADDRESS) {
+        if (rewardToken_ == UtilsLib._NATIVE_ADDRESS) {
             Address.sendValue(payable(to_), amount_);
         } else {
             SafeERC20.safeTransfer(IERC20(rewardToken_), to_, amount_);
@@ -644,7 +672,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     /**
      * @notice moves builder rewards to another address
      * @param rewardToken_ address of the token rewarded
-     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address
+     *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param to_ address who receives the rewards
      */
     function _moveBuilderUnclaimedRewards(address rewardToken_, address to_) internal {
@@ -653,6 +681,33 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
             rewardData[rewardToken_].builderRewards = 0;
             _transferRewardToken(rewardToken_, to_, _rewardTokenAmount);
         }
+    }
+
+    function _incentivizeWithRewardToken(uint256 amount_, address rewardToken_) internal minIncentiveAmount(amount_) {
+        // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
+        // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
+        // calculate rewardPerToken
+        if (builderRegistry.isGaugeHalted(address(this))) revert GaugeHalted();
+        // Gauges cannot be incentivized before the distribution of the cycle finishes
+        if (backersManager.periodFinish() <= block.timestamp) revert BeforeDistribution();
+
+        if (
+            IERC20(rewardToken_).balanceOf(msg.sender) < amount_
+                || IERC20(rewardToken_).allowance(msg.sender, address(this)) < amount_
+        ) {
+            revert NotEnoughAmount();
+        }
+
+        _notifyRewardAmount(
+            rewardToken_,
+            0, /*builderAmount_*/
+            amount_,
+            backersManager.periodFinish(),
+            backersManager.timeUntilNextCycle(block.timestamp),
+            false /*resetRewardMissing_*/
+        );
+
+        SafeERC20.safeTransferFrom(IERC20(rewardToken_), msg.sender, address(this), amount_);
     }
 
     /**

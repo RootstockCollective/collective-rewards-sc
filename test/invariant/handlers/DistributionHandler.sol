@@ -7,37 +7,44 @@ import { ERC20Mock } from "test/mock/ERC20Mock.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 
 contract DistributionHandler is BaseHandler {
-    ERC20Mock public rewardToken;
+    ERC20Mock public rifToken;
+    ERC20Mock public usdrifToken;
     RewardDistributorRootstockCollective public rewardDistributor;
 
     uint256 public totalAmountDistributed;
+    uint256 public totalAmountDistributedUsdrif;
 
     constructor(BaseTest baseTest_, TimeManager timeManager_) BaseHandler(baseTest_, timeManager_) {
-        rewardToken = baseTest_.rewardToken();
+        rifToken = baseTest_.rifToken();
         rewardDistributor = baseTest_.rewardDistributor();
+        usdrifToken = baseTest_.usdrifToken();
     }
 
     function startDistribution(
-        uint256 amountERC20_,
-        uint256 amountCoinbase_,
+        uint256 amountRif_,
+        uint256 amountUsdrif_,
+        uint256 amountNative_,
         uint256 timeToSkip_
     )
         external
         skipTime(timeToSkip_)
     {
         if (backersManager.totalPotentialReward() == 0) return;
-        amountERC20_ = bound(amountERC20_, 0, type(uint64).max);
-        amountCoinbase_ = bound(amountCoinbase_, 0, type(uint64).max);
+        amountRif_ = bound(amountRif_, 0, type(uint64).max);
+        amountUsdrif_ = bound(amountUsdrif_, 0, type(uint64).max);
+        amountNative_ = bound(amountNative_, 0, type(uint64).max);
 
         timeManager.increaseTimestamp(
             backersManager.cycleNext(block.timestamp) - block.timestamp + (timeToSkip_ % 0.99 hours)
         );
 
-        totalAmountDistributed += amountERC20_;
+        totalAmountDistributed += amountRif_;
+        totalAmountDistributedUsdrif += amountUsdrif_;
 
-        rewardToken.mint(address(rewardDistributor), amountERC20_);
-        vm.deal(address(rewardDistributor), amountCoinbase_);
+        rifToken.mint(address(rewardDistributor), amountRif_);
+        usdrifToken.mint(address(rewardDistributor), amountUsdrif_);
+        vm.deal(address(rewardDistributor), amountNative_);
         vm.prank(baseTest.foundation());
-        rewardDistributor.sendRewardsAndStartDistribution(amountERC20_, amountCoinbase_);
+        rewardDistributor.sendRewardsAndStartDistribution(amountRif_, amountUsdrif_, amountNative_);
     }
 }

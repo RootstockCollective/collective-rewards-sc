@@ -1,5 +1,5 @@
 # BackersManagerRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/backersManager/BackersManagerRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/dddd380a18864fe36c9ec409abd3170e82ca6a46/src/backersManager/BackersManagerRootstockCollective.sol)
 
 **Inherits:**
 [CycleTimeKeeperRootstockCollective](/src/backersManager/CycleTimeKeeperRootstockCollective.sol/abstract.CycleTimeKeeperRootstockCollective.md), [ICollectiveRewardsCheckRootstockCollective](/src/interfaces/ICollectiveRewardsCheckRootstockCollective.sol/interface.ICollectiveRewardsCheckRootstockCollective.md), ERC165Upgradeable
@@ -8,13 +8,6 @@ Creates gauges, manages backers votes and distribute rewards
 
 
 ## State Variables
-### _MAX_DISTRIBUTIONS_PER_BATCH
-
-```solidity
-uint256 internal constant _MAX_DISTRIBUTIONS_PER_BATCH = 20;
-```
-
-
 ### __gapUpgrade
 gap to preserve storage layout after removing builder registry from the inheritance tree
 
@@ -33,12 +26,12 @@ IERC20 public stakingToken;
 ```
 
 
-### rewardToken
-address of the token rewarded to builder and voters
+### rifToken
+address of rif token rewarded to builder and backers
 
 
 ```solidity
-address public rewardToken;
+address public rifToken;
 ```
 
 
@@ -60,21 +53,21 @@ uint256 public tempTotalPotentialReward;
 ```
 
 
-### rewardsERC20
+### rewardsRif
 ERC20 rewards to distribute [N]
 
 
 ```solidity
-uint256 public rewardsERC20;
+uint256 public rewardsRif;
 ```
 
 
-### rewardsCoinbase
-Coinbase rewards to distribute [N]
+### rewardsNative
+Native rewards to distribute [N]
 
 
 ```solidity
-uint256 public rewardsCoinbase;
+uint256 public rewardsNative;
 ```
 
 
@@ -132,6 +125,33 @@ mapping(address backer => bool hasOptedOut) public rewardsOptedOut;
 ```
 
 
+### maxDistributionsPerBatch
+maximum allowed distributions per batch
+
+
+```solidity
+uint256 public maxDistributionsPerBatch;
+```
+
+
+### rewardsUsdrif
+ERC20 rewards to distribute [N]
+
+
+```solidity
+uint256 public rewardsUsdrif;
+```
+
+
+### usdrifToken
+address of the USDRIF token rewarded to builder and voters
+
+
+```solidity
+address public usdrifToken;
+```
+
+
 ### __gap
 *This empty reserved space is put in place to allow future versions to add new
 variables without shifting down storage in the inheritance chain.
@@ -179,6 +199,13 @@ modifier onlyBuilderRegistry();
 modifier onlyOptedInBacker();
 ```
 
+### onlyConfigurator
+
+
+```solidity
+modifier onlyConfigurator();
+```
+
 ### constructor
 
 **Note:**
@@ -200,11 +227,13 @@ https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md
 ```solidity
 function initialize(
     IGovernanceManagerRootstockCollective governanceManager_,
-    address rewardToken_,
+    address rifToken_,
+    address usdrifToken_,
     address stakingToken_,
     uint32 cycleDuration_,
     uint24 cycleStartOffset_,
-    uint32 distributionDuration_
+    uint32 distributionDuration_,
+    uint256 maxDistributionsPerBatch_
 )
     external
     initializer;
@@ -214,11 +243,13 @@ function initialize(
 |Name|Type|Description|
 |----|----|-----------|
 |`governanceManager_`|`IGovernanceManagerRootstockCollective`|contract with permissioned roles|
-|`rewardToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20 standard are supported.|
+|`rifToken_`|`address`|address of the token rewarded to builder and voters. Only tokens that adhere to the ERC-20 standard are supported.|
+|`usdrifToken_`|`address`|address of the USDRIF token rewarded to builder and voters. Only tokens that adhere to the standard are supported.|
 |`stakingToken_`|`address`|address of the staking token for builder and voters|
 |`cycleDuration_`|`uint32`|Collective Rewards cycle time duration|
 |`cycleStartOffset_`|`uint24`|offset to add to the first cycle, used to set an specific day to start the cycles|
 |`distributionDuration_`|`uint32`|duration of the distribution window|
+|`maxDistributionsPerBatch_`|`uint256`|maximum number of distributions allowed per batch|
 
 
 ### initializeBuilderRegistry
@@ -234,6 +265,22 @@ function initializeBuilderRegistry(BuilderRegistryRootstockCollective builderReg
 |Name|Type|Description|
 |----|----|-----------|
 |`builderRegistry_`|`BuilderRegistryRootstockCollective`|address of the builder registry contract|
+
+
+### initializeV3
+
+contract version 3 initializer
+
+
+```solidity
+function initializeV3(uint256 maxDistributionsPerBatch_, address usdrifToken_) external reinitializer(3);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`maxDistributionsPerBatch_`|`uint256`|maximum number of distributions allowed per batch|
+|`usdrifToken_`|`address`|address of the USDRIF token|
 
 
 ### supportsInterface
@@ -323,8 +370,15 @@ reverts if there are no gauges available for the distribution*
 
 
 ```solidity
-function notifyRewardAmount(uint256 amount_) external payable notInDistributionPeriod;
+function notifyRewardAmount(uint256 amountRif_, uint256 amountUsdrif_) external payable notInDistributionPeriod;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amountRif_`|`uint256`|amount of ERC20 rif token to send|
+|`amountUsdrif_`|`uint256`|amount of ERC20 usdrif token to send|
+
 
 ### startDistribution
 
@@ -391,7 +445,7 @@ function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] mem
 
 |Name|Type|Description|
 |----|----|-----------|
-|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for coinbase address|
+|`rewardToken_`|`address`|address of the token rewarded address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native address|
 |`gauges_`|`GaugeRootstockCollective[]`|array of gauges to claim|
 
 
@@ -429,17 +483,18 @@ This action can be performed only by the backer themselves or by the foundation.
 function optInRewards(address backer_) external onlyBackerOrKycApprover(backer_);
 ```
 
-### communityApproveBuilder
+### updateMaxDistributionsPerBatch
 
-This method allows ongoing v1 proposals to be executed after the BackersManager upgrade to v2, by keeping
-compatibility with the v1 interface.
+Updates the maximum number of distributions allowed per batch.
+
+*reverts if not called by the upgrader*
+
+*permission will be delegated from upgrader to different role once the GovernanceManagerRootStockCollective
+contract is upgraded*
 
 
 ```solidity
-function communityApproveBuilder(address builder_)
-    external
-    onlyValidChanger
-    returns (GaugeRootstockCollective gauge_);
+function updateMaxDistributionsPerBatch(uint256 maxDistributionsPerBatch_) external onlyConfigurator;
 ```
 
 ### _allocate
@@ -505,10 +560,8 @@ function _updateAllocation(
 ### _distribute
 
 distribute accumulated reward tokens to the gauges
-
-*reverts if distribution period has not yet started
 This function is paginated and it finishes once all gauges distribution are completed,
-ending the distribution period and voting restrictions.*
+ending the distribution period and voting restrictions.
 
 
 ```solidity
@@ -536,8 +589,9 @@ internal function used to distribute reward tokens to a gauge
 ```solidity
 function _gaugeDistribute(
     GaugeRootstockCollective gauge_,
-    uint256 rewardsERC20_,
-    uint256 rewardsCoinbase_,
+    uint256 rewardsRif_,
+    uint256 rewardsUsdrif_,
+    uint256 rewardsNative_,
     uint256 totalPotentialReward_,
     uint256 periodFinish_,
     uint256 cycleStart_,
@@ -551,8 +605,9 @@ function _gaugeDistribute(
 |Name|Type|Description|
 |----|----|-----------|
 |`gauge_`|`GaugeRootstockCollective`|address of the gauge to distribute|
-|`rewardsERC20_`|`uint256`|ERC20 rewards to distribute|
-|`rewardsCoinbase_`|`uint256`|Coinbase rewards to distribute|
+|`rewardsRif_`|`uint256`|ERC20 rewards to distribute|
+|`rewardsUsdrif_`|`uint256`|ERC20 usdrif rewards to distribute|
+|`rewardsNative_`|`uint256`|Native rewards to distribute|
 |`totalPotentialReward_`|`uint256`|cached total potential reward|
 |`periodFinish_`|`uint256`|cached period finish|
 |`cycleStart_`|`uint256`|cached cycle start timestamp|
@@ -565,23 +620,60 @@ function _gaugeDistribute(
 |`<none>`|`uint256`|newGaugeRewardShares_ new gauge rewardShares, updated after the distribution|
 
 
-### rewardTokenApprove
+### _notifyRewardAmountRif
 
-approves rewardTokens to a given gauge
-
-*give full allowance when it is community approved and remove it when it is community banned
-reverts if the reward token contract returns false on the approval*
+Internal function to notify and transfer RIF reward tokens to this contract.
 
 
 ```solidity
-function rewardTokenApprove(address gauge_, uint256 value_) external onlyBuilderRegistry;
+function _notifyRewardAmountRif(uint256 amount_) internal;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`gauge_`|`address`|gauge contract to approve rewardTokens|
-|`value_`|`uint256`|amount of rewardTokens to approve|
+|`amount_`|`uint256`|The amount of RIF tokens to transfer and notify.|
+
+
+### _notifyRewardAmountUsdrif
+
+Internal function to notify and transfer USDRIF reward tokens to this contract.
+
+
+```solidity
+function _notifyRewardAmountUsdrif(uint256 amount_) internal;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amount_`|`uint256`|The amount of USDRIF tokens to transfer and notify.|
+
+
+### _notifyRewardAmount
+
+
+```solidity
+function _notifyRewardAmount(address token_, address sender_, uint256 amount_) internal;
+```
+
+### rewardTokensApprove
+
+approves reward tokens to a given gauge
+
+*give full allowance when it is community approved and remove it when it is community banned
+reverts if the ERC-20 reward tokens returns false on the approval*
+
+
+```solidity
+function rewardTokensApprove(address gauge_, uint256 value_) external onlyBuilderRegistry;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`gauge_`|`address`|gauge contract to approve reward tokens|
+|`value_`|`uint256`|amount to approve|
 
 
 ### haltGaugeShares
@@ -593,13 +685,23 @@ produce a miscalculation of rewards*
 
 
 ```solidity
-function haltGaugeShares(GaugeRootstockCollective gauge_) external onlyBuilderRegistry notInDistributionPeriod;
+function haltGaugeShares(GaugeRootstockCollective gauge_)
+    external
+    onlyBuilderRegistry
+    notInDistributionPeriod
+    returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`gauge_`|`GaugeRootstockCollective`|gauge contract to be halted|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`uint256`|periodFinish_ timestamp indicating the end of the current rewards period|
 
 
 ### resumeGaugeShares
@@ -611,13 +713,20 @@ produce a miscalculation of rewards*
 
 
 ```solidity
-function resumeGaugeShares(GaugeRootstockCollective gauge_) external onlyBuilderRegistry notInDistributionPeriod;
+function resumeGaugeShares(
+    GaugeRootstockCollective gauge_,
+    uint256 haltedGaugeLastPeriodFinish_
+)
+    external
+    onlyBuilderRegistry
+    notInDistributionPeriod;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`gauge_`|`GaugeRootstockCollective`|gauge contract to be resumed|
+|`haltedGaugeLastPeriodFinish_`|`uint256`||
 
 
 ## Events
@@ -661,6 +770,12 @@ event BackerRewardsOptedOut(address indexed backer_);
 
 ```solidity
 event BackerRewardsOptedIn(address indexed backer_);
+```
+
+### MaxDistributionsPerBatchUpdated
+
+```solidity
+event MaxDistributionsPerBatchUpdated(uint256 oldValue_, uint256 newValue_);
 ```
 
 ## Errors

@@ -8,6 +8,7 @@ contract BaseFuzz is BaseTest {
     uint256 public constant MAX_BACKERS = 50;
     uint256 public constant MAX_VOTE = 100_000 ether;
     uint256 public constant RT_DISTRIBUTION_AMOUNT = 10_000 ether;
+    uint256 public constant URT_DISTRIBUTION_AMOUNT = 10_000 ether;
     uint256 public constant CB_DISTRIBUTION_AMOUNT = 1000 ether;
 
     address[] public backersArray;

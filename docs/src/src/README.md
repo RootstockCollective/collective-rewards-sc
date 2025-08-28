@@ -7,4 +7,5 @@
 - [governance](/src/governance)
 - [interfaces](/src/interfaces)
 - [libraries](/src/libraries)
+- [upgrades](/src/upgrades)
 - [RewardDistributorRootstockCollective](RewardDistributorRootstockCollective.sol/contract.RewardDistributorRootstockCollective.md)

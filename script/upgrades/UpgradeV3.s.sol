@@ -16,11 +16,13 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         address _backersManager = vm.envOr("BackersManagerRootstockCollectiveProxy", address(0));
         address payable _rewardDistributor = payable(vm.envOr("RewardDistributorRootstockCollectiveProxy", address(0)));
         address _configurator = vm.envAddress("CONFIGURATOR_ADDRESS");
+        address _usdrifToken = vm.envAddress("USDRIF_TOKEN_ADDRESS");
 
         upgradeV3_ = run(
             BackersManagerRootstockCollective(_backersManager),
             RewardDistributorRootstockCollective(_rewardDistributor),
             _configurator,
+            _usdrifToken,
             true
         );
     }
@@ -29,6 +31,7 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         BackersManagerRootstockCollective backersManagerProxy_,
         RewardDistributorRootstockCollective rewardDistributorProxy_,
         address configurator_,
+        address usdrifToken_,
         bool writeDeployment_
     )
         public
@@ -38,6 +41,7 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         require(address(backersManagerProxy_) != address(0), "Backers Manager address cannot be zero");
         require(address(rewardDistributorProxy_) != address(0), "Reward distributor address cannot be zero");
         require(configurator_ != address(0), "Configurator address cannot be zero");
+        require(usdrifToken_ != address(0), "USDRIF token address cannot be zero");
 
         BackersManagerRootstockCollective _backersManagerImplV3 = new BackersManagerRootstockCollective();
         BuilderRegistryRootstockCollective _builderRegistryImplV3 = new BuilderRegistryRootstockCollective();
@@ -53,7 +57,8 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
             _gaugeImplV3,
             rewardDistributorProxy_,
             _rewardDistributorImplV3,
-            configurator_
+            configurator_,
+            usdrifToken_
         );
 
         if (!writeDeployment_) return upgradeV3_;

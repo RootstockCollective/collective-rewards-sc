@@ -12,9 +12,11 @@ contract SetCycleDurationTest is BaseTest {
     event NewCycleDurationScheduled(uint256 newCycleDuration_, uint256 cooldownEndTime_);
 
     function _setUp() internal override {
-        // mint some rewardTokens to this contract for reward distribution
-        rewardToken.mint(address(this), 100_000 ether);
-        rewardToken.approve(address(backersManager), 100_000 ether);
+        // mint some rifTokens to this contract for reward distribution
+        rifToken.mint(address(this), 100_000 ether);
+        rifToken.approve(address(backersManager), 100_000 ether);
+        usdrifToken.mint(address(this), 100_000 ether);
+        usdrifToken.approve(address(backersManager), 100_000 ether);
     }
 
     function _initialState() internal {
@@ -194,19 +196,19 @@ contract SetCycleDurationTest is BaseTest {
     function test_SetCycleDurationLonger() public {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a new cycle duration of 3 weeks
         vm.prank(governor);
         backersManager.setCycleDuration(3 weeks, 0 days);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 3 weeks
         assertEq(_cycleDuration, 3 weeks);
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // THEN cycles start time is 3 weeks ago
         assertEq(_cycleStart, block.timestamp - 3 weeks);
@@ -221,40 +223,52 @@ contract SetCycleDurationTest is BaseTest {
         assertEq(backersManager.periodFinish(), block.timestamp + 3 weeks);
         // THEN totalPotentialReward is 16 * 3 weeks
         assertEq(backersManager.totalPotentialReward(), 16 ether * 3 weeks);
-        // THEN gauge rewardRate in rewardToken is 6.25 / 3 weeks; 6.25 = (100 * 2 / 16) * 0.5
-        assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 6.25 ether / uint256(3 weeks));
-        // THEN gauge rewardRate in coinbase is 0.625 / 3 weeks; 0.625 = (10 * 2 / 16) * 0.5
-        assertEq(gauge.rewardRate(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 0.625 ether / uint256(3 weeks));
-        // THEN gauge2 rewardRate in rewardToken is 43.75 / 3 weeks; 43.75 = (100 * 14 / 16) * 0.5
-        assertEq(gauge2.rewardRate(address(rewardToken)) / 10 ** 18, 43.75 ether / uint256(3 weeks));
-        // THEN gauge2 rewardRate in coinbase is 4.375 / 3 weeks; 4.375 = (10 * 14 / 16) * 0.5
-        assertEq(gauge2.rewardRate(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 4.375 ether / uint256(3 weeks));
+        // THEN gauge rewardRate in rifToken is 6.25 / 3 weeks; 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 6.25 ether / uint256(3 weeks));
+        // THEN gauge rewardRate in usdrifToken is 6.25 / 3 weeks; 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(gauge.rewardRate(address(usdrifToken)) / 10 ** 18, 6.25 ether / uint256(3 weeks));
+        // THEN gauge rewardRate in native tokens is 0.625 / 3 weeks; 0.625 = (10 * 2 / 16) * 0.5
+        assertEq(gauge.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 0.625 ether / uint256(3 weeks));
+        // THEN gauge2 rewardRate in rifToken is 43.75 / 3 weeks; 43.75 = (100 * 14 / 16) * 0.5
+        assertEq(gauge2.rewardRate(address(rifToken)) / 10 ** 18, 43.75 ether / uint256(3 weeks));
+        // THEN gauge2 rewardRate in usdrifToken is 43.75 / 3 weeks; 43.75 = (100 * 14 / 16) * 0.5
+        assertEq(gauge2.rewardRate(address(usdrifToken)) / 10 ** 18, 43.75 ether / uint256(3 weeks));
+        // THEN gauge2 rewardRate in native tokens is 4.375 / 3 weeks; 4.375 = (10 * 14 / 16) * 0.5
+        assertEq(gauge2.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 4.375 ether / uint256(3 weeks));
 
         // AND cycle finishes
         _skipAndStartNewCycle();
-        // THEN gauge rewardPerToken in rewardToken is 9.375 = 6.25 * 3 distributions / 2 allocations
-        assertApproxEqAbs(gauge.rewardPerToken(address(rewardToken)), 9.375 ether, 100);
-        // THEN gauge rewardPerToken in coinbase is 0.9375 = 0.625 * 3 distributions / 2 allocations
-        assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0.9375 ether, 100);
-        // THEN gauge2 rewardPerToken in rewardToken is 9.375 = 43.75 * 3 distributions / 14 allocations
-        assertApproxEqAbs(gauge2.rewardPerToken(address(rewardToken)), 9.375 ether, 100);
-        // THEN gauge2 rewardPerToken in coinbase is 0.9375 = 4.375 * 3 distributions / 14 allocations
-        assertApproxEqAbs(gauge2.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0.9375 ether, 100);
+        // THEN gauge rewardPerToken in rifToken is 9.375 = 6.25 * 3 distributions / 2 allocations
+        assertApproxEqAbs(gauge.rewardPerToken(address(rifToken)), 9.375 ether, 100);
+        // THEN gauge rewardPerToken in usdrifToken is 9.375 = 6.25 * 3 distributions / 2 allocations
+        assertApproxEqAbs(gauge.rewardPerToken(address(usdrifToken)), 9.375 ether, 100);
+        // THEN gauge rewardPerToken in native tokens is 0.9375 = 0.625 * 3 distributions / 2 allocations
+        assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 0.9375 ether, 100);
+        // THEN gauge2 rewardPerToken in rifToken is 9.375 = 43.75 * 3 distributions / 14 allocations
+        assertApproxEqAbs(gauge2.rewardPerToken(address(rifToken)), 9.375 ether, 100);
+        // THEN gauge2 rewardPerToken in usdrifToken is 9.375 = 43.75 * 3 distributions / 14 allocations
+        assertApproxEqAbs(gauge2.rewardPerToken(address(usdrifToken)), 9.375 ether, 100);
+        // THEN gauge2 rewardPerToken in native tokens is 0.9375 = 4.375 * 3 distributions / 14 allocations
+        assertApproxEqAbs(gauge2.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 0.9375 ether, 100);
 
         // WHEN builder claim rewards
         _buildersClaim();
-        // THEN builder receives 50% of rewardToken 18.75 = (300 * 2 / 16) * 0.5
-        assertEq(_clearERC20Balance(builder), 18.75 ether);
-        // THEN builder receives 50% of coinbase 1.875 = (30 * 2 / 16) * 0.5
-        assertEq(_clearCoinbaseBalance(builder), 1.875 ether);
+        // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearRifBalance(builder), 18.75 ether);
+        // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearUsdrifBalance(builder), 18.75 ether);
+        // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
+        assertEq(_clearNativeBalance(builder), 1.875 ether);
 
         // WHEN alice claims the rewards
         vm.prank(alice);
         gauge.claimBackerReward(alice);
-        // THEN alice receives 50% of rewardToken 18.75 = (300 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
-        // THEN alice receives 50% of coinbase 1.875 = (30 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearCoinbaseBalance(alice), 1.875 ether, 100);
+        // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearRifBalance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearNativeBalance(alice), 1.875 ether, 100);
     }
 
     /**
@@ -263,19 +277,19 @@ contract SetCycleDurationTest is BaseTest {
     function test_SetCycleDurationShorter() public {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a new cycle duration of 0.5 weeks
         vm.prank(governor);
         backersManager.setCycleDuration(0.5 weeks, 0 days);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         // THEN cycle duration is 0.5 week
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         assertEq(_cycleDuration, 0.5 weeks);
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
 
         // THEN cycles start time is 0.5 weeks ago
         assertEq(_cycleStart, block.timestamp - 0.5 weeks);
@@ -290,40 +304,48 @@ contract SetCycleDurationTest is BaseTest {
         assertEq(backersManager.periodFinish(), block.timestamp + 0.5 weeks);
         // THEN totalPotentialReward is 16 * 0.5 weeks
         assertEq(backersManager.totalPotentialReward(), 16 ether * 0.5 weeks);
-        // THEN gauge rewardRate in rewardToken is 6.25 / 0.5 weeks; 6.25 = (100 * 2 / 16) * 0.5
-        assertEq(gauge.rewardRate(address(rewardToken)) / 10 ** 18, 6.25 ether / uint256(0.5 weeks));
-        // THEN gauge rewardRate in coinbase is 0.625 / 0.5 weeks; 0.625 = (10 * 2 / 16) * 0.5
-        assertEq(gauge.rewardRate(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 0.625 ether / uint256(0.5 weeks));
-        // THEN gauge2 rewardRate in rewardToken is 43.75 / 0.5 weeks; 43.75 = (100 * 14 / 16) * 0.5
-        assertEq(gauge2.rewardRate(address(rewardToken)) / 10 ** 18, 43.75 ether / uint256(0.5 weeks));
-        // THEN gauge2 rewardRate in coinbase is 4.375 / 0.5 weeks; 4.375 = (10 * 14 / 16) * 0.5
-        assertEq(gauge2.rewardRate(UtilsLib._COINBASE_ADDRESS) / 10 ** 18, 4.375 ether / uint256(0.5 weeks));
+        // THEN gauge rewardRate in rifToken is 6.25 / 0.5 weeks; 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(gauge.rewardRate(address(rifToken)) / 10 ** 18, 6.25 ether / uint256(0.5 weeks));
+        // THEN gauge rewardRate in usdrifToken is 6.25 / 0.5 weeks; 6.25 = (100 * 2 / 16) * 0.5
+        assertEq(gauge.rewardRate(address(usdrifToken)) / 10 ** 18, 6.25 ether / uint256(0.5 weeks));
+        // THEN gauge rewardRate in native tokens is 0.625 / 0.5 weeks; 0.625 = (10 * 2 / 16) * 0.5
+        assertEq(gauge.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 0.625 ether / uint256(0.5 weeks));
+        // THEN gauge2 rewardRate in rifToken is 43.75 / 0.5 weeks; 43.75 = (100 * 14 / 16) * 0.5
+        assertEq(gauge2.rewardRate(address(rifToken)) / 10 ** 18, 43.75 ether / uint256(0.5 weeks));
+        // THEN gauge2 rewardRate in usdrifToken is 43.75 / 0.5 weeks; 43.75 = (100 * 14 / 16) * 0.5
+        assertEq(gauge2.rewardRate(address(usdrifToken)) / 10 ** 18, 43.75 ether / uint256(0.5 weeks));
+        // THEN gauge2 rewardRate in native tokens is 4.375 / 0.5 weeks; 4.375 = (10 * 14 / 16) * 0.5
+        assertEq(gauge2.rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18, 4.375 ether / uint256(0.5 weeks));
 
         // AND cycle finishes
         _skipAndStartNewCycle();
-        // THEN gauge rewardPerToken in rewardToken is 9.375 = 6.25 * 3 distributions / 2 allocations
-        assertApproxEqAbs(gauge.rewardPerToken(address(rewardToken)), 9.375 ether, 100);
-        // THEN gauge rewardPerToken in coinbase is 0.9375 = 0.625 * 3 distributions / 2 allocations
-        assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0.9375 ether, 100);
-        // THEN gauge2 rewardPerToken in rewardToken is 9.375 = 43.75 * 3 distributions / 14 allocations
-        assertApproxEqAbs(gauge2.rewardPerToken(address(rewardToken)), 9.375 ether, 100);
-        // THEN gauge2 rewardPerToken in coinbase is 0.9375 = 4.375 * 3 distributions / 14 allocations
-        assertApproxEqAbs(gauge2.rewardPerToken(UtilsLib._COINBASE_ADDRESS), 0.9375 ether, 100);
+        // THEN gauge rewardPerToken in rifToken is 9.375 = 6.25 * 3 distributions / 2 allocations
+        assertApproxEqAbs(gauge.rewardPerToken(address(rifToken)), 9.375 ether, 100);
+        // THEN gauge rewardPerToken in native tokens is 0.9375 = 0.625 * 3 distributions / 2 allocations
+        assertApproxEqAbs(gauge.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 0.9375 ether, 100);
+        // THEN gauge2 rewardPerToken in rifToken is 9.375 = 43.75 * 3 distributions / 14 allocations
+        assertApproxEqAbs(gauge2.rewardPerToken(address(rifToken)), 9.375 ether, 100);
+        // THEN gauge2 rewardPerToken in native tokens is 0.9375 = 4.375 * 3 distributions / 14 allocations
+        assertApproxEqAbs(gauge2.rewardPerToken(UtilsLib._NATIVE_ADDRESS), 0.9375 ether, 100);
 
         // WHEN builder claim rewards
         _buildersClaim();
-        // THEN builder receives 50% of rewardToken 18.75 = (300 * 2 / 16) * 0.5
-        assertEq(_clearERC20Balance(builder), 18.75 ether);
-        // THEN builder receives 50% of coinbase 1.875 = (30 * 2 / 16) * 0.5
-        assertEq(_clearCoinbaseBalance(builder), 1.875 ether);
+        // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearRifBalance(builder), 18.75 ether);
+        // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearUsdrifBalance(builder), 18.75 ether);
+        // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
+        assertEq(_clearNativeBalance(builder), 1.875 ether);
 
         // WHEN alice claims the rewards
         vm.prank(alice);
         gauge.claimBackerReward(alice);
-        // THEN alice receives 50% of rewardToken 18.75 = (300 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
-        // THEN alice receives 50% of coinbase 1.875 = (30 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearCoinbaseBalance(alice), 1.875 ether, 100);
+        // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearRifBalance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearNativeBalance(alice), 1.875 ether, 100);
     }
 
     /**
@@ -332,14 +354,14 @@ contract SetCycleDurationTest is BaseTest {
     function test_SameCycleDurationWithOffset() public {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a same cycle duration of 1 weeks adding an offset of 3 days
         vm.prank(governor);
         backersManager.setCycleDuration(1 weeks, 3 days);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1 week + 3 days
         assertEq(_cycleDuration, 1 weeks + 3 days);
@@ -350,8 +372,8 @@ contract SetCycleDurationTest is BaseTest {
         // THEN next cycle is in 1 week + 3 days
         assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1 weeks + 3 days);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1 week
         assertEq(_cycleDuration, 1 weeks);
@@ -367,18 +389,22 @@ contract SetCycleDurationTest is BaseTest {
 
         // WHEN builder claim rewards
         _buildersClaim();
-        // THEN builder receives 50% of rewardToken 18.75 = (300 * 2 / 16) * 0.5
-        assertEq(_clearERC20Balance(builder), 18.75 ether);
-        // THEN builder receives 50% of coinbase 1.875 = (30 * 2 / 16) * 0.5
-        assertEq(_clearCoinbaseBalance(builder), 1.875 ether);
+        // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearRifBalance(builder), 18.75 ether);
+        // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearUsdrifBalance(builder), 18.75 ether);
+        // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
+        assertEq(_clearNativeBalance(builder), 1.875 ether);
 
         // WHEN alice claims the rewards
         vm.prank(alice);
         gauge.claimBackerReward(alice);
-        // THEN alice receives 50% of rewardToken 18.75 = (300 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
-        // THEN alice receives 50% of coinbase 1.875 = (30 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearCoinbaseBalance(alice), 1.875 ether, 100);
+        // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearRifBalance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearNativeBalance(alice), 1.875 ether, 100);
     }
 
     /**
@@ -387,14 +413,14 @@ contract SetCycleDurationTest is BaseTest {
     function test_LongerCycleDurationWithOffset() public {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a longer cycle duration of 1.5 weeks adding an offset of 3 days
         vm.prank(governor);
         backersManager.setCycleDuration(1.5 weeks, 3 days);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1.5 week + 3 days
         assertEq(_cycleDuration, 1.5 weeks + 3 days);
@@ -405,8 +431,8 @@ contract SetCycleDurationTest is BaseTest {
         // THEN next cycle is in 1.5 week + 3 days
         assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 1.5 weeks + 3 days);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 1.5 week
         assertEq(_cycleDuration, 1.5 weeks);
@@ -422,18 +448,22 @@ contract SetCycleDurationTest is BaseTest {
 
         // WHEN builder claim rewards
         _buildersClaim();
-        // THEN builder receives 50% of rewardToken 18.75 = (300 * 2 / 16) * 0.5
-        assertEq(_clearERC20Balance(builder), 18.75 ether);
-        // THEN builder receives 50% of coinbase 1.875 = (30 * 2 / 16) * 0.5
-        assertEq(_clearCoinbaseBalance(builder), 1.875 ether);
+        // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearRifBalance(builder), 18.75 ether);
+        // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearUsdrifBalance(builder), 18.75 ether);
+        // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
+        assertEq(_clearNativeBalance(builder), 1.875 ether);
 
         // WHEN alice claims the rewards
         vm.prank(alice);
         gauge.claimBackerReward(alice);
-        // THEN alice receives 50% of rewardToken 18.75 = (300 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
-        // THEN alice receives 50% of coinbase 1.875 = (30 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearCoinbaseBalance(alice), 1.875 ether, 100);
+        // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearRifBalance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearNativeBalance(alice), 1.875 ether, 100);
     }
 
     /**
@@ -442,14 +472,14 @@ contract SetCycleDurationTest is BaseTest {
     function test_ShorterCycleDurationWithOffset() public {
         // GIVEN alice and bob allocate to builder and builder2
         _initialState();
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         // AND governor sets a shorter cycle duration of 0.75 weeks adding an offset of 3 days
         vm.prank(governor);
         backersManager.setCycleDuration(0.75 weeks, 3 days);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 0.75 week + 3 days
         assertEq(_cycleDuration, 0.75 weeks + 3 days);
@@ -460,8 +490,8 @@ contract SetCycleDurationTest is BaseTest {
         // THEN next cycle is in 0.75 week + 3 days
         assertEq(backersManager.cycleNext(block.timestamp), block.timestamp + 0.75 weeks + 3 days);
 
-        // AND 100 rewardToken and 10 coinbase are distributed
-        _distribute(100 ether, 10 ether);
+        // AND 100 rifToken, 100 usdrifToken and 10 native tokens are distributed
+        _distribute(100 ether, 100 ether, 10 ether);
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
         // THEN cycle duration is 0.75 week
         assertEq(_cycleDuration, 0.75 weeks);
@@ -477,17 +507,21 @@ contract SetCycleDurationTest is BaseTest {
 
         // WHEN builder claim rewards
         _buildersClaim();
-        // THEN builder receives 50% of rewardToken 18.75 = (300 * 2 / 16) * 0.5
-        assertEq(_clearERC20Balance(builder), 18.75 ether);
-        // THEN builder receives 50% of coinbase 1.875 = (30 * 2 / 16) * 0.5
-        assertEq(_clearCoinbaseBalance(builder), 1.875 ether);
+        // THEN builder receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearRifBalance(builder), 18.75 ether);
+        // THEN builder receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertEq(_clearUsdrifBalance(builder), 18.75 ether);
+        // THEN builder receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
+        assertEq(_clearNativeBalance(builder), 1.875 ether);
 
         // WHEN alice claims the rewards
         vm.prank(alice);
         gauge.claimBackerReward(alice);
-        // THEN alice receives 50% of rewardToken 18.75 = (300 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearERC20Balance(alice), 18.75 ether, 100);
-        // THEN alice receives 50% of coinbase 1.875 = (30 * 2 / 16) * 0.5
-        assertApproxEqAbs(_clearCoinbaseBalance(alice), 1.875 ether, 100);
+        // THEN alice receives 50% of rifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearRifBalance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of usdrifToken 18.75 = (300 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearUsdrifBalance(alice), 18.75 ether, 100);
+        // THEN alice receives 50% of native tokens 1.875 = (30 * 2 / 16) * 0.5
+        assertApproxEqAbs(_clearNativeBalance(alice), 1.875 ether, 100);
     }
 }

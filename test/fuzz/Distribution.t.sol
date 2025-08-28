@@ -15,14 +15,17 @@ contract DistributionFuzzTest is BaseFuzz {
         _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
         // AND there are 3 distributions
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
-        _distribute(RT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
+        _distribute(RT_DISTRIBUTION_AMOUNT, URT_DISTRIBUTION_AMOUNT, CB_DISTRIBUTION_AMOUNT);
 
         // AND each gauge receives its proportional share of rewards based on its allocation
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             assertApproxEqAbs(
-                rewardToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(RT_DISTRIBUTION_AMOUNT * 3, i), 100
+                rifToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(RT_DISTRIBUTION_AMOUNT * 3, i), 100
+            );
+            assertApproxEqAbs(
+                usdrifToken.balanceOf(address(gaugesArray[i])), _calcGaugeReward(URT_DISTRIBUTION_AMOUNT * 3, i), 100
             );
             assertApproxEqAbs(address(gaugesArray[i]).balance, _calcGaugeReward(CB_DISTRIBUTION_AMOUNT * 3, i), 100);
         }
@@ -32,8 +35,9 @@ contract DistributionFuzzTest is BaseFuzz {
 
         // THEN they receive the rewards after deducting the backers reward percentage
         for (uint256 i = 0; i < gaugesArray.length; i++) {
+            assertApproxEqAbs(rifToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 3, i), 100);
             assertApproxEqAbs(
-                rewardToken.balanceOf(builders[i]), _calcBuilderReward(RT_DISTRIBUTION_AMOUNT * 3, i), 100
+                usdrifToken.balanceOf(builders[i]), _calcBuilderReward(URT_DISTRIBUTION_AMOUNT * 3, i), 100
             );
             assertApproxEqAbs(builders[i].balance, _calcBuilderReward(CB_DISTRIBUTION_AMOUNT * 3, i), 100);
         }
@@ -48,8 +52,11 @@ contract DistributionFuzzTest is BaseFuzz {
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rewardToken.balanceOf(backersArray[i]),
-                _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 3, i),
+                rifToken.balanceOf(backersArray[i]), _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 3, i), 0.000000001 ether
+            );
+            assertApproxEqAbs(
+                usdrifToken.balanceOf(backersArray[i]),
+                _calcBackerReward(URT_DISTRIBUTION_AMOUNT * 3, i),
                 0.000000001 ether
             );
             assertApproxEqAbs(
@@ -59,7 +66,8 @@ contract DistributionFuzzTest is BaseFuzz {
 
         // THEN gauges balances are empty
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            assertApproxEqAbs(rewardToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
+            assertApproxEqAbs(rifToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
+            assertApproxEqAbs(usdrifToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
             assertApproxEqAbs(address(gaugesArray[i]).balance, 0, 0.000000001 ether);
         }
     }
@@ -81,8 +89,8 @@ contract DistributionFuzzTest is BaseFuzz {
         //  AND a random amount of backers voting the gauges
         _initialFuzzAllocation(buildersAmount_, backersAmount_, seed_);
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution of 10_000 rifToken, 10_000 usdrifToken and 1_000 native tokens
+        _distribute(10_000 ether, 10_000 ether, 1000 ether);
 
         // AND a random time passes
         skip(allocationsTime_);
@@ -132,8 +140,8 @@ contract DistributionFuzzTest is BaseFuzz {
             assertEq(gaugesArray[i].rewardShares(), _expectedRewardShares);
         }
 
-        // AND there is a distribution of 10000 rewardToken and 1000 coinbase
-        _distribute(10_000 ether, 1000 ether);
+        // AND there is a distribution of 10_000 rifToken, 10_000 usdrifToken and 1_000 native tokens
+        _distribute(10_000 ether, 10_000 ether, 1000 ether);
         // THEN totalPotentialReward is the entire cycle
         assertEq(backersManager.totalPotentialReward(), _newTotalAllocations * cycleDuration);
         // THEN rewardShares for each gauge is the entire cycle

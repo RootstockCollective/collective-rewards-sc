@@ -1,5 +1,5 @@
 # BuilderRegistryRootstockCollective
-[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/d3eba7c5de1f4bd94fc8d9063bc035b452fb6c5d/src/builderRegistry/BuilderRegistryRootstockCollective.sol)
+[Git Source](https://github.com/RootstockCollective/collective-rewards-sc/blob/dddd380a18864fe36c9ec409abd3170e82ca6a46/src/builderRegistry/BuilderRegistryRootstockCollective.sol)
 
 **Inherits:**
 [UpgradeableRootstockCollective](/src/governance/UpgradeableRootstockCollective.sol/abstract.UpgradeableRootstockCollective.md)
@@ -158,13 +158,6 @@ modifier onlyKycApprover();
 modifier onlyUpgrader();
 ```
 
-### onlyValidChangerOrBackersManager
-
-
-```solidity
-modifier onlyValidChangerOrBackersManager();
-```
-
 ### onlyBackersManager
 
 
@@ -206,18 +199,6 @@ function initialize(
 |`rewardDistributor_`|`address`|address of the rewardDistributor contract|
 |`rewardPercentageCooldown_`|`uint128`|time that must elapse for a new reward percentage from a builder to be applied|
 
-
-### setHaltedGaugeLastPeriodFinish
-
-
-```solidity
-function setHaltedGaugeLastPeriodFinish(
-    GaugeRootstockCollective gauge_,
-    uint256 periodFinish_
-)
-    external
-    onlyBackersManager;
-```
 
 ### requestRewardReceiverUpdate
 
@@ -350,7 +331,7 @@ function revokeBuilderKYC(address builder_) external onlyKycApprover;
 
 community approve builder and create its gauge
 
-*reverts if it is not called by the governor, authorized changer nor the backers manager
+*reverts if it is not called by the governor or the authorized changer
 reverts if is already community approved
 reverts if it has a gauge associated*
 
@@ -358,7 +339,7 @@ reverts if it has a gauge associated*
 ```solidity
 function communityApproveBuilder(address builder_)
     external
-    onlyValidChangerOrBackersManager
+    onlyValidChanger
     returns (GaugeRootstockCollective gauge_);
 ```
 **Parameters**
@@ -386,6 +367,27 @@ reverts if it is not community approved*
 
 ```solidity
 function communityBanBuilder(address builder_) external onlyValidChanger;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`builder_`|`address`|address of the builder|
+
+
+### dewhitelistBuilder
+
+Removes a builder from the whitelist. This function is maintained for compatibility with the previous
+naming convention
+
+*reverts if it is not called by the governor address or authorized changer
+reverts if it does not have a gauge associated
+reverts if it is not community approved
+Internally calls `_communityBanBuilder` to perform the operation.*
+
+
+```solidity
+function dewhitelistBuilder(address builder_) external onlyValidChanger;
 ```
 **Parameters**
 
@@ -518,6 +520,30 @@ function canClaimBuilderReward(address claimer_) external view returns (address 
 |`claimer_`|`address`|address of the claimer|
 
 
+### validateGaugeHalted
+
+Validates if a gauge is halted and can accept allocations
+
+*This function first checks if the gauge is initialized and then checks if it is halted.
+Halted gauges can only have negative allocations (withdrawals) and are not considered for rewards.*
+
+
+```solidity
+function validateGaugeHalted(GaugeRootstockCollective gauge_) external view returns (bool);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`gauge_`|`GaugeRootstockCollective`|The gauge contract to check|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`bool`|bool True if the gauge is halted, false otherwise|
+
+
 ### isBuilderOperational
 
 return true if builder is operational
@@ -568,6 +594,28 @@ get gauge from array at a given index
 ```solidity
 function getGaugeAt(uint256 index_) public view returns (address);
 ```
+
+### getGaugesInRange
+
+Get gauges in a specified range.
+
+
+```solidity
+function getGaugesInRange(uint256 start_, uint256 length_) external view returns (address[] memory);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`start_`|`uint256`|The starting index (inclusive).|
+|`length_`|`uint256`|The number of gauge addresses we want to retrieve.|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address[]`|gauges_ An array of gauge addresses within the specified range.|
+
 
 ### isGaugeRewarded
 
@@ -654,7 +702,7 @@ Ensures the builder associated with the given gauge exists and builder is initia
 
 
 ```solidity
-function requireInitializedBuilder(GaugeRootstockCollective gauge_) external view;
+function requireInitializedBuilder(GaugeRootstockCollective gauge_) public view;
 ```
 **Parameters**
 
@@ -714,15 +762,15 @@ function _canBeResumed(GaugeRootstockCollective gauge_) internal view returns (b
 |`gauge_`|`GaugeRootstockCollective`|gauge contract to be resumed|
 
 
-### _intialiseBuilder
+### _initializeBuilder
 
 *Initializes builder for the first time, setting the reward receiver and the reward percentage
 Sets initialized flag to true. It cannot be switched to false anymore
-See {intialiseBuilder} for details.*
+See [initializeBuilder](/src/builderRegistry/BuilderRegistryRootstockCollective.sol/contract.BuilderRegistryRootstockCollective.md#initializebuilder) for details.*
 
 
 ```solidity
-function _intialiseBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private;
+function _initializeBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private;
 ```
 
 ### _communityApproveBuilder
@@ -733,6 +781,16 @@ See [communityApproveBuilder](/src/builderRegistry/BuilderRegistryRootstockColle
 
 ```solidity
 function _communityApproveBuilder(address builder_) private returns (GaugeRootstockCollective gauge_);
+```
+
+### _communityBanBuilder
+
+*Internal function to community ban and halt its gauge
+See [communityBanBuilder](/src/builderRegistry/BuilderRegistryRootstockCollective.sol/contract.BuilderRegistryRootstockCollective.md#communitybanbuilder) for details.*
+
+
+```solidity
+function _communityBanBuilder(address builder_) private;
 ```
 
 ## Events
@@ -933,6 +991,12 @@ error ZeroAddressNotAllowed();
 
 ```solidity
 error BuilderRewardsLocked();
+```
+
+### InvalidIndex
+
+```solidity
+error InvalidIndex();
 ```
 
 ## Structs
