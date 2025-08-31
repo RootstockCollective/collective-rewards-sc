@@ -166,6 +166,28 @@ contract UpgradeV3Test is Test {
         // AND usdrifToken should be initialized with the same token as backersManager
         vm.assertEq(address(rewardDistributor.usdrifToken()), address(backersManager.usdrifToken()));
         vm.assertEq(address(rewardDistributor.usdrifToken()), usdrifToken);
+        // AND rifToken should be initialized with the same token as backersManager
+        vm.assertEq(address(rewardDistributor.rifToken()), address(backersManager.rifToken()));
+        vm.assertNotEq(address(rewardDistributor.rifToken()), address(0));
+    }
+
+    /**
+     * SCENARIO: rewardToken was renamed to rifToken in V3
+     */
+    function test_fork_rewardTokenRenamedToRifToken() public {
+        // GIVEN the rewardDistributor is still v2
+        // THEN calling rifToken should revert
+        vm.expectRevert();
+        rewardDistributor.rewardToken();
+
+        // GIVEN the upgrade is performed
+        _upgradeV3();
+
+        // THEN rifToken should be initialized with the same token as backersManager
+        vm.assertEq(address(rewardDistributor.rifToken()), address(backersManager.rifToken()));
+        // AND calling rewardToken should revert
+        vm.expectRevert();
+        rewardDistributor.rewardToken();
     }
 
     /**
