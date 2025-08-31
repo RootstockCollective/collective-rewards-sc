@@ -163,6 +163,47 @@ contract UpgradeV3Test is Test {
 
         // THEN rewardDistributor should have the new implementation
         vm.assertEq(_getImplementation(address(rewardDistributor)), address(upgradeV3.rewardDistributorImplV3()));
+        // AND usdrifToken should be initialized with the same token as backersManager
+        vm.assertEq(address(rewardDistributor.usdrifToken()), address(backersManager.usdrifToken()));
+        vm.assertEq(address(rewardDistributor.usdrifToken()), usdrifToken);
+    }
+
+    /**
+     * SCENARIO: usdrifToken does not exist in the v2 rewardDistributor
+     */
+    function test_fork_usdrifTokenDoesNotExistBeforeUpgrade() public {
+        // GIVEN the rewardDistributor is still v2
+        // THEN it should revert when accessing usdrifToken
+        vm.expectRevert();
+        rewardDistributor.usdrifToken();
+    }
+
+    /**
+     * SCENARIO: initializeUsdrifToken works correctly during upgrade
+     */
+    function test_fork_initializeUsdrifToken() public {
+        // GIVEN the contracts are not yet upgraded
+        // WHEN the upgrade is performed
+        _upgradeV3();
+
+        // THEN usdrifToken should be properly initialized
+        vm.assertNotEq(address(rewardDistributor.usdrifToken()), address(0));
+        vm.assertEq(address(rewardDistributor.usdrifToken()), usdrifToken);
+        vm.assertEq(address(rewardDistributor.usdrifToken()), address(backersManager.usdrifToken()));
+    }
+
+    /**
+     * SCENARIO: initializeUsdrifToken cannot be called twice
+     */
+    function test_fork_initializeUsdrifToken_cannotCallTwice() public {
+        // GIVEN the upgrade is performed and usdrifToken is initialized
+        _upgradeV3();
+        vm.assertNotEq(address(rewardDistributor.usdrifToken()), address(0));
+
+        // WHEN trying to call initializeUsdrifToken again
+        // THEN it should revert with UsdrifTokenAlreadyInitialized
+        vm.expectRevert(RewardDistributorRootstockCollective.UsdrifTokenAlreadyInitialized.selector);
+        rewardDistributor.initializeUsdrifToken();
     }
 
     /**

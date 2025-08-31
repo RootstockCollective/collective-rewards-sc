@@ -105,7 +105,7 @@ contract UpgradeV3 {
     }
 
     function _upgradeRewardDistributor() internal {
-        bytes memory _data;
+        bytes memory _data = abi.encodeCall(RewardDistributorRootstockCollective.initializeUsdrifToken, ());
         rewardDistributorProxy.upgradeToAndCall(address(rewardDistributorImplV3), _data);
     }
 

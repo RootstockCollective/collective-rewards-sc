@@ -16,6 +16,8 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     // -----------------------------
     error NotFoundationTreasury();
     error CollectiveRewardsAddressesAlreadyInitialized();
+    error CollectiveRewardsAddressesNotInitialized();
+    error UsdrifTokenAlreadyInitialized();
     error CycleAlreadyFunded();
 
     // -----------------------------
@@ -85,6 +87,19 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         backersManager = BackersManagerRootstockCollective(backersManager_);
         rifToken = IERC20(BackersManagerRootstockCollective(backersManager_).rifToken());
         usdrifToken = IERC20(BackersManagerRootstockCollective(backersManager_).usdrifToken());
+    }
+
+    /**
+     * @notice USDRIF token initializer
+     * @dev used to upgrade the live contracts. usdrifToken is set to the usdrifToken of the backersManager
+     * @dev TODO: After upgrading the live contracts to V3, this function can be deleted and the usdrifToken can be set
+     * directly with initializeCollectiveRewardsAddresses
+     */
+    function initializeUsdrifToken() external {
+        if (address(usdrifToken) != address(0)) revert UsdrifTokenAlreadyInitialized();
+        BackersManagerRootstockCollective _backersManager = backersManager;
+        if (address(_backersManager) == address(0)) revert CollectiveRewardsAddressesNotInitialized();
+        usdrifToken = IERC20(_backersManager.usdrifToken());
     }
 
     // -----------------------------
