@@ -33,7 +33,7 @@ contract GovernanceManagerRootstockCollectiveTest is BaseTest {
     /**
      * SCENARIO: GovernanceManager is reinitialized correctly with configurator
      */
-    function test_InitializeV2() public view {
+    function test_InitializeV3() public view {
         // THEN the configurator is set correctly
         assertEq(governanceManager.configurator(), configurator);
     }

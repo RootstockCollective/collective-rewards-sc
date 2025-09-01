@@ -96,7 +96,7 @@ contract UpgradeV3 {
 
     function _upgradeGovernanceManager() internal {
         bytes memory _governanceManagerInitializeData =
-            abi.encodeCall(GovernanceManagerRootstockCollective.initializeV2, (configurator));
+            abi.encodeCall(GovernanceManagerRootstockCollective.initializeV3, (configurator));
 
         governanceManagerProxy.upgradeToAndCall(address(governanceManagerImplV3), _governanceManagerInitializeData);
     }

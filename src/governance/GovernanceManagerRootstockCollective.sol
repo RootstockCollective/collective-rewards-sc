@@ -80,7 +80,7 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _updateUpgrader(upgrader_);
     }
 
-    function initializeV2(address configurator_) public reinitializer(2) onlyAuthorizedUpgrader {
+    function initializeV3(address configurator_) public reinitializer(3) onlyAuthorizedUpgrader {
         _updateConfigurator(configurator_);
     }
 
