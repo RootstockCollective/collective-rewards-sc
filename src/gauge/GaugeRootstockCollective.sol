@@ -90,7 +90,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
     BuilderRegistryRootstockCollective public builderRegistry;
 
     // -----------------------------
-    // -------- V2 Storage ---------
+    // -------- V3 Storage ---------
     // -----------------------------
 
     /// @notice address of usdRif token rewarded to builder and backers

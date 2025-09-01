@@ -168,6 +168,17 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         rewardPercentageCooldown = rewardPercentageCooldown_;
     }
 
+    /**
+     * @notice contract initializer
+     * @param gaugeFactory_ address of the GaugeFactoryRootstockCollective contract
+     * @dev used to upgrade the contract to V3
+     *  TODO: After upgrading the live contracts to V3, this function can be deleted as the gaugeFactory can be set
+     * directly in the initialize function
+     */
+    function initializeV3(GaugeFactoryRootstockCollective gaugeFactory_) external reinitializer(3) {
+        gaugeFactory = gaugeFactory_;
+    }
+
     // -----------------------------
     // ---- External Functions -----
     // -----------------------------
