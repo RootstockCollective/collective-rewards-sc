@@ -12,6 +12,7 @@ import { RewardDistributorRootstockCollective } from "src/RewardDistributorRoots
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
 import { IBackersManagerRootstockCollectiveV2 } from "src/interfaces/v2/IBackersManagerRootstockCollectiveV2.sol";
 import { IRewardDistributorRootstockCollectiveV2 } from "src/interfaces/v2/IRewardDistributorRootstockCollectiveV2.sol";
+import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 
 contract UpgradeV3Test is Test {
     IBackersManagerRootstockCollectiveV2 public backersManagerV2;
@@ -244,9 +245,9 @@ contract UpgradeV3Test is Test {
     }
 
     /**
-     * SCENARIO: GaugeFactory is deployed with correct parameters
+     * SCENARIO: GaugeFactory is upgraded to v3 with correct parameters
      */
-    function test_fork_gaugeFactoryV3Setup() public {
+    function test_fork_gaugeFactoryV3Upgrade() public {
         // GIVEN the upgrade is performed
         _upgradeV3();
 
@@ -255,6 +256,74 @@ contract UpgradeV3Test is Test {
         vm.assertEq(_gaugeFactory.beacon(), address(gaugeBeacon));
         vm.assertEq(_gaugeFactory.rifToken(), address(backersManagerV3.rifToken()));
         vm.assertEq(_gaugeFactory.usdrifToken(), usdrifToken);
+
+        // AND GaugeBeacon should be upgraded to the new implementation
+        vm.assertEq(gaugeBeacon.implementation(), address(upgradeV3.gaugeImplV3()));
+
+        // AND Gauge V3 functions should be accessible (not revert)
+        GaugeRootstockCollective _gaugeV3 = GaugeRootstockCollective(address(gaugeBeacon.implementation()));
+        // return data is zero as it is just the proxy implementation, without storage set
+        _gaugeV3.rifToken();
+        _gaugeV3.usdrifToken();
+    }
+
+    /**
+     * SCENARIO: All gauges are upgraded to v3 and have rifToken and usdrifToken initialized
+     */
+    function test_fork_allGaugesUpgradedToV3() public {
+        // GIVEN the upgrade is performed
+        _upgradeV3();
+
+        // WHEN iterating over all gauges in the BuilderRegistry
+        uint256 _gaugesLength = builderRegistry.getGaugesLength();
+
+        // THEN each gauge should have rifToken and usdrifToken properly initialized
+        for (uint256 i = 0; i < _gaugesLength; i++) {
+            address _gaugeAddress = builderRegistry.getGaugeAt(i);
+            GaugeRootstockCollective _gauge = GaugeRootstockCollective(_gaugeAddress);
+
+            // Check that rifToken exists and is not zero address
+            address _rifToken = _gauge.rifToken();
+            vm.assertNotEq(_rifToken, address(0), "rifToken should not be zero address");
+            vm.assertEq(
+                _rifToken, address(backersManagerV3.rifToken()), "rifToken should match BackersManager rifToken"
+            );
+
+            // Check that usdrifToken exists and is not zero address
+            address _usdrifToken = _gauge.usdrifToken();
+            vm.assertNotEq(_usdrifToken, address(0), "usdrifToken should not be zero address");
+            vm.assertEq(
+                _usdrifToken,
+                address(backersManagerV3.usdrifToken()),
+                "usdrifToken should match BackersManager usdrifToken"
+            );
+            vm.assertEq(_usdrifToken, usdrifToken, "usdrifToken should match expected USDRIF token");
+        }
+    }
+
+    /**
+     * SCENARIO: All halted gauges are upgraded to v3 and have rifToken and usdrifToken initialized
+     */
+    function test_fork_allHaltedGaugesUpgradedToV3() public {
+        // GIVEN the upgrade is performed
+        _upgradeV3();
+
+        // WHEN iterating over all halted gauges in the BuilderRegistry
+        uint256 _haltedGaugesLength = builderRegistry.getHaltedGaugesLength();
+        for (uint256 i = 0; i < _haltedGaugesLength; i++) {
+            address _gaugeAddress = builderRegistry.getHaltedGaugeAt(i);
+            GaugeRootstockCollective _gauge = GaugeRootstockCollective(_gaugeAddress);
+
+            // Check that usdrifToken exists and is not zero address
+            address _usdrifToken = _gauge.usdrifToken();
+            vm.assertNotEq(_usdrifToken, address(0), "usdrifToken should not be zero address");
+            vm.assertEq(
+                _usdrifToken,
+                address(backersManagerV3.usdrifToken()),
+                "usdrifToken should match BackersManager usdrifToken"
+            );
+            vm.assertEq(_usdrifToken, usdrifToken, "usdrifToken should match expected USDRIF token");
+        }
     }
 
     /**
