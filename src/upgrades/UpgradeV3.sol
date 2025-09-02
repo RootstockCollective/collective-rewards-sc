@@ -18,7 +18,7 @@ import { IRewardDistributorRootstockCollectiveV2 } from "src/interfaces/v2/IRewa
 contract UpgradeV3 {
     error NotUpgrader();
 
-    IBackersManagerRootstockCollectiveV2 public backersManagerProxyV2;
+    IBackersManagerRootstockCollectiveV2 public backersManagerProxy;
     BackersManagerRootstockCollective public backersManagerImplV3;
     BuilderRegistryRootstockCollective public builderRegistryProxy;
     BuilderRegistryRootstockCollective public builderRegistryImplV3;
@@ -35,7 +35,7 @@ contract UpgradeV3 {
     uint256 public constant MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
     constructor(
-        IBackersManagerRootstockCollectiveV2 backersManagerProxyV2_,
+        IBackersManagerRootstockCollectiveV2 backersManagerProxy_,
         BackersManagerRootstockCollective backersManagerImplV3_,
         BuilderRegistryRootstockCollective builderRegistryImplV3_,
         GovernanceManagerRootstockCollective governanceManagerImplV3_,
@@ -46,12 +46,11 @@ contract UpgradeV3 {
         address usdrifToken_,
         GaugeFactoryRootstockCollective gaugeFactoryV3_
     ) {
-        backersManagerProxyV2 = backersManagerProxyV2_;
+        backersManagerProxy = backersManagerProxy_;
         backersManagerImplV3 = backersManagerImplV3_;
-        builderRegistryProxy = BuilderRegistryRootstockCollective(backersManagerProxyV2_.builderRegistry());
+        builderRegistryProxy = BuilderRegistryRootstockCollective(backersManagerProxy_.builderRegistry());
         builderRegistryImplV3 = builderRegistryImplV3_;
-        governanceManagerProxy =
-            GovernanceManagerRootstockCollective(address(backersManagerProxyV2_.governanceManager()));
+        governanceManagerProxy = GovernanceManagerRootstockCollective(address(backersManagerProxy_.governanceManager()));
         governanceManagerImplV3 = governanceManagerImplV3_;
         gaugeBeacon = GaugeBeaconRootstockCollective(
             GaugeFactoryRootstockCollective(builderRegistryProxy.gaugeFactory()).beacon()
@@ -91,7 +90,7 @@ contract UpgradeV3 {
         bytes memory _backersManagerInitializeData =
             abi.encodeCall(BackersManagerRootstockCollective.initializeV3, (MAX_DISTRIBUTIONS_PER_BATCH, usdrifToken));
 
-        backersManagerProxyV2.upgradeToAndCall(address(backersManagerImplV3), _backersManagerInitializeData);
+        backersManagerProxy.upgradeToAndCall(address(backersManagerImplV3), _backersManagerInitializeData);
     }
 
     function _upgradeGovernanceManager() internal {
@@ -125,7 +124,7 @@ contract UpgradeV3 {
     }
 
     function _upgradeRewardDistributor() internal {
-        bytes memory _data = abi.encodeCall(RewardDistributorRootstockCollective.initializeUsdrifToken, ());
+        bytes memory _data = abi.encodeCall(RewardDistributorRootstockCollective.initializeV3, ());
         rewardDistributorProxy.upgradeToAndCall(address(rewardDistributorImplV3), _data);
     }
 

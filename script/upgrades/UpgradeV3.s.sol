@@ -14,7 +14,7 @@ import { IBackersManagerRootstockCollectiveV2 } from "src/interfaces/v2/IBackers
 import { IRewardDistributorRootstockCollectiveV2 } from "src/interfaces/v2/IRewardDistributorRootstockCollectiveV2.sol";
 
 contract UpgradeV3Deployer is Broadcaster, OutputWriter {
-    // Temporary state variables to avoid stack too deep error
+    // State variables instead of local variables to avoid stack too deep error
     BackersManagerRootstockCollective private _backersManagerImplV3;
     BuilderRegistryRootstockCollective private _builderRegistryImplV3;
     RewardDistributorRootstockCollective private _rewardDistributorImplV3;
@@ -41,7 +41,7 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
     }
 
     function run(
-        IBackersManagerRootstockCollectiveV2 backersManagerProxyV2_,
+        IBackersManagerRootstockCollectiveV2 backersManagerProxy_,
         IRewardDistributorRootstockCollectiveV2 rewardDistributorProxyV2_,
         address configurator_,
         address usdrifToken_,
@@ -52,15 +52,14 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         broadcast
         returns (UpgradeV3 upgradeV3_)
     {
-        require(address(backersManagerProxyV2_) != address(0), "Backers Manager address cannot be zero");
+        require(address(backersManagerProxy_) != address(0), "Backers Manager address cannot be zero");
         require(address(rewardDistributorProxyV2_) != address(0), "Reward distributor address cannot be zero");
         require(configurator_ != address(0), "Configurator address cannot be zero");
         require(usdrifToken_ != address(0), "USDRIF token address cannot be zero");
         require(gaugeBeacon_ != address(0), "Gauge beacon address cannot be zero");
 
-        upgradeV3_ = _deployUpgradeV3(
-            backersManagerProxyV2_, rewardDistributorProxyV2_, configurator_, usdrifToken_, gaugeBeacon_
-        );
+        upgradeV3_ =
+            _deployUpgradeV3(backersManagerProxy_, rewardDistributorProxyV2_, configurator_, usdrifToken_, gaugeBeacon_);
 
         if (!writeDeployment_) return upgradeV3_;
 
@@ -68,7 +67,7 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
     }
 
     function _deployUpgradeV3(
-        IBackersManagerRootstockCollectiveV2 backersManagerProxyV2_,
+        IBackersManagerRootstockCollectiveV2 backersManagerProxy_,
         IRewardDistributorRootstockCollectiveV2 rewardDistributorProxyV2_,
         address configurator_,
         address usdrifToken_,
@@ -84,11 +83,11 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         _governanceManagerImplV3 = new GovernanceManagerRootstockCollective();
         _gaugeImplV3 = new GaugeRootstockCollective();
 
-        address _rifToken = IBackersManagerRootstockCollectiveV2(backersManagerProxyV2_).rewardToken();
+        address _rifToken = IBackersManagerRootstockCollectiveV2(backersManagerProxy_).rewardToken();
         _gaugeFactoryV3 = new GaugeFactoryRootstockCollective(gaugeBeacon_, _rifToken, usdrifToken_);
 
         upgradeV3_ = new UpgradeV3(
-            backersManagerProxyV2_,
+            backersManagerProxy_,
             _backersManagerImplV3,
             _builderRegistryImplV3,
             _governanceManagerImplV3,

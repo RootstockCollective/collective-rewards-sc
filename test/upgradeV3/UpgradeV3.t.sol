@@ -13,6 +13,7 @@ import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCo
 import { IBackersManagerRootstockCollectiveV2 } from "src/interfaces/v2/IBackersManagerRootstockCollectiveV2.sol";
 import { IRewardDistributorRootstockCollectiveV2 } from "src/interfaces/v2/IRewardDistributorRootstockCollectiveV2.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract UpgradeV3Test is Test {
     IBackersManagerRootstockCollectiveV2 public backersManagerV2;
@@ -62,7 +63,7 @@ contract UpgradeV3Test is Test {
     function test_fork_upgradeV3Setup() public view {
         // GIVEN UpgradeV3 is setup
         // THEN UpgradeV3 should have the expected initialization state
-        vm.assertEq(address(upgradeV3.backersManagerProxyV2()), address(backersManagerV2));
+        vm.assertEq(address(upgradeV3.backersManagerProxy()), address(backersManagerV2));
         vm.assertNotEq(address(upgradeV3.backersManagerImplV3()), address(0));
 
         vm.assertEq(address(upgradeV3.builderRegistryProxy()), address(builderRegistry));
@@ -217,9 +218,9 @@ contract UpgradeV3Test is Test {
     }
 
     /**
-     * SCENARIO: initializeUsdrifToken works correctly during upgrade
+     * SCENARIO: rewardDistributor initializeV3 sets usdrifToken correctly during upgrade
      */
-    function test_fork_initializeUsdrifToken() public {
+    function test_fork_rewardDistributorinitializeV3() public {
         // GIVEN the contracts are not yet upgraded
         // WHEN the upgrade is performed
         _upgradeV3();
@@ -231,17 +232,17 @@ contract UpgradeV3Test is Test {
     }
 
     /**
-     * SCENARIO: initializeUsdrifToken cannot be called twice
+     * SCENARIO: rewardDistributor initializeV3 cannot be called twice
      */
-    function test_fork_initializeUsdrifToken_cannotCallTwice() public {
+    function test_fork_rewardDistributorInitializeV3_cannotCallTwice() public {
         // GIVEN the upgrade is performed and usdrifToken is initialized
         _upgradeV3();
         vm.assertNotEq(address(rewardDistributorV3.usdrifToken()), address(0));
 
-        // WHEN trying to call initializeUsdrifToken again
-        // THEN it should revert with UsdrifTokenAlreadyInitialized
-        vm.expectRevert(RewardDistributorRootstockCollective.UsdrifTokenAlreadyInitialized.selector);
-        rewardDistributorV3.initializeUsdrifToken();
+        // WHEN trying to call initializeV3 again
+        // THEN it should revert with InvalidInitialization
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        rewardDistributorV3.initializeV3();
     }
 
     /**
@@ -333,7 +334,7 @@ contract UpgradeV3Test is Test {
         vm.prank(upgrader);
         governanceManager.updateUpgrader(address(upgradeV3));
         upgradeV3.run();
-        backersManagerV3 = BackersManagerRootstockCollective(address(upgradeV3.backersManagerProxyV2()));
+        backersManagerV3 = BackersManagerRootstockCollective(address(upgradeV3.backersManagerProxy()));
         rewardDistributorV3 = RewardDistributorRootstockCollective(payable(address(upgradeV3.rewardDistributorProxy())));
     }
 
