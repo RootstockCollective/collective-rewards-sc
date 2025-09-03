@@ -14,11 +14,13 @@ import { IBackersManagerRootstockCollectiveV2 } from "src/interfaces/v2/IBackers
 import { IRewardDistributorRootstockCollectiveV2 } from "src/interfaces/v2/IRewardDistributorRootstockCollectiveV2.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { IBuilderRegistryRootstockCollectiveV2 } from "src/interfaces/v2/IBuilderRegistryRootstockCollectiveV2.sol";
 
 contract UpgradeV3Test is Test {
     IBackersManagerRootstockCollectiveV2 public backersManagerV2;
     BackersManagerRootstockCollective public backersManagerV3;
-    BuilderRegistryRootstockCollective public builderRegistry;
+    IBuilderRegistryRootstockCollectiveV2 public builderRegistryV2;
+    BuilderRegistryRootstockCollective public builderRegistryV3;
     IGovernanceManagerRootstockCollective public governanceManager;
     IRewardDistributorRootstockCollectiveV2 public rewardDistributorV2;
     RewardDistributorRootstockCollective public rewardDistributorV3;
@@ -38,7 +40,8 @@ contract UpgradeV3Test is Test {
         configuratorAddress = vm.envAddress("CONFIGURATOR_ADDRESS");
 
         backersManagerV2 = IBackersManagerRootstockCollectiveV2(vm.envAddress("BackersManagerRootstockCollectiveProxy"));
-        builderRegistry = BuilderRegistryRootstockCollective(vm.envAddress("BuilderRegistryRootstockCollectiveProxy"));
+        builderRegistryV2 =
+            IBuilderRegistryRootstockCollectiveV2(vm.envAddress("BuilderRegistryRootstockCollectiveProxy"));
         governanceManager =
             IGovernanceManagerRootstockCollective(vm.envAddress("GovernanceManagerRootstockCollectiveProxy"));
         rewardDistributorV2 =
@@ -72,7 +75,7 @@ contract UpgradeV3Test is Test {
         vm.assertEq(address(upgradeV3.backersManagerProxy()), address(backersManagerV2));
         vm.assertNotEq(address(upgradeV3.backersManagerImplV3()), address(0));
 
-        vm.assertEq(address(upgradeV3.builderRegistryProxy()), address(builderRegistry));
+        vm.assertEq(address(upgradeV3.builderRegistryProxy()), address(builderRegistryV2));
         vm.assertNotEq(address(upgradeV3.builderRegistryImplV3()), address(0));
 
         vm.assertEq(address(upgradeV3.governanceManagerProxy()), address(governanceManager));
@@ -129,17 +132,36 @@ contract UpgradeV3Test is Test {
      * SCENARIO: backersManagerV2 is upgraded to v3
      */
     function test_fork_upgradeBackersManager() public {
-        // GIVEN the upgrade is performed
+        // GIVEN v2 values before upgrade
+        uint256 _v2RewardsERC20 = backersManagerV2.rewardsERC20();
+        uint256 _v2RewardsCoinbase = backersManagerV2.rewardsCoinbase();
+        address _v2RewardToken = backersManagerV2.rewardToken();
+
+        // WHEN the upgrade is performed
         _upgradeV3();
 
         // THEN backersManagerV2 should have the new implementation
         vm.assertEq(_getImplementation(address(backersManagerV2)), address(upgradeV3.backersManagerImplV3()));
-        // AND should follow v3 interface
-        vm.assertEq(backersManagerV3.maxDistributionsPerBatch(), upgradeV3.MAX_DISTRIBUTIONS_PER_BATCH());
-        // AND usdrifToken should be set
-        vm.assertEq(address(backersManagerV3.usdrifToken()), usdrifToken);
-        // AND rewardToken should be renamed to rifToken
+
+        // AND v3 interface should work with preserved values
+        // rewardToken should be renamed to rifToken
         vm.assertEq(address(backersManagerV3.rifToken()), rifTokenAddress);
+        vm.assertEq(address(backersManagerV3.rifToken()), _v2RewardToken);
+        // rewardsERC20 should be preserved as rewardsRif
+        vm.assertEq(backersManagerV3.rewardsRif(), _v2RewardsERC20);
+        // rewardsCoinbase should be preserved as rewardsNative
+        vm.assertEq(backersManagerV3.rewardsNative(), _v2RewardsCoinbase);
+
+        // AND new v3 variables should be properly initialized
+        // maxDistributionsPerBatch should be set to the expected value (new in v3)
+        vm.assertEq(backersManagerV3.maxDistributionsPerBatch(), upgradeV3.MAX_DISTRIBUTIONS_PER_BATCH());
+        vm.assertEq(backersManagerV3.maxDistributionsPerBatch(), 20);
+        // usdrifToken should be set (new in v3)
+        vm.assertEq(address(backersManagerV3.usdrifToken()), usdrifToken);
+        // rewardsUsdrif should be initialized to 0 (new variable in v3)
+        vm.assertEq(backersManagerV3.rewardsUsdrif(), 0);
+
+        // AND v2 functions should no longer be accessible
         vm.expectRevert();
         IBackersManagerRootstockCollectiveV2(address(backersManagerV3)).rewardToken();
     }
@@ -152,11 +174,111 @@ contract UpgradeV3Test is Test {
         _upgradeV3();
 
         // THEN BuilderRegistry should have the new implementation
-        vm.assertEq(_getImplementation(address(builderRegistry)), address(upgradeV3.builderRegistryImplV3()));
-        // AND should follow v3 interface
-        vm.assertEq(builderRegistry.rewardReceiver(alice), address(0));
-        // AND should have the new GaugeFactory set
-        vm.assertEq(address(builderRegistry.gaugeFactory()), address(upgradeV3.gaugeFactoryV3()));
+        vm.assertEq(_getImplementation(address(builderRegistryV3)), address(upgradeV3.builderRegistryImplV3()));
+
+        // AND new v3 features should be properly initialized
+        // should have the new GaugeFactory set
+        vm.assertEq(address(builderRegistryV3.gaugeFactory()), address(upgradeV3.gaugeFactoryV3()));
+        // rewardReceiver for new addresses should return 0 (default behavior)
+        vm.assertEq(builderRegistryV3.rewardReceiver(alice), address(0));
+    }
+
+    /**
+     * SCENARIO: Builder reward receiver mappings are preserved during upgrade for all builders
+     */
+    function test_fork_builderRewardReceiverPreservation() public {
+        // GIVEN we collect all builders and their v2 reward receiver mappings before upgrade
+        uint256 _gaugesLength = builderRegistryV2.getGaugesLength();
+        require(_gaugesLength > 0, "No builders in the registry");
+
+        // Collect all builders and their v2 reward receiver data
+        address[] memory _builders = new address[](_gaugesLength);
+        address[] memory _v2RewardReceivers = new address[](_gaugesLength);
+        address[] memory _v2RewardReceiverReplacements = new address[](_gaugesLength);
+
+        for (uint256 i = 0; i < _gaugesLength; i++) {
+            address _gauge = builderRegistryV2.getGaugeAt(i);
+            address _builder = builderRegistryV2.gaugeToBuilder(_gauge);
+            _builders[i] = _builder;
+
+            // Capture v2 reward receiver mappings before upgrade
+            _v2RewardReceivers[i] = builderRegistryV2.builderRewardReceiver(_builder);
+            _v2RewardReceiverReplacements[i] = builderRegistryV2.builderRewardReceiverReplacement(_builder);
+        }
+
+        // WHEN the upgrade is performed
+        _upgradeV3();
+
+        // THEN verify all builders' reward receiver mappings are preserved
+        for (uint256 i = 0; i < _gaugesLength; i++) {
+            address _builder = _builders[i];
+
+            // Verify builderRewardReceiver -> rewardReceiver mapping
+            vm.assertEq(builderRegistryV3.rewardReceiver(_builder), _v2RewardReceivers[i]);
+
+            // Verify builderRewardReceiverReplacement -> rewardReceiverUpdate mapping
+            vm.assertEq(builderRegistryV3.rewardReceiverUpdate(_builder), _v2RewardReceiverReplacements[i]);
+        }
+    }
+
+    /**
+     * SCENARIO: BuilderState fields are preserved during upgrade with proper renames for all builders
+     */
+    function test_fork_builderStatePreservation() public {
+        // GIVEN we collect all builders and their v2 states before upgrade
+        uint256 _gaugesLength = builderRegistryV2.getGaugesLength();
+        require(_gaugesLength > 0, "No builders in the registry");
+
+        // Collect all builders and their v2 renamed fields states
+        address[] memory _builders = new address[](_gaugesLength);
+        bool[] memory _v2Activated = new bool[](_gaugesLength);
+        bool[] memory _v2Paused = new bool[](_gaugesLength);
+        bool[] memory _v2Revoked = new bool[](_gaugesLength);
+
+        for (uint256 i = 0; i < _gaugesLength; i++) {
+            address _gauge = builderRegistryV2.getGaugeAt(i);
+            address _builder = builderRegistryV2.gaugeToBuilder(_gauge);
+            _builders[i] = _builder;
+
+            // Capture v2 BuilderState renamed fields values before upgrade
+            (
+                bool _activated,
+                , // kycApproved (unchanged)
+                , // communityApproved (unchanged)
+                bool paused,
+                bool revoked,
+                , // reserved (unchanged)
+                    // pausedReason (unchanged)
+            ) = builderRegistryV2.builderState(_builder);
+
+            _v2Activated[i] = _activated;
+            _v2Paused[i] = paused;
+            _v2Revoked[i] = revoked;
+        }
+
+        // WHEN the upgrade is performed
+        _upgradeV3();
+
+        // THEN verify all builders' states are preserved with renamed fields
+        for (uint256 i = 0; i < _gaugesLength; i++) {
+            address _builder = _builders[i];
+
+            // Get v3 BuilderState values
+            (
+                bool _v3Initialized,
+                , // kycApproved (unchanged)
+                , // communityApproved (unchanged)
+                bool v3KycPaused,
+                bool v3SelfPaused,
+                , // reserved (unchanged)
+                    // pausedReason (unchanged)
+            ) = builderRegistryV3.builderState(_builder);
+
+            // Verify renamed fields for this builder
+            vm.assertEq(_v3Initialized, _v2Activated[i]);
+            vm.assertEq(v3KycPaused, _v2Paused[i]);
+            vm.assertEq(v3SelfPaused, _v2Revoked[i]);
+        }
     }
 
     /**
@@ -187,15 +309,27 @@ contract UpgradeV3Test is Test {
      */
 
     function test_fork_upgradeRewardDistributor() public {
-        // GIVEN the upgrade is performed
+        // GIVEN v2 values before upgrade
+        uint256 _v2DefaultRewardTokenAmount = rewardDistributorV2.defaultRewardTokenAmount();
+        uint256 _v2DefaultRewardCoinbaseAmount = rewardDistributorV2.defaultRewardCoinbaseAmount();
+
+        // WHEN the upgrade is performed
         _upgradeV3();
 
         // THEN rewardDistributor should have the new implementation
         vm.assertEq(_getImplementation(address(rewardDistributorV3)), address(upgradeV3.rewardDistributorImplV3()));
         // AND usdrifToken should be initialized with the same token as backersManagerV2
-        vm.assertEq(address(rewardDistributorV3.usdrifToken()), address(backersManagerV3.usdrifToken()));
+        vm.assertEq(address(rewardDistributorV3.usdrifToken()), usdrifToken);
         // AND rifToken should be initialized with the same token as backersManagerV3
-        vm.assertEq(address(rewardDistributorV3.rifToken()), address(backersManagerV3.rifToken()));
+        vm.assertEq(address(rewardDistributorV3.rifToken()), rifTokenAddress);
+        // AND defaultRifAmount should preserve the v2 defaultRewardTokenAmount value
+        vm.assertEq(rewardDistributorV3.defaultRifAmount(), _v2DefaultRewardTokenAmount);
+        // AND defaultNativeAmount should preserve the v2 defaultRewardCoinbaseAmount value
+        vm.assertEq(rewardDistributorV3.defaultNativeAmount(), _v2DefaultRewardCoinbaseAmount);
+        // AND defaultUsdrifAmount should be initialized to 0 (new variable in v3)
+        vm.assertEq(rewardDistributorV3.defaultUsdrifAmount(), 0);
+        // AND lastFundedCycleStart should be initialized to 0 (new variable in v3)
+        vm.assertEq(rewardDistributorV3.lastFundedCycleStart(), 0);
     }
 
     /**
@@ -211,7 +345,7 @@ contract UpgradeV3Test is Test {
         _upgradeV3();
 
         // THEN rifToken should be initialized with the same token as backersManagerV3
-        vm.assertEq(address(rewardDistributorV3.rifToken()), address(backersManagerV3.rifToken()));
+        vm.assertEq(address(rewardDistributorV3.rifToken()), rifTokenAddress);
         // AND calling rewardToken should revert
         vm.expectRevert();
         IRewardDistributorRootstockCollectiveV2(payable(address(rewardDistributorV3))).rewardToken();
@@ -263,7 +397,7 @@ contract UpgradeV3Test is Test {
         // THEN GaugeFactory should be properly configured
         GaugeFactoryRootstockCollective _gaugeFactory = upgradeV3.gaugeFactoryV3();
         vm.assertEq(_gaugeFactory.beacon(), address(gaugeBeacon));
-        vm.assertEq(_gaugeFactory.rifToken(), address(backersManagerV3.rifToken()));
+        vm.assertEq(_gaugeFactory.rifToken(), rifTokenAddress);
         vm.assertEq(_gaugeFactory.usdrifToken(), usdrifToken);
 
         // AND GaugeBeacon should be upgraded to the new implementation
@@ -285,21 +419,21 @@ contract UpgradeV3Test is Test {
         _upgradeV3();
 
         // WHEN iterating over all gauges in the BuilderRegistry
-        uint256 _gaugesLength = builderRegistry.getGaugesLength();
+        uint256 _gaugesLength = builderRegistryV3.getGaugesLength();
 
         // THEN each gauge should have rifToken and usdrifToken properly initialized
         for (uint256 i = 0; i < _gaugesLength; i++) {
-            address _gaugeAddress = builderRegistry.getGaugeAt(i);
+            address _gaugeAddress = builderRegistryV3.getGaugeAt(i);
             GaugeRootstockCollective _gauge = GaugeRootstockCollective(_gaugeAddress);
 
             // Check that rifToken exists and is not zero address
             address _rifToken = _gauge.rifToken();
-            vm.assertEq(_rifToken, rifTokenAddress, "rifToken should match expected RIF token");
+            vm.assertEq(_rifToken, rifTokenAddress);
 
             // Check that usdrifToken exists and is not zero address
             address _usdrifToken = _gauge.usdrifToken();
-            vm.assertEq(_usdrifToken, usdrifToken, "usdrifToken should match expected USDRIF token");
-            vm.assertEq(_usdrifToken, usdrifToken, "usdrifToken should match expected USDRIF token");
+            vm.assertEq(_usdrifToken, usdrifToken);
+            vm.assertEq(_usdrifToken, usdrifToken);
         }
     }
 
@@ -311,15 +445,15 @@ contract UpgradeV3Test is Test {
         _upgradeV3();
 
         // WHEN iterating over all halted gauges in the BuilderRegistry
-        uint256 _haltedGaugesLength = builderRegistry.getHaltedGaugesLength();
+        uint256 _haltedGaugesLength = builderRegistryV3.getHaltedGaugesLength();
         for (uint256 i = 0; i < _haltedGaugesLength; i++) {
-            address _gaugeAddress = builderRegistry.getHaltedGaugeAt(i);
+            address _gaugeAddress = builderRegistryV3.getHaltedGaugeAt(i);
             GaugeRootstockCollective _gauge = GaugeRootstockCollective(_gaugeAddress);
 
             // Check that usdrifToken exists and is not zero address
             address _usdrifToken = _gauge.usdrifToken();
-            vm.assertEq(_usdrifToken, usdrifToken, "usdrifToken should match expected USDRIF token");
-            vm.assertEq(_usdrifToken, usdrifToken, "usdrifToken should match expected USDRIF token");
+            vm.assertEq(_usdrifToken, usdrifToken);
+            vm.assertEq(_usdrifToken, usdrifToken);
         }
     }
 
@@ -332,6 +466,7 @@ contract UpgradeV3Test is Test {
         upgradeV3.run();
         backersManagerV3 = BackersManagerRootstockCollective(address(upgradeV3.backersManagerProxy()));
         rewardDistributorV3 = RewardDistributorRootstockCollective(payable(address(upgradeV3.rewardDistributorProxy())));
+        builderRegistryV3 = BuilderRegistryRootstockCollective(address(upgradeV3.builderRegistryProxy()));
     }
 
     /**

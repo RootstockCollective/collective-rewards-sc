@@ -50,7 +50,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     uint256 public lastFundedCycleStart;
 
     // -----------------------------
-    // -------- Storage V2 ---------
+    // -------- Storage V3 ---------
     // -----------------------------
 
     /// @notice address of the usdrif token rewarded to builder and backers
