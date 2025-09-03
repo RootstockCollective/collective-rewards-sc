@@ -25,25 +25,31 @@ contract UpgradeV3Test is Test {
     GaugeBeaconRootstockCollective public gaugeBeacon;
     UpgradeV3 public upgradeV3;
     address public upgrader;
-    address public configurator = makeAddr("configurator");
-    address public alice = makeAddr("alice");
-    address public usdrifToken = vm.envAddress("USDRIF_TOKEN_ADDRESS");
+    address public configurator;
+    address public alice;
+    address public usdrifToken;
+    address public rifTokenAddress;
+    address public configuratorAddress;
 
     function setUp() public {
-        backersManagerV2 =
-            IBackersManagerRootstockCollectiveV2(vm.envOr("BackersManagerRootstockCollectiveProxy", address(0)));
-        builderRegistry =
-            BuilderRegistryRootstockCollective(vm.envOr("BuilderRegistryRootstockCollectiveProxy", address(0)));
+        // Initialize environment variables as state variables
+        usdrifToken = vm.envAddress("USDRIF_TOKEN_ADDRESS");
+        rifTokenAddress = vm.envAddress("RIF_TOKEN_ADDRESS");
+        configuratorAddress = vm.envAddress("CONFIGURATOR_ADDRESS");
+
+        backersManagerV2 = IBackersManagerRootstockCollectiveV2(vm.envAddress("BackersManagerRootstockCollectiveProxy"));
+        builderRegistry = BuilderRegistryRootstockCollective(vm.envAddress("BuilderRegistryRootstockCollectiveProxy"));
         governanceManager =
-            IGovernanceManagerRootstockCollective(vm.envOr("GovernanceManagerRootstockCollectiveProxy", address(0)));
-        rewardDistributorV2 = IRewardDistributorRootstockCollectiveV2(
-            payable(vm.envOr("RewardDistributorRootstockCollectiveProxy", address(0)))
-        );
+            IGovernanceManagerRootstockCollective(vm.envAddress("GovernanceManagerRootstockCollectiveProxy"));
+        rewardDistributorV2 =
+            IRewardDistributorRootstockCollectiveV2(payable(vm.envAddress("RewardDistributorRootstockCollectiveProxy")));
         GaugeFactoryRootstockCollective _gaugeFactory =
-            GaugeFactoryRootstockCollective(vm.envOr("GaugeFactoryRootstockCollective", address(0)));
+            GaugeFactoryRootstockCollective(vm.envAddress("GaugeFactoryRootstockCollective"));
         gaugeBeacon = GaugeBeaconRootstockCollective(_gaugeFactory.beacon());
 
         upgrader = governanceManager.upgrader();
+        alice = makeAddr("alice");
+        configurator = makeAddr("configurator");
 
         // Setup UpgradeV3
         UpgradeV3Deployer _upgradeV3Deployer = new UpgradeV3Deployer();
@@ -130,6 +136,12 @@ contract UpgradeV3Test is Test {
         vm.assertEq(_getImplementation(address(backersManagerV2)), address(upgradeV3.backersManagerImplV3()));
         // AND should follow v3 interface
         vm.assertEq(backersManagerV3.maxDistributionsPerBatch(), upgradeV3.MAX_DISTRIBUTIONS_PER_BATCH());
+        // AND usdrifToken should be set
+        vm.assertEq(address(backersManagerV3.usdrifToken()), usdrifToken);
+        // AND rewardToken should be renamed to rifToken
+        vm.assertEq(address(backersManagerV3.rifToken()), rifTokenAddress);
+        vm.expectRevert();
+        IBackersManagerRootstockCollectiveV2(address(backersManagerV3)).rewardToken();
     }
 
     /**
@@ -157,7 +169,7 @@ contract UpgradeV3Test is Test {
         // THEN governanceManager should have the new implementation
         vm.assertEq(_getImplementation(address(governanceManager)), address(upgradeV3.governanceManagerImplV3()));
         // AND should follow v3 interface
-        vm.assertNotEq(governanceManager.configurator(), address(0));
+        vm.assertNotEq(governanceManager.configurator(), configuratorAddress);
     }
 
     /**
@@ -182,10 +194,8 @@ contract UpgradeV3Test is Test {
         vm.assertEq(_getImplementation(address(rewardDistributorV3)), address(upgradeV3.rewardDistributorImplV3()));
         // AND usdrifToken should be initialized with the same token as backersManagerV2
         vm.assertEq(address(rewardDistributorV3.usdrifToken()), address(backersManagerV3.usdrifToken()));
-        vm.assertEq(address(rewardDistributorV3.usdrifToken()), usdrifToken);
         // AND rifToken should be initialized with the same token as backersManagerV3
         vm.assertEq(address(rewardDistributorV3.rifToken()), address(backersManagerV3.rifToken()));
-        vm.assertNotEq(address(rewardDistributorV3.rifToken()), address(0));
     }
 
     /**
@@ -220,15 +230,13 @@ contract UpgradeV3Test is Test {
     /**
      * SCENARIO: rewardDistributor initializeV3 sets usdrifToken correctly during upgrade
      */
-    function test_fork_rewardDistributorinitializeV3() public {
+    function test_fork_rewardDistributorInitializeV3() public {
         // GIVEN the contracts are not yet upgraded
         // WHEN the upgrade is performed
         _upgradeV3();
 
         // THEN usdrifToken should be properly initialized
-        vm.assertNotEq(address(rewardDistributorV3.usdrifToken()), address(0));
         vm.assertEq(address(rewardDistributorV3.usdrifToken()), usdrifToken);
-        vm.assertEq(address(rewardDistributorV3.usdrifToken()), address(backersManagerV3.usdrifToken()));
     }
 
     /**
@@ -237,7 +245,7 @@ contract UpgradeV3Test is Test {
     function test_fork_rewardDistributorInitializeV3_cannotCallTwice() public {
         // GIVEN the upgrade is performed and usdrifToken is initialized
         _upgradeV3();
-        vm.assertNotEq(address(rewardDistributorV3.usdrifToken()), address(0));
+        vm.assertEq(address(rewardDistributorV3.usdrifToken()), usdrifToken);
 
         // WHEN trying to call initializeV3 again
         // THEN it should revert with InvalidInitialization
@@ -263,9 +271,10 @@ contract UpgradeV3Test is Test {
 
         // AND Gauge V3 functions should be accessible (not revert)
         GaugeRootstockCollective _gaugeV3 = GaugeRootstockCollective(address(gaugeBeacon.implementation()));
-        // return data is zero as it is just the proxy implementation, without storage set
-        _gaugeV3.rifToken();
-        _gaugeV3.usdrifToken();
+        // AND rifToken and usdrifToken should be zero address as _gaugeV3 is the implementation, not the proxy, so
+        // there is no storage set
+        vm.assertEq(_gaugeV3.rifToken(), address(0));
+        vm.assertEq(_gaugeV3.usdrifToken(), address(0));
     }
 
     /**
@@ -285,19 +294,11 @@ contract UpgradeV3Test is Test {
 
             // Check that rifToken exists and is not zero address
             address _rifToken = _gauge.rifToken();
-            vm.assertNotEq(_rifToken, address(0), "rifToken should not be zero address");
-            vm.assertEq(
-                _rifToken, address(backersManagerV3.rifToken()), "rifToken should match BackersManager rifToken"
-            );
+            vm.assertEq(_rifToken, rifTokenAddress, "rifToken should match expected RIF token");
 
             // Check that usdrifToken exists and is not zero address
             address _usdrifToken = _gauge.usdrifToken();
-            vm.assertNotEq(_usdrifToken, address(0), "usdrifToken should not be zero address");
-            vm.assertEq(
-                _usdrifToken,
-                address(backersManagerV3.usdrifToken()),
-                "usdrifToken should match BackersManager usdrifToken"
-            );
+            vm.assertEq(_usdrifToken, usdrifToken, "usdrifToken should match expected USDRIF token");
             vm.assertEq(_usdrifToken, usdrifToken, "usdrifToken should match expected USDRIF token");
         }
     }
@@ -317,12 +318,7 @@ contract UpgradeV3Test is Test {
 
             // Check that usdrifToken exists and is not zero address
             address _usdrifToken = _gauge.usdrifToken();
-            vm.assertNotEq(_usdrifToken, address(0), "usdrifToken should not be zero address");
-            vm.assertEq(
-                _usdrifToken,
-                address(backersManagerV3.usdrifToken()),
-                "usdrifToken should match BackersManager usdrifToken"
-            );
+            vm.assertEq(_usdrifToken, usdrifToken, "usdrifToken should match expected USDRIF token");
             vm.assertEq(_usdrifToken, usdrifToken, "usdrifToken should match expected USDRIF token");
         }
     }
