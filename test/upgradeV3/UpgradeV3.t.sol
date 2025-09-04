@@ -15,6 +15,7 @@ import { IRewardDistributorRootstockCollectiveV2 } from "src/interfaces/v2/IRewa
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { IBuilderRegistryRootstockCollectiveV2 } from "src/interfaces/v2/IBuilderRegistryRootstockCollectiveV2.sol";
+import { UtilsLib } from "src/libraries/UtilsLib.sol";
 
 contract UpgradeV3Test is Test {
     IBackersManagerRootstockCollectiveV2 public backersManagerV2;
@@ -189,34 +190,41 @@ contract UpgradeV3Test is Test {
     function test_fork_builderRewardReceiverPreservation() public {
         // GIVEN we collect all builders and their v2 reward receiver mappings before upgrade
         uint256 _gaugesLength = builderRegistryV2.getGaugesLength();
-        require(_gaugesLength > 0, "No builders in the registry");
+        uint256 _haltedGaugesLength = builderRegistryV2.getHaltedGaugesLength();
+        uint256 _totalGauges = _gaugesLength + _haltedGaugesLength;
+        require(_totalGauges > 0, "No builders in the registry");
 
-        // Collect all builders and their v2 reward receiver data
-        address[] memory _builders = new address[](_gaugesLength);
-        address[] memory _v2RewardReceivers = new address[](_gaugesLength);
-        address[] memory _v2RewardReceiverReplacements = new address[](_gaugesLength);
+        // Collect all builders and their v2 reward receiver data (regular + halted gauges)
+        address[] memory _builders = new address[](_totalGauges);
+        address[] memory _v2RewardReceivers = new address[](_totalGauges);
+        address[] memory _v2RewardReceiverReplacements = new address[](_totalGauges);
 
+        // Capture active v2 gauges data
         for (uint256 i = 0; i < _gaugesLength; i++) {
             address _gauge = builderRegistryV2.getGaugeAt(i);
             address _builder = builderRegistryV2.gaugeToBuilder(_gauge);
             _builders[i] = _builder;
-
-            // Capture v2 reward receiver mappings before upgrade
             _v2RewardReceivers[i] = builderRegistryV2.builderRewardReceiver(_builder);
             _v2RewardReceiverReplacements[i] = builderRegistryV2.builderRewardReceiverReplacement(_builder);
+        }
+
+        // Capture v2 halted gauges data
+        for (uint256 i = 0; i < _haltedGaugesLength; i++) {
+            uint256 _index = _gaugesLength + i;
+            address _gauge = builderRegistryV2.getHaltedGaugeAt(i);
+            address _builder = builderRegistryV2.gaugeToBuilder(_gauge);
+            _builders[_index] = _builder;
+            _v2RewardReceivers[_index] = builderRegistryV2.builderRewardReceiver(_builder);
+            _v2RewardReceiverReplacements[_index] = builderRegistryV2.builderRewardReceiverReplacement(_builder);
         }
 
         // WHEN the upgrade is performed
         _upgradeV3();
 
-        // THEN verify all builders' reward receiver mappings are preserved
-        for (uint256 i = 0; i < _gaugesLength; i++) {
+        // THEN verify all builders' reward receiver mappings are preserved (regular + halted)
+        for (uint256 i = 0; i < _totalGauges; i++) {
             address _builder = _builders[i];
-
-            // Verify builderRewardReceiver -> rewardReceiver mapping
             vm.assertEq(builderRegistryV3.rewardReceiver(_builder), _v2RewardReceivers[i]);
-
-            // Verify builderRewardReceiverReplacement -> rewardReceiverUpdate mapping
             vm.assertEq(builderRegistryV3.rewardReceiverUpdate(_builder), _v2RewardReceiverReplacements[i]);
         }
     }
@@ -227,14 +235,17 @@ contract UpgradeV3Test is Test {
     function test_fork_builderStatePreservation() public {
         // GIVEN we collect all builders and their v2 states before upgrade
         uint256 _gaugesLength = builderRegistryV2.getGaugesLength();
-        require(_gaugesLength > 0, "No builders in the registry");
+        uint256 _haltedGaugesLength = builderRegistryV2.getHaltedGaugesLength();
+        uint256 _totalGauges = _gaugesLength + _haltedGaugesLength;
+        require(_totalGauges > 0, "No builders in the registry");
 
-        // Collect all builders and their v2 renamed fields states
-        address[] memory _builders = new address[](_gaugesLength);
-        bool[] memory _v2Activated = new bool[](_gaugesLength);
-        bool[] memory _v2Paused = new bool[](_gaugesLength);
-        bool[] memory _v2Revoked = new bool[](_gaugesLength);
+        // Collect all builders and their v2 renamed fields states (regular + halted gauges)
+        address[] memory _builders = new address[](_totalGauges);
+        bool[] memory _v2Activated = new bool[](_totalGauges);
+        bool[] memory _v2Paused = new bool[](_totalGauges);
+        bool[] memory _v2Revoked = new bool[](_totalGauges);
 
+        // Capture active gauges data before upgrade
         for (uint256 i = 0; i < _gaugesLength; i++) {
             address _gauge = builderRegistryV2.getGaugeAt(i);
             address _builder = builderRegistryV2.gaugeToBuilder(_gauge);
@@ -256,11 +267,34 @@ contract UpgradeV3Test is Test {
             _v2Revoked[i] = revoked;
         }
 
+        // Capture halted gauges data before upgrade
+        for (uint256 i = 0; i < _haltedGaugesLength; i++) {
+            uint256 _index = _gaugesLength + i;
+            address _gauge = builderRegistryV2.getHaltedGaugeAt(i);
+            address _builder = builderRegistryV2.gaugeToBuilder(_gauge);
+            _builders[_index] = _builder;
+
+            // Capture v2 BuilderState renamed fields values before upgrade
+            (
+                bool _activated,
+                , // kycApproved (unchanged)
+                , // communityApproved (unchanged)
+                bool paused,
+                bool revoked,
+                , // reserved (unchanged)
+                    // pausedReason (unchanged)
+            ) = builderRegistryV2.builderState(_builder);
+
+            _v2Activated[_index] = _activated;
+            _v2Paused[_index] = paused;
+            _v2Revoked[_index] = revoked;
+        }
+
         // WHEN the upgrade is performed
         _upgradeV3();
 
-        // THEN verify all builders' states are preserved with renamed fields
-        for (uint256 i = 0; i < _gaugesLength; i++) {
+        // THEN verify all builders' states are preserved with renamed fields (regular + halted)
+        for (uint256 i = 0; i < _totalGauges; i++) {
             address _builder = _builders[i];
 
             // Get v3 BuilderState values
@@ -457,6 +491,46 @@ contract UpgradeV3Test is Test {
     }
 
     /**
+     * SCENARIO: Specific backer rewards are preserved during upgrade across all gauges
+     */
+    function test_fork_specificBackerRewardsPreservation() public {
+        // GIVEN a specific backer address to test
+        address _testBacker = 0xb0F0D0e27BF82236E01d8FaB590b46A470F45cfF;
+
+        // Collect all gauges (regular + halted) to check rewards comprehensively
+        address[] memory _allGauges = _collectAllGauges();
+
+        // Verify the backer has rewards in at least one gauge
+        bool _hasRewards = _verifyBackerHasRewards(_allGauges, _testBacker);
+        require(_hasRewards, "Backer has no rewards in any gauge");
+
+        // Capture backer's reward state before upgrade
+        (
+            uint256[] memory _v2EarnedRif,
+            uint256[] memory _v2EarnedUsdrif,
+            uint256[] memory _v2EarnedNative,
+            uint256[] memory _v2RewardsRif,
+            uint256[] memory _v2RewardsUsdrif,
+            uint256[] memory _v2RewardsNative
+        ) = _captureBackerRewards(_allGauges, _testBacker);
+
+        // WHEN the upgrade is performed
+        _upgradeV3();
+
+        // THEN verify all backer rewards are preserved after upgrade
+        _verifyBackerRewardsPreserved(
+            _allGauges,
+            _testBacker,
+            _v2EarnedRif,
+            _v2EarnedUsdrif,
+            _v2EarnedNative,
+            _v2RewardsRif,
+            _v2RewardsUsdrif,
+            _v2RewardsNative
+        );
+    }
+
+    /**
      * @dev Upgrades the contracts to v3
      */
     function _upgradeV3() internal {
@@ -466,6 +540,143 @@ contract UpgradeV3Test is Test {
         backersManagerV3 = BackersManagerRootstockCollective(address(upgradeV3.backersManagerProxy()));
         rewardDistributorV3 = RewardDistributorRootstockCollective(payable(address(upgradeV3.rewardDistributorProxy())));
         builderRegistryV3 = BuilderRegistryRootstockCollective(address(upgradeV3.builderRegistryProxy()));
+    }
+
+    /**
+     * @notice Helper function to collect all gauges (regular + halted)
+     * @return allGauges_ array of all gauge addresses
+     */
+    function _collectAllGauges() internal view returns (address[] memory allGauges_) {
+        uint256 _gaugesLength = builderRegistryV2.getGaugesLength();
+        uint256 _haltedGaugesLength = builderRegistryV2.getHaltedGaugesLength();
+        uint256 _totalGauges = _gaugesLength + _haltedGaugesLength;
+
+        allGauges_ = new address[](_totalGauges);
+
+        // Collect regular gauges
+        for (uint256 i = 0; i < _gaugesLength; i++) {
+            allGauges_[i] = builderRegistryV2.getGaugeAt(i);
+        }
+
+        // Collect halted gauges
+        for (uint256 i = 0; i < _haltedGaugesLength; i++) {
+            allGauges_[_gaugesLength + i] = builderRegistryV2.getHaltedGaugeAt(i);
+        }
+    }
+
+    /**
+     * @notice Helper function to verify if a backer has rewards in any gauge, so the test is valid
+     * @param allGauges_ array of all gauge addresses
+     * @param backer_ address of the backer to check
+     * @return hasRewards_ true if backer has rewards in at least one gauge
+     */
+    function _verifyBackerHasRewards(
+        address[] memory allGauges_,
+        address backer_
+    )
+        internal
+        view
+        returns (bool hasRewards_)
+    {
+        uint256 _totalGauges = allGauges_.length;
+
+        for (uint256 i = 0; i < _totalGauges; i++) {
+            GaugeRootstockCollective _gauge = GaugeRootstockCollective(allGauges_[i]);
+
+            // Check if backer has any earned or stored rewards in this gauge
+            if (
+                _gauge.earned(rifTokenAddress, backer_) > 0 || _gauge.earned(usdrifToken, backer_) > 0
+                    || _gauge.earned(UtilsLib._NATIVE_ADDRESS, backer_) > 0 || _gauge.rewards(rifTokenAddress, backer_) > 0
+                    || _gauge.rewards(usdrifToken, backer_) > 0 || _gauge.rewards(UtilsLib._NATIVE_ADDRESS, backer_) > 0
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @notice Helper function to capture backer rewards before upgrade
+     * @param allGauges_ array of all gauge addresses
+     * @param backer_ address of the backer to check
+     * @return v2EarnedRif_ earned RIF rewards before upgrade
+     * @return v2EarnedUsdrif_ earned USDRIF rewards before upgrade
+     * @return v2EarnedNative_ earned native rewards before upgrade
+     * @return v2RewardsRif_ stored RIF rewards before upgrade
+     * @return v2RewardsUsdrif_ stored USDRIF rewards before upgrade
+     * @return v2RewardsNative_ stored native rewards before upgrade
+     */
+    function _captureBackerRewards(
+        address[] memory allGauges_,
+        address backer_
+    )
+        internal
+        view
+        returns (
+            uint256[] memory v2EarnedRif_,
+            uint256[] memory v2EarnedUsdrif_,
+            uint256[] memory v2EarnedNative_,
+            uint256[] memory v2RewardsRif_,
+            uint256[] memory v2RewardsUsdrif_,
+            uint256[] memory v2RewardsNative_
+        )
+    {
+        uint256 _totalGauges = allGauges_.length;
+
+        v2EarnedRif_ = new uint256[](_totalGauges);
+        v2EarnedUsdrif_ = new uint256[](_totalGauges);
+        v2EarnedNative_ = new uint256[](_totalGauges);
+        v2RewardsRif_ = new uint256[](_totalGauges);
+        v2RewardsUsdrif_ = new uint256[](_totalGauges);
+        v2RewardsNative_ = new uint256[](_totalGauges);
+
+        for (uint256 i = 0; i < _totalGauges; i++) {
+            GaugeRootstockCollective _gauge = GaugeRootstockCollective(allGauges_[i]);
+
+            // Capture earned rewards (pending to be claimed)
+            v2EarnedRif_[i] = _gauge.earned(rifTokenAddress, backer_);
+            v2EarnedUsdrif_[i] = _gauge.earned(usdrifToken, backer_);
+            v2EarnedNative_[i] = _gauge.earned(UtilsLib._NATIVE_ADDRESS, backer_);
+
+            // Capture already stored rewards
+            v2RewardsRif_[i] = _gauge.rewards(rifTokenAddress, backer_);
+            v2RewardsUsdrif_[i] = _gauge.rewards(usdrifToken, backer_);
+            v2RewardsNative_[i] = _gauge.rewards(UtilsLib._NATIVE_ADDRESS, backer_);
+        }
+    }
+
+    /**
+     * @notice Helper function to verify backer rewards are preserved after upgrade
+     */
+    function _verifyBackerRewardsPreserved(
+        address[] memory allGauges_,
+        address backer_,
+        uint256[] memory v2EarnedRif_,
+        uint256[] memory v2EarnedUsdrif_,
+        uint256[] memory v2EarnedNative_,
+        uint256[] memory v2RewardsRif_,
+        uint256[] memory v2RewardsUsdrif_,
+        uint256[] memory v2RewardsNative_
+    )
+        internal
+        view
+    {
+        uint256 _totalGauges = allGauges_.length;
+
+        for (uint256 i = 0; i < _totalGauges; i++) {
+            GaugeRootstockCollective _gauge = GaugeRootstockCollective(allGauges_[i]);
+
+            // Verify earned rewards are preserved (within reasonable tolerance due to time progression)
+            vm.assertGe(_gauge.earned(rifTokenAddress, backer_), v2EarnedRif_[i]);
+            vm.assertGe(_gauge.earned(usdrifToken, backer_), v2EarnedUsdrif_[i]);
+            vm.assertGe(_gauge.earned(UtilsLib._NATIVE_ADDRESS, backer_), v2EarnedNative_[i]);
+
+            // Verify stored rewards are exactly preserved
+            vm.assertEq(_gauge.rewards(rifTokenAddress, backer_), v2RewardsRif_[i]);
+            vm.assertEq(_gauge.rewards(usdrifToken, backer_), v2RewardsUsdrif_[i]);
+            vm.assertEq(_gauge.rewards(UtilsLib._NATIVE_ADDRESS, backer_), v2RewardsNative_[i]);
+        }
     }
 
     /**
