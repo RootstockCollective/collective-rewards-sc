@@ -433,7 +433,6 @@ contract UpgradeV3Test is Test {
             // Check that usdrifToken exists and is not zero address
             address _usdrifToken = _gauge.usdrifToken();
             vm.assertEq(_usdrifToken, usdrifToken);
-            vm.assertEq(_usdrifToken, usdrifToken);
         }
     }
 
