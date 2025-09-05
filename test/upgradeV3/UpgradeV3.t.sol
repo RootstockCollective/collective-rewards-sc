@@ -33,6 +33,20 @@ contract UpgradeV3Test is Test {
     address public usdrifToken;
     address public rifTokenAddress;
     address public configuratorAddress;
+    address[] public forkBackers;
+
+    /// @dev Struct to capture backer rewards and allocations snapshot
+    struct BackerRewardsSnapshot {
+        address backer;
+        uint256[] earnedRif;
+        uint256[] earnedUsdrif;
+        uint256[] earnedNative;
+        uint256[] rewardsRif;
+        uint256[] rewardsUsdrif;
+        uint256[] rewardsNative;
+        uint256[] allocations;
+        uint256 blockNumber;
+    }
 
     function setUp() public {
         // Initialize environment variables as state variables
@@ -54,6 +68,15 @@ contract UpgradeV3Test is Test {
         upgrader = governanceManager.upgrader();
         alice = makeAddr("alice");
         configurator = makeAddr("configurator");
+
+        // Initialize fork backers from environment variable
+        string memory _addressesStr = vm.envString("FORK_BACKERS_ADDRESSES");
+        string[] memory _addressStrings = vm.split(_addressesStr, ",");
+
+        // Convert to address array and store in state variable
+        for (uint256 i = 0; i < _addressStrings.length; i++) {
+            forkBackers.push(vm.parseAddress(_addressStrings[i]));
+        }
 
         // Setup UpgradeV3
         UpgradeV3Deployer _upgradeV3Deployer = new UpgradeV3Deployer();
@@ -491,45 +514,32 @@ contract UpgradeV3Test is Test {
     }
 
     /**
-     * SCENARIO: Specific backer rewards are preserved during upgrade across all gauges
+     * SCENARIO: Specific backer rewards and allocations are preserved during upgrade across all gauges
      */
     function test_fork_specificBackerRewardsPreservation() public {
-        // GIVEN a specific backer address to test
-        address _testBacker = 0xb0F0D0e27BF82236E01d8FaB590b46A470F45cfF;
+        // GIVEN fork backer addresses from state variable
+        require(forkBackers.length > 0, "No fork backers configured in FORK_BACKERS_ADDRESSES");
 
-        // Collect all gauges (regular + halted) to check rewards comprehensively
+        // Collect all gauges (regular + halted)
         address[] memory _allGauges = _collectAllGauges();
 
-        // Verify the backer has both rewards and allocations in at least one gauge
-        bool _hasRewardsAndAllocations = _verifyBackerHasRewardsAndAllocations(_allGauges, _testBacker);
-        require(_hasRewardsAndAllocations, "Backer must have both rewards and allocations in at least one gauge");
+        // Filter backers to only those with both rewards and allocations
+        address[] memory _validBackers = _filterValidBackers(_allGauges, forkBackers);
+        require(_validBackers.length > 0, "No valid backers found with both rewards and allocations");
 
-        // Capture backer's reward and allocation state before upgrade
-        (
-            uint256[] memory _v2EarnedRif,
-            uint256[] memory _v2EarnedUsdrif,
-            uint256[] memory _v2EarnedNative,
-            uint256[] memory _v2RewardsRif,
-            uint256[] memory _v2RewardsUsdrif,
-            uint256[] memory _v2RewardsNative,
-            uint256[] memory _v2Allocations
-        ) = _captureBackerRewardsAndAllocations(_allGauges, _testBacker);
+        // Capture state for all valid backers before upgrade
+        BackerRewardsSnapshot[] memory _preUpgradeSnapshots = new BackerRewardsSnapshot[](_validBackers.length);
+        for (uint256 i = 0; i < _validBackers.length; i++) {
+            _preUpgradeSnapshots[i] = _captureBackerSnapshot(_allGauges, _validBackers[i]);
+        }
 
         // WHEN the upgrade is performed
         _upgradeV3();
 
-        // THEN verify all backer rewards and allocations are preserved after upgrade
-        _verifyBackerRewardsAndAllocationsPreserved(
-            _allGauges,
-            _testBacker,
-            _v2EarnedRif,
-            _v2EarnedUsdrif,
-            _v2EarnedNative,
-            _v2RewardsRif,
-            _v2RewardsUsdrif,
-            _v2RewardsNative,
-            _v2Allocations
-        );
+        // THEN verify all valid backers' rewards and allocations are preserved after upgrade
+        for (uint256 i = 0; i < _validBackers.length; i++) {
+            _verifyBackerSnapshotPreserved(_allGauges, _validBackers[i], _preUpgradeSnapshots[i]);
+        }
     }
 
     /**
@@ -692,6 +702,121 @@ contract UpgradeV3Test is Test {
 
             // Verify allocations are exactly preserved
             vm.assertEq(_gauge.allocationOf(backer_), v2Allocations_[i]);
+        }
+    }
+
+    /**
+     * @notice Helper function to filter backers to only those with both rewards and allocations
+     * @param allGauges_ array of all gauge addresses
+     * @param backers_ array of backer addresses to filter
+     * @return validBackers_ array of valid backer addresses
+     */
+    function _filterValidBackers(
+        address[] memory allGauges_,
+        address[] memory backers_
+    )
+        internal
+        view
+        returns (address[] memory validBackers_)
+    {
+        address[] memory _tempValidBackers = new address[](backers_.length);
+        uint256 _validCount = 0;
+
+        for (uint256 i = 0; i < backers_.length; i++) {
+            if (_verifyBackerHasRewardsAndAllocations(allGauges_, backers_[i])) {
+                _tempValidBackers[_validCount] = backers_[i];
+                _validCount++;
+            }
+        }
+
+        // Create properly sized array
+        validBackers_ = new address[](_validCount);
+        for (uint256 i = 0; i < _validCount; i++) {
+            validBackers_[i] = _tempValidBackers[i];
+        }
+    }
+
+    /**
+     * @notice Helper function to capture a complete snapshot of backer's rewards and allocations
+     * @param allGauges_ array of all gauge addresses
+     * @param backer_ address of the backer to capture
+     * @return snapshot_ complete snapshot of backer's state
+     */
+    function _captureBackerSnapshot(
+        address[] memory allGauges_,
+        address backer_
+    )
+        internal
+        view
+        returns (BackerRewardsSnapshot memory snapshot_)
+    {
+        uint256 _totalGauges = allGauges_.length;
+
+        snapshot_.backer = backer_;
+        snapshot_.earnedRif = new uint256[](_totalGauges);
+        snapshot_.earnedUsdrif = new uint256[](_totalGauges);
+        snapshot_.earnedNative = new uint256[](_totalGauges);
+        snapshot_.rewardsRif = new uint256[](_totalGauges);
+        snapshot_.rewardsUsdrif = new uint256[](_totalGauges);
+        snapshot_.rewardsNative = new uint256[](_totalGauges);
+        snapshot_.allocations = new uint256[](_totalGauges);
+        snapshot_.blockNumber = block.number;
+
+        for (uint256 i = 0; i < _totalGauges; i++) {
+            GaugeRootstockCollective _gauge = GaugeRootstockCollective(allGauges_[i]);
+
+            // Capture earned rewards (pending to be claimed)
+            snapshot_.earnedRif[i] = _gauge.earned(rifTokenAddress, backer_);
+            snapshot_.earnedUsdrif[i] = _gauge.earned(usdrifToken, backer_);
+            snapshot_.earnedNative[i] = _gauge.earned(UtilsLib._NATIVE_ADDRESS, backer_);
+
+            // Capture already stored rewards
+            snapshot_.rewardsRif[i] = _gauge.rewards(rifTokenAddress, backer_);
+            snapshot_.rewardsUsdrif[i] = _gauge.rewards(usdrifToken, backer_);
+            snapshot_.rewardsNative[i] = _gauge.rewards(UtilsLib._NATIVE_ADDRESS, backer_);
+
+            // Capture allocations
+            snapshot_.allocations[i] = _gauge.allocationOf(backer_);
+        }
+    }
+
+    /**
+     * @notice Helper function to verify backer snapshot is preserved after upgrade
+     * @param allGauges_ array of all gauge addresses
+     * @param backer_ address of the backer to verify
+     * @param preUpgradeSnapshot_ snapshot captured before upgrade
+     */
+    function _verifyBackerSnapshotPreserved(
+        address[] memory allGauges_,
+        address backer_,
+        BackerRewardsSnapshot memory preUpgradeSnapshot_
+    )
+        internal
+        view
+    {
+        require(preUpgradeSnapshot_.backer == backer_, "Snapshot backer mismatch");
+        uint256 _totalGauges = allGauges_.length;
+
+        for (uint256 i = 0; i < _totalGauges; i++) {
+            GaugeRootstockCollective _gauge = GaugeRootstockCollective(allGauges_[i]);
+
+            // Verify earned rewards are preserved or increased (due to time progression)
+            // Allow for small increases due to reward accrual during upgrade
+            uint256 _currentEarnedRif = _gauge.earned(rifTokenAddress, backer_);
+            uint256 _currentEarnedUsdrif = _gauge.earned(usdrifToken, backer_);
+            uint256 _currentEarnedNative = _gauge.earned(UtilsLib._NATIVE_ADDRESS, backer_);
+
+            vm.assertGe(_currentEarnedRif, preUpgradeSnapshot_.earnedRif[i]);
+            vm.assertGe(_currentEarnedUsdrif, preUpgradeSnapshot_.earnedUsdrif[i]);
+            vm.assertGe(_currentEarnedNative, preUpgradeSnapshot_.earnedNative[i]);
+
+            // Verify stored rewards are exactly preserved (these should not change during upgrade)
+            vm.assertEq(_gauge.rewards(rifTokenAddress, backer_), preUpgradeSnapshot_.rewardsRif[i]);
+            vm.assertEq(_gauge.rewards(usdrifToken, backer_), preUpgradeSnapshot_.rewardsUsdrif[i]);
+            vm.assertEq(_gauge.rewards(UtilsLib._NATIVE_ADDRESS, backer_), preUpgradeSnapshot_.rewardsNative[i]);
+
+            // Verify allocations are exactly preserved
+            vm.assertEq(_gauge.allocationOf(backer_), preUpgradeSnapshot_.allocations[i]);
         }
     }
 
