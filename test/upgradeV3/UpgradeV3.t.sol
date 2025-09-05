@@ -500,25 +500,26 @@ contract UpgradeV3Test is Test {
         // Collect all gauges (regular + halted) to check rewards comprehensively
         address[] memory _allGauges = _collectAllGauges();
 
-        // Verify the backer has rewards in at least one gauge
-        bool _hasRewards = _verifyBackerHasRewards(_allGauges, _testBacker);
-        require(_hasRewards, "Backer has no rewards in any gauge");
+        // Verify the backer has both rewards and allocations in at least one gauge
+        bool _hasRewardsAndAllocations = _verifyBackerHasRewardsAndAllocations(_allGauges, _testBacker);
+        require(_hasRewardsAndAllocations, "Backer must have both rewards and allocations in at least one gauge");
 
-        // Capture backer's reward state before upgrade
+        // Capture backer's reward and allocation state before upgrade
         (
             uint256[] memory _v2EarnedRif,
             uint256[] memory _v2EarnedUsdrif,
             uint256[] memory _v2EarnedNative,
             uint256[] memory _v2RewardsRif,
             uint256[] memory _v2RewardsUsdrif,
-            uint256[] memory _v2RewardsNative
-        ) = _captureBackerRewards(_allGauges, _testBacker);
+            uint256[] memory _v2RewardsNative,
+            uint256[] memory _v2Allocations
+        ) = _captureBackerRewardsAndAllocations(_allGauges, _testBacker);
 
         // WHEN the upgrade is performed
         _upgradeV3();
 
-        // THEN verify all backer rewards are preserved after upgrade
-        _verifyBackerRewardsPreserved(
+        // THEN verify all backer rewards and allocations are preserved after upgrade
+        _verifyBackerRewardsAndAllocationsPreserved(
             _allGauges,
             _testBacker,
             _v2EarnedRif,
@@ -526,7 +527,8 @@ contract UpgradeV3Test is Test {
             _v2EarnedNative,
             _v2RewardsRif,
             _v2RewardsUsdrif,
-            _v2RewardsNative
+            _v2RewardsNative,
+            _v2Allocations
         );
     }
 
@@ -565,30 +567,34 @@ contract UpgradeV3Test is Test {
     }
 
     /**
-     * @notice Helper function to verify if a backer has rewards in any gauge, so the test is valid
+     * @notice Helper function to verify if a backer has both rewards and allocations in any gauge, so the test is valid
      * @param allGauges_ array of all gauge addresses
      * @param backer_ address of the backer to check
-     * @return hasRewards_ true if backer has rewards in at least one gauge
+     * @return hasRewardsAndAllocations_ true if backer has both rewards and allocations in at least one gauge
      */
-    function _verifyBackerHasRewards(
+    function _verifyBackerHasRewardsAndAllocations(
         address[] memory allGauges_,
         address backer_
     )
         internal
         view
-        returns (bool hasRewards_)
+        returns (bool hasRewardsAndAllocations_)
     {
         uint256 _totalGauges = allGauges_.length;
 
         for (uint256 i = 0; i < _totalGauges; i++) {
             GaugeRootstockCollective _gauge = GaugeRootstockCollective(allGauges_[i]);
 
+            // Check if backer has allocations in this gauge
+            bool _hasAllocations = _gauge.allocationOf(backer_) > 0;
+
             // Check if backer has any earned or stored rewards in this gauge
-            if (
-                _gauge.earned(rifTokenAddress, backer_) > 0 || _gauge.earned(usdrifToken, backer_) > 0
-                    || _gauge.earned(UtilsLib._NATIVE_ADDRESS, backer_) > 0 || _gauge.rewards(rifTokenAddress, backer_) > 0
-                    || _gauge.rewards(usdrifToken, backer_) > 0 || _gauge.rewards(UtilsLib._NATIVE_ADDRESS, backer_) > 0
-            ) {
+            bool _hasRewards = _gauge.earned(rifTokenAddress, backer_) > 0 || _gauge.earned(usdrifToken, backer_) > 0
+                || _gauge.earned(UtilsLib._NATIVE_ADDRESS, backer_) > 0 || _gauge.rewards(rifTokenAddress, backer_) > 0
+                || _gauge.rewards(usdrifToken, backer_) > 0 || _gauge.rewards(UtilsLib._NATIVE_ADDRESS, backer_) > 0;
+
+            // Return true only if backer has BOTH rewards AND allocations in this gauge
+            if (_hasRewards && _hasAllocations) {
                 return true;
             }
         }
@@ -597,7 +603,7 @@ contract UpgradeV3Test is Test {
     }
 
     /**
-     * @notice Helper function to capture backer rewards before upgrade
+     * @notice Helper function to capture backer rewards and allocations before upgrade
      * @param allGauges_ array of all gauge addresses
      * @param backer_ address of the backer to check
      * @return v2EarnedRif_ earned RIF rewards before upgrade
@@ -606,8 +612,9 @@ contract UpgradeV3Test is Test {
      * @return v2RewardsRif_ stored RIF rewards before upgrade
      * @return v2RewardsUsdrif_ stored USDRIF rewards before upgrade
      * @return v2RewardsNative_ stored native rewards before upgrade
+     * @return v2Allocations_ allocations before upgrade
      */
-    function _captureBackerRewards(
+    function _captureBackerRewardsAndAllocations(
         address[] memory allGauges_,
         address backer_
     )
@@ -619,7 +626,8 @@ contract UpgradeV3Test is Test {
             uint256[] memory v2EarnedNative_,
             uint256[] memory v2RewardsRif_,
             uint256[] memory v2RewardsUsdrif_,
-            uint256[] memory v2RewardsNative_
+            uint256[] memory v2RewardsNative_,
+            uint256[] memory v2Allocations_
         )
     {
         uint256 _totalGauges = allGauges_.length;
@@ -630,6 +638,7 @@ contract UpgradeV3Test is Test {
         v2RewardsRif_ = new uint256[](_totalGauges);
         v2RewardsUsdrif_ = new uint256[](_totalGauges);
         v2RewardsNative_ = new uint256[](_totalGauges);
+        v2Allocations_ = new uint256[](_totalGauges);
 
         for (uint256 i = 0; i < _totalGauges; i++) {
             GaugeRootstockCollective _gauge = GaugeRootstockCollective(allGauges_[i]);
@@ -643,13 +652,16 @@ contract UpgradeV3Test is Test {
             v2RewardsRif_[i] = _gauge.rewards(rifTokenAddress, backer_);
             v2RewardsUsdrif_[i] = _gauge.rewards(usdrifToken, backer_);
             v2RewardsNative_[i] = _gauge.rewards(UtilsLib._NATIVE_ADDRESS, backer_);
+
+            // Capture allocations
+            v2Allocations_[i] = _gauge.allocationOf(backer_);
         }
     }
 
     /**
-     * @notice Helper function to verify backer rewards are preserved after upgrade
+     * @notice Helper function to verify backer rewards and allocations are preserved after upgrade
      */
-    function _verifyBackerRewardsPreserved(
+    function _verifyBackerRewardsAndAllocationsPreserved(
         address[] memory allGauges_,
         address backer_,
         uint256[] memory v2EarnedRif_,
@@ -657,7 +669,8 @@ contract UpgradeV3Test is Test {
         uint256[] memory v2EarnedNative_,
         uint256[] memory v2RewardsRif_,
         uint256[] memory v2RewardsUsdrif_,
-        uint256[] memory v2RewardsNative_
+        uint256[] memory v2RewardsNative_,
+        uint256[] memory v2Allocations_
     )
         internal
         view
@@ -676,6 +689,9 @@ contract UpgradeV3Test is Test {
             vm.assertEq(_gauge.rewards(rifTokenAddress, backer_), v2RewardsRif_[i]);
             vm.assertEq(_gauge.rewards(usdrifToken, backer_), v2RewardsUsdrif_[i]);
             vm.assertEq(_gauge.rewards(UtilsLib._NATIVE_ADDRESS, backer_), v2RewardsNative_[i]);
+
+            // Verify allocations are exactly preserved
+            vm.assertEq(_gauge.allocationOf(backer_), v2Allocations_[i]);
         }
     }
 
