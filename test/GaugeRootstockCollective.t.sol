@@ -15,6 +15,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
     event BackerRewardsClaimed(address indexed backer_, uint256 amount_);
     event NewAllocation(address indexed backer_, uint256 allocation_);
     event NotifyReward(address indexed rifToken_, uint256 builderAmount_, uint256 backersAmount_);
+    event RewardSharesUpdated(uint256 rewardShares_);
 
     function _mintAndApproveTokens(ERC20Mock token_, address account_, uint256 amount_) internal {
         token_.mint(account_, amount_);
@@ -724,6 +725,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 0 ether are distributed for backers
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        uint256 _rewardShares = gauge.rewardShares();
+        vm.expectEmit();
+        emit RewardSharesUpdated(_rewardShares);
         // rewardMissing are updated with all the existing rewards (since there were no allocations), included in the
         // rewardRate for new cycle and set back to 0 in this method
         gauge.notifyRewardAmountAndUpdateShares(
@@ -825,6 +829,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 0 ether are distributed for backers
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        uint256 _rewardShares = gauge.rewardShares();
+        vm.expectEmit();
+        emit RewardSharesUpdated(_rewardShares);
         gauge.notifyRewardAmountAndUpdateShares(
             0 ether, 0, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
@@ -847,6 +854,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 0 ether are distributed for backers
         vm.startPrank(address(backersManager));
         (_cycleStart, _cycleDuration) = backersManager.getCycleStartAndDuration();
+        _rewardShares = gauge.rewardShares();
+        vm.expectEmit();
+        emit RewardSharesUpdated(_rewardShares);
         gauge.notifyRewardAmountAndUpdateShares(
             0 ether, 0, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
@@ -923,6 +933,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 100 ether are distributed for backers
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        uint256 _rewardShares = gauge.rewardShares();
+        vm.expectEmit();
+        emit RewardSharesUpdated(_rewardShares);
         gauge.notifyRewardAmountAndUpdateShares(
             100 ether, 100 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
@@ -998,6 +1011,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND distribution finishes with 100 ether being distributed
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        uint256 _rewardShares = gauge.rewardShares();
+        vm.expectEmit();
+        emit RewardSharesUpdated(_rewardShares);
         gauge.notifyRewardAmountAndUpdateShares(
             100 ether, 100 ether, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
@@ -2000,6 +2016,9 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // AND 0 ether distributed for backers
         vm.startPrank(address(backersManager));
         (uint256 _cycleStart, uint256 _cycleDuration) = backersManager.getCycleStartAndDuration();
+        uint256 _rewardShares = gauge.rewardShares();
+        vm.expectEmit();
+        emit RewardSharesUpdated(_rewardShares);
         gauge.notifyRewardAmountAndUpdateShares(
             0, 0, 1 ether, backersManager.periodFinish(), _cycleStart, _cycleDuration
         );
