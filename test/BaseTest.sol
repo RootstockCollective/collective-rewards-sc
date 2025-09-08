@@ -68,7 +68,7 @@ contract BaseTest is Test {
         (governanceManager,) =
             new GovernanceManagerRootstockCollectiveDeployer().run(governor, foundation, kycApprover, upgrader);
         vm.prank(upgrader);
-        governanceManager.initializeV2(configurator);
+        governanceManager.initializeV3(configurator);
 
         MockTokenDeployer _mockTokenDeployer = new MockTokenDeployer();
         MockStakingTokenDeployer _mockStakingTokenDeployer = new MockStakingTokenDeployer();

@@ -8,15 +8,17 @@ import { BuilderRegistryRootstockCollective } from "../builderRegistry/BuilderRe
 import { BackersManagerRootstockCollective } from "../backersManager/BackersManagerRootstockCollective.sol";
 import { GovernanceManagerRootstockCollective } from "../governance/GovernanceManagerRootstockCollective.sol";
 import { RewardDistributorRootstockCollective } from "../RewardDistributorRootstockCollective.sol";
-
+import { IBackersManagerRootstockCollectiveV2 } from "src/interfaces/v2/IBackersManagerRootstockCollectiveV2.sol";
+import { IRewardDistributorRootstockCollectiveV2 } from "src/interfaces/v2/IRewardDistributorRootstockCollectiveV2.sol";
 /**
  * @title UpgradeV3
  * @notice Migrate the mainnet live contracts to V3
  */
+
 contract UpgradeV3 {
     error NotUpgrader();
 
-    BackersManagerRootstockCollective public backersManagerProxy;
+    IBackersManagerRootstockCollectiveV2 public backersManagerProxy;
     BackersManagerRootstockCollective public backersManagerImplV3;
     BuilderRegistryRootstockCollective public builderRegistryProxy;
     BuilderRegistryRootstockCollective public builderRegistryImplV3;
@@ -24,36 +26,39 @@ contract UpgradeV3 {
     GovernanceManagerRootstockCollective public governanceManagerImplV3;
     GaugeBeaconRootstockCollective public gaugeBeacon;
     GaugeRootstockCollective public gaugeImplV3;
-    RewardDistributorRootstockCollective public rewardDistributorProxy;
+    IRewardDistributorRootstockCollectiveV2 public rewardDistributorProxy;
     RewardDistributorRootstockCollective public rewardDistributorImplV3;
+    GaugeFactoryRootstockCollective public gaugeFactoryV3;
     address public upgrader;
     address public configurator;
     address public usdrifToken;
     uint256 public constant MAX_DISTRIBUTIONS_PER_BATCH = 20;
 
     constructor(
-        BackersManagerRootstockCollective backersManagerProxy_,
+        IBackersManagerRootstockCollectiveV2 backersManagerProxy_,
         BackersManagerRootstockCollective backersManagerImplV3_,
         BuilderRegistryRootstockCollective builderRegistryImplV3_,
         GovernanceManagerRootstockCollective governanceManagerImplV3_,
         GaugeRootstockCollective gaugeImplV3_,
-        RewardDistributorRootstockCollective rewardDistributorProxy_,
+        IRewardDistributorRootstockCollectiveV2 rewardDistributorProxyV2_,
         RewardDistributorRootstockCollective rewardDistributorImplV3_,
         address configurator_,
-        address usdrifToken_
+        address usdrifToken_,
+        GaugeFactoryRootstockCollective gaugeFactoryV3_
     ) {
         backersManagerProxy = backersManagerProxy_;
         backersManagerImplV3 = backersManagerImplV3_;
-        builderRegistryProxy = backersManagerProxy_.builderRegistry();
+        builderRegistryProxy = BuilderRegistryRootstockCollective(backersManagerProxy_.builderRegistry());
         builderRegistryImplV3 = builderRegistryImplV3_;
-        governanceManagerProxy = GovernanceManagerRootstockCollective(address(backersManagerProxy.governanceManager()));
+        governanceManagerProxy = GovernanceManagerRootstockCollective(address(backersManagerProxy_.governanceManager()));
         governanceManagerImplV3 = governanceManagerImplV3_;
         gaugeBeacon = GaugeBeaconRootstockCollective(
             GaugeFactoryRootstockCollective(builderRegistryProxy.gaugeFactory()).beacon()
         );
         gaugeImplV3 = gaugeImplV3_;
-        rewardDistributorProxy = rewardDistributorProxy_;
+        rewardDistributorProxy = rewardDistributorProxyV2_;
         rewardDistributorImplV3 = rewardDistributorImplV3_;
+        gaugeFactoryV3 = gaugeFactoryV3_;
         upgrader = governanceManagerProxy.upgrader();
         configurator = configurator_;
         usdrifToken = usdrifToken_;
@@ -90,22 +95,36 @@ contract UpgradeV3 {
 
     function _upgradeGovernanceManager() internal {
         bytes memory _governanceManagerInitializeData =
-            abi.encodeCall(GovernanceManagerRootstockCollective.initializeV2, (configurator));
+            abi.encodeCall(GovernanceManagerRootstockCollective.initializeV3, (configurator));
 
         governanceManagerProxy.upgradeToAndCall(address(governanceManagerImplV3), _governanceManagerInitializeData);
     }
 
     function _upgradeBuilderRegistry() internal {
-        bytes memory _data;
+        bytes memory _data = abi.encodeCall(BuilderRegistryRootstockCollective.initializeV3, (gaugeFactoryV3));
         builderRegistryProxy.upgradeToAndCall(address(builderRegistryImplV3), _data);
     }
 
     function _upgradeGauges() internal {
         gaugeBeacon.upgradeTo(address(gaugeImplV3));
+
+        // Initialize gauges with usdrifToken
+        uint256 _gaugesLength = builderRegistryProxy.getGaugesLength();
+        for (uint256 i = 0; i < _gaugesLength; i++) {
+            address _gaugeAddress = builderRegistryProxy.getGaugeAt(i);
+            GaugeRootstockCollective(_gaugeAddress).initializeV3(usdrifToken);
+        }
+
+        // Initialize halted gauges with usdrifToken
+        uint256 _haltedGaugesLength = builderRegistryProxy.getHaltedGaugesLength();
+        for (uint256 i = 0; i < _haltedGaugesLength; i++) {
+            address _gaugeAddress = builderRegistryProxy.getHaltedGaugeAt(i);
+            GaugeRootstockCollective(_gaugeAddress).initializeV3(usdrifToken);
+        }
     }
 
     function _upgradeRewardDistributor() internal {
-        bytes memory _data;
+        bytes memory _data = abi.encodeCall(RewardDistributorRootstockCollective.initializeV3, ());
         rewardDistributorProxy.upgradeToAndCall(address(rewardDistributorImplV3), _data);
     }
 
