@@ -31,8 +31,8 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     modifier onlyOncePerCycle() {
         uint256 _currentCycleStart = backersManager.cycleStart(block.timestamp);
         if (lastFundedCycleStart == _currentCycleStart) revert CycleAlreadyFunded();
-        _;
         lastFundedCycleStart = _currentCycleStart;
+        _;
     }
 
     // -----------------------------
@@ -117,11 +117,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         uint256 amountRif_,
         uint256 amountUsdrif_,
         uint256 amountNative_
-    )
-        external
-        payable
-        onlyFoundationTreasury
-    {
+    ) external payable onlyFoundationTreasury {
         _sendRewards(amountRif_, amountUsdrif_, amountNative_);
     }
 
@@ -137,11 +133,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         uint256 amountRif_,
         uint256 amountUsdrif_,
         uint256 amountNative_
-    )
-        external
-        payable
-        onlyFoundationTreasury
-    {
+    ) external payable onlyFoundationTreasury {
         _sendRewards(amountRif_, amountUsdrif_, amountNative_);
         backersManager.startDistribution();
     }
@@ -157,11 +149,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         uint256 rifTokenAmount_,
         uint256 usdrifTokenAmount_,
         uint256 nativeAmount_
-    )
-        external
-        payable
-        onlyFoundationTreasury
-    {
+    ) external payable onlyFoundationTreasury {
         defaultRifAmount = rifTokenAmount_;
         defaultUsdrifAmount = usdrifTokenAmount_;
         defaultNativeAmount = nativeAmount_;
@@ -204,7 +192,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     /**
      * @notice receives native tokens to distribute for rewards
      */
-    receive() external payable { }
+    receive() external payable {}
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
