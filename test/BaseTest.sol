@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.24;
 
 import { Test } from "forge-std/src/Test.sol";
 import { Deploy as MockTokenDeployer } from "script/test_mock/MockToken.s.sol";

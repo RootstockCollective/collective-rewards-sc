@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 // Copied from https://github.com/rsksmart/optimism/blob/develop/packages/contracts-bedrock/scripts/Executables.sol
 

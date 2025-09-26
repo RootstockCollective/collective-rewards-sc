@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.24;
 
 import { BaseFuzz } from "./BaseFuzz.sol";
 import { stdStorage, StdStorage } from "forge-std/src/Test.sol";

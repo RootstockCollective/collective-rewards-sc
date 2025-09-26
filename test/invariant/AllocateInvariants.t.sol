@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.20;
+pragma solidity 0.8.24;
 
 import { BaseInvariants } from "./BaseInvariants.sol";
 import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol";
