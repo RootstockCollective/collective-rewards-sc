@@ -12,7 +12,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event DefaultRewardAmountsUpdated(uint256 rifAmount_, uint256 nativeAmount_, uint256 usdrifAmount_);
+    event DefaultRewardAmountsUpdated(uint256 rifAmount_, uint256 usdrifAmount_, uint256 nativeAmount_);
 
     function _setUp() internal override {
         // mint some rifTokens to this contract for reward distribution
@@ -96,7 +96,7 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         // WHEN default reward amounts are set
         //  THEN DefaultRewardAmountsUpdated event is emitted
         vm.expectEmit();
-        emit DefaultRewardAmountsUpdated(10 ether, 1 ether, 10 ether);
+        emit DefaultRewardAmountsUpdated(10 ether, 10 ether, 1 ether);
         rewardDistributor.setDefaultRewardAmount(10 ether, 10 ether, 1 ether);
 
         // THEN default rif token amounts are set

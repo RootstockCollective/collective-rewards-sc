@@ -51,7 +51,7 @@ contract BackersManagerRootstockCollective is
     event BackerRewardsOptedOut(address indexed backer_);
     event BackerRewardsOptedIn(address indexed backer_);
     event MaxDistributionsPerBatchUpdated(uint256 oldValue_, uint256 newValue_);
-    event RewardDistributionRewards(uint256 rifAmount_, uint256 nativeAmount_, uint256 usdrifAmount_);
+    event RewardDistributionRewards(uint256 rifAmount_, uint256 usdrifAmount_, uint256 nativeAmount_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -566,7 +566,7 @@ contract BackersManagerRootstockCollective is
         tempTotalPotentialReward = 0;
         _periodFinish = cycleNext(block.timestamp);
         emit RewardDistributionFinished(msg.sender);
-        emit RewardDistributionRewards(rewardsRif, rewardsNative, rewardsUsdrif);
+        emit RewardDistributionRewards(rewardsRif, rewardsUsdrif, rewardsNative);
     }
 
     /**

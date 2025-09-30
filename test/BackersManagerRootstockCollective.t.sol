@@ -19,7 +19,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     event RewardDistributed(address indexed sender_);
     event RewardDistributionFinished(address indexed sender_);
     event MaxDistributionsPerBatchUpdated(uint256 oldMaxDistributionsPerBatch_, uint256 newMaxDistributionsPerBatch_);
-    event RewardDistributionRewards(uint256 rifAmount_, uint256 nativeAmount_, uint256 usdrifAmount_);
+    event RewardDistributionRewards(uint256 rifAmount_, uint256 usdrifAmount_, uint256 nativeAmount_);
 
     /**
      * SCENARIO: allocate should revert if it is called with arrays with different lengths
@@ -649,7 +649,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         emit RewardDistributionFinished(address(this));
         //   THEN RewardDistributionRewards event is emitted
         vm.expectEmit();
-        emit RewardDistributionRewards(100 ether, 0, 100 ether);
+        emit RewardDistributionRewards(100 ether, 100 ether, 0);
         backersManager.startDistribution();
         // THEN reward token balance of gauge is 27.272727272727272727 = 100 * 6 / 22
         assertEq(rifToken.balanceOf(address(gauge)), 27_272_727_272_727_272_727);

@@ -23,7 +23,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     // -----------------------------
     // ----------- Events ----------
     // -----------------------------
-    event DefaultRewardAmountsUpdated(uint256 rifAmount_, uint256 nativeAmount_, uint256 usdrifAmount_);
+    event DefaultRewardAmountsUpdated(uint256 rifAmount_, uint256 usdrifAmount_, uint256 nativeAmount_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -170,7 +170,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         defaultRifAmount = rifTokenAmount_;
         defaultUsdrifAmount = usdrifTokenAmount_;
         defaultNativeAmount = nativeAmount_;
-        emit DefaultRewardAmountsUpdated(rifTokenAmount_, nativeAmount_, usdrifTokenAmount_);
+        emit DefaultRewardAmountsUpdated(rifTokenAmount_, usdrifTokenAmount_, nativeAmount_);
     }
 
     /**
