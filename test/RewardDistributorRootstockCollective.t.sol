@@ -93,18 +93,22 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         // GIVEN a RewardDistributorRootstockCollective contract
         vm.startPrank(foundation);
 
+        uint256 _defaultRifAmount = 10 ether;
+        uint256 _defaultUsdrifAmount = 10 ether;
+        uint256 _defaultNativeAmount = 1 ether;
+
         // WHEN default reward amounts are set
         //  THEN DefaultRewardAmountsUpdated event is emitted
         vm.expectEmit();
-        emit DefaultRewardAmountsUpdated(10 ether, 10 ether, 1 ether);
-        rewardDistributor.setDefaultRewardAmount(10 ether, 10 ether, 1 ether);
+        emit DefaultRewardAmountsUpdated(_defaultRifAmount, _defaultUsdrifAmount, _defaultNativeAmount);
+        rewardDistributor.setDefaultRewardAmount(_defaultRifAmount, _defaultUsdrifAmount, _defaultNativeAmount);
 
         // THEN default rif token amounts are set
-        assertEq(rewardDistributor.defaultRifAmount(), 10 ether);
+        assertEq(rewardDistributor.defaultRifAmount(), _defaultRifAmount);
         // THEN default native token amounts are set
-        assertEq(rewardDistributor.defaultNativeAmount(), 1 ether);
+        assertEq(rewardDistributor.defaultNativeAmount(), _defaultNativeAmount);
         // THEN default usdrif token amounts are set
-        assertEq(rewardDistributor.defaultUsdrifAmount(), 10 ether);
+        assertEq(rewardDistributor.defaultUsdrifAmount(), _defaultUsdrifAmount);
     }
 
     /**
