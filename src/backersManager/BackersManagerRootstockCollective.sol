@@ -211,6 +211,7 @@ contract BackersManagerRootstockCollective is
      */
     function initializeV3(uint256 maxDistributionsPerBatch_, address usdrifToken_) external reinitializer(3) {
         if (address(usdrifToken_) == address(0)) revert ZeroAddressNotAllowed();
+        __ReentrancyGuard_init();
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
         usdrifToken = usdrifToken_;
     }
