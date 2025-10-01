@@ -6,6 +6,7 @@ import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
+import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
 
 contract RewardDistributorRootstockCollectiveTest is BaseTest {
     function _setUp() internal override {
@@ -282,5 +283,50 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         // should fail because send the default native tokens amount twice exceeding the balance
         vm.expectRevert();
         rewardDistributor.sendRewardsWithDefaultAmount();
+    }
+
+    /**
+     * SCENARIO: onlyOncePerCycle modifier protects against reentrancy attacks
+     */
+    function test_OnlyOncePerCycleReentrancyProtection() public {
+        // GIVEN a RewardDistributorRootstockCollective contract with some tokens
+        rifToken.transfer(address(rewardDistributor), 10 ether);
+        usdrifToken.transfer(address(rewardDistributor), 10 ether);
+        Address.sendValue(payable(address(rewardDistributor)), 5 ether);
+
+        // set default amounts
+        vm.prank(foundation);
+        rewardDistributor.setDefaultRewardAmount(1 ether, 1 ether, 1 ether);
+
+        // Create a test distributor that exposes the modifier for testing
+        TestRewardDistributor _testDistributor = new TestRewardDistributor();
+        _testDistributor.setup(address(backersManager));
+
+        // WHEN the test function attempts reentrancy using the onlyOncePerCycle modifier
+        // THEN it should revert with CycleAlreadyFunded on the second call
+        vm.expectRevert(RewardDistributorRootstockCollective.CycleAlreadyFunded.selector);
+        _testDistributor.maliciousReentrancy();
+    }
+}
+
+/**
+ * @notice Test contract that extends RewardDistributor to test the onlyOncePerCycle modifier
+ */
+contract TestRewardDistributor is RewardDistributorRootstockCollective {
+    bool private _reentrancyAttempted;
+
+    function setup(address backersManager_) external {
+        backersManager = BackersManagerRootstockCollective(backersManager_);
+    }
+
+    /**
+     * @notice Test function that uses the onlyOncePerCycle modifier and attempts reentrancy
+     */
+    function maliciousReentrancy() external onlyOncePerCycle {
+        if (!_reentrancyAttempted) {
+            _reentrancyAttempted = true;
+            // Attempt reentrancy - this should fail due to the modifier
+            this.maliciousReentrancy();
+        }
     }
 }

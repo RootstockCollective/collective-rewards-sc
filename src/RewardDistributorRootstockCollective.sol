@@ -31,8 +31,8 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     modifier onlyOncePerCycle() {
         uint256 _currentCycleStart = backersManager.cycleStart(block.timestamp);
         if (lastFundedCycleStart == _currentCycleStart) revert CycleAlreadyFunded();
-        _;
         lastFundedCycleStart = _currentCycleStart;
+        _;
     }
 
     // -----------------------------
