@@ -3,7 +3,7 @@
   "plugins": ["bim"],
   "rules": {
     "code-complexity": ["error", 8],
-    "compiler-version": ["error", "0.8.20"],
+    "compiler-version": ["error", "0.8.24"],
     "func-visibility": ["error", { "ignoreConstructors": true }],
     "func-param-name-mixedcase": "error",
     "private-vars-leading-underscore": "error",

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.24;
 
 library UtilsLib {
     // Constants may not be used in child contracts and that is fine as they are
