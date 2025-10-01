@@ -9,6 +9,11 @@ import { RewardDistributorRootstockCollective } from "src/RewardDistributorRoots
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
 
 contract RewardDistributorRootstockCollectiveTest is BaseTest {
+    // -----------------------------
+    // ----------- Events ----------
+    // -----------------------------
+    event DefaultRewardAmountsUpdated(uint256 rifAmount_, uint256 usdrifAmount_, uint256 nativeAmount_);
+
     function _setUp() internal override {
         // mint some rifTokens to this contract for reward distribution
         rifToken.mint(address(this), 100_000 ether);
@@ -79,6 +84,31 @@ contract RewardDistributorRootstockCollectiveTest is BaseTest {
         //  THEN tx reverts because insufficient balance
         vm.expectRevert();
         rewardDistributor.sendRewardsAndStartDistribution(0, 0, 2 ether);
+    }
+
+    /**
+     * SCENARIO: set default reward amounts
+     */
+    function test_SetDefaultRewardAmount() public {
+        // GIVEN a RewardDistributorRootstockCollective contract
+        vm.startPrank(foundation);
+
+        uint256 _defaultRifAmount = 10 ether;
+        uint256 _defaultUsdrifAmount = 10 ether;
+        uint256 _defaultNativeAmount = 1 ether;
+
+        // WHEN default reward amounts are set
+        //  THEN DefaultRewardAmountsUpdated event is emitted
+        vm.expectEmit();
+        emit DefaultRewardAmountsUpdated(_defaultRifAmount, _defaultUsdrifAmount, _defaultNativeAmount);
+        rewardDistributor.setDefaultRewardAmount(_defaultRifAmount, _defaultUsdrifAmount, _defaultNativeAmount);
+
+        // THEN default rif token amounts are set
+        assertEq(rewardDistributor.defaultRifAmount(), _defaultRifAmount);
+        // THEN default native token amounts are set
+        assertEq(rewardDistributor.defaultNativeAmount(), _defaultNativeAmount);
+        // THEN default usdrif token amounts are set
+        assertEq(rewardDistributor.defaultUsdrifAmount(), _defaultUsdrifAmount);
     }
 
     /**

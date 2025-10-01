@@ -21,6 +21,11 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
     error CycleAlreadyFunded();
 
     // -----------------------------
+    // ----------- Events ----------
+    // -----------------------------
+    event DefaultRewardAmountsUpdated(uint256 rifAmount_, uint256 usdrifAmount_, uint256 nativeAmount_);
+
+    // -----------------------------
     // --------- Modifiers ---------
     // -----------------------------
     modifier onlyFoundationTreasury() {
@@ -165,6 +170,7 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
         defaultRifAmount = rifTokenAmount_;
         defaultUsdrifAmount = usdrifTokenAmount_;
         defaultNativeAmount = nativeAmount_;
+        emit DefaultRewardAmountsUpdated(rifTokenAmount_, usdrifTokenAmount_, nativeAmount_);
     }
 
     /**
