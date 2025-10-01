@@ -330,7 +330,13 @@ contract BackersManagerRootstockCollective is
      *  reverts if it is called during the distribution period
      * @return finished_ true if distribution has finished
      */
-    function startDistribution() external onlyInDistributionWindow notInDistributionPeriod returns (bool finished_) {
+    function startDistribution()
+        external
+        nonReentrant
+        onlyInDistributionWindow
+        notInDistributionPeriod
+        returns (bool finished_)
+    {
         emit RewardDistributionStarted(msg.sender);
         finished_ = _distribute();
         onDistributionPeriod = !finished_;
