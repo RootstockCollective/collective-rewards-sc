@@ -4,8 +4,6 @@ pragma solidity 0.8.24;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
-import { ReentrancyGuardTransientUpgradeable } from
-    "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardTransientUpgradeable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { BuilderRegistryRootstockCollective } from "../builderRegistry/BuilderRegistryRootstockCollective.sol";
@@ -22,8 +20,7 @@ import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernance
 contract BackersManagerRootstockCollective is
     CycleTimeKeeperRootstockCollective,
     ICollectiveRewardsCheckRootstockCollective,
-    ERC165Upgradeable,
-    ReentrancyGuardTransientUpgradeable
+    ERC165Upgradeable
 {
     // -----------------------------
     // ------- Custom Errors -------
@@ -182,7 +179,6 @@ contract BackersManagerRootstockCollective is
         __CycleTimeKeeperRootstockCollective_init(
             governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
         );
-        __ReentrancyGuardTransient_init();
         rifToken = rifToken_;
         usdrifToken = usdrifToken_;
         stakingToken = IERC20(stakingToken_);
@@ -330,13 +326,7 @@ contract BackersManagerRootstockCollective is
      *  reverts if it is called during the distribution period
      * @return finished_ true if distribution has finished
      */
-    function startDistribution()
-        external
-        nonReentrant
-        onlyInDistributionWindow
-        notInDistributionPeriod
-        returns (bool finished_)
-    {
+    function startDistribution() external onlyInDistributionWindow notInDistributionPeriod returns (bool finished_) {
         emit RewardDistributionStarted(msg.sender);
         finished_ = _distribute();
         onDistributionPeriod = !finished_;
@@ -349,7 +339,7 @@ contract BackersManagerRootstockCollective is
      *  ending the distribution period and voting restrictions.
      * @return finished_ true if distribution has finished
      */
-    function distribute() external nonReentrant returns (bool finished_) {
+    function distribute() external returns (bool finished_) {
         if (onDistributionPeriod == false) revert DistributionPeriodDidNotStart();
         finished_ = _distribute();
         onDistributionPeriod = !finished_;
