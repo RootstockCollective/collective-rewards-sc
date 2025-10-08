@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 // Some code is copied from the
 // https://github.com/rsksmart/optimism/blob/develop/packages/contracts-bedrock/scripts/Deployer.sol

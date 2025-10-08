@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import { OutputWriter } from "script/script_utils/OutputWriter.s.sol";
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";

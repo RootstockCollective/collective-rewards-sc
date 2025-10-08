@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable gas-custom-errors
 // solhint-disable reason-string
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import { Broadcaster } from "script/script_utils/Broadcaster.s.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";

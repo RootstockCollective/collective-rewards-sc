@@ -1,4 +1,4 @@
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import { BaseTest } from "./BaseTest.sol";
 import { console } from "forge-std/src/console.sol";
