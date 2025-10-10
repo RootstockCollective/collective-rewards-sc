@@ -620,8 +620,10 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     // -----------------------------
 
     /**
-     * @notice Validates that the new max reward percentage is higher than all active builders' next reward percentages
+     * @notice Validates that the new max reward percentage is higher or equal to all active builders' next reward
+     * percentages
      * @dev Iterates through all operational gauges and checks their builders' reward percentages
+     * @dev builder with kyc revoked will not be considered, same as self paused builders
      * @param maxRewardPercentage_ The new maximum reward percentage to validate
      */
     function _validateMaxRewardPercentageAgainstActiveBuilders(uint256 maxRewardPercentage_) internal view {
@@ -632,12 +634,11 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
             // Only consider builders with gauge and community approved
             address _builder = gaugeToBuilder[_gauge];
             BuilderState memory _builderState = builderState[_builder];
-            if (!_builderState.communityApproved) continue;
 
             // Only consider the next reward percentage since it's the one that will be applied after the cooldown
             // period
             RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[_builder];
-            if (maxRewardPercentage_ < _rewardPercentageData.next) {
+            if (_rewardPercentageData.next > maxRewardPercentage_) {
                 revert MaxRewardPercentageTooLow();
             }
         }
