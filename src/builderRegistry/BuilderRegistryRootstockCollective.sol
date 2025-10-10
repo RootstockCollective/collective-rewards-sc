@@ -630,7 +630,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         for (uint256 i = 0; i < _gaugesLength; ++i) {
             GaugeRootstockCollective _gauge = GaugeRootstockCollective(_gauges.at(i));
             // Only consider builders with gauge and community approved
-            if (address(_gauge) == address(0)) continue;
             address _builder = gaugeToBuilder[_gauge];
             BuilderState memory _builderState = builderState[_builder];
             if (!_builderState.communityApproved) continue;
