@@ -19,6 +19,7 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     event SelfPaused(address indexed builder_);
     event SelfResumed(address indexed builder_, uint256 rewardPercentage_, uint256 cooldown_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
+    event MaxRewardPercentageUpdated(uint256 oldMaxRewardPercentage_, uint256 newMaxRewardPercentage_);
 
     function test_OnlyKycApprover() public {
         // GIVEN a backer alice
@@ -922,5 +923,115 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
             address _gauge = makeAddr(string(abi.encode(i)));
             _whitelistBuilder(_gauge, builder, 1 ether);
         }
+    }
+
+    /**
+     * SCENARIO: governor can update maxRewardPercentage
+     */
+    function test_UpdateMaxRewardPercentage() public {
+        // GIVEN a new maxRewardPercentage value higher than existing builders (60% > 50%)
+        uint256 _newMaxRewardPercentage = 0.6 ether; // 60%
+        uint256 _oldMaxRewardPercentage = builderRegistry.maxRewardPercentage();
+
+        // WHEN governor calls updateMaxRewardPercentage
+        vm.prank(governor);
+        vm.expectEmit();
+        emit MaxRewardPercentageUpdated(_oldMaxRewardPercentage, _newMaxRewardPercentage);
+        builderRegistry.updateMaxRewardPercentage(_newMaxRewardPercentage);
+
+        // THEN maxRewardPercentage is updated
+        assertEq(builderRegistry.maxRewardPercentage(), _newMaxRewardPercentage);
+    }
+
+    /**
+     * SCENARIO: non-authorized changer cannot update maxRewardPercentage
+     */
+    function test_RevertUpdateMaxRewardPercentageNotAuthorizedChanger() public {
+        // GIVEN a new maxRewardPercentage value
+        uint256 _newMaxRewardPercentage = 0.9 ether;
+
+        // WHEN a non-authorized changer tries to update maxRewardPercentage
+        vm.prank(alice);
+        vm.expectRevert(IGovernanceManagerRootstockCollective.NotAuthorizedChanger.selector);
+        builderRegistry.updateMaxRewardPercentage(_newMaxRewardPercentage);
+    }
+
+    /**
+     * SCENARIO: updateMaxRewardPercentage reverts with value greater than 100%
+     */
+    function test_RevertUpdateMaxRewardPercentageGreaterThanPrecision() public {
+        // WHEN governor tries to set maxRewardPercentage greater than 100%
+        vm.prank(governor);
+        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidMaxRewardPercentage.selector);
+        builderRegistry.updateMaxRewardPercentage(1.1 ether); // 110%
+    }
+
+    /**
+     * SCENARIO: updateMaxRewardPercentage reverts when new max is lower than existing active builders' reward
+     * percentages
+     */
+    function test_RevertUpdateMaxRewardPercentageTooLow() public {
+        // GIVEN active builders with 50% reward percentage (from BaseTest setup)
+        // WHEN governor tries to set maxRewardPercentage to 40% (lower than existing builders)
+        vm.prank(governor);
+        vm.expectRevert(BuilderRegistryRootstockCollective.MaxRewardPercentageTooLow.selector);
+        builderRegistry.updateMaxRewardPercentage(0.4 ether); // 40%
+    }
+
+    /**
+     * SCENARIO: updateMaxRewardPercentage ignores deactivated builders when validating
+     */
+    function test_UpdateMaxRewardPercentageIgnoresDeactivatedBuilders() public {
+        // GIVEN a builder with high reward percentage
+        address _highRewardBuilder = makeAddr("highRewardBuilder");
+        vm.prank(kycApprover);
+        builderRegistry.initializeBuilder(_highRewardBuilder, _highRewardBuilder, 0.8 ether); // 80%
+
+        // AND the builder is community approved (gets a gauge)
+        vm.prank(governor);
+        builderRegistry.communityApproveBuilder(_highRewardBuilder);
+
+        // AND the builder is then KYC revoked (deactivated by foundation)
+        vm.prank(kycApprover);
+        builderRegistry.revokeBuilderKYC(_highRewardBuilder);
+
+        // WHEN governor tries to set maxRewardPercentage to 60% (lower than deactivated builder's 80%)
+        uint256 _newMaxRewardPercentage = 0.6 ether;
+        uint256 _oldMaxRewardPercentage = builderRegistry.maxRewardPercentage();
+
+        vm.prank(governor);
+        vm.expectEmit();
+        emit MaxRewardPercentageUpdated(_oldMaxRewardPercentage, _newMaxRewardPercentage);
+        builderRegistry.updateMaxRewardPercentage(_newMaxRewardPercentage);
+
+        // THEN maxRewardPercentage is updated successfully (deactivated builder is ignored)
+        assertEq(builderRegistry.maxRewardPercentage(), _newMaxRewardPercentage);
+    }
+
+    /**
+     * SCENARIO: builder reward percentage validation uses the updated max value
+     */
+    function test_BuilderRewardPercentageValidationWithUpdatedMax() public {
+        // GIVEN maxRewardPercentage is updated to 60% (higher than existing 50% builders)
+        uint256 _newMaxRewardPercentage = 0.6 ether;
+        vm.prank(governor);
+        builderRegistry.updateMaxRewardPercentage(_newMaxRewardPercentage);
+
+        // GIVEN two different builder addresses
+        address _builder1 = makeAddr("testBuilder1");
+        address _builder2 = makeAddr("testBuilder2");
+
+        // WHEN trying to initialize a builder with 70% reward percentage
+        vm.prank(kycApprover);
+        vm.expectRevert(BuilderRegistryRootstockCollective.InvalidBackerRewardPercentage.selector);
+        builderRegistry.initializeBuilder(_builder1, _builder1, 0.7 ether); // 70%
+
+        // WHEN trying to initialize a builder with 50% reward percentage (within limit)
+        vm.prank(kycApprover);
+        builderRegistry.initializeBuilder(_builder2, _builder2, 0.5 ether); // 50%
+
+        // THEN builder is successfully initialized
+        (bool _initialized,,,,,,) = builderRegistry.builderState(_builder2);
+        assertTrue(_initialized);
     }
 }
