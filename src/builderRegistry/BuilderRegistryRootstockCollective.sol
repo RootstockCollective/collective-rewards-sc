@@ -633,7 +633,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
             GaugeRootstockCollective _gauge = GaugeRootstockCollective(_gauges.at(i));
             // Only consider the next reward percentage since it's the one that will be applied after the cooldown
             RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[gaugeToBuilder[_gauge]];
-            if (_rewardPercentageData.next > maxRewardPercentage_) {
+            if (maxRewardPercentage_ < _rewardPercentageData.next) {
                 revert MaxRewardPercentageTooLow();
             }
         }
