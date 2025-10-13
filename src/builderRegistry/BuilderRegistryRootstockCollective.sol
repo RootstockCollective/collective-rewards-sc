@@ -631,13 +631,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
         for (uint256 i = 0; i < _gaugesLength; ++i) {
             GaugeRootstockCollective _gauge = GaugeRootstockCollective(_gauges.at(i));
-            // Only consider builders with gauge and community approved
-            address _builder = gaugeToBuilder[_gauge];
-            BuilderState memory _builderState = builderState[_builder];
-
             // Only consider the next reward percentage since it's the one that will be applied after the cooldown
-            // period
-            RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[_builder];
+            RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[gaugeToBuilder[_gauge]];
             if (_rewardPercentageData.next > maxRewardPercentage_) {
                 revert MaxRewardPercentageTooLow();
             }
