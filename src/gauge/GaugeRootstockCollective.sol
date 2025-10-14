@@ -265,6 +265,12 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @notice claim rewards for a `backer_` address
      * @dev reverts if is not called by the `backer_` or the backersManager
      * @param backer_ address who receives the rewards
+     *
+     * @dev REENTRANCY CONSIDERATION:
+     *  This function is called from BackersManagerRootstockCollective.claimBackerRewards(),
+     *  which currently does NOT have nonReentrant protection.
+     *  If you modify this function to add external calls,
+     *  consider whether BackersManager.claimBackerRewards() needs nonReentrant protection.
      */
     function claimBackerReward(address backer_) external {
         claimBackerReward(rifToken, backer_);
@@ -278,6 +284,12 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native tokens address
      * @param backer_ address who receives the rewards
+     *
+     * @dev REENTRANCY CONSIDERATION:
+     *  This function is called from BackersManagerRootstockCollective.claimBackerRewards(),
+     *  which currently does NOT have nonReentrant protection.
+     *  If you modify this function to add external calls,
+     *  consider whether BackersManager.claimBackerRewards() needs nonReentrant protection.
      */
     function claimBackerReward(address rewardToken_, address backer_) public {
         if (msg.sender != backer_ && msg.sender != address(backersManager)) revert NotAuthorized();
@@ -347,6 +359,11 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @return allocationDeviation_ deviation between current allocation and the new one
      * @return rewardSharesDeviation_  deviation between current reward shares and the new one
      * @return isNegative_ true if new allocation is lesser than the current one
+     *
+     * @dev REENTRANCY CONSIDERATION:
+     *  This function is called from BackersManagerRootstockCollective.allocate() and allocateBatch(),
+     *  which currently do NOT have nonReentrant protection. Any external calls, callbacks, or hooks
+     *  added to this function could enable reentrancy attacks on BackersManager.
      */
     function allocate(
         address backer_,
@@ -445,6 +462,11 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param cycleStart_ Collective Rewards cycle start timestamp
      * @param cycleDuration_ Collective Rewards cycle time duration
      * @return newGaugeRewardShares_ new gauge rewardShares, updated after the distribution
+     *
+     * @dev REENTRANCY CONSIDERATION:
+     *  This function is called from two places in BackersManager: _gaugeDistribute() and resumeGaugeShares()
+     *  If you add additional external calls or hooks,
+     *  consider that BackersManager.resumeGaugeShares() needs nonReentrant protection.
      */
     function notifyRewardAmountAndUpdateShares(
         uint256 amountRif_,
