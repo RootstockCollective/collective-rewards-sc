@@ -40,6 +40,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error ZeroAddressNotAllowed();
     error BuilderRewardsLocked();
     error InvalidIndex();
+    error InvalidMaxRewardPercentage();
+    error MaxRewardPercentageTooLow();
 
     // -----------------------------
     // ----------- Events ----------
@@ -58,6 +60,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     event RewardReceiverUpdateCancelled(address indexed builder_, address newRewardReceiver_);
     event RewardReceiverUpdated(address indexed builder_, address newRewardReceiver_);
     event GaugeCreated(address indexed builder_, address indexed gauge_, address creator_);
+    event MaxRewardPercentageUpdated(uint256 oldMaxRewardPercentage_, uint256 newMaxRewardPercentage_);
 
     // -----------------------------
     // --------- Modifiers ---------
@@ -76,6 +79,11 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         if (msg.sender != address(backersManager)) {
             revert NotAuthorized();
         }
+        _;
+    }
+
+    modifier onlyAuthorizedChanger() {
+        governanceManager.validateAuthorizedChanger(msg.sender);
         _;
     }
 
@@ -133,6 +141,8 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     uint128 public rewardPercentageCooldown;
     /// @notice address of the BackersManagerRootstockCollective contract
     BackersManagerRootstockCollective public backersManager;
+    /// @notice maximum allowed reward percentage for builders (configurable by governance)
+    uint256 public maxRewardPercentage;
 
     // -----------------------------
     // ------- Initializer ---------
@@ -166,6 +176,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         gaugeFactory = GaugeFactoryRootstockCollective(gaugeFactory_);
         rewardDistributor = rewardDistributor_;
         rewardPercentageCooldown = rewardPercentageCooldown_;
+        maxRewardPercentage = _MAX_REWARD_PERCENTAGE;
     }
 
     /**
@@ -177,6 +188,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      */
     function initializeV3(GaugeFactoryRootstockCollective gaugeFactory_) external reinitializer(3) {
         gaugeFactory = gaugeFactory_;
+        maxRewardPercentage = _MAX_REWARD_PERCENTAGE;
     }
 
     // -----------------------------
@@ -378,7 +390,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         if (!builderState[msg.sender].communityApproved) revert BuilderNotCommunityApproved();
         if (!builderState[msg.sender].selfPaused) revert BuilderNotSelfPaused();
 
-        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
+        if (rewardPercentage_ > maxRewardPercentage) {
             revert InvalidBackerRewardPercentage();
         }
 
@@ -432,8 +444,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     function setBackerRewardPercentage(uint64 rewardPercentage_) external {
         if (!isBuilderOperational(msg.sender)) revert BuilderNotOperational();
 
-        // TODO: should we have a minimal amount?
-        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
+        if (rewardPercentage_ > maxRewardPercentage) {
             revert InvalidBackerRewardPercentage();
         }
 
@@ -585,9 +596,48 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         return _haltedGauges.contains(gauge_);
     }
 
+    /**
+     * @notice Updates the maximum allowed reward percentage for builders
+     * @dev Only callable by configurator, governor, or authorized changer
+     * @param maxRewardPercentage_ The maximum reward percentage (100% == 1 ether)
+     */
+    function updateMaxRewardPercentage(uint256 maxRewardPercentage_) external onlyAuthorizedChanger {
+        if (maxRewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
+            revert InvalidMaxRewardPercentage();
+        }
+
+        // Validate that the new max reward percentage is higher than all active builders' current reward percentages
+        _validateMaxRewardPercentageAgainstActiveBuilders(maxRewardPercentage_);
+
+        uint256 _oldMaxRewardPercentage = maxRewardPercentage;
+        maxRewardPercentage = maxRewardPercentage_;
+
+        emit MaxRewardPercentageUpdated(_oldMaxRewardPercentage, maxRewardPercentage_);
+    }
+
     // -----------------------------
     // ---- Internal Functions -----
     // -----------------------------
+
+    /**
+     * @notice Validates that the new max reward percentage is higher or equal to all active builders' next reward
+     * percentages
+     * @dev Iterates through all operational gauges and checks their builders' reward percentages
+     * @dev builder with kyc revoked will not be considered, same as self paused builders
+     * @param maxRewardPercentage_ The new maximum reward percentage to validate
+     */
+    function _validateMaxRewardPercentageAgainstActiveBuilders(uint256 maxRewardPercentage_) internal view {
+        uint256 _gaugesLength = _gauges.length();
+
+        for (uint256 i = 0; i < _gaugesLength; ++i) {
+            GaugeRootstockCollective _gauge = GaugeRootstockCollective(_gauges.at(i));
+            // Only consider the next reward percentage since it's the one that will be applied after the cooldown
+            RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[gaugeToBuilder[_gauge]];
+            if (maxRewardPercentage_ < _rewardPercentageData.next) {
+                revert MaxRewardPercentageTooLow();
+            }
+        }
+    }
 
     /**
      * @notice creates a new gauge for a builder
@@ -677,7 +727,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
         builderState[builder_].kycApproved = true;
         rewardReceiver[builder_] = rewardReceiver_;
         // TODO: should we have a minimal amount?
-        if (rewardPercentage_ > _MAX_REWARD_PERCENTAGE) {
+        if (rewardPercentage_ > maxRewardPercentage) {
             revert InvalidBackerRewardPercentage();
         }
 
