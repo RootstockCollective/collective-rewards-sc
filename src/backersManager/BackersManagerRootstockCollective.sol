@@ -4,8 +4,7 @@ pragma solidity 0.8.24;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
-import { ReentrancyGuardTransientUpgradeable } from
-    "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardTransientUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { BuilderRegistryRootstockCollective } from "../builderRegistry/BuilderRegistryRootstockCollective.sol";
@@ -23,7 +22,7 @@ contract BackersManagerRootstockCollective is
     CycleTimeKeeperRootstockCollective,
     ICollectiveRewardsCheckRootstockCollective,
     ERC165Upgradeable,
-    ReentrancyGuardTransientUpgradeable
+    ReentrancyGuardUpgradeable
 {
     // -----------------------------
     // ------- Custom Errors -------
@@ -182,7 +181,7 @@ contract BackersManagerRootstockCollective is
         __CycleTimeKeeperRootstockCollective_init(
             governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
         );
-        __ReentrancyGuardTransient_init();
+        __ReentrancyGuard_init();
         rifToken = rifToken_;
         usdrifToken = usdrifToken_;
         stakingToken = IERC20(stakingToken_);
