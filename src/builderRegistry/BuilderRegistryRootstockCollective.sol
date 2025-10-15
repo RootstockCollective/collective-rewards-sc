@@ -623,18 +623,38 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @notice Validates that the new max reward percentage is higher or equal to all active builders' next reward
      * percentages
      * @dev Iterates through all operational gauges and checks their builders' reward percentages
-     * @dev builder with kyc revoked will not be considered, same as self paused builders
+     * @dev Also iterates through halted gauges and checks KYC-revoked builders (they can come back without changing
+     * reward percentage)
+     * @dev Self-paused builders are not checked since they must set a new reward percentage when unpausing
      * @param maxRewardPercentage_ The new maximum reward percentage to validate
      */
     function _validateMaxRewardPercentageAgainstActiveBuilders(uint256 maxRewardPercentage_) internal view {
+        // Check all operational gauges
         uint256 _gaugesLength = _gauges.length();
-
         for (uint256 i = 0; i < _gaugesLength; ++i) {
             GaugeRootstockCollective _gauge = GaugeRootstockCollective(_gauges.at(i));
+            address _builder = gaugeToBuilder[_gauge];
             // Only consider the next reward percentage since it's the one that will be applied after the cooldown
-            RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[gaugeToBuilder[_gauge]];
+            RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[_builder];
             if (maxRewardPercentage_ < _rewardPercentageData.next) {
                 revert MaxRewardPercentageTooLow();
+            }
+        }
+
+        // Check halted gauges for builders that can resume without changing their reward percentage
+        uint256 _haltedGaugesLength = _haltedGauges.length();
+        for (uint256 i = 0; i < _haltedGaugesLength; ++i) {
+            GaugeRootstockCollective _gauge = GaugeRootstockCollective(_haltedGauges.at(i));
+            address _builder = gaugeToBuilder[_gauge];
+            BuilderState memory _builderState = builderState[_builder];
+
+            // Only check KYC-revoked builders (they can resume via approveBuilderKYC without changing reward %)
+            // Skip self-paused builders (they must set new reward % when calling unpauseSelf)
+            if (!_builderState.kycApproved && !_builderState.selfPaused) {
+                RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[_builder];
+                if (maxRewardPercentage_ < _rewardPercentageData.next) {
+                    revert MaxRewardPercentageTooLow();
+                }
             }
         }
     }
