@@ -984,9 +984,9 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: updateMaxRewardPercentage ignores deactivated builders when validating
+     * SCENARIO: updateMaxRewardPercentage validates KYC-revoked builders (they can resume without changing reward %)
      */
-    function test_UpdateMaxRewardPercentageIgnoresDeactivatedBuilders() public {
+    function test_RevertUpdateMaxRewardPercentageWithKYCRevokedBuilder() public {
         // GIVEN a builder with high reward percentage
         address _highRewardBuilder = makeAddr("highRewardBuilder");
         vm.prank(kycApprover);
@@ -996,11 +996,36 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         vm.prank(governor);
         builderRegistry.communityApproveBuilder(_highRewardBuilder);
 
-        // AND the builder is then KYC revoked (deactivated by foundation)
+        // AND the builder is then KYC revoked
         vm.prank(kycApprover);
         builderRegistry.revokeBuilderKYC(_highRewardBuilder);
 
-        // WHEN governor tries to set maxRewardPercentage to 60% (lower than deactivated builder's 80%)
+        // WHEN governor tries to set maxRewardPercentage to 60% (lower than KYC-revoked builder's 80%)
+        uint256 _newMaxRewardPercentage = 0.6 ether;
+
+        vm.prank(governor);
+        vm.expectRevert(BuilderRegistryRootstockCollective.MaxRewardPercentageTooLow.selector);
+        builderRegistry.updateMaxRewardPercentage(_newMaxRewardPercentage);
+    }
+
+    /**
+     * SCENARIO: updateMaxRewardPercentage ignores self-paused builders (they must set new reward % to resume)
+     */
+    function test_UpdateMaxRewardPercentageIgnoresSelfPausedBuilders() public {
+        // GIVEN a builder with high reward percentage
+        address _highRewardBuilder = makeAddr("highRewardBuilder");
+        vm.prank(kycApprover);
+        builderRegistry.initializeBuilder(_highRewardBuilder, _highRewardBuilder, 0.8 ether); // 80%
+
+        // AND the builder is community approved (gets a gauge)
+        vm.prank(governor);
+        builderRegistry.communityApproveBuilder(_highRewardBuilder);
+
+        // AND the builder self-pauses
+        vm.prank(_highRewardBuilder);
+        builderRegistry.pauseSelf();
+
+        // WHEN governor tries to set maxRewardPercentage to 60% (lower than self-paused builder's 80%)
         uint256 _newMaxRewardPercentage = 0.6 ether;
         uint256 _oldMaxRewardPercentage = builderRegistry.maxRewardPercentage();
 
@@ -1009,8 +1034,33 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         emit MaxRewardPercentageUpdated(_oldMaxRewardPercentage, _newMaxRewardPercentage);
         builderRegistry.updateMaxRewardPercentage(_newMaxRewardPercentage);
 
-        // THEN maxRewardPercentage is updated successfully (deactivated builder is ignored)
+        // THEN maxRewardPercentage is updated successfully (self-paused builder is ignored)
         assertEq(builderRegistry.maxRewardPercentage(), _newMaxRewardPercentage);
+    }
+
+    /**
+     * SCENARIO: updateMaxRewardPercentage validates KYC-paused builders (they can resume without changing reward %)
+     */
+    function test_RevertUpdateMaxRewardPercentageWithKYCPausedBuilder() public {
+        // GIVEN a builder with high reward percentage
+        address _highRewardBuilder = makeAddr("highRewardBuilder");
+        vm.prank(kycApprover);
+        builderRegistry.initializeBuilder(_highRewardBuilder, _highRewardBuilder, 0.8 ether); // 80%
+
+        // AND the builder is community approved (gets a gauge)
+        vm.prank(governor);
+        builderRegistry.communityApproveBuilder(_highRewardBuilder);
+
+        // AND the builder is then KYC paused
+        vm.prank(kycApprover);
+        builderRegistry.pauseBuilderKYC(_highRewardBuilder, "test reason");
+
+        // WHEN governor tries to set maxRewardPercentage to 60% (lower than KYC-paused builder's 80%)
+        uint256 _newMaxRewardPercentage = 0.6 ether;
+
+        vm.prank(governor);
+        vm.expectRevert(BuilderRegistryRootstockCollective.MaxRewardPercentageTooLow.selector);
+        builderRegistry.updateMaxRewardPercentage(_newMaxRewardPercentage);
     }
 
     /**
