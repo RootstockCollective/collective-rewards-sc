@@ -23,8 +23,8 @@ contract Deploy is Broadcaster {
                 IGovernanceManagerRootstockCollective(governanceManager_), _gaugeImplementation
             );
         }
-        return new GaugeBeaconRootstockCollective{ salt: _salt }(
-            IGovernanceManagerRootstockCollective(governanceManager_), _gaugeImplementation
-        );
+        return new GaugeBeaconRootstockCollective{
+            salt: _salt
+        }(IGovernanceManagerRootstockCollective(governanceManager_), _gaugeImplementation);
     }
 }

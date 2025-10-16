@@ -58,8 +58,9 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         require(usdrifToken_ != address(0), "USDRIF token address cannot be zero");
         require(gaugeBeacon_ != address(0), "Gauge beacon address cannot be zero");
 
-        upgradeV3_ =
-            _deployUpgradeV3(backersManagerProxy_, rewardDistributorProxyV2_, configurator_, usdrifToken_, gaugeBeacon_);
+        upgradeV3_ = _deployUpgradeV3(
+            backersManagerProxy_, rewardDistributorProxyV2_, configurator_, usdrifToken_, gaugeBeacon_
+        );
 
         if (!writeDeployment_) return upgradeV3_;
 

@@ -20,12 +20,7 @@ contract DistributionHandler is BaseHandler {
         usdrifToken = baseTest_.usdrifToken();
     }
 
-    function startDistribution(
-        uint256 amountRif_,
-        uint256 amountUsdrif_,
-        uint256 amountNative_,
-        uint256 timeToSkip_
-    )
+    function startDistribution(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_, uint256 timeToSkip_)
         external
         skipTime(timeToSkip_)
     {

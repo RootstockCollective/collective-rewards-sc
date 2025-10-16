@@ -82,10 +82,8 @@ contract BaseFuzz is BaseTest {
         uint256 _rewards;
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (gaugesArray[i].totalAllocation() > 0) {
-                _rewards += (
-                    (_calcGaugeReward(amount_, i) - _calcBuilderReward(amount_, i))
-                        * gaugesArray[i].allocationOf(backersArray[backerIndex_])
-                ) / gaugesArray[i].totalAllocation();
+                _rewards += ((_calcGaugeReward(amount_, i) - _calcBuilderReward(amount_, i))
+                    * gaugesArray[i].allocationOf(backersArray[backerIndex_])) / gaugesArray[i].totalAllocation();
             }
         }
         return _rewards;

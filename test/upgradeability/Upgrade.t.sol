@@ -40,8 +40,9 @@ contract UpgradeTest is BaseTest {
         rewardDistributor.upgradeToAndCall(
             address(_rewardDistributorNewImpl), abi.encodeCall(_rewardDistributorNewImpl.initializeMock, (43))
         );
-        uint256 _newVar = RewardDistributorRootstockCollectiveUpgradeMock(payable(rewardDistributor)).getCustomMockValue(
-        ) - (uint256(uint160(foundation)));
+        uint256 _newVar =
+            RewardDistributorRootstockCollectiveUpgradeMock(payable(rewardDistributor)).getCustomMockValue()
+            - (uint256(uint160(foundation)));
         // THEN getCustomMockValue is foundation address + 43 newVariable
         assertEq(_newVar, 43);
     }
@@ -59,8 +60,9 @@ contract UpgradeTest is BaseTest {
         governanceManager.upgradeToAndCall(
             address(_governanceManagerNewImpl), abi.encodeCall(_governanceManagerNewImpl.initializeMock, (45))
         );
-        uint256 _newVar = GovernanceManagerRootstockCollectiveUpgradeMock(address(governanceManager)).getCustomMockValue(
-        ) - (uint256(uint160(governor)));
+        uint256 _newVar =
+            GovernanceManagerRootstockCollectiveUpgradeMock(address(governanceManager)).getCustomMockValue()
+            - (uint256(uint160(governor)));
         // THEN getCustomMockValue is governor address + 45 newVariable
         assertEq(_newVar, 45);
     }

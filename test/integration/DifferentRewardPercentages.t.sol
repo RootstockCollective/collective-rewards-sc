@@ -28,7 +28,7 @@ contract DifferentRewardPercentages is BaseTest {
         _whitelistBuilder(_builder5, _builder5, 1 ether);
     }
 
-    /* 
+    /*
      * SCENARIO: there are several builders with different backer rewards percentage. They all receive the correct
      *  amount of rewards
      */
@@ -149,7 +149,7 @@ contract DifferentRewardPercentages is BaseTest {
         assertEq(_clearNativeBalance(builders[4]), 0 ether);
     }
 
-    /* 
+    /*
     * SCENARIO: there are several builders with different backer rewards percentage and voters remove votes during the
      *  cycle. They all receive the correct amount of rewards
      */

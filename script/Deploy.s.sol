@@ -13,10 +13,12 @@ import { GaugeFactoryRootstockCollective } from "src/gauge/GaugeFactoryRootstock
 import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
-import { Deploy as RewardDistributorRootstockCollectiveDeployer } from
-    "script/RewardDistributorRootstockCollective.s.sol";
-import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
-    "script/governance/GovernanceManagerRootstockCollective.s.sol";
+import {
+    Deploy as RewardDistributorRootstockCollectiveDeployer
+} from "script/RewardDistributorRootstockCollective.s.sol";
+import {
+    Deploy as GovernanceManagerRootstockCollectiveDeployer
+} from "script/governance/GovernanceManagerRootstockCollective.s.sol";
 
 contract Deploy is Broadcaster, OutputWriter {
     address private _rifTokenAddress;
@@ -53,9 +55,8 @@ contract Deploy is Broadcaster, OutputWriter {
         (
             GovernanceManagerRootstockCollective _governanceManagerProxy,
             GovernanceManagerRootstockCollective _governanceManagerImpl
-        ) = new GovernanceManagerRootstockCollectiveDeployer().run(
-            _governorAddress, _foundationTreasuryAddress, _kycApproverAddress, _upgrader
-        );
+        ) = new GovernanceManagerRootstockCollectiveDeployer()
+            .run(_governorAddress, _foundationTreasuryAddress, _kycApproverAddress, _upgrader);
         saveWithProxy(
             "GovernanceManagerRootstockCollective", address(_governanceManagerImpl), address(_governanceManagerProxy)
         );
@@ -64,9 +65,8 @@ contract Deploy is Broadcaster, OutputWriter {
             new GaugeBeaconRootstockCollectiveDeployer().run(address(_governanceManagerProxy));
         save("GaugeBeaconRootstockCollective", address(_gaugeBeacon));
 
-        GaugeFactoryRootstockCollective _gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(
-            address(_gaugeBeacon), _rifTokenAddress, _usdrifTokenAddress
-        );
+        GaugeFactoryRootstockCollective _gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer()
+            .run(address(_gaugeBeacon), _rifTokenAddress, _usdrifTokenAddress);
         save("GaugeFactoryRootstockCollective", address(_gaugeFactory));
 
         (
@@ -77,28 +77,32 @@ contract Deploy is Broadcaster, OutputWriter {
             "RewardDistributorRootstockCollective", address(_rewardDistributorImpl), address(_rewardDistributorProxy)
         );
 
-        (BackersManagerRootstockCollective _backersManagerProxy, BackersManagerRootstockCollective _backersManagerImpl)
-        = new BackersManagerRootstockCollectiveDeployer().run(
-            address(_governanceManagerProxy),
-            _rifTokenAddress,
-            _usdrifTokenAddress,
-            _stakingTokenAddress,
-            _cycleDuration,
-            _cycleStartOffset,
-            _distributionDuration,
-            _maxDistributionsPerBatch
-        );
+        (
+            BackersManagerRootstockCollective _backersManagerProxy,
+            BackersManagerRootstockCollective _backersManagerImpl
+        ) = new BackersManagerRootstockCollectiveDeployer()
+            .run(
+                address(_governanceManagerProxy),
+                _rifTokenAddress,
+                _usdrifTokenAddress,
+                _stakingTokenAddress,
+                _cycleDuration,
+                _cycleStartOffset,
+                _distributionDuration,
+                _maxDistributionsPerBatch
+            );
         saveWithProxy("BackersManagerRootstockCollective", address(_backersManagerImpl), address(_backersManagerProxy));
 
         (
             BuilderRegistryRootstockCollective _builderRegistryProxy,
             BuilderRegistryRootstockCollective _builderRegistryImpl
-        ) = new BuilderRegistryRootstockCollectiveDeployer().run(
-            address(_backersManagerProxy),
-            address(_gaugeFactory),
-            address(_rewardDistributorProxy),
-            _rewardPercentageCooldown
-        );
+        ) = new BuilderRegistryRootstockCollectiveDeployer()
+            .run(
+                address(_backersManagerProxy),
+                address(_gaugeFactory),
+                address(_rewardDistributorProxy),
+                _rewardPercentageCooldown
+            );
         saveWithProxy(
             "BuilderRegistryRootstockCollective", address(_builderRegistryImpl), address(_builderRegistryProxy)
         );
