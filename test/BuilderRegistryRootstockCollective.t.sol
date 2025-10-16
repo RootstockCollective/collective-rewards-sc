@@ -1089,4 +1089,105 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         (bool _initialized,,,,,,) = builderRegistry.builderState(_builder2);
         assertTrue(_initialized);
     }
+
+    /**
+     * SCENARIO: updateMaxRewardPercentage validates scheduled (next) reward percentage during cooldown
+     */
+    function test_RevertUpdateMaxRewardPercentageWithScheduledHighPercentage() public {
+        // GIVEN an operational builder schedules a high reward percentage change
+        vm.prank(builder);
+        builderRegistry.setBackerRewardPercentage(0.8 ether); // 80% scheduled, cooldown active
+
+        // Verify cooldown is still active (next hasn't been applied yet)
+        (, uint64 _next, uint128 _cooldownEndTime) = builderRegistry.backerRewardPercentage(builder);
+        assertEq(_next, 0.8 ether);
+        assertTrue(block.timestamp < _cooldownEndTime);
+
+        // WHEN governor tries to set maxRewardPercentage to 60% (lower than scheduled 80%)
+        vm.prank(governor);
+        vm.expectRevert(BuilderRegistryRootstockCollective.MaxRewardPercentageTooLow.selector);
+        builderRegistry.updateMaxRewardPercentage(0.6 ether);
+    }
+
+    /**
+     * SCENARIO: updateMaxRewardPercentage ignores builders that are both KYC-revoked and self-paused
+     */
+    function test_UpdateMaxRewardPercentageIgnoresKYCRevokedAndSelfPausedBuilder() public {
+        // GIVEN a builder with high reward percentage (80%)
+        address _highRewardBuilder = makeAddr("highRewardBuilder");
+        vm.prank(kycApprover);
+        builderRegistry.initializeBuilder(_highRewardBuilder, _highRewardBuilder, 0.8 ether);
+
+        vm.prank(governor);
+        builderRegistry.communityApproveBuilder(_highRewardBuilder);
+
+        // AND the builder self-pauses
+        vm.prank(_highRewardBuilder);
+        builderRegistry.pauseSelf();
+
+        // AND the builder's KYC is then revoked
+        vm.prank(kycApprover);
+        builderRegistry.revokeBuilderKYC(_highRewardBuilder);
+
+        // WHEN governor sets maxRewardPercentage to 60% (lower than builder's 80%)
+        uint256 _newMaxRewardPercentage = 0.6 ether;
+
+        vm.prank(governor);
+        builderRegistry.updateMaxRewardPercentage(_newMaxRewardPercentage);
+
+        // THEN update succeeds (builder with both flags is ignored per line 652)
+        assertEq(builderRegistry.maxRewardPercentage(), _newMaxRewardPercentage);
+    }
+
+    /**
+     * SCENARIO: updateMaxRewardPercentage ignores community-banned builders
+     */
+    function test_UpdateMaxRewardPercentageIgnoresCommunityBannedBuilder() public {
+        // GIVEN a builder with high reward percentage (80%)
+        address _highRewardBuilder = makeAddr("highRewardBuilder");
+        vm.prank(kycApprover);
+        builderRegistry.initializeBuilder(_highRewardBuilder, _highRewardBuilder, 0.8 ether);
+
+        vm.prank(governor);
+        builderRegistry.communityApproveBuilder(_highRewardBuilder);
+
+        // AND the builder is then community banned
+        vm.prank(governor);
+        builderRegistry.communityBanBuilder(_highRewardBuilder);
+
+        // Verify builder is not community approved
+        (,, bool _communityApproved,,,,) = builderRegistry.builderState(_highRewardBuilder);
+        assertFalse(_communityApproved);
+
+        // WHEN governor sets maxRewardPercentage to 60% (lower than banned builder's 80%)
+        uint256 _newMaxRewardPercentage = 0.6 ether;
+
+        vm.prank(governor);
+        builderRegistry.updateMaxRewardPercentage(_newMaxRewardPercentage);
+
+        // THEN update succeeds (community-banned builder is ignored)
+        assertEq(builderRegistry.maxRewardPercentage(), _newMaxRewardPercentage);
+    }
+
+    /**
+     * SCENARIO: initializeBuilder should revert if there are already 2000 builders (gauges)
+     */
+    function test_RevertMaxNumberOfBuildersReached() public {
+        // GIVEN 2 builders are already initialized and community approved in setUp (creating 2 gauges)
+        // WHEN kycApprover initializes and community approves 1998 more builders (reaching total of 2000 gauges)
+        for (uint256 i = 0; i < 1998; i++) {
+            address _builder = address(uint160(0x1000000 + i));
+            vm.prank(kycApprover);
+            builderRegistry.initializeBuilder(_builder, _builder, 0);
+            vm.prank(governor);
+            builderRegistry.communityApproveBuilder(_builder);
+        }
+
+        // WHEN kycApprover tries to initialize one more builder (which would create the 2001st gauge)
+        address _newBuilder = makeAddr("builder2001");
+        vm.prank(kycApprover);
+        // THEN tx reverts because max number of builders is reached
+        vm.expectRevert(BuilderRegistryRootstockCollective.MaxNumberOfBuildersReached.selector);
+        builderRegistry.initializeBuilder(_newBuilder, _newBuilder, 0);
+    }
 }
