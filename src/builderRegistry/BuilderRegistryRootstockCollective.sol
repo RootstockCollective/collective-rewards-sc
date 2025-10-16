@@ -16,7 +16,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_REWARD_PERCENTAGE = UtilsLib._PRECISION;
-    uint256 internal constant _MAX_BUILDERS = 2000;
+    uint256 internal constant _MAX_BUILDERS = 1000;
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
