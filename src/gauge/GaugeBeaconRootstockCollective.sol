@@ -12,10 +12,7 @@ contract GaugeBeaconRootstockCollective is UpgradeableBeacon {
      * @param governanceManager_ contract with permissioned roles
      * @param gaugeImplementation_ address of the Gauge initial implementation
      */
-    constructor(
-        IGovernanceManagerRootstockCollective governanceManager_,
-        address gaugeImplementation_
-    )
+    constructor(IGovernanceManagerRootstockCollective governanceManager_, address gaugeImplementation_)
         UpgradeableBeacon(gaugeImplementation_, governanceManager_.governor())
     {
         governanceManager = governanceManager_;

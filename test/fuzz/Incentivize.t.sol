@@ -85,15 +85,17 @@ contract IncentivizeFuzzTest is BaseFuzz {
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rifToken.balanceOf(backersArray[i]), _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether
+                rifToken.balanceOf(backersArray[i]),
+                _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 2, i),
+                0.000_000_001 ether
             );
             assertApproxEqAbs(
                 usdrifToken.balanceOf(backersArray[i]),
                 _calcBackerReward(URT_DISTRIBUTION_AMOUNT * 2, i),
-                0.000000001 ether
+                0.000_000_001 ether
             );
             assertApproxEqAbs(
-                backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether
+                backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 2, i), 0.000_000_001 ether
             );
         }
 
@@ -101,24 +103,24 @@ contract IncentivizeFuzzTest is BaseFuzz {
         //  otherwise, they are considered in the rewardRate for following allocations(aka rewardMissing)
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (gaugesArray[i].totalAllocation() > 0) {
-                assertApproxEqAbs(rifToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
-                assertApproxEqAbs(usdrifToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
-                assertApproxEqAbs(address(gaugesArray[i]).balance, 0, 0.000000001 ether);
+                assertApproxEqAbs(rifToken.balanceOf(address(gaugesArray[i])), 0, 0.000_000_001 ether);
+                assertApproxEqAbs(usdrifToken.balanceOf(address(gaugesArray[i])), 0, 0.000_000_001 ether);
+                assertApproxEqAbs(address(gaugesArray[i]).balance, 0, 0.000_000_001 ether);
             } else {
                 assertApproxEqAbs(
                     gaugesArray[i].rewardRate(address(rifToken)) / 10 ** 18,
                     rewardsAdded[gaugesArray[i]] / cycleDuration,
-                    0.000000001 ether
+                    0.000_000_001 ether
                 );
                 assertApproxEqAbs(
                     gaugesArray[i].rewardRate(address(usdrifToken)) / 10 ** 18,
                     rewardsAdded[gaugesArray[i]] / cycleDuration,
-                    0.000000001 ether
+                    0.000_000_001 ether
                 );
                 assertApproxEqAbs(
                     gaugesArray[i].rewardRate(UtilsLib._NATIVE_ADDRESS) / 10 ** 18,
                     rewardsAdded[gaugesArray[i]] / cycleDuration,
-                    0.000000001 ether
+                    0.000_000_001 ether
                 );
             }
         }
@@ -128,9 +130,10 @@ contract IncentivizeFuzzTest is BaseFuzz {
         uint256 _rewards;
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (gaugesArray[i].totalAllocation() > 0) {
-                _rewards += (
-                    rewardsAdded[gaugesArray[i]] + _calcGaugeReward(amount_, i) - _calcBuilderReward(amount_, i)
-                ) * gaugesArray[i].allocationOf(backersArray[backerIndex_]) / gaugesArray[i].totalAllocation();
+                _rewards += (rewardsAdded[gaugesArray[i]]
+                    + _calcGaugeReward(amount_, i)
+                    - _calcBuilderReward(amount_, i)) * gaugesArray[i].allocationOf(backersArray[backerIndex_])
+                / gaugesArray[i].totalAllocation();
             }
         }
         return _rewards;

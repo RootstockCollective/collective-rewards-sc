@@ -15,11 +15,7 @@ contract Deploy is Broadcaster {
         return run(_beaconAddress, _rifTokenAddress, _usdrifTokenAddress);
     }
 
-    function run(
-        address beacon_,
-        address rifToken_,
-        address usdrifToken_
-    )
+    function run(address beacon_, address rifToken_, address usdrifToken_)
         public
         broadcast
         returns (GaugeFactoryRootstockCollective)

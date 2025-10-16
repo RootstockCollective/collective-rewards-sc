@@ -68,12 +68,16 @@ contract PauseBuilderKYCFuzzTest is BaseFuzz {
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rifToken.balanceOf(backersArray[i]), _calcBackerReward(RT_DISTRIBUTION_AMOUNT, i), 0.000000001 ether
+                rifToken.balanceOf(backersArray[i]), _calcBackerReward(RT_DISTRIBUTION_AMOUNT, i), 0.000_000_001 ether
             );
             assertApproxEqAbs(
-                usdrifToken.balanceOf(backersArray[i]), _calcBackerReward(URT_DISTRIBUTION_AMOUNT, i), 0.000000001 ether
+                usdrifToken.balanceOf(backersArray[i]),
+                _calcBackerReward(URT_DISTRIBUTION_AMOUNT, i),
+                0.000_000_001 ether
             );
-            assertApproxEqAbs(backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT, i), 0.000000001 ether);
+            assertApproxEqAbs(
+                backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT, i), 0.000_000_001 ether
+            );
         }
     }
 
@@ -143,15 +147,17 @@ contract PauseBuilderKYCFuzzTest is BaseFuzz {
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rifToken.balanceOf(backersArray[i]), _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether
+                rifToken.balanceOf(backersArray[i]),
+                _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 2, i),
+                0.000_000_001 ether
             );
             assertApproxEqAbs(
                 usdrifToken.balanceOf(backersArray[i]),
                 _calcBackerReward(URT_DISTRIBUTION_AMOUNT * 2, i),
-                0.000000001 ether
+                0.000_000_001 ether
             );
             assertApproxEqAbs(
-                backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 2, i), 0.000000001 ether
+                backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 2, i), 0.000_000_001 ether
             );
         }
     }

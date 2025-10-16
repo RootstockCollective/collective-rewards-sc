@@ -348,11 +348,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @return rewardSharesDeviation_  deviation between current reward shares and the new one
      * @return isNegative_ true if new allocation is lesser than the current one
      */
-    function allocate(
-        address backer_,
-        uint256 allocation_,
-        uint256 timeUntilNextCycle_
-    )
+    function allocate(address backer_, uint256 allocation_, uint256 timeUntilNextCycle_)
         external
         onlyAuthorizedContract
         returns (uint256 allocationDeviation_, uint256 rewardSharesDeviation_, bool isNegative_)

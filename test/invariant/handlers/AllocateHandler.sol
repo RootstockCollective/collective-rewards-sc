@@ -26,11 +26,7 @@ contract AllocateHandler is BaseHandler {
         backersManager.allocate(_gauge, _allocation);
     }
 
-    function allocateBatch(
-        uint256[] calldata gaugesIndex_,
-        uint256[] calldata allocations_,
-        uint256 timeToSkip_
-    )
+    function allocateBatch(uint256[] calldata gaugesIndex_, uint256[] calldata allocations_, uint256 timeToSkip_)
         external
         skipTime(timeToSkip_)
     {

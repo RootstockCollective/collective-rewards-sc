@@ -52,23 +52,25 @@ contract DistributionFuzzTest is BaseFuzz {
 
             // THEN they receive the rewards
             assertApproxEqAbs(
-                rifToken.balanceOf(backersArray[i]), _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 3, i), 0.000000001 ether
+                rifToken.balanceOf(backersArray[i]),
+                _calcBackerReward(RT_DISTRIBUTION_AMOUNT * 3, i),
+                0.000_000_001 ether
             );
             assertApproxEqAbs(
                 usdrifToken.balanceOf(backersArray[i]),
                 _calcBackerReward(URT_DISTRIBUTION_AMOUNT * 3, i),
-                0.000000001 ether
+                0.000_000_001 ether
             );
             assertApproxEqAbs(
-                backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 3, i), 0.000000001 ether
+                backersArray[i].balance, _calcBackerReward(CB_DISTRIBUTION_AMOUNT * 3, i), 0.000_000_001 ether
             );
         }
 
         // THEN gauges balances are empty
         for (uint256 i = 0; i < gaugesArray.length; i++) {
-            assertApproxEqAbs(rifToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
-            assertApproxEqAbs(usdrifToken.balanceOf(address(gaugesArray[i])), 0, 0.000000001 ether);
-            assertApproxEqAbs(address(gaugesArray[i]).balance, 0, 0.000000001 ether);
+            assertApproxEqAbs(rifToken.balanceOf(address(gaugesArray[i])), 0, 0.000_000_001 ether);
+            assertApproxEqAbs(usdrifToken.balanceOf(address(gaugesArray[i])), 0, 0.000_000_001 ether);
+            assertApproxEqAbs(address(gaugesArray[i]).balance, 0, 0.000_000_001 ether);
         }
     }
 
@@ -119,11 +121,11 @@ contract DistributionFuzzTest is BaseFuzz {
         // THEN totalPotentialReward is updated considering the new allocations and the time until next cycle
         uint256 _expectedTotalPotentialReward = _totalAllocations * cycleDuration;
         if (_newTotalAllocations > _totalAllocations) {
-            _expectedTotalPotentialReward +=
-                (_newTotalAllocations - _totalAllocations) * backersManager.timeUntilNextCycle(block.timestamp);
+            _expectedTotalPotentialReward += (_newTotalAllocations - _totalAllocations)
+            * backersManager.timeUntilNextCycle(block.timestamp);
         } else {
-            _expectedTotalPotentialReward -=
-                (_totalAllocations - _newTotalAllocations) * backersManager.timeUntilNextCycle(block.timestamp);
+            _expectedTotalPotentialReward -= (_totalAllocations - _newTotalAllocations)
+            * backersManager.timeUntilNextCycle(block.timestamp);
         }
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
@@ -132,10 +134,10 @@ contract DistributionFuzzTest is BaseFuzz {
             uint256 _expectedRewardShares = _gaugesAllocationsBefore[i] * cycleDuration;
             if (gaugesArray[i].totalAllocation() > _gaugesAllocationsBefore[i]) {
                 _expectedRewardShares += (gaugesArray[i].totalAllocation() - _gaugesAllocationsBefore[i])
-                    * backersManager.timeUntilNextCycle(block.timestamp);
+                * backersManager.timeUntilNextCycle(block.timestamp);
             } else {
                 _expectedRewardShares -= (_gaugesAllocationsBefore[i] - gaugesArray[i].totalAllocation())
-                    * backersManager.timeUntilNextCycle(block.timestamp);
+                * backersManager.timeUntilNextCycle(block.timestamp);
             }
             assertEq(gaugesArray[i].rewardShares(), _expectedRewardShares);
         }

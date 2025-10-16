@@ -126,10 +126,10 @@ contract SelfPauseBuilderFuzzTest is BaseFuzz {
                 if (!builderRegistry.isGaugeHalted(address(backersGauges[i][j]))) {
                     if (backersAllocations[i][j] > _allocationBefore) {
                         _expectedTotalPotentialReward += (backersAllocations[i][j] - _allocationBefore)
-                            * backersManager.timeUntilNextCycle(block.timestamp);
+                        * backersManager.timeUntilNextCycle(block.timestamp);
                     } else {
                         _expectedTotalPotentialReward -= (_allocationBefore - backersAllocations[i][j])
-                            * backersManager.timeUntilNextCycle(block.timestamp);
+                        * backersManager.timeUntilNextCycle(block.timestamp);
                     }
                 } else {
                     if (backersAllocations[i][j] > _allocationBefore) {
@@ -311,7 +311,9 @@ contract SelfPauseBuilderFuzzTest is BaseFuzz {
             if (pausedBuilders[builders[i]] == SelfPauseState.paused && _random % 10 > 2) {
                 expectedTotalPotentialReward_ += gaugesArray[i].rewardShares();
                 vm.prank(builders[i]);
-                builderRegistry.unpauseSelf(0.1 ether /*reward percentage*/ );
+                builderRegistry.unpauseSelf(
+                    0.1 ether /*reward percentage*/
+                );
                 pausedBuilders[builders[i]] = SelfPauseState.unpaused;
             }
         }

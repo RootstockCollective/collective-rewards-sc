@@ -206,7 +206,12 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
         // WHEN calls communityApproveBuilder
         //  THEN a GaugeCreated event is emitted
         vm.expectEmit(true, false, true, true); // ignore new gauge address
-        emit GaugeCreated(_newBuilder, /*ignored*/ address(0), governor);
+        emit GaugeCreated(
+            _newBuilder,
+            /*ignored*/
+            address(0),
+            governor
+        );
 
         //  THEN CommunityApproved event is emitted
         vm.expectEmit();

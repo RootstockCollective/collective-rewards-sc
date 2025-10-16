@@ -263,7 +263,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         //  THEN NotifyReward event is emitted
         vm.startPrank(address(incentivizer));
         vm.expectEmit();
-        emit NotifyReward(address(rifToken), 0, /*builderAmount_*/ 100 ether);
+        emit NotifyReward(
+            address(rifToken),
+            0,
+            /*builderAmount_*/
+            100 ether
+        );
         gauge.incentivizeWithRifToken(100 ether);
 
         // THEN rewardPerTokenStored is 0
@@ -312,7 +317,12 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         //  THEN NotifyReward event is emitted
         vm.startPrank(address(incentivizer));
         vm.expectEmit();
-        emit NotifyReward(address(usdrifToken), 0, /*builderAmount_*/ 100 ether);
+        emit NotifyReward(
+            address(usdrifToken),
+            0,
+            /*builderAmount_*/
+            100 ether
+        );
         gauge.incentivizeWithUsdrifToken(100 ether);
 
         // THEN rewardPerTokenStored is 0
@@ -2291,8 +2301,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
      *  at the beginning of an cycle to simulate a distribution
      */
     function _setPeriodFinish() internal {
-        stdstore.target(address(backersManager)).sig("periodFinish()").checked_write(
-            backersManager.cycleNext(block.timestamp)
-        );
+        stdstore.target(address(backersManager)).sig("periodFinish()")
+            .checked_write(backersManager.cycleNext(block.timestamp));
     }
 }
