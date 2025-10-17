@@ -4,7 +4,9 @@ pragma solidity 0.8.24;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {
+    ReentrancyGuardTransientUpgradeable
+} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardTransientUpgradeable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { BuilderRegistryRootstockCollective } from "../builderRegistry/BuilderRegistryRootstockCollective.sol";
@@ -23,7 +25,7 @@ contract BackersManagerRootstockCollective is
     CycleTimeKeeperRootstockCollective,
     ICollectiveRewardsCheckRootstockCollective,
     ERC165Upgradeable,
-    ReentrancyGuardUpgradeable
+    ReentrancyGuardTransientUpgradeable
 {
     // -----------------------------
     // ------- Custom Errors -------
@@ -182,7 +184,7 @@ contract BackersManagerRootstockCollective is
         __CycleTimeKeeperRootstockCollective_init(
             governanceManager_, cycleDuration_, cycleStartOffset_, distributionDuration_
         );
-        __ReentrancyGuard_init();
+        __ReentrancyGuardTransient_init();
         rifToken = rifToken_;
         usdrifToken = usdrifToken_;
         stakingToken = IERC20(stakingToken_);
@@ -312,7 +314,12 @@ contract BackersManagerRootstockCollective is
      * @param amountRif_ amount of ERC20 rif token to send
      * @param amountUsdrif_ amount of ERC20 usdrif token to send
      */
-    function notifyRewardAmount(uint256 amountRif_, uint256 amountUsdrif_) external payable notInDistributionPeriod {
+    function notifyRewardAmount(uint256 amountRif_, uint256 amountUsdrif_)
+        external
+        payable
+        nonReentrant
+        notInDistributionPeriod
+    {
         if (builderRegistry.getGaugesLength() == 0) revert NoGaugesForDistribution();
         if (msg.value > 0) {
             rewardsNative += msg.value;
@@ -360,7 +367,7 @@ contract BackersManagerRootstockCollective is
      * @notice claims backer rewards from a batch of gauges
      * @param gauges_ array of gauges to claim
      */
-    function claimBackerRewards(GaugeRootstockCollective[] memory gauges_) external {
+    function claimBackerRewards(GaugeRootstockCollective[] memory gauges_) external nonReentrant {
         uint256 _length = gauges_.length;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
@@ -375,7 +382,7 @@ contract BackersManagerRootstockCollective is
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native address
      */
-    function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external {
+    function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external nonReentrant {
         uint256 _length = gauges_.length;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
