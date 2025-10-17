@@ -16,6 +16,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     uint256 internal constant _MAX_REWARD_PERCENTAGE = UtilsLib._PRECISION;
+    uint256 internal constant _MAX_BUILDERS = 1000;
     // -----------------------------
     // ------- Custom Errors -------
     // -----------------------------
@@ -42,6 +43,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
     error InvalidIndex();
     error InvalidMaxRewardPercentage();
     error MaxRewardPercentageTooLow();
+    error MaxNumberOfBuildersReached();
 
     // -----------------------------
     // ----------- Events ----------
@@ -594,7 +596,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     /**
      * @notice Updates the maximum allowed reward percentage for builders
-     * @dev Only callable by configurator, governor, or authorized changer
+     * @dev Only callable by governor or authorized changer
      * @param maxRewardPercentage_ The maximum reward percentage (100% == 1 ether)
      */
     function updateMaxRewardPercentage(uint256 maxRewardPercentage_) external onlyAuthorizedChanger {
@@ -619,18 +621,39 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @notice Validates that the new max reward percentage is higher or equal to all active builders' next reward
      * percentages
      * @dev Iterates through all operational gauges and checks their builders' reward percentages
-     * @dev builder with kyc revoked will not be considered, same as self paused builders
+     * @dev Also iterates through halted gauges and checks KYC-revoked builders (they can come back without changing
+     * reward percentage)
+     * @dev Self-paused builders are not checked since they must set a new reward percentage when unpausing
      * @param maxRewardPercentage_ The new maximum reward percentage to validate
      */
     function _validateMaxRewardPercentageAgainstActiveBuilders(uint256 maxRewardPercentage_) internal view {
+        // Check all operational gauges
         uint256 _gaugesLength = _gauges.length();
-
         for (uint256 i = 0; i < _gaugesLength; ++i) {
             GaugeRootstockCollective _gauge = GaugeRootstockCollective(_gauges.at(i));
+            address _builder = gaugeToBuilder[_gauge];
             // Only consider the next reward percentage since it's the one that will be applied after the cooldown
-            RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[gaugeToBuilder[_gauge]];
+            RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[_builder];
             if (maxRewardPercentage_ < _rewardPercentageData.next) {
                 revert MaxRewardPercentageTooLow();
+            }
+        }
+
+        // Check halted gauges for builders that can resume without changing their reward percentage
+        uint256 _haltedGaugesLength = _haltedGauges.length();
+        for (uint256 i = 0; i < _haltedGaugesLength; ++i) {
+            GaugeRootstockCollective _gauge = GaugeRootstockCollective(_haltedGauges.at(i));
+            address _builder = gaugeToBuilder[_gauge];
+            BuilderState memory _builderState = builderState[_builder];
+
+            // Only check KYC-revoked builders (they can resume via approveBuilderKYC without changing reward %)
+            // Consider builders that can be resumed without changing reward %
+            // Skip self-paused builders (they must set new reward % when calling unpauseSelf)
+            if (!_builderState.kycApproved && _builderState.communityApproved && !_builderState.selfPaused) {
+                RewardPercentageData memory _rewardPercentageData = backerRewardPercentage[_builder];
+                if (maxRewardPercentage_ < _rewardPercentageData.next) {
+                    revert MaxRewardPercentageTooLow();
+                }
             }
         }
     }
@@ -714,11 +737,14 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
 
     /**
      * @dev Initializes builder for the first time, setting the reward receiver and the reward percentage
+     * @dev reverts if max number of builders is reached
      *  Sets initialized flag to true. It cannot be switched to false anymore
      *  See {initializeBuilder} for details.
      */
     function _initializeBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
         if (builderState[builder_].initialized) revert BuilderAlreadyInitialized();
+        if (_gauges.length() + _haltedGauges.length() >= _MAX_BUILDERS) revert MaxNumberOfBuildersReached();
+
         builderState[builder_].initialized = true;
         builderState[builder_].kycApproved = true;
         rewardReceiver[builder_] = rewardReceiver_;
