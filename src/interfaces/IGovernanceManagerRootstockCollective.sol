@@ -71,12 +71,7 @@ interface IGovernanceManagerRootstockCollective {
      * @param kycApprover_ account responsible of approving Builder's Know you Costumer policies and Legal requirements
      * @param upgrader_ The initial upgrader address.
      */
-    function initialize(
-        address governor_,
-        address foundationTreasury_,
-        address kycApprover_,
-        address upgrader_
-    )
+    function initialize(address governor_, address foundationTreasury_, address kycApprover_, address upgrader_)
         external;
 
     /**

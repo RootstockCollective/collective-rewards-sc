@@ -8,8 +8,9 @@ import { Deploy as GaugeBeaconRootstockCollectiveDeployer } from "script/gauge/G
 import { Deploy as GaugeFactoryRootstockCollectiveDeployer } from "script/gauge/GaugeFactoryRootstockCollective.s.sol";
 import { Deploy as BackersManagerRootstockCollectiveDeployer } from "script/BackersManagerRootstockCollective.s.sol";
 import { Deploy as BuilderRegistryRootstockCollectiveDeployer } from "script/BuilderRegistryRootstockCollective.s.sol";
-import { Deploy as RewardDistributorRootstockCollectiveDeployer } from
-    "script/RewardDistributorRootstockCollective.s.sol";
+import {
+    Deploy as RewardDistributorRootstockCollectiveDeployer
+} from "script/RewardDistributorRootstockCollective.s.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
 import { StakingTokenMock } from "./mock/StakingTokenMock.sol";
 import { GaugeBeaconRootstockCollective } from "src/gauge/GaugeBeaconRootstockCollective.sol";
@@ -19,8 +20,9 @@ import { BackersManagerRootstockCollective } from "src/backersManager/BackersMan
 import { BuilderRegistryRootstockCollective } from "src/builderRegistry/BuilderRegistryRootstockCollective.sol";
 import { RewardDistributorRootstockCollective } from "src/RewardDistributorRootstockCollective.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { Deploy as GovernanceManagerRootstockCollectiveDeployer } from
-    "script/governance/GovernanceManagerRootstockCollective.s.sol";
+import {
+    Deploy as GovernanceManagerRootstockCollectiveDeployer
+} from "script/governance/GovernanceManagerRootstockCollective.s.sol";
 import { GovernanceManagerRootstockCollective } from "src/governance/GovernanceManagerRootstockCollective.sol";
 
 contract BaseTest is Test {
@@ -76,29 +78,28 @@ contract BaseTest is Test {
         rifToken = _mockTokenDeployer.run(1);
         usdrifToken = _mockTokenDeployer.run(2);
         gaugeBeacon = new GaugeBeaconRootstockCollectiveDeployer().run(address(governanceManager));
-        gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer().run(
-            address(gaugeBeacon), address(rifToken), address(usdrifToken)
-        );
+        gaugeFactory = new GaugeFactoryRootstockCollectiveDeployer()
+            .run(address(gaugeBeacon), address(rifToken), address(usdrifToken));
 
         (rewardDistributor, rewardDistributorImpl) =
             new RewardDistributorRootstockCollectiveDeployer().run(address(governanceManager));
 
-        (backersManager, backersManagerImpl) = new BackersManagerRootstockCollectiveDeployer().run(
-            address(governanceManager),
-            address(rifToken),
-            address(usdrifToken),
-            address(stakingToken),
-            cycleDuration,
-            cycleStartOffset,
-            distributionDuration,
-            maxDistributionsPerBatch
-        );
+        (backersManager, backersManagerImpl) = new BackersManagerRootstockCollectiveDeployer()
+            .run(
+                address(governanceManager),
+                address(rifToken),
+                address(usdrifToken),
+                address(stakingToken),
+                cycleDuration,
+                cycleStartOffset,
+                distributionDuration,
+                maxDistributionsPerBatch
+            );
 
         rewardDistributor.initializeCollectiveRewardsAddresses(address(backersManager));
 
-        (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer().run(
-            address(backersManager), address(gaugeFactory), address(rewardDistributor), rewardPercentageCooldown
-        );
+        (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer()
+            .run(address(backersManager), address(gaugeFactory), address(rewardDistributor), rewardPercentageCooldown);
 
         backersManager.initializeBuilderRegistry(builderRegistry);
 
@@ -145,11 +146,7 @@ contract BaseTest is Test {
         skip(_currentCycleRemaining);
     }
 
-    function _whitelistBuilder(
-        address builder_,
-        address rewardReceiver_,
-        uint64 rewardPercentage_
-    )
+    function _whitelistBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_)
         internal
         returns (GaugeRootstockCollective newGauge_)
     {

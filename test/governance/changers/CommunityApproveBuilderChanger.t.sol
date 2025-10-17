@@ -2,8 +2,9 @@
 pragma solidity 0.8.24;
 
 import { BaseTest, GaugeRootstockCollective } from "../../BaseTest.sol";
-import { CommunityApproveBuilderChangerTemplateRootstockCollective } from
-    "../../../src/governance/changerTemplates/CommunityApproveBuilderChangerTemplateRootstockCollective.sol";
+import {
+    CommunityApproveBuilderChangerTemplateRootstockCollective
+} from "../../../src/governance/changerTemplates/CommunityApproveBuilderChangerTemplateRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 
 contract CommunityApproveBuilderChangerTest is BaseTest {

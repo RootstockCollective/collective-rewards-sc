@@ -8,8 +8,9 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { GaugeRootstockCollective } from "../gauge/GaugeRootstockCollective.sol";
 import { BuilderRegistryRootstockCollective } from "../builderRegistry/BuilderRegistryRootstockCollective.sol";
-import { ICollectiveRewardsCheckRootstockCollective } from
-    "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
+import {
+    ICollectiveRewardsCheckRootstockCollective
+} from "../interfaces/ICollectiveRewardsCheckRootstockCollective.sol";
 import { UtilsLib } from "../libraries/UtilsLib.sol";
 import { CycleTimeKeeperRootstockCollective } from "./CycleTimeKeeperRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "../interfaces/IGovernanceManagerRootstockCollective.sol";
@@ -233,7 +234,14 @@ contract BackersManagerRootstockCollective is
      * @param targetAddress_ address who wants to withdraw stakingToken
      * param value_ amount of stakingToken to withdraw, not used on current version
      */
-    function canWithdraw(address targetAddress_, uint256 /*value_*/ ) external view returns (bool) {
+    function canWithdraw(
+        address targetAddress_,
+        uint256 /*value_*/
+    )
+        external
+        view
+        returns (bool)
+    {
         uint256 _allocation = backerTotalAllocation[targetAddress_];
         if (_allocation == 0) return true;
 
@@ -247,10 +255,7 @@ contract BackersManagerRootstockCollective is
      * @param gauge_ address of the gauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
      */
-    function allocate(
-        GaugeRootstockCollective gauge_,
-        uint256 allocation_
-    )
+    function allocate(GaugeRootstockCollective gauge_, uint256 allocation_)
         external
         notInDistributionPeriod
         onlyOptedInBacker
@@ -274,10 +279,7 @@ contract BackersManagerRootstockCollective is
      * @param gauges_ array of gauges where the votes will be allocated
      * @param allocations_ array of amount of votes to allocate
      */
-    function allocateBatch(
-        GaugeRootstockCollective[] calldata gauges_,
-        uint256[] calldata allocations_
-    )
+    function allocateBatch(GaugeRootstockCollective[] calldata gauges_, uint256[] calldata allocations_)
         external
         notInDistributionPeriod
         onlyOptedInBacker
@@ -495,11 +497,7 @@ contract BackersManagerRootstockCollective is
      * @param newBackerTotalAllocation_ backer total allocation after new the allocation
      * @param newTotalPotentialReward_ total potential reward after the new allocation
      */
-    function _updateAllocation(
-        address backer_,
-        uint256 newBackerTotalAllocation_,
-        uint256 newTotalPotentialReward_
-    )
+    function _updateAllocation(address backer_, uint256 newBackerTotalAllocation_, uint256 newTotalPotentialReward_)
         internal
     {
         backerTotalAllocation[backer_] = newBackerTotalAllocation_;
@@ -607,7 +605,9 @@ contract BackersManagerRootstockCollective is
         uint256 _amountNative = (_rewardShares * rewardsNative_) / totalPotentialReward_;
         uint256 _backerRewardPercentage =
             builderRegistry.getRewardPercentageToApply(builderRegistry.gaugeToBuilder(gauge_));
-        return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountNative }(
+        return gauge_.notifyRewardAmountAndUpdateShares{
+            value: _amountNative
+        }(
             (_rewardShares * rewardsRif_) / totalPotentialReward_,
             (_rewardShares * rewardsUsdrif_) / totalPotentialReward_,
             _backerRewardPercentage,
@@ -677,10 +677,7 @@ contract BackersManagerRootstockCollective is
      * produce a miscalculation of rewards
      * @param gauge_ gauge contract to be resumed
      */
-    function resumeGaugeShares(
-        GaugeRootstockCollective gauge_,
-        uint256 haltedGaugeLastPeriodFinish_
-    )
+    function resumeGaugeShares(GaugeRootstockCollective gauge_, uint256 haltedGaugeLastPeriodFinish_)
         external
         onlyBuilderRegistry
         notInDistributionPeriod
@@ -692,9 +689,9 @@ contract BackersManagerRootstockCollective is
         // if there was a distribution we need to update the shares with the full cycle duration
         if (haltedGaugeLastPeriodFinish_ < _periodFinish) {
             (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
-            totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
-                0, 0, 0, haltedGaugeLastPeriodFinish_, _cycleStart, _cycleDuration
-            );
+            totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{
+                value: 0
+            }(0, 0, 0, haltedGaugeLastPeriodFinish_, _cycleStart, _cycleDuration);
         } else {
             // halt and resume were in the same cycle, we don't update the shares
             totalPotentialReward += gauge_.rewardShares();

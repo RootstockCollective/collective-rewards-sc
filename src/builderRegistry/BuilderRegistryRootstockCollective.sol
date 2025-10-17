@@ -251,11 +251,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @param rewardReceiver_ address of the builder reward receiver
      * @param rewardPercentage_ reward percentage(100% == 1 ether)
      */
-    function initializeBuilder(
-        address builder_,
-        address rewardReceiver_,
-        uint64 rewardPercentage_
-    )
+    function initializeBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_)
         external
         onlyKycApprover
     {
