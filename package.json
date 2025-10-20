@@ -51,6 +51,7 @@
   "private": true,
   "scripts": {
     "clean": "rm -rf cache out cache_hardhat artifacts typechain-types",
+    "install:ci": "bun install --frozen-lockfile",
     "compile": "forge compile --force && hardhat compile --force",
     "deploy": "./script/deploy.sh",
     "deploy:upgrade-v3": "forge script script/upgrades/UpgradeV3.s.sol --rpc-url $RPC_URL --legacy --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --with-gas-price $GAS_PRICE --extra-output-files abi --broadcast",
