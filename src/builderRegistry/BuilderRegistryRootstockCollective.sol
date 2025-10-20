@@ -668,6 +668,7 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      * @return gauge_ gauge contract
      */
     function _createGauge(address builder_) internal returns (GaugeRootstockCollective gauge_) {
+        if (_gauges.length() + _haltedGauges.length() >= _MAX_BUILDERS) revert MaxNumberOfBuildersReached();
         gauge_ = gaugeFactory.createGauge();
         builderToGauge[builder_] = gauge_;
         gaugeToBuilder[gauge_] = builder_;
@@ -747,7 +748,6 @@ contract BuilderRegistryRootstockCollective is UpgradeableRootstockCollective {
      */
     function _initializeBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_) private {
         if (builderState[builder_].initialized) revert BuilderAlreadyInitialized();
-        if (_gauges.length() + _haltedGauges.length() >= _MAX_BUILDERS) revert MaxNumberOfBuildersReached();
 
         builderState[builder_].initialized = true;
         builderState[builder_].kycApproved = true;

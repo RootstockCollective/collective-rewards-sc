@@ -1170,7 +1170,8 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
     }
 
     /**
-     * SCENARIO: initializeBuilder should revert if there are already 1000 builders (gauges)
+     * SCENARIO: communityApproveBuilder should revert if there are already 1000 builders (gauges)
+     * Note: initializeBuilder no longer checks the max builders limit as it's checked in _createGauge
      */
     function test_RevertMaxNumberOfBuildersReached() public {
         // GIVEN 2 builders are already initialized and community approved in setUp (creating 2 gauges)
@@ -1183,11 +1184,16 @@ contract BuilderRegistryRootstockCollectiveTest is BaseTest {
             builderRegistry.communityApproveBuilder(_builder);
         }
 
-        // WHEN kycApprover tries to initialize one more builder (which would create the 1001st gauge)
+        // WHEN governor tries to community approve one more builder (which would create the 1001st gauge)
         address _newBuilder = makeAddr("builder1001");
-        vm.prank(kycApprover);
+        vm.prank(governor);
         // THEN tx reverts because max number of builders is reached
         vm.expectRevert(BuilderRegistryRootstockCollective.MaxNumberOfBuildersReached.selector);
+        builderRegistry.communityApproveBuilder(_newBuilder);
+
+        // WHEN kycApprover tries to initialize one more builder (this should succeed as the check was removed)
+        vm.prank(kycApprover);
         builderRegistry.initializeBuilder(_newBuilder, _newBuilder, 0);
+        // THEN the builder is initialized successfully (no revert expected)
     }
 }
