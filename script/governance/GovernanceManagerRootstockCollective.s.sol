@@ -18,7 +18,12 @@ contract Deploy is Broadcaster {
         (proxy_, implementation_) = run(_governorAddress, _foundationAddress, _kycApproverAddress, _upgrader);
     }
 
-    function run(address governor_, address foundation_, address kycApprover_, address upgrader_)
+    function run(
+        address governor_,
+        address foundation_,
+        address kycApprover_,
+        address upgrader_
+    )
         public
         broadcast
         returns (GovernanceManagerRootstockCollective proxy_, GovernanceManagerRootstockCollective implementation_)

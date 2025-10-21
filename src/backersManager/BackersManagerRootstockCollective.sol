@@ -257,7 +257,10 @@ contract BackersManagerRootstockCollective is
      * @param gauge_ address of the gauge where the votes will be allocated
      * @param allocation_ amount of votes to allocate
      */
-    function allocate(GaugeRootstockCollective gauge_, uint256 allocation_)
+    function allocate(
+        GaugeRootstockCollective gauge_,
+        uint256 allocation_
+    )
         external
         notInDistributionPeriod
         onlyOptedInBacker
@@ -281,7 +284,10 @@ contract BackersManagerRootstockCollective is
      * @param gauges_ array of gauges where the votes will be allocated
      * @param allocations_ array of amount of votes to allocate
      */
-    function allocateBatch(GaugeRootstockCollective[] calldata gauges_, uint256[] calldata allocations_)
+    function allocateBatch(
+        GaugeRootstockCollective[] calldata gauges_,
+        uint256[] calldata allocations_
+    )
         external
         notInDistributionPeriod
         onlyOptedInBacker
@@ -314,7 +320,10 @@ contract BackersManagerRootstockCollective is
      * @param amountRif_ amount of ERC20 rif token to send
      * @param amountUsdrif_ amount of ERC20 usdrif token to send
      */
-    function notifyRewardAmount(uint256 amountRif_, uint256 amountUsdrif_)
+    function notifyRewardAmount(
+        uint256 amountRif_,
+        uint256 amountUsdrif_
+    )
         external
         payable
         nonReentrant
@@ -382,7 +391,13 @@ contract BackersManagerRootstockCollective is
      * @param rewardToken_ address of the token rewarded
      *  address(uint160(uint256(keccak256("COINBASE_ADDRESS")))) is used for native address
      */
-    function claimBackerRewards(address rewardToken_, GaugeRootstockCollective[] memory gauges_) external nonReentrant {
+    function claimBackerRewards(
+        address rewardToken_,
+        GaugeRootstockCollective[] memory gauges_
+    )
+        external
+        nonReentrant
+    {
         uint256 _length = gauges_.length;
         BuilderRegistryRootstockCollective _builderRegistry = builderRegistry;
         for (uint256 i = 0; i < _length; i = UtilsLib._uncheckedInc(i)) {
@@ -504,7 +519,11 @@ contract BackersManagerRootstockCollective is
      * @param newBackerTotalAllocation_ backer total allocation after new the allocation
      * @param newTotalPotentialReward_ total potential reward after the new allocation
      */
-    function _updateAllocation(address backer_, uint256 newBackerTotalAllocation_, uint256 newTotalPotentialReward_)
+    function _updateAllocation(
+        address backer_,
+        uint256 newBackerTotalAllocation_,
+        uint256 newTotalPotentialReward_
+    )
         internal
     {
         backerTotalAllocation[backer_] = newBackerTotalAllocation_;
@@ -684,7 +703,10 @@ contract BackersManagerRootstockCollective is
      * produce a miscalculation of rewards
      * @param gauge_ gauge contract to be resumed
      */
-    function resumeGaugeShares(GaugeRootstockCollective gauge_, uint256 haltedGaugeLastPeriodFinish_)
+    function resumeGaugeShares(
+        GaugeRootstockCollective gauge_,
+        uint256 haltedGaugeLastPeriodFinish_
+    )
         external
         onlyBuilderRegistry
         notInDistributionPeriod

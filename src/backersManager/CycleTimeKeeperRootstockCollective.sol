@@ -113,7 +113,10 @@ abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockColl
      * @param newCycleDuration_ new cycle duration
      * @param cycleStartOffset_ offset to add to the first cycle, used to set an specific day to start the cycles
      */
-    function setCycleDuration(uint32 newCycleDuration_, uint24 cycleStartOffset_)
+    function setCycleDuration(
+        uint32 newCycleDuration_,
+        uint24 cycleStartOffset_
+    )
         external
         onlyValidChangerOrFoundation
     {
@@ -243,7 +246,10 @@ abstract contract CycleTimeKeeperRootstockCollective is UpgradeableRootstockColl
      * @param cycleDuration_ cycle time duration
      * @return true if the distribution duration is less than half of the cycle duration
      */
-    function _isValidDistributionToCycleRatio(uint32 distributionDuration_, uint32 cycleDuration_)
+    function _isValidDistributionToCycleRatio(
+        uint32 distributionDuration_,
+        uint32 cycleDuration_
+    )
         internal
         pure
         returns (bool)

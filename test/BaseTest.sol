@@ -146,7 +146,11 @@ contract BaseTest is Test {
         skip(_currentCycleRemaining);
     }
 
-    function _whitelistBuilder(address builder_, address rewardReceiver_, uint64 rewardPercentage_)
+    function _whitelistBuilder(
+        address builder_,
+        address rewardReceiver_,
+        uint64 rewardPercentage_
+    )
         internal
         returns (GaugeRootstockCollective newGauge_)
     {

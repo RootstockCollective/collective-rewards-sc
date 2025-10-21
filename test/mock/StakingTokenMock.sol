@@ -36,8 +36,9 @@ contract StakingTokenMock is ERC20 {
         _;
         // The check is applied after the fnc modified, so that if there is any revert there, it takes priority
         if (collectiveRewardsCheck != address(0)) {
-            try ICollectiveRewardsCheckRootstockCollective(collectiveRewardsCheck)
-                .canWithdraw(staker, value) returns (bool canWithdraw) {
+            try ICollectiveRewardsCheckRootstockCollective(collectiveRewardsCheck).canWithdraw(staker, value) returns (
+                bool canWithdraw
+            ) {
                 if (!canWithdraw) {
                     revert STRIFStakedInCollectiveRewardsCanWithdraw(false);
                 }
@@ -55,15 +56,20 @@ contract StakingTokenMock is ERC20 {
             revert STRIFSupportsICollectiveRewardsCheckRootstockCollective(false);
         }
 
-        try ICollectiveRewardsCheckRootstockCollective(collectiveRewardsAddress)
-            .canWithdraw(address(0), 1) returns (bool) {
+        try ICollectiveRewardsCheckRootstockCollective(collectiveRewardsAddress).canWithdraw(address(0), 1) returns (
+            bool
+        ) {
             collectiveRewardsCheck = collectiveRewardsAddress;
         } catch {
             revert STRIFUnexpectedCanWithdraw(collectiveRewardsAddress);
         }
     }
 
-    function _update(address from, address to, uint256 value)
+    function _update(
+        address from,
+        address to,
+        uint256 value
+    )
         internal
         override
         _checkCollectiveRewardsForStake(from, value)
