@@ -348,7 +348,11 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @return rewardSharesDeviation_  deviation between current reward shares and the new one
      * @return isNegative_ true if new allocation is lesser than the current one
      */
-    function allocate(address backer_, uint256 allocation_, uint256 timeUntilNextCycle_)
+    function allocate(
+        address backer_,
+        uint256 allocation_,
+        uint256 timeUntilNextCycle_
+    )
         external
         onlyAuthorizedContract
         returns (uint256 allocationDeviation_, uint256 rewardSharesDeviation_, bool isNegative_)
@@ -539,7 +543,15 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param backer_ address who earned the rewards
      * @param periodFinish_ timestamp end of current rewards period
      */
-    function _earned(address rewardToken_, address backer_, uint256 periodFinish_) internal view returns (uint256) {
+    function _earned(
+        address rewardToken_,
+        address backer_,
+        uint256 periodFinish_
+    )
+        internal
+        view
+        returns (uint256)
+    {
         RewardData storage _rewardData = rewardData[rewardToken_];
 
         // [N] = ([N] * ([PREC] - [PREC]) / [PREC])
@@ -679,7 +691,13 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         }
     }
 
-    function _incentivizeWithRewardToken(uint256 amount_, address rewardToken_) internal minIncentiveAmount(amount_) {
+    function _incentivizeWithRewardToken(
+        uint256 amount_,
+        address rewardToken_
+    )
+        internal
+        minIncentiveAmount(amount_)
+    {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken

@@ -577,7 +577,10 @@ contract UpgradeV3Test is Test {
      * @param backer_ address of the backer to check
      * @return hasRewardsAndAllocations_ true if backer has both rewards and allocations in at least one gauge
      */
-    function _verifyBackerHasRewardsAndAllocations(address[] memory allGauges_, address backer_)
+    function _verifyBackerHasRewardsAndAllocations(
+        address[] memory allGauges_,
+        address backer_
+    )
         internal
         view
         returns (bool hasRewardsAndAllocations_)
@@ -591,8 +594,7 @@ contract UpgradeV3Test is Test {
             bool _hasAllocations = _gauge.allocationOf(backer_) > 0;
 
             // Check if backer has any earned or stored rewards in this gauge
-            bool _hasRewards =
-                _gauge.earned(rifTokenAddress, backer_) > 0 || _gauge.earned(usdrifToken, backer_) > 0
+            bool _hasRewards = _gauge.earned(rifTokenAddress, backer_) > 0 || _gauge.earned(usdrifToken, backer_) > 0
                 || _gauge.earned(UtilsLib._NATIVE_ADDRESS, backer_) > 0 || _gauge.rewards(rifTokenAddress, backer_) > 0
                 || _gauge.rewards(usdrifToken, backer_) > 0 || _gauge.rewards(UtilsLib._NATIVE_ADDRESS, backer_) > 0;
 
@@ -617,7 +619,10 @@ contract UpgradeV3Test is Test {
      * @return v2RewardsNative_ stored native rewards before upgrade
      * @return v2Allocations_ allocations before upgrade
      */
-    function _captureBackerRewardsAndAllocations(address[] memory allGauges_, address backer_)
+    function _captureBackerRewardsAndAllocations(
+        address[] memory allGauges_,
+        address backer_
+    )
         internal
         view
         returns (
@@ -701,7 +706,10 @@ contract UpgradeV3Test is Test {
      * @param backers_ array of backer addresses to filter
      * @return validBackers_ array of valid backer addresses
      */
-    function _filterValidBackers(address[] memory allGauges_, address[] memory backers_)
+    function _filterValidBackers(
+        address[] memory allGauges_,
+        address[] memory backers_
+    )
         internal
         view
         returns (address[] memory validBackers_)
@@ -729,7 +737,10 @@ contract UpgradeV3Test is Test {
      * @param backer_ address of the backer to capture
      * @return snapshot_ complete snapshot of backer's state
      */
-    function _captureBackerSnapshot(address[] memory allGauges_, address backer_)
+    function _captureBackerSnapshot(
+        address[] memory allGauges_,
+        address backer_
+    )
         internal
         view
         returns (BackerRewardsSnapshot memory snapshot_)

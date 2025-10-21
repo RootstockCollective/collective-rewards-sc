@@ -46,7 +46,11 @@ library UtilsLib {
      * @param timestamp_ timestamp to calculate
      * @return cycleNext timestamp when the cycle ends or the next starts
      */
-    function _calcCycleNext(uint256 cycleStart_, uint256 cycleDuration_, uint256 timestamp_)
+    function _calcCycleNext(
+        uint256 cycleStart_,
+        uint256 cycleDuration_,
+        uint256 timestamp_
+    )
         internal
         pure
         returns (uint256)
@@ -63,7 +67,11 @@ library UtilsLib {
      * @param timestamp_ timestamp to calculate
      * @return timeUntilNextCycle amount of time until next cycle
      */
-    function _calcTimeUntilNextCycle(uint256 cycleStart_, uint256 cycleDuration_, uint256 timestamp_)
+    function _calcTimeUntilNextCycle(
+        uint256 cycleStart_,
+        uint256 cycleDuration_,
+        uint256 timestamp_
+    )
         internal
         pure
         returns (uint256)

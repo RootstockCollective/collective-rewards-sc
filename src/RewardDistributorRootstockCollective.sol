@@ -118,7 +118,11 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @param amountUsdrif_ amount of ERC20 usdrif token to send
      * @param amountNative_ amount of Native token to send
      */
-    function sendRewards(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_)
+    function sendRewards(
+        uint256 amountRif_,
+        uint256 amountUsdrif_,
+        uint256 amountNative_
+    )
         external
         payable
         onlyFoundationTreasury
@@ -134,7 +138,11 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @param amountUsdrif_ amount of ERC20 usdrif token to send
      * @param amountNative_ amount of Native token to send
      */
-    function sendRewardsAndStartDistribution(uint256 amountRif_, uint256 amountUsdrif_, uint256 amountNative_)
+    function sendRewardsAndStartDistribution(
+        uint256 amountRif_,
+        uint256 amountUsdrif_,
+        uint256 amountNative_
+    )
         external
         payable
         onlyFoundationTreasury
@@ -150,7 +158,11 @@ contract RewardDistributorRootstockCollective is UpgradeableRootstockCollective 
      * @param usdrifTokenAmount_ default amount of ERC20 usdrif token to send
      * @param nativeAmount_ default amount of Native token to send
      */
-    function setDefaultRewardAmount(uint256 rifTokenAmount_, uint256 usdrifTokenAmount_, uint256 nativeAmount_)
+    function setDefaultRewardAmount(
+        uint256 rifTokenAmount_,
+        uint256 usdrifTokenAmount_,
+        uint256 nativeAmount_
+    )
         external
         payable
         onlyFoundationTreasury

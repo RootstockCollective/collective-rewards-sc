@@ -7,7 +7,11 @@ import { BaseTest } from "../../BaseTest.sol";
 contract CycleHandler is BaseHandler {
     constructor(BaseTest baseTest_, TimeManager timeManager_) BaseHandler(baseTest_, timeManager_) { }
 
-    function setCycleDuration(uint32 newCycleDuration_, uint24 cycleStartOffset_, uint256 timeToSkip_)
+    function setCycleDuration(
+        uint32 newCycleDuration_,
+        uint24 cycleStartOffset_,
+        uint256 timeToSkip_
+    )
         external
         skipTime(timeToSkip_)
     {

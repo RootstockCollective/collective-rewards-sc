@@ -63,7 +63,12 @@ contract GovernanceManagerRootstockCollective is UUPSUpgradeable, IGovernanceMan
         _disableInitializers();
     }
 
-    function initialize(address governor_, address foundationTreasury_, address kycApprover_, address upgrader_)
+    function initialize(
+        address governor_,
+        address foundationTreasury_,
+        address kycApprover_,
+        address upgrader_
+    )
         public
         initializer
     {
