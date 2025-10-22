@@ -631,9 +631,7 @@ contract BackersManagerRootstockCollective is
         uint256 _amountNative = (_rewardShares * rewardsNative_) / totalPotentialReward_;
         uint256 _backerRewardPercentage =
             builderRegistry.getRewardPercentageToApply(builderRegistry.gaugeToBuilder(gauge_));
-        return gauge_.notifyRewardAmountAndUpdateShares{
-            value: _amountNative
-        }(
+        return gauge_.notifyRewardAmountAndUpdateShares{ value: _amountNative }(
             (_rewardShares * rewardsRif_) / totalPotentialReward_,
             (_rewardShares * rewardsUsdrif_) / totalPotentialReward_,
             _backerRewardPercentage,
@@ -718,9 +716,9 @@ contract BackersManagerRootstockCollective is
         // if there was a distribution we need to update the shares with the full cycle duration
         if (haltedGaugeLastPeriodFinish_ < _periodFinish) {
             (uint256 _cycleStart, uint256 _cycleDuration) = getCycleStartAndDuration();
-            totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{
-                value: 0
-            }(0, 0, 0, haltedGaugeLastPeriodFinish_, _cycleStart, _cycleDuration);
+            totalPotentialReward += gauge_.notifyRewardAmountAndUpdateShares{ value: 0 }(
+                0, 0, 0, haltedGaugeLastPeriodFinish_, _cycleStart, _cycleDuration
+            );
         } else {
             // halt and resume were in the same cycle, we don't update the shares
             totalPotentialReward += gauge_.rewardShares();
