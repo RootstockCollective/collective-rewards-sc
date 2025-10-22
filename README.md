@@ -168,6 +168,8 @@ This is how to install dependencies:
 2. Add a remapping for the dependency in [remappings.txt](./remappings.txt), e.g.
    `dependency-name=node_modules/dependency-name`
 
+**Security Note**: For CI/CD and production environments, always use `bun run install:ci` instead of `bun install` to prevent supply chain attacks by ensuring only locked dependency versions are installed.
+
 Note that OpenZeppelin Contracts is pre-installed, so you can follow that as an example.
 
 ## Writing Tests
