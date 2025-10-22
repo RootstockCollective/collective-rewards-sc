@@ -264,6 +264,7 @@ contract BackersManagerRootstockCollective is
         external
         notInDistributionPeriod
         onlyOptedInBacker
+        nonReentrant
     {
         (uint256 _newBackerTotalAllocation, uint256 _newTotalPotentialReward) = _allocate(
             gauge_,
@@ -291,6 +292,7 @@ contract BackersManagerRootstockCollective is
         external
         notInDistributionPeriod
         onlyOptedInBacker
+        nonReentrant
     {
         uint256 _length = gauges_.length;
         if (_length != allocations_.length) revert UnequalLengths();
