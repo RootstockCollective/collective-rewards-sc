@@ -428,7 +428,7 @@ contract BackersManagerRootstockCollective is
      *         and claiming rewards in the future.
      *         This action can only be performed by the backer themselves or by the foundation.
      */
-    function optOutRewards(address backer_) external onlyBackerOrKycApprover(backer_) {
+    function optOutRewards(address backer_) external onlyBackerOrKycApprover(backer_) nonReentrant {
         if (backerTotalAllocation[backer_] != 0) {
             revert BackerHasAllocations();
         }
@@ -444,7 +444,7 @@ contract BackersManagerRootstockCollective is
      *         Backers are opted in by default; only those who have opted out can choose to opt in again.
      *         This action can be performed only by the backer themselves or by the foundation.
      */
-    function optInRewards(address backer_) external onlyBackerOrKycApprover(backer_) {
+    function optInRewards(address backer_) external onlyBackerOrKycApprover(backer_) nonReentrant {
         if (!rewardsOptedOut[backer_]) {
             revert AlreadyOptedInRewards();
         }
