@@ -215,6 +215,25 @@ contract BackersManagerRootstockCollective is
         if (address(usdrifToken_) == address(0)) revert ZeroAddressNotAllowed();
         maxDistributionsPerBatch = maxDistributionsPerBatch_;
         usdrifToken = usdrifToken_;
+
+        // Approve usdrifToken for all active gauges
+        uint256 _gaugesLength = builderRegistry.getGaugesLength();
+        for (uint256 i = 0; i < _gaugesLength; i = UtilsLib._uncheckedInc(i)) {
+            address _gauge = builderRegistry.getGaugeAt(i);
+            _approveUsdrifTokenForGauge(_gauge, type(uint256).max);
+        }
+
+        // Approve usdrifToken for all halted gauges (except community banned)
+        uint256 _haltedGaugesLength = builderRegistry.getHaltedGaugesLength();
+        for (uint256 i = 0; i < _haltedGaugesLength; i = UtilsLib._uncheckedInc(i)) {
+            address _gauge = builderRegistry.getHaltedGaugeAt(i);
+            address _builder = builderRegistry.gaugeToBuilder(GaugeRootstockCollective(_gauge));
+            // Only approve if builder is still community approved (not banned)
+            (,, bool _communityApproved,,,,) = builderRegistry.builderState(_builder);
+            if (_communityApproved) {
+                _approveUsdrifTokenForGauge(_gauge, type(uint256).max);
+            }
+        }
     }
 
     // -----------------------------
@@ -675,6 +694,20 @@ contract BackersManagerRootstockCollective is
      */
     function rewardTokensApprove(address gauge_, uint256 value_) external onlyBuilderRegistry {
         if (!IERC20(rifToken).approve(gauge_, value_) || !IERC20(usdrifToken).approve(gauge_, value_)) {
+            revert RewardTokenNotApproved();
+        }
+    }
+
+    /**
+     * @notice approves usdrifToken to a given gauge
+     * @dev internal function used during upgrade to approve usdrifToken for existing gauges
+     * reverts if the ERC-20 usdrifToken returns false on the approval
+     * @dev remove after upgrade v3 is completed
+     * @param gauge_ gauge contract to approve usdrifToken
+     * @param value_ amount to approve
+     */
+    function _approveUsdrifTokenForGauge(address gauge_, uint256 value_) internal {
+        if (!IERC20(usdrifToken).approve(gauge_, value_)) {
             revert RewardTokenNotApproved();
         }
     }
