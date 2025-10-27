@@ -16,6 +16,7 @@ import { GaugeRootstockCollective } from "src/gauge/GaugeRootstockCollective.sol
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { IBuilderRegistryRootstockCollectiveV2 } from "src/interfaces/v2/IBuilderRegistryRootstockCollectiveV2.sol";
 import { UtilsLib } from "src/libraries/UtilsLib.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract UpgradeV3Test is Test {
     IBackersManagerRootstockCollectiveV2 public backersManagerV2;
@@ -534,6 +535,129 @@ contract UpgradeV3Test is Test {
         // THEN verify all valid backers' rewards and allocations are preserved after upgrade
         for (uint256 i = 0; i < _validBackers.length; i++) {
             _verifyBackerSnapshotPreserved(_allGauges, _validBackers[i], _preUpgradeSnapshots[i]);
+        }
+    }
+
+    /**
+     * SCENARIO: Distribution execution succeeds after upgrade
+     * @dev This test covers the critical case where distribution failed before the usdrifToken approval fix.
+     *      The initializeV3 function now approves usdrifToken for all existing gauges, which allows
+     *      distribution to successfully transfer rewards to gauges.
+     */
+    function test_fork_distributionSucceedsAfterUpgrade() public {
+        // GIVEN the contracts are upgraded to V3
+        _upgradeV3();
+
+        // AND we have some rewards to distribute
+        uint256 _rifRewardAmount = 1000 ether;
+        uint256 _usdrifRewardAmount = 500 ether;
+        uint256 _nativeRewardAmount = 10 ether;
+
+        // Fund the test account with tokens
+        deal(rifTokenAddress, alice, _rifRewardAmount);
+        deal(usdrifToken, alice, _usdrifRewardAmount);
+        deal(alice, _nativeRewardAmount);
+
+        // Approve BackersManager to spend tokens
+        vm.startPrank(alice);
+        IERC20(rifTokenAddress).approve(address(backersManagerV3), _rifRewardAmount);
+        IERC20(usdrifToken).approve(address(backersManagerV3), _usdrifRewardAmount);
+
+        // Notify reward amounts
+        backersManagerV3.notifyRewardAmount{ value: _nativeRewardAmount }(_rifRewardAmount, _usdrifRewardAmount);
+        vm.stopPrank();
+
+        // Verify rewards were added
+        vm.assertEq(backersManagerV3.rewardsRif(), _rifRewardAmount);
+        vm.assertEq(backersManagerV3.rewardsUsdrif(), _usdrifRewardAmount);
+        vm.assertEq(backersManagerV3.rewardsNative(), _nativeRewardAmount);
+
+        // WHEN we warp to the distribution window
+        uint256 _nextCycleStart = backersManagerV3.cycleNext(block.timestamp);
+        uint256 _distributionWindowStart = _nextCycleStart;
+
+        // Move to the start of the next distribution window
+        vm.warp(_distributionWindowStart + 1);
+
+        // Verify we are in the distribution window
+        uint256 _endDistWindow = backersManagerV3.endDistributionWindow(block.timestamp);
+        vm.assertLt(block.timestamp, _endDistWindow, "Should be in distribution window");
+
+        // THEN distribution should succeed without reverting
+        vm.expectEmit(true, true, true, true);
+        emit BackersManagerRootstockCollective.RewardDistributionStarted(alice);
+
+        vm.prank(alice);
+        bool _finished = backersManagerV3.startDistribution();
+
+        // AND distribution should complete (given the default maxDistributionsPerBatch is sufficient)
+        // If there are many gauges, it might need multiple calls to distribute()
+        if (!_finished) {
+            // Continue distribution until finished
+            uint256 _maxIterations = 100;
+            uint256 _iterations = 0;
+            while (!_finished && _iterations < _maxIterations) {
+                vm.prank(alice);
+                _finished = backersManagerV3.distribute();
+                _iterations++;
+            }
+            vm.assertTrue(_finished, "Distribution should finish within max iterations");
+        }
+
+        // THEN rewards should be fully distributed
+        vm.assertEq(backersManagerV3.rewardsRif(), 0, "RIF rewards should be distributed");
+        vm.assertEq(backersManagerV3.rewardsUsdrif(), 0, "USDRIF rewards should be distributed");
+        vm.assertEq(backersManagerV3.rewardsNative(), 0, "Native rewards should be distributed");
+
+        // AND distribution period should be finished
+        vm.assertFalse(backersManagerV3.onDistributionPeriod(), "Distribution period should be finished");
+    }
+
+    /**
+     * SCENARIO: usdrifToken approval is correctly set for all active gauges after upgrade
+     * @dev This verifies that the initializeV3 function correctly approves usdrifToken for existing gauges
+     */
+    function test_fork_usdrifTokenApprovalForActiveGauges() public {
+        // GIVEN the upgrade is performed
+        _upgradeV3();
+
+        // THEN all active gauges should have max usdrifToken approval
+        uint256 _gaugesLength = builderRegistryV3.getGaugesLength();
+        require(_gaugesLength > 0, "No active gauges found");
+
+        for (uint256 i = 0; i < _gaugesLength; i++) {
+            address _gauge = builderRegistryV3.getGaugeAt(i);
+            uint256 _allowance = IERC20(usdrifToken).allowance(address(backersManagerV3), _gauge);
+            vm.assertEq(_allowance, type(uint256).max, "USDRIF allowance should be max for active gauge");
+        }
+    }
+
+    /**
+     * SCENARIO: usdrifToken approval is correctly set for halted gauges (except community banned)
+     * @dev This verifies that the initializeV3 function correctly approves usdrifToken for halted gauges
+     *      that are still community approved
+     */
+    function test_fork_usdrifTokenApprovalForHaltedGauges() public {
+        // GIVEN the upgrade is performed
+        _upgradeV3();
+
+        // THEN halted gauges that are still community approved should have max usdrifToken approval
+        uint256 _haltedGaugesLength = builderRegistryV3.getHaltedGaugesLength();
+
+        for (uint256 i = 0; i < _haltedGaugesLength; i++) {
+            address _gauge = builderRegistryV3.getHaltedGaugeAt(i);
+            address _builder = builderRegistryV3.gaugeToBuilder(GaugeRootstockCollective(_gauge));
+            (,, bool _communityApproved,,,,) = builderRegistryV3.builderState(_builder);
+
+            uint256 _allowance = IERC20(usdrifToken).allowance(address(backersManagerV3), _gauge);
+
+            if (_communityApproved) {
+                // Should have max approval if still community approved
+                vm.assertEq(_allowance, type(uint256).max, "USDRIF allowance should be max for halted gauge");
+            } else {
+                // Should have zero approval if community banned
+                vm.assertEq(_allowance, 0, "USDRIF allowance should be zero for community banned gauge");
+            }
         }
     }
 
