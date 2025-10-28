@@ -29,6 +29,7 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         address _configurator = vm.envAddress("CONFIGURATOR_ADDRESS");
         address _usdrifToken = vm.envAddress("USDRIF_TOKEN_ADDRESS");
         address _gaugeBeacon = vm.envAddress("GaugeBeaconRootstockCollective");
+        uint256 _maxDistributionsPerBatch = uint256(vm.envUint("MAX_DISTRIBUTION_PER_BATCH"));
 
         upgradeV3_ = run(
             IBackersManagerRootstockCollectiveV2(_backersManager),
@@ -36,6 +37,7 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
             _configurator,
             _usdrifToken,
             _gaugeBeacon,
+            _maxDistributionsPerBatch,
             true
         );
     }
@@ -46,6 +48,7 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         address configurator_,
         address usdrifToken_,
         address gaugeBeacon_,
+        uint256 maxDistributionsPerBatch_,
         bool writeDeployment_
     )
         public
@@ -57,9 +60,15 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         require(configurator_ != address(0), "Configurator address cannot be zero");
         require(usdrifToken_ != address(0), "USDRIF token address cannot be zero");
         require(gaugeBeacon_ != address(0), "Gauge beacon address cannot be zero");
+        require(maxDistributionsPerBatch_ > 0, "Max distributions per batch must be greater than 0");
 
         upgradeV3_ = _deployUpgradeV3(
-            backersManagerProxy_, rewardDistributorProxyV2_, configurator_, usdrifToken_, gaugeBeacon_
+            backersManagerProxy_,
+            rewardDistributorProxyV2_,
+            configurator_,
+            usdrifToken_,
+            gaugeBeacon_,
+            maxDistributionsPerBatch_
         );
 
         if (!writeDeployment_) return upgradeV3_;
@@ -72,7 +81,8 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
         IRewardDistributorRootstockCollectiveV2 rewardDistributorProxyV2_,
         address configurator_,
         address usdrifToken_,
-        address gaugeBeacon_
+        address gaugeBeacon_,
+        uint256 maxDistributionsPerBatch_
     )
         internal
         returns (UpgradeV3 upgradeV3_)
@@ -97,7 +107,8 @@ contract UpgradeV3Deployer is Broadcaster, OutputWriter {
             _rewardDistributorImplV3,
             configurator_,
             usdrifToken_,
-            _gaugeFactoryV3
+            _gaugeFactoryV3,
+            maxDistributionsPerBatch_
         );
     }
 

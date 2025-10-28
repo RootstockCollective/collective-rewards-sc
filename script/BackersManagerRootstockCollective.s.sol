@@ -21,7 +21,7 @@ contract Deploy is Broadcaster {
         uint32 _cycleDuration = uint32(vm.envUint("CYCLE_DURATION"));
         uint32 _distributionDuration = uint32(vm.envUint("DISTRIBUTION_DURATION"));
         uint24 _cycleStartOffset = uint24(vm.envUint("CYCLE_START_OFFSET"));
-        uint256 _maxDistributionsPerBatch = uint256(vm.envUint("MAX_DISTRIBUTIONS_PER_BATCH"));
+        uint256 _maxDistributionsPerBatch = uint256(vm.envUint("MAX_DISTRIBUTION_PER_BATCH"));
 
         (proxy_, implementation_) = run(
             _governanceManager,

@@ -34,6 +34,7 @@ contract UpgradeV3Test is Test {
     address public usdrifToken;
     address public rifTokenAddress;
     address public configuratorAddress;
+    uint256 public maxDistributionsPerBatch;
     address[] public forkBackers;
 
     /// @dev Struct to capture backer rewards and allocations snapshot
@@ -54,6 +55,7 @@ contract UpgradeV3Test is Test {
         usdrifToken = vm.envAddress("USDRIF_TOKEN_ADDRESS");
         rifTokenAddress = vm.envAddress("RIF_TOKEN_ADDRESS");
         configuratorAddress = vm.envAddress("CONFIGURATOR_ADDRESS");
+        maxDistributionsPerBatch = vm.envUint("MAX_DISTRIBUTION_PER_BATCH");
 
         backersManagerV2 = IBackersManagerRootstockCollectiveV2(vm.envAddress("BackersManagerRootstockCollectiveProxy"));
         builderRegistryV2 =
@@ -88,6 +90,7 @@ contract UpgradeV3Test is Test {
             configurator,
             usdrifToken,
             address(gaugeBeacon),
+            maxDistributionsPerBatch,
             false
         );
     }
@@ -118,7 +121,7 @@ contract UpgradeV3Test is Test {
         vm.assertEq(upgradeV3.upgrader(), upgrader);
 
         vm.assertNotEq(address(upgradeV3.configurator()), address(0));
-        vm.assertGt(upgradeV3.MAX_DISTRIBUTIONS_PER_BATCH(), 0);
+        vm.assertGt(upgradeV3.maxDistributionsPerBatch(), 0);
     }
 
     /**
@@ -180,8 +183,7 @@ contract UpgradeV3Test is Test {
 
         // AND new v3 variables should be properly initialized
         // maxDistributionsPerBatch should be set to the expected value (new in v3)
-        vm.assertEq(backersManagerV3.maxDistributionsPerBatch(), upgradeV3.MAX_DISTRIBUTIONS_PER_BATCH());
-        vm.assertEq(backersManagerV3.maxDistributionsPerBatch(), 20);
+        vm.assertEq(backersManagerV3.maxDistributionsPerBatch(), upgradeV3.maxDistributionsPerBatch());
         // usdrifToken should be set (new in v3)
         vm.assertEq(address(backersManagerV3.usdrifToken()), usdrifToken);
         // rewardsUsdrif should be initialized to 0 (new variable in v3)
