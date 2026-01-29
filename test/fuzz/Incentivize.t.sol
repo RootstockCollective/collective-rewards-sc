@@ -131,9 +131,9 @@ contract IncentivizeFuzzTest is BaseFuzz {
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             if (gaugesArray[i].totalAllocation() > 0) {
                 _rewards += (rewardsAdded[gaugesArray[i]]
-                    + _calcGaugeReward(amount_, i)
-                    - _calcBuilderReward(amount_, i)) * gaugesArray[i].allocationOf(backersArray[backerIndex_])
-                / gaugesArray[i].totalAllocation();
+                        + _calcGaugeReward(amount_, i)
+                        - _calcBuilderReward(amount_, i)) * gaugesArray[i].allocationOf(backersArray[backerIndex_])
+                    / gaugesArray[i].totalAllocation();
             }
         }
         return _rewards;

@@ -543,15 +543,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @param backer_ address who earned the rewards
      * @param periodFinish_ timestamp end of current rewards period
      */
-    function _earned(
-        address rewardToken_,
-        address backer_,
-        uint256 periodFinish_
-    )
-        internal
-        view
-        returns (uint256)
-    {
+    function _earned(address rewardToken_, address backer_, uint256 periodFinish_) internal view returns (uint256) {
         RewardData storage _rewardData = rewardData[rewardToken_];
 
         // [N] = ([N] * ([PREC] - [PREC]) / [PREC])
@@ -691,13 +683,7 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         }
     }
 
-    function _incentivizeWithRewardToken(
-        uint256 amount_,
-        address rewardToken_
-    )
-        internal
-        minIncentiveAmount(amount_)
-    {
+    function _incentivizeWithRewardToken(uint256 amount_, address rewardToken_) internal minIncentiveAmount(amount_) {
         // Halted gauges cannot receive rewards because periodFinish is fixed at the last distribution.
         // If new rewards are received, lastUpdateTime will be greater than periodFinish, making it impossible to
         // calculate rewardPerToken

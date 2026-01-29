@@ -19,14 +19,7 @@ contract AllocateHandler is BaseHandler {
         stakingToken = baseTest_.stakingToken();
     }
 
-    function allocate(
-        uint256 gaugeIndex_,
-        uint256 allocation_,
-        uint256 timeToSkip_
-    )
-        external
-        skipTime(timeToSkip_)
-    {
+    function allocate(uint256 gaugeIndex_, uint256 allocation_, uint256 timeToSkip_) external skipTime(timeToSkip_) {
         if (msg.sender.code.length != 0) return;
         (GaugeRootstockCollective _gauge, uint256 _allocation) = _allocate(gaugeIndex_, allocation_);
         vm.prank(msg.sender);
@@ -55,13 +48,7 @@ contract AllocateHandler is BaseHandler {
         backersManager.allocateBatch(_gauges, _allocations);
     }
 
-    function _allocate(
-        uint256 gaugeIndex_,
-        uint256 allocation_
-    )
-        internal
-        returns (GaugeRootstockCollective, uint256)
-    {
+    function _allocate(uint256 gaugeIndex_, uint256 allocation_) internal returns (GaugeRootstockCollective, uint256) {
         gaugeIndex_ = bound(gaugeIndex_, 0, baseTest.gaugesArrayLength() - 1);
         allocation_ = bound(allocation_, 0, type(uint64).max);
 

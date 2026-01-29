@@ -284,7 +284,7 @@ contract UpgradeV3Test is Test {
                 , // communityApproved (unchanged)
                 bool paused,
                 bool revoked,, // reserved (unchanged)
-                    // pausedReason (unchanged)
+                // pausedReason (unchanged)
             ) = builderRegistryV2.builderState(_builder);
 
             _v2Activated[i] = _activated;
@@ -305,7 +305,7 @@ contract UpgradeV3Test is Test {
                 , // communityApproved (unchanged)
                 bool paused,
                 bool revoked,, // reserved (unchanged)
-                    // pausedReason (unchanged)
+                // pausedReason (unchanged)
             ) = builderRegistryV2.builderState(_builder);
 
             _v2Activated[_index] = _activated;
@@ -326,7 +326,7 @@ contract UpgradeV3Test is Test {
                 , // communityApproved (unchanged)
                 bool v3KycPaused,
                 bool v3SelfPaused,, // reserved (unchanged)
-                    // pausedReason (unchanged)
+                // pausedReason (unchanged)
             ) = builderRegistryV3.builderState(_builder);
 
             // Verify renamed fields for this builder
