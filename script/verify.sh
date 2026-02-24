@@ -43,10 +43,10 @@ else
     exit 1
 fi
 
-# Check required environment variables
+# Check DEPLOYMENT_CONTEXT is set
 if [ -z "$DEPLOYMENT_CONTEXT" ]; then
-    echo -e "${YELLOW}DEPLOYMENT_CONTEXT not set. Defaulting to 'testnet'.${NC}"
-    DEPLOYMENT_CONTEXT="testnet"
+    echo -e "${RED}Error: DEPLOYMENT_CONTEXT not set${NC}"
+    exit 1
 fi
 
 # Check if RPC_URL is set for blockscout
