@@ -126,10 +126,10 @@ contract SelfPauseBuilderFuzzTest is BaseFuzz {
                 if (!builderRegistry.isGaugeHalted(address(backersGauges[i][j]))) {
                     if (backersAllocations[i][j] > _allocationBefore) {
                         _expectedTotalPotentialReward += (backersAllocations[i][j] - _allocationBefore)
-                        * backersManager.timeUntilNextCycle(block.timestamp);
+                            * backersManager.timeUntilNextCycle(block.timestamp);
                     } else {
                         _expectedTotalPotentialReward -= (_allocationBefore - backersAllocations[i][j])
-                        * backersManager.timeUntilNextCycle(block.timestamp);
+                            * backersManager.timeUntilNextCycle(block.timestamp);
                     }
                 } else {
                     if (backersAllocations[i][j] > _allocationBefore) {

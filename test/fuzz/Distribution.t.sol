@@ -122,10 +122,10 @@ contract DistributionFuzzTest is BaseFuzz {
         uint256 _expectedTotalPotentialReward = _totalAllocations * cycleDuration;
         if (_newTotalAllocations > _totalAllocations) {
             _expectedTotalPotentialReward += (_newTotalAllocations - _totalAllocations)
-            * backersManager.timeUntilNextCycle(block.timestamp);
+                * backersManager.timeUntilNextCycle(block.timestamp);
         } else {
             _expectedTotalPotentialReward -= (_totalAllocations - _newTotalAllocations)
-            * backersManager.timeUntilNextCycle(block.timestamp);
+                * backersManager.timeUntilNextCycle(block.timestamp);
         }
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
 
@@ -134,10 +134,10 @@ contract DistributionFuzzTest is BaseFuzz {
             uint256 _expectedRewardShares = _gaugesAllocationsBefore[i] * cycleDuration;
             if (gaugesArray[i].totalAllocation() > _gaugesAllocationsBefore[i]) {
                 _expectedRewardShares += (gaugesArray[i].totalAllocation() - _gaugesAllocationsBefore[i])
-                * backersManager.timeUntilNextCycle(block.timestamp);
+                    * backersManager.timeUntilNextCycle(block.timestamp);
             } else {
                 _expectedRewardShares -= (_gaugesAllocationsBefore[i] - gaugesArray[i].totalAllocation())
-                * backersManager.timeUntilNextCycle(block.timestamp);
+                    * backersManager.timeUntilNextCycle(block.timestamp);
             }
             assertEq(gaugesArray[i].rewardShares(), _expectedRewardShares);
         }
