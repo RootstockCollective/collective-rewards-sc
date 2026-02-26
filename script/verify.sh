@@ -55,7 +55,7 @@ if [ "$EXPLORER" = "blockscout" ] && [ -z "$RPC_URL" ]; then
     exit 1
 fi
 
-# Normalize to mainnet vs testnet for verifier URLs only
+# Normalize context to mainnet vs testnet for VERIFIER_URL and EXPLORER_URL
 if [ "$DEPLOYMENT_CONTEXT" = "mainnet" ]; then
     CHAIN_ENV="mainnet"
 else
