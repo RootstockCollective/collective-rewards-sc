@@ -55,29 +55,42 @@ if [ "$EXPLORER" = "blockscout" ] && [ -z "$RPC_URL" ]; then
     exit 1
 fi
 
-# ── Build forge verifier args per explorer + network ─────────────────────
-case "$EXPLORER" in
-    blockscout)
-        if [ "$DEPLOYMENT_CONTEXT" = "mainnet" ]; then
-            VERIFIER_URL="https://rootstock.blockscout.com/api/"
-            EXPLORER_URL="https://rootstock.blockscout.com"
-        else
-            VERIFIER_URL="https://rootstock-testnet.blockscout.com/api/"
-            EXPLORER_URL="https://rootstock-testnet.blockscout.com"
-        fi
-        FORGE_VERIFIER_ARGS=(--verifier blockscout --verifier-url "$VERIFIER_URL" --rpc-url "$RPC_URL")
-        ;;
-    rootstock)
-        if [ "$DEPLOYMENT_CONTEXT" = "mainnet" ]; then
-            VERIFIER_URL="https://be.explorer.rootstock.io/api/v3/etherscan"
-            EXPLORER_URL="https://explorer.rootstock.io"
-        else
-            VERIFIER_URL="https://be.explorer.testnet.rootstock.io/api/v3/etherscan"
-            EXPLORER_URL="https://explorer.testnet.rootstock.io"
-        fi
-        FORGE_VERIFIER_ARGS=(--verifier custom --verifier-url "$VERIFIER_URL" --chain-id "$CHAIN_ID")
-        ;;
-esac
+# Normalize to mainnet vs testnet for verifier URLs only
+if [ "$DEPLOYMENT_CONTEXT" = "mainnet" ]; then
+    CHAIN_ENV="mainnet"
+else
+    CHAIN_ENV="testnet"
+fi
+
+# blockscout
+VERIFIER_URL_blockscout_mainnet="https://rootstock.blockscout.com/api/"
+VERIFIER_URL_blockscout_testnet="https://rootstock-testnet.blockscout.com/api/"
+EXPLORER_URL_blockscout_mainnet="https://rootstock.blockscout.com"
+EXPLORER_URL_blockscout_testnet="https://rootstock-testnet.blockscout.com"
+FORGE_ARGS_blockscout='--verifier blockscout --verifier-url "$VERIFIER_URL" --rpc-url "$RPC_URL"'
+
+# rootstock
+VERIFIER_URL_rootstock_mainnet="https://be.explorer.rootstock.io/api/v3/etherscan"
+VERIFIER_URL_rootstock_testnet="https://be.explorer.testnet.rootstock.io/api/v3/etherscan"
+EXPLORER_URL_rootstock_mainnet="https://explorer.rootstock.io"
+EXPLORER_URL_rootstock_testnet="https://explorer.testnet.rootstock.io"
+FORGE_ARGS_rootstock='--verifier custom --verifier-url "$VERIFIER_URL" --chain-id "$CHAIN_ID"'
+
+# Lookup by EXPLORER and CHAIN_ENV
+key_ctx="${EXPLORER}_${CHAIN_ENV}"
+key="VERIFIER_URL_${key_ctx}"; VERIFIER_URL="${!key}"
+key="EXPLORER_URL_${key_ctx}"; EXPLORER_URL="${!key}"
+
+# obs: CHAIN_ID comes from .chain_id file
+
+if [ -z "$VERIFIER_URL" ] || [ -z "$EXPLORER_URL" ] || [ -z "$CHAIN_ID" ]; then
+    echo -e "${RED}Error: No verifier config for explorer=$EXPLORER; context=$DEPLOYMENT_CONTEXT; chain_id=$CHAIN_ID${NC}"
+    exit 1
+fi
+
+# Build forge verifier args from config
+key="FORGE_ARGS_${EXPLORER}"
+eval 'FORGE_VERIFIER_ARGS=('"${!key}"')'
 
 # ── Check deployment file ────────────────────────────────────────────────
 contract_addresses="deployments/$DEPLOYMENT_CONTEXT/contract_addresses.json"
