@@ -52,11 +52,7 @@ interface IBuilderRegistryRootstockCollectiveV2 {
 
     function approveBuilderKYC(address builder_) external;
 
-    function approveBuilderRewardReceiverReplacement(
-        address builder_,
-        address rewardReceiverReplacement_
-    )
-        external;
+    function approveBuilderRewardReceiverReplacement(address builder_, address rewardReceiverReplacement_) external;
 
     function backerRewardPercentage(address builder_)
         external
