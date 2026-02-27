@@ -15,7 +15,7 @@ contract DistributionDurationInvariants is BaseInvariants {
 
     /**
      * SCENARIO: Cycle Duration should always be at least 2 times distribution duration
-     * @dev: The test is allowed to revert, as we want setDistributionDuration to be as
+     * @dev The test is allowed to revert, as we want setDistributionDuration to be as
      * un-restricted as possible
      */
     /// forge-config: default.invariant.fail-on-revert = false

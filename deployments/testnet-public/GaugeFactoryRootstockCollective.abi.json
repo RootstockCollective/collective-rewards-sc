@@ -1,0 +1,75 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "beacon_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "rifToken_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "usdrifToken_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "beacon",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "createGauge",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "gauge_",
+        "type": "address",
+        "internalType": "contract GaugeRootstockCollective"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "rifToken",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "usdrifToken",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  }
+]
