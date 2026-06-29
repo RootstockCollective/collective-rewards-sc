@@ -71,7 +71,6 @@
     "test:fuzz": "forge test --match-test testFuzz",
     "test:invariant": "forge test --match-test invariant",
     "test:integration": "hardhat test",
-    "test:fork": "forge test --fork-url $RPC_URL --match-test fork",
     "test:coverage": "forge coverage --no-match-test '(fork)'",
     "test:coverage:report": "sh ./coverage.sh",
     "prepare": "husky",
