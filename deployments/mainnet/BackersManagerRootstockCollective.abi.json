@@ -142,25 +142,6 @@
   },
   {
     "type": "function",
-    "name": "communityApproveBuilder",
-    "inputs": [
-      {
-        "name": "builder_",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "gauge_",
-        "type": "address",
-        "internalType": "contract GaugeRootstockCollective"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "cycleData",
     "inputs": [],
     "outputs": [
@@ -316,7 +297,13 @@
         "internalType": "contract GaugeRootstockCollective"
       }
     ],
-    "outputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -342,7 +329,12 @@
         "internalType": "contract IGovernanceManagerRootstockCollective"
       },
       {
-        "name": "rewardToken_",
+        "name": "rifToken_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "usdrifToken_",
         "type": "address",
         "internalType": "address"
       },
@@ -365,6 +357,11 @@
         "name": "distributionDuration_",
         "type": "uint32",
         "internalType": "uint32"
+      },
+      {
+        "name": "maxDistributionsPerBatch_",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -372,7 +369,7 @@
   },
   {
     "type": "function",
-    "name": "initializeV2",
+    "name": "initializeBuilderRegistry",
     "inputs": [
       {
         "name": "builderRegistry_",
@@ -385,10 +382,46 @@
   },
   {
     "type": "function",
+    "name": "initializeV3",
+    "inputs": [
+      {
+        "name": "maxDistributionsPerBatch_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "usdrifToken_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "maxDistributionsPerBatch",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "notifyRewardAmount",
     "inputs": [
       {
-        "name": "amount_",
+        "name": "amountRif_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "amountUsdrif_",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -469,6 +502,11 @@
         "name": "gauge_",
         "type": "address",
         "internalType": "contract GaugeRootstockCollective"
+      },
+      {
+        "name": "haltedGaugeLastPeriodFinish_",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -476,20 +514,7 @@
   },
   {
     "type": "function",
-    "name": "rewardToken",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "rewardTokenApprove",
+    "name": "rewardTokensApprove",
     "inputs": [
       {
         "name": "gauge_",
@@ -507,20 +532,7 @@
   },
   {
     "type": "function",
-    "name": "rewardsCoinbase",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "rewardsERC20",
+    "name": "rewardsNative",
     "inputs": [],
     "outputs": [
       {
@@ -546,6 +558,45 @@
         "name": "hasOptedOut",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "rewardsRif",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "rewardsUsdrif",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "rifToken",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -673,6 +724,19 @@
   },
   {
     "type": "function",
+    "name": "updateMaxDistributionsPerBatch",
+    "inputs": [
+      {
+        "name": "maxDistributionsPerBatch_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "upgradeToAndCall",
     "inputs": [
       {
@@ -688,6 +752,19 @@
     ],
     "outputs": [],
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "usdrifToken",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "event",
@@ -724,6 +801,25 @@
         "type": "uint64",
         "indexed": false,
         "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "MaxDistributionsPerBatchUpdated",
+    "inputs": [
+      {
+        "name": "oldValue_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "newValue_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -844,6 +940,31 @@
   },
   {
     "type": "event",
+    "name": "RewardDistributionRewards",
+    "inputs": [
+      {
+        "name": "rifAmount_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "usdrifAmount_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "nativeAmount_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "RewardDistributionStarted",
     "inputs": [
       {
@@ -874,17 +995,6 @@
     "inputs": [
       {
         "name": "target",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "AddressInsufficientBalance",
-    "inputs": [
-      {
-        "name": "account",
         "type": "address",
         "internalType": "address"
       }
@@ -953,17 +1063,12 @@
   },
   {
     "type": "error",
-    "name": "FailedInnerCall",
+    "name": "FailedCall",
     "inputs": []
   },
   {
     "type": "error",
     "name": "GaugeDoesNotExist",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidAddress",
     "inputs": []
   },
   {
@@ -1013,6 +1118,16 @@
   },
   {
     "type": "error",
+    "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RewardTokenNotApproved",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "SafeERC20FailedOperation",
     "inputs": [
       {
@@ -1041,6 +1156,11 @@
   {
     "type": "error",
     "name": "UnequalLengths",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroAddressNotAllowed",
     "inputs": []
   }
 ]
