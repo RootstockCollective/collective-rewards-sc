@@ -1,13 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import { Deploy as BackersManagerRootstockCollectiveDeployer } from "script/BackersManagerRootstockCollective.s.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { BaseTest } from "../BaseTest.sol";
 import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
 import { IGovernanceManagerRootstockCollective } from "src/interfaces/IGovernanceManagerRootstockCollective.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract InitializationTest is BaseTest {
+    function _deployBackersManager() internal returns (BackersManagerRootstockCollective backersManager_) {
+        BackersManagerRootstockCollective _implementation = new BackersManagerRootstockCollective();
+        bytes memory _initializerData = abi.encodeCall(
+            BackersManagerRootstockCollective.initialize,
+            (
+                governanceManager,
+                address(rifToken),
+                address(usdrifToken),
+                address(stakingToken),
+                cycleDuration,
+                cycleStartOffset,
+                distributionDuration,
+                maxDistributionsPerBatch
+            )
+        );
+        backersManager_ =
+            BackersManagerRootstockCollective(address(new ERC1967Proxy(address(_implementation), _initializerData)));
+    }
+
     /**
      * SCENARIO: BackersManagerRootstockCollective cannot be initialized twice
      */
@@ -33,17 +52,7 @@ contract InitializationTest is BaseTest {
      */
     function test_RevertBackersManagerRootstockCollectiveInitializeBuilderRegistryTwice() public {
         // GIVEN a BackersManagerRootstockCollective with builderRegistry already initialized
-        (BackersManagerRootstockCollective _backersManager,) = new BackersManagerRootstockCollectiveDeployer()
-            .run(
-                address(governanceManager),
-                address(rifToken),
-                address(usdrifToken),
-                address(stakingToken),
-                cycleDuration,
-                cycleStartOffset,
-                distributionDuration,
-                maxDistributionsPerBatch
-            );
+        BackersManagerRootstockCollective _backersManager = _deployBackersManager();
 
         vm.prank(upgrader);
         _backersManager.initializeBuilderRegistry(builderRegistry);
@@ -60,17 +69,7 @@ contract InitializationTest is BaseTest {
      */
     function test_RevertBackersManagerRootstockCollectiveInitializeBuilderRegistryNotAuthorizedUpgrader() public {
         // GIVEN a BackersManagerRootstockCollective without builderRegistry initialized
-        (BackersManagerRootstockCollective _backersManager,) = new BackersManagerRootstockCollectiveDeployer()
-            .run(
-                address(governanceManager),
-                address(rifToken),
-                address(usdrifToken),
-                address(stakingToken),
-                cycleDuration,
-                cycleStartOffset,
-                distributionDuration,
-                maxDistributionsPerBatch
-            );
+        BackersManagerRootstockCollective _backersManager = _deployBackersManager();
 
         //  WHEN an unauthorized account tries to initialize builderRegistry
         //   THEN tx reverts because NotAuthorizedUpgrader
