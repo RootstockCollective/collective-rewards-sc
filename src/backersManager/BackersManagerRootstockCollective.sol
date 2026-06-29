@@ -44,6 +44,7 @@ contract BackersManagerRootstockCollective is
     error BackerHasAllocations();
     error ZeroAddressNotAllowed();
     error RewardTokenNotApproved();
+    error BuilderRegistryAlreadyInitialized();
 
     // -----------------------------
     // ----------- Events ----------
@@ -196,8 +197,12 @@ contract BackersManagerRootstockCollective is
      * @notice builder registry contract initializer
      * @param builderRegistry_ address of the builder registry contract
      */
-    function initializeBuilderRegistry(BuilderRegistryRootstockCollective builderRegistry_) external {
+    function initializeBuilderRegistry(BuilderRegistryRootstockCollective builderRegistry_)
+        external
+        onlyAuthorizedUpgrader
+    {
         if (address(builderRegistry_) == address(0)) revert ZeroAddressNotAllowed();
+        if (address(builderRegistry) != address(0)) revert BuilderRegistryAlreadyInitialized();
 
         builderRegistry = builderRegistry_;
     }

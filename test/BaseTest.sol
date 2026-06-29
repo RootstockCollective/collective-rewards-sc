@@ -101,6 +101,7 @@ contract BaseTest is Test {
         (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer()
             .run(address(backersManager), address(gaugeFactory), address(rewardDistributor), rewardPercentageCooldown);
 
+        vm.prank(upgrader);
         backersManager.initializeBuilderRegistry(builderRegistry);
 
         // allow to execute all the functions protected by governance
