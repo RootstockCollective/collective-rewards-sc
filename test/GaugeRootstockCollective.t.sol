@@ -5,6 +5,7 @@ import { stdStorage, StdStorage } from "forge-std/src/Test.sol";
 import { BaseTest, GaugeRootstockCollective } from "./BaseTest.sol";
 import { UtilsLib } from "../src/libraries/UtilsLib.sol";
 import { ERC20Mock } from "./mock/ERC20Mock.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract GaugeRootstockCollectiveTest is BaseTest {
     using stdStorage for StdStorage;
@@ -35,6 +36,32 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         // Setup usdrifTokens for incentivizer and backersManager
         _mintAndApproveTokens(usdrifToken, address(incentivizer), _tokenAmount);
         _mintAndApproveTokens(usdrifToken, address(backersManager), _tokenAmount);
+    }
+
+    /**
+     * SCENARIO: a gauge created via GaugeFactory is properly initialized
+     *  GIVEN a new gauge deployed through communityApproveBuilder
+     *  THEN rifToken, usdrifToken, builderRegistry and backersManager are set correctly
+     */
+    function test_gaugeIsProperlyInitialized() public {
+        _createGauge(0.5 ether);
+        GaugeRootstockCollective _newGauge = gaugesArray[gaugesArray.length - 1];
+
+        assertEq(_newGauge.rifToken(), address(rifToken));
+        assertEq(_newGauge.usdrifToken(), address(usdrifToken));
+        assertEq(address(_newGauge.builderRegistry()), address(builderRegistry));
+        assertEq(address(_newGauge.backersManager()), address(backersManager));
+    }
+
+    /**
+     * SCENARIO: a gauge cannot be initialized twice
+     *  GIVEN an initialized gauge
+     *  WHEN initialize is called again
+     *  THEN tx reverts with InvalidInitialization
+     */
+    function test_RevertGaugeInitialize() public {
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        gauge.initialize(address(rifToken), address(usdrifToken), address(builderRegistry));
     }
 
     /**
