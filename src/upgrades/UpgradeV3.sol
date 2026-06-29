@@ -110,19 +110,7 @@ contract UpgradeV3 {
     function _upgradeGauges() internal {
         gaugeBeacon.upgradeTo(address(gaugeImplV3));
 
-        // Initialize gauges with usdrifToken
-        uint256 _gaugesLength = builderRegistryProxy.getGaugesLength();
-        for (uint256 i = 0; i < _gaugesLength; i++) {
-            address _gaugeAddress = builderRegistryProxy.getGaugeAt(i);
-            GaugeRootstockCollective(_gaugeAddress).initializeV3(usdrifToken);
-        }
-
-        // Initialize halted gauges with usdrifToken
-        uint256 _haltedGaugesLength = builderRegistryProxy.getHaltedGaugesLength();
-        for (uint256 i = 0; i < _haltedGaugesLength; i++) {
-            address _gaugeAddress = builderRegistryProxy.getHaltedGaugeAt(i);
-            GaugeRootstockCollective(_gaugeAddress).initializeV3(usdrifToken);
-        }
+        // Gauges already have rifToken and usdrifToken set during `initialize()`.
     }
 
     function _upgradeRewardDistributor() internal {

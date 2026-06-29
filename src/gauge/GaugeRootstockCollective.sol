@@ -124,18 +124,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         backersManager = BackersManagerRootstockCollective(builderRegistry.backersManager());
     }
 
-    /**
-     * @notice contract initializer
-     * @param usdrifToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the
-     * ERC-20
-     * standard are supported.
-     * @notice For more info on supported tokens, see:
-     * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
-     */
-    function initializeV3(address usdrifToken_) external reinitializer(3) {
-        __ReentrancyGuard_init();
-        usdrifToken = usdrifToken_;
-    }
+    // NOTE: `initializeV3()` was removed after the V3 migration. Gauges that were migrated during UpgradeV3
+    // already reached version 3. New gauges remain at version 1 after `initialize()`; this is safe because
+    // no public reinitializer remains callable.
 
     // NOTE: This contract previously included an `initializeV2()` function using `reinitializer(2)`
     // to set the `builderRegistry` from `backersManager.builderRegistry()` during an upgrade to version 2.

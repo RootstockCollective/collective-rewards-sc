@@ -159,7 +159,6 @@ contract BaseTest is Test {
         builders.push(builder_);
         vm.prank(governor);
         newGauge_ = builderRegistry.communityApproveBuilder(builder_);
-        newGauge_.initializeV3(address(usdrifToken));
         gaugesArray.push(newGauge_);
     }
 
