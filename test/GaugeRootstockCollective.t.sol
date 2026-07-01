@@ -177,8 +177,8 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(gauge.rewards(address(rifToken), alice), 0);
         // THEN alice backerRewardPerTokenPaid is 0 because there are no rewards distributed
         assertEq(gauge.backerRewardPerTokenPaid(address(rifToken), alice), 0);
-        // THEN lastUpdateTime is cycle start since there are no rewards distributed
-        assertEq(gauge.lastUpdateTime(address(rifToken)), backersManager.cycleStart(block.timestamp));
+        // THEN lastUpdateTime tracks when the allocation update happened
+        assertEq(gauge.lastUpdateTime(address(rifToken)), block.timestamp);
     }
 
     /**

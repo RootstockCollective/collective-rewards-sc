@@ -167,6 +167,7 @@ contract SupportAndDistributeTest is BaseTest {
         // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         _skipAndStartNewCycle();
+        _triggerDistribution();
 
         // WHEN alice claims the rewards
         vm.prank(alice);

@@ -820,9 +820,8 @@ contract SkipDistribution is BaseTest {
         _incentivize(gauge, 100 ether, 100 ether, 0);
 
         // CYCLE 3
-        // AND cycle finishes
-        _skipAndStartNewCycle();
-        _triggerDistribution();
+        // AND cycle enters allocation period without distribution
+        _skipToEndDistributionWindow();
 
         // AND alice allocates to gauge
         vm.prank(alice);
@@ -878,18 +877,16 @@ contract SkipDistribution is BaseTest {
         _incentivize(gauge, 100 ether, 100 ether, 0);
 
         // CYCLE 3
-        // AND cycle finishes
-        _skipAndStartNewCycle();
-        _triggerDistribution();
+        // AND cycle enters allocation period without distribution
+        _skipToEndDistributionWindow();
 
         // AND alice allocates to gauge
         vm.prank(alice);
         backersManager.allocate(gauge, 1 ether);
 
         // CYCLE 4
-        // AND cycle finishes
-        _skipAndStartNewCycle();
-        _triggerDistribution();
+        // AND cycle enters allocation period without distribution
+        _skipToEndDistributionWindow();
 
         // AND alice deallocates all votes
         vm.prank(alice);

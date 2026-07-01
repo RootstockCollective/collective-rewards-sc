@@ -241,8 +241,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     function test_ModifyAllocation() public {
         // GIVEN a BackerManager contract
         vm.startPrank(alice);
-        // AND a new cycle
-        _skipAndStartNewCycle();
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
         // WHEN alice allocates 2 ether to builder and 6 ether to builder2
@@ -741,8 +739,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
      */
     function test_ModifyAllocationBeforeDistribution() public {
         // GIVEN a BackerManager contract
-        // AND a new cycle
-        _skipAndStartNewCycle();
         // AND alice allocates 10 ether to builder
         vm.prank(alice);
         backersManager.allocate(gauge, 10 ether);
@@ -796,8 +792,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
      */
     function test_UnallocationBeforeDistribution() public {
         // GIVEN a BackerManager contract
-        // AND a new cycle
-        _skipAndStartNewCycle();
         // AND alice allocates 10 ether to builder
         vm.prank(alice);
         backersManager.allocate(gauge, 10 ether);
@@ -850,8 +844,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
      */
     function test_RemoveAllocationBeforeDistribution() public {
         // GIVEN a BackerManager contract
-        // AND a new cycle
-        _skipAndStartNewCycle();
         // AND alice allocates 10 ether to builder
         vm.prank(alice);
         backersManager.allocate(gauge, 10 ether);
@@ -971,6 +963,7 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
         backersManager.startDistribution();
         // AND cycle finish
         _skipAndStartNewCycle();
+        _triggerDistribution();
 
         // AND bob modifies his allocations 16 ether to builder and 4 ether to builder2
         vm.startPrank(bob);
@@ -1634,7 +1627,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
      */
     function test_MissingRewardsAccumulation() public {
         // GIVEN alice allocates to gauge and gauge2
-        _skipAndStartNewCycle();
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
