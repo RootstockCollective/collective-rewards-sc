@@ -45,6 +45,7 @@ contract BackersManagerRootstockCollective is
     error ZeroAddressNotAllowed();
     error RewardTokenNotApproved();
     error BuilderRegistryAlreadyInitialized();
+    error CycleEnded();
 
     // -----------------------------
     // ----------- Events ----------
@@ -71,6 +72,13 @@ contract BackersManagerRootstockCollective is
 
     modifier notInDistributionPeriod() {
         if (onDistributionPeriod) revert NotInDistributionPeriod();
+        _;
+    }
+
+    modifier onlyInAllocationPeriod() {
+        if (block.timestamp >= _periodFinish && block.timestamp < endDistributionWindow(block.timestamp)) {
+            revert CycleEnded();
+        }
         _;
     }
 
@@ -287,6 +295,7 @@ contract BackersManagerRootstockCollective is
     )
         external
         notInDistributionPeriod
+        onlyInAllocationPeriod
         onlyOptedInBacker
         nonReentrant
     {
@@ -315,6 +324,7 @@ contract BackersManagerRootstockCollective is
     )
         external
         notInDistributionPeriod
+        onlyInAllocationPeriod
         onlyOptedInBacker
         nonReentrant
     {

@@ -127,8 +127,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     function test_AllocateBatch() public {
         // GIVEN a BackerManager contract
         vm.startPrank(alice);
-        // AND a new cycle
-        _skipAndStartNewCycle();
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
         // WHEN alice allocates 2 ether to builder and 6 ether to builder2
@@ -159,8 +157,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     function test_AllocateBatchGaugeRepeated() public {
         // GIVEN a BackerManager contract
         vm.startPrank(alice);
-        // AND a new cycle
-        _skipAndStartNewCycle();
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
 
@@ -186,8 +182,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
     function test_AllocateOverride() public {
         // GIVEN a BackerManager contract
         vm.startPrank(alice);
-        // AND a new cycle
-        _skipAndStartNewCycle();
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
         // WHEN alice allocates 2 ether to builder and 6 ether to builder2
@@ -213,8 +207,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
      */
     function test_AllocateBatchOverride() public {
         // GIVEN a BackerManager contract
-        // AND a new cycle
-        _skipAndStartNewCycle();
         allocationsArray[0] = 2 ether;
         allocationsArray[1] = 6 ether;
 
@@ -908,8 +900,6 @@ contract BackersManagerRootstockCollectiveTest is BaseTest {
      */
     function test_AddAllocationBeforeDistribution() public {
         // GIVEN a BackerManager contract
-        // AND a new cycle
-        _skipAndStartNewCycle();
         // AND alice allocates 10 ether to builder
         vm.prank(alice);
         backersManager.allocate(gauge, 10 ether);

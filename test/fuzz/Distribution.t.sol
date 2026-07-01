@@ -96,6 +96,13 @@ contract DistributionFuzzTest is BaseFuzz {
 
         // AND a random time passes
         skip(allocationsTime_);
+        // If we landed in the distribution window, trigger distribution to allow allocations
+        if (
+            block.timestamp >= backersManager.periodFinish()
+                && block.timestamp < backersManager.endDistributionWindow(block.timestamp)
+        ) {
+            _triggerDistribution();
+        }
 
         uint256[] memory _gaugesAllocationsBefore = new uint256[](gaugesArray.length);
         uint256 _totalAllocations;

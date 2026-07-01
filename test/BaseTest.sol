@@ -132,6 +132,13 @@ contract BaseTest is Test {
         skip(_currentCycleRemaining);
     }
 
+    function _triggerDistribution() internal {
+        backersManager.startDistribution();
+        while (backersManager.onDistributionPeriod()) {
+            backersManager.distribute();
+        }
+    }
+
     function _skipRemainingCycleFraction(uint256 fraction_) internal {
         uint256 _currentCycleRemaining = backersManager.cycleNext(block.timestamp) - block.timestamp;
         skip(_currentCycleRemaining / fraction_);

@@ -152,8 +152,6 @@ contract GaugeRootstockCollectiveTest is BaseTest {
      * SCENARIO: BackersManagerRootstockCollective deallocates to alice with no rewards distributed
      */
     function test_Deallocate() public {
-        // GIVEN a new cycle
-        _skipAndStartNewCycle();
         // AND alice allocates 1 ether
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
@@ -187,8 +185,6 @@ contract GaugeRootstockCollectiveTest is BaseTest {
      * SCENARIO: BackersManagerRootstockCollective makes a partial deallocation to alice with no rewards distributed
      */
     function test_DeallocatePartial() public {
-        // GIVEN a new cycle
-        _skipAndStartNewCycle();
         // AND alice allocates 1 ether
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
@@ -215,6 +211,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(builder);
         builderRegistry.setBackerRewardPercentage(0.7 ether);
         skip(rewardPercentageCooldown);
+        _triggerDistribution();
 
         // AND 6 ether are allocated to alice
         vm.startPrank(alice);
@@ -1069,6 +1066,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(builder2);
         builderRegistry.setBackerRewardPercentage(0.15 ether);
         skip(rewardPercentageCooldown);
+        _triggerDistribution();
         // AND alice allocates to gauge and gauge2
         vm.startPrank(alice);
         allocationsArray[0] = 2 ether;
@@ -1106,6 +1104,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(builder);
         builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
+        _triggerDistribution();
         // AND alice allocates to gauge
         vm.startPrank(alice);
         backersManager.allocate(gauge, 2 ether);
@@ -1144,6 +1143,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(builder);
         builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
+        _triggerDistribution();
         // AND alice allocates to gauge
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
@@ -1186,6 +1186,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(builder);
         builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
+        _triggerDistribution();
         // AND alice allocates to gauge
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
@@ -1226,6 +1227,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(builder);
         builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
+        _triggerDistribution();
         // AND alice allocates to gauge
         vm.startPrank(alice);
         backersManager.allocate(gauge, 1 ether);
@@ -1265,6 +1267,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(builder2);
         builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
+        _triggerDistribution();
         // AND alice allocates to gauge2
         vm.startPrank(alice);
         backersManager.allocate(gauge2, 2 ether);
@@ -1316,6 +1319,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.prank(builder2);
         builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
+        _triggerDistribution();
         // AND alice allocates to gauge2
         vm.startPrank(alice);
         backersManager.allocate(gauge2, 2 ether);
@@ -1377,6 +1381,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(builder);
         builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
+        _triggerDistribution();
         // AND alice allocates to gauge
         vm.startPrank(alice);
         backersManager.allocate(gauge, 2 ether);
@@ -1429,6 +1434,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         vm.startPrank(builder);
         builderRegistry.setBackerRewardPercentage(0.3 ether);
         skip(rewardPercentageCooldown);
+        _triggerDistribution();
         // AND alice allocates to gauge
         vm.startPrank(alice);
         backersManager.allocate(gauge, 2 ether);
@@ -2028,6 +2034,7 @@ contract GaugeRootstockCollectiveTest is BaseTest {
         assertEq(usdrifToken.balanceOf(bob), 83_333_333_333_333_333_330);
 
         // AND alice and bob deallocate all
+        _triggerDistribution();
         // GIVEN alice allocates 1 ether
         vm.startPrank(alice);
         backersManager.allocate(gauge, 0 ether);

@@ -162,6 +162,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
 
         // skip some time to halt on another timestamp
         skip(10);
+        _triggerDistribution();
 
         // AND builder is halted before a distribution
         _haltGauge();
@@ -206,6 +207,7 @@ abstract contract HaltedBuilderBehavior is BaseTest {
         _initialDistribution();
         // AND cycle finish
         _skipAndStartNewCycle();
+        _triggerDistribution();
         vm.prank(alice);
         backersManager.allocate(gauge, 100 ether);
 

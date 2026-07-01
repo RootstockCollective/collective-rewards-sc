@@ -6,10 +6,7 @@ import { UtilsLib } from "src/libraries/UtilsLib.sol";
 import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
 contract SkipDistribution is BaseTest {
-    function _setUp() internal override {
-        // start from a new cycle
-        _skipAndStartNewCycle();
-    }
+    function _setUp() internal override { }
 
     /**
      * SCENARIO: there is an cycle without distribution.
@@ -825,6 +822,7 @@ contract SkipDistribution is BaseTest {
         // CYCLE 3
         // AND cycle finishes
         _skipAndStartNewCycle();
+        _triggerDistribution();
 
         // AND alice allocates to gauge
         vm.prank(alice);
@@ -882,6 +880,7 @@ contract SkipDistribution is BaseTest {
         // CYCLE 3
         // AND cycle finishes
         _skipAndStartNewCycle();
+        _triggerDistribution();
 
         // AND alice allocates to gauge
         vm.prank(alice);
@@ -890,6 +889,7 @@ contract SkipDistribution is BaseTest {
         // CYCLE 4
         // AND cycle finishes
         _skipAndStartNewCycle();
+        _triggerDistribution();
 
         // AND alice deallocates all votes
         vm.prank(alice);
@@ -936,6 +936,7 @@ contract SkipDistribution is BaseTest {
         // CYCLE 2
         // AND new cycle starts without a distribution
         _skipAndStartNewCycle();
+        _triggerDistribution();
 
         // AND bob votes to gauge2
         vm.prank(bob);
