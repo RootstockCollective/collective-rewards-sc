@@ -2,6 +2,7 @@
 pragma solidity 0.8.24;
 
 import { BaseFuzz } from "./BaseFuzz.sol";
+import { BackersManagerRootstockCollective } from "src/backersManager/BackersManagerRootstockCollective.sol";
 
 contract DistributionFuzzTest is BaseFuzz {
     /* solhint-disable code-complexity */
@@ -157,5 +158,40 @@ contract DistributionFuzzTest is BaseFuzz {
         for (uint256 i = 0; i < gaugesArray.length; i++) {
             assertEq(gaugesArray[i].rewardShares(), gaugesArray[i].totalAllocation() * cycleDuration);
         }
+    }
+
+    /**
+     * SCENARIO: allocation behavior is stable around distribution window boundaries.
+     */
+    function testFuzz_AllocationWindowBoundaryJitter(uint256 delta_) public {
+        // GIVEN a valid distribution window and a bounded delta inside it
+        _skipToStartDistributionWindow();
+        uint256 _periodFinish = backersManager.periodFinish();
+        uint256 _windowEnd = backersManager.endDistributionWindow(block.timestamp);
+        delta_ = bound(delta_, 1, _windowEnd - _periodFinish - 1);
+
+        // WHEN allocating right before periodFinish
+        vm.warp(_periodFinish - 1);
+        vm.prank(alice);
+        backersManager.allocate(gauge, 1 ether);
+        assertEq(gauge.allocationOf(alice), 1 ether);
+
+        // THEN allocating at periodFinish reverts
+        vm.warp(_periodFinish);
+        vm.expectRevert(BackersManagerRootstockCollective.CycleEnded.selector);
+        vm.prank(alice);
+        backersManager.allocate(gauge, 1 ether);
+
+        // THEN allocating inside the blocked window also reverts
+        vm.warp(_periodFinish + delta_);
+        vm.expectRevert(BackersManagerRootstockCollective.CycleEnded.selector);
+        vm.prank(alice);
+        backersManager.allocate(gauge, 1 ether);
+
+        // THEN allocating exactly at window end is enabled again
+        vm.warp(_windowEnd);
+        vm.prank(alice);
+        backersManager.allocate(gauge, 2 ether);
+        assertEq(gauge.allocationOf(alice), 2 ether);
     }
 }
