@@ -44,6 +44,8 @@ contract BackersManagerRootstockCollective is
     error BackerHasAllocations();
     error ZeroAddressNotAllowed();
     error RewardTokenNotApproved();
+    error BuilderRegistryAlreadyInitialized();
+    error CycleEnded();
 
     // -----------------------------
     // ----------- Events ----------
@@ -70,6 +72,13 @@ contract BackersManagerRootstockCollective is
 
     modifier notInDistributionPeriod() {
         if (onDistributionPeriod) revert NotInDistributionPeriod();
+        _;
+    }
+
+    modifier onlyInAllocationPeriod() {
+        if (block.timestamp >= _periodFinish && block.timestamp < endDistributionWindow(block.timestamp)) {
+            revert CycleEnded();
+        }
         _;
     }
 
@@ -196,8 +205,12 @@ contract BackersManagerRootstockCollective is
      * @notice builder registry contract initializer
      * @param builderRegistry_ address of the builder registry contract
      */
-    function initializeBuilderRegistry(BuilderRegistryRootstockCollective builderRegistry_) external {
+    function initializeBuilderRegistry(BuilderRegistryRootstockCollective builderRegistry_)
+        external
+        onlyAuthorizedUpgrader
+    {
         if (address(builderRegistry_) == address(0)) revert ZeroAddressNotAllowed();
+        if (address(builderRegistry) != address(0)) revert BuilderRegistryAlreadyInitialized();
 
         builderRegistry = builderRegistry_;
     }
@@ -282,6 +295,7 @@ contract BackersManagerRootstockCollective is
     )
         external
         notInDistributionPeriod
+        onlyInAllocationPeriod
         onlyOptedInBacker
         nonReentrant
     {
@@ -310,6 +324,7 @@ contract BackersManagerRootstockCollective is
     )
         external
         notInDistributionPeriod
+        onlyInAllocationPeriod
         onlyOptedInBacker
         nonReentrant
     {

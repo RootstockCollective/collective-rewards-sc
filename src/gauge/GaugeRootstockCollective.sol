@@ -114,8 +114,14 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
      * @notice For more info on supported tokens, see:
      * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
      * @param builderRegistry_ address of the builder registry contract
+     * @dev Uses `reinitializer(3)` instead of `initializer` on purpose. Gauges are beacon proxies created at
+     * different times: gauges deployed before V3 were migrated up to version 3, while new gauges are deployed
+     * fresh against the already-V3 implementation. A fresh proxy starts at `_initialized == 0`, so `reinitializer(3)`
+     * makes new gauges jump straight to version 3 in a single call, keeping the whole gauge fleet uniformly at
+     * version 3. This prevents a version mismatch where a future `reinitializer(<=3)` could be callable on a subset
+     * of gauges. `__ReentrancyGuard_init()` still works since `reinitializer` sets `_initializing` during the call.
      */
-    function initialize(address rifToken_, address usdrifToken_, address builderRegistry_) external initializer {
+    function initialize(address rifToken_, address usdrifToken_, address builderRegistry_) external reinitializer(3) {
         __ReentrancyGuard_init();
         rifToken = rifToken_;
         usdrifToken = usdrifToken_;
@@ -124,18 +130,9 @@ contract GaugeRootstockCollective is ReentrancyGuardUpgradeable {
         backersManager = BackersManagerRootstockCollective(builderRegistry.backersManager());
     }
 
-    /**
-     * @notice contract initializer
-     * @param usdrifToken_ address of the token rewarded to builder and voters. Only tokens that adhere to the
-     * ERC-20
-     * standard are supported.
-     * @notice For more info on supported tokens, see:
-     * https://github.com/RootstockCollective/collective-rewards-sc/blob/main/README.md#Reward-token
-     */
-    function initializeV3(address usdrifToken_) external reinitializer(3) {
-        __ReentrancyGuard_init();
-        usdrifToken = usdrifToken_;
-    }
+    // NOTE: `initializeV3()` was removed after the V3 migration. Gauges that were migrated during UpgradeV3
+    // already reached version 3. New gauges initialize directly at version 3 via `reinitializer(3)` on
+    // `initialize()` (see the rationale documented on that function).
 
     // NOTE: This contract previously included an `initializeV2()` function using `reinitializer(2)`
     // to set the `builderRegistry` from `backersManager.builderRegistry()` during an upgrade to version 2.

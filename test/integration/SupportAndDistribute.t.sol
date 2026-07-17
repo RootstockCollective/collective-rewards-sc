@@ -14,9 +14,6 @@ contract SupportAndDistributeTest is BaseTest {
         // creates 10 gauges with 40% of reward percentage
         uint64 _rewardPercentage = 0.4 ether; // 40%
         _createGauges(10, _rewardPercentage);
-
-        // start from a new cycle
-        _skipAndStartNewCycle();
     }
     /**
      * SCENARIO: All the votes occurs at the beginning of the distribution and are not re-allocated
@@ -52,6 +49,7 @@ contract SupportAndDistributeTest is BaseTest {
         // AND 100 rifTokens and 100 usdrifTokens and 10 native cpind are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         _skipAndStartNewCycle();
+        _triggerDistribution();
 
         vm.prank(alice);
         // WHEN alice claims the rewards
@@ -169,6 +167,7 @@ contract SupportAndDistributeTest is BaseTest {
         // AND 100 rifTokens and 100 usdrifTokens and 10 native tokens are distributed
         _distribute(100 ether, 100 ether, 10 ether);
         _skipAndStartNewCycle();
+        _triggerDistribution();
 
         // WHEN alice claims the rewards
         vm.prank(alice);

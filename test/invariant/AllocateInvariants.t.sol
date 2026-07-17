@@ -15,4 +15,15 @@ contract AllocateInvariants is BaseInvariants {
         }
         assertEq(backersManager.totalPotentialReward(), _expectedTotalPotentialReward);
     }
+
+    /**
+     * SCENARIO: allocations attempted in blocked window always revert.
+     */
+    function invariant_BlockedWindowAllocationsAlwaysRevert() public useTime {
+        // Attempts and reverts must match: no blocked-window allocation call may succeed.
+        assertEq(allocateHandler.blockedWindowAllocateAttempts(), allocateHandler.blockedWindowAllocateReverts());
+        assertEq(
+            allocateHandler.blockedWindowAllocateBatchAttempts(), allocateHandler.blockedWindowAllocateBatchReverts()
+        );
+    }
 }

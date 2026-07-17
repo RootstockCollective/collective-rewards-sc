@@ -101,6 +101,7 @@ contract BaseTest is Test {
         (builderRegistry, builderRegistryImpl) = new BuilderRegistryRootstockCollectiveDeployer()
             .run(address(backersManager), address(gaugeFactory), address(rewardDistributor), rewardPercentageCooldown);
 
+        vm.prank(upgrader);
         backersManager.initializeBuilderRegistry(builderRegistry);
 
         // allow to execute all the functions protected by governance
@@ -131,6 +132,13 @@ contract BaseTest is Test {
         skip(_currentCycleRemaining);
     }
 
+    function _triggerDistribution() internal {
+        backersManager.startDistribution();
+        while (backersManager.onDistributionPeriod()) {
+            backersManager.distribute();
+        }
+    }
+
     function _skipRemainingCycleFraction(uint256 fraction_) internal {
         uint256 _currentCycleRemaining = backersManager.cycleNext(block.timestamp) - block.timestamp;
         skip(_currentCycleRemaining / fraction_);
@@ -159,7 +167,6 @@ contract BaseTest is Test {
         builders.push(builder_);
         vm.prank(governor);
         newGauge_ = builderRegistry.communityApproveBuilder(builder_);
-        newGauge_.initializeV3(address(usdrifToken));
         gaugesArray.push(newGauge_);
     }
 
